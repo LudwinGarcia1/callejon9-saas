@@ -3,6 +3,9 @@ package com.callejon9.shared.error;
 import com.callejon9.tenancy.NoTenantContextException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -18,6 +21,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    private static final String DATA_INTEGRITY_DETAIL =
+            "Ya existe un registro con estos datos o se produjo un conflicto de "
+                    + "concurrencia. Intenta de nuevo.";
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ProblemDetail onValidationError(MethodArgumentNotValidException exception) {
@@ -54,6 +63,25 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.FORBIDDEN, exception.getMessage());
         problem.setTitle("Sin restaurante activo");
+        return problem;
+    }
+
+    /**
+     * Una insercion o actualizacion concurrente choco con una restriccion de
+     * la base de datos (un UNIQUE, tipicamente): un folio duplicado, un
+     * numero de mesa repetido, etc. El mensaje de Postgres nombra la
+     * restriccion, la columna y la tabla -- estructura interna que nunca debe
+     * llegarle al cliente -- asi que el detalle expuesto es siempre el mismo
+     * texto generico. La causa real se registra en warn para que siga siendo
+     * diagnosticable desde el servidor.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    ProblemDetail onDataIntegrityViolation(DataIntegrityViolationException exception) {
+        log.warn("Conflicto de integridad de datos: {}", exception.getMessage(), exception);
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT, DATA_INTEGRITY_DETAIL);
+        problem.setTitle("Conflicto de datos");
         return problem;
     }
 }
