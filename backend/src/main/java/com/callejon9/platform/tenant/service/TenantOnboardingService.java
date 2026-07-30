@@ -14,6 +14,8 @@ import com.callejon9.user.domain.UserRole;
 import com.callejon9.user.repository.UserRepository;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -48,9 +50,17 @@ import org.springframework.transaction.support.TransactionTemplate;
  * de ningun tenant activo. Se opto por compensar (en vez de dejarlo huerfano)
  * porque un tenant sin ningun usuario administrador es inservible y no debe
  * quedar visible para reintentos de signup con el mismo slug.
+ *
+ * <p>La compensacion misma puede fallar (una desconexion transitoria, por
+ * ejemplo). Si eso ocurre, la causa original del fallo del alta del
+ * administrador es lo que el operador necesita ver primero; el fallo de la
+ * compensacion se adjunta como excepcion suprimida, nunca la reemplaza.
+ * Ambos casos quedan registrados en el log en nivel error.
  */
 @Service
 public class TenantOnboardingService {
+
+    private static final Logger log = LoggerFactory.getLogger(TenantOnboardingService.class);
 
     private final TenantRepository tenantRepository;
     private final PlanRepository planRepository;
@@ -103,7 +113,17 @@ public class TenantOnboardingService {
             transactionTemplate.executeWithoutResult(status ->
                     createAdminUser(adminEmail, adminFullName, rawPassword));
         } catch (RuntimeException ex) {
-            tenantRepository.deleteById(tenant.getId());
+            log.error("El alta del administrador fallo para el tenant {}; se compensa "
+                            + "borrando el tenant y su suscripcion. Causa original: {}",
+                    tenant.getId(), ex.getMessage(), ex);
+            try {
+                tenantRepository.deleteById(tenant.getId());
+            } catch (RuntimeException compensationFailure) {
+                log.error("La compensacion (borrar el tenant {}) tambien fallo; el tenant "
+                                + "queda huerfano y requiere limpieza manual.",
+                        tenant.getId(), compensationFailure);
+                ex.addSuppressed(compensationFailure);
+            }
             throw ex;
         } finally {
             TenantContext.clear();
