@@ -9,13 +9,29 @@ import { useSession } from "@/hooks/use-session";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@/lib/types";
 
-/** Navegacion disponible por rol. Cada rol solo ve su propia seccion. */
+const NAV_ADMIN = { href: "/admin", label: "Administracion" };
+const NAV_WAITER = { href: "/waiter", label: "Mesas" };
+const NAV_KITCHEN = { href: "/kitchen", label: "Cocina" };
+const NAV_CASHIER = { href: "/cashier", label: "Caja" };
+
+/**
+ * Navegacion disponible por rol.
+ *
+ * ADMIN ve las cuatro secciones operativas, y no es una concesion: en el
+ * backend ADMIN aparece en todos los @PreAuthorize del flujo -- ordenes son
+ * hasAnyRole('WAITER','ADMIN'), el tablero de cocina es hasAnyRole('KITCHEN',
+ * 'ADMIN') y el cobro es hasAnyRole('CASHIER','ADMIN'). La barra refleja la
+ * autoridad real en vez de inventar una restriccion que el servidor no aplica.
+ *
+ * SUPER_ADMIN solo ve la plataforma porque pertenece al tenant tecnico
+ * 'platform', que no tiene mesas, productos ni comandas.
+ */
 const NAV_ITEMS_BY_ROLE: Record<UserRole, { href: string; label: string }[]> = {
   SUPER_ADMIN: [{ href: "/platform", label: "Plataforma" }],
-  ADMIN: [{ href: "/admin", label: "Administracion" }],
-  WAITER: [{ href: "/waiter", label: "Mesas" }],
-  KITCHEN: [{ href: "/kitchen", label: "Cocina" }],
-  CASHIER: [{ href: "/cashier", label: "Caja" }],
+  ADMIN: [NAV_ADMIN, NAV_WAITER, NAV_KITCHEN, NAV_CASHIER],
+  WAITER: [NAV_WAITER],
+  KITCHEN: [NAV_KITCHEN],
+  CASHIER: [NAV_CASHIER],
 };
 
 /**
