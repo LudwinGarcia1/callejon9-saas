@@ -1,3 +1,11 @@
+import { Suspense } from "react";
+
+import { LoginView } from "./login-view";
+
 export default function LoginPage() {
-  return <h1>Iniciar sesion</h1>;
+  return (
+    <Suspense>
+      <LoginView />
+    </Suspense>
+  );
 }
