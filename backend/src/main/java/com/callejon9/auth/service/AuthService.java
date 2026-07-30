@@ -2,12 +2,15 @@ package com.callejon9.auth.service;
 
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.repository.TenantRepository;
+import com.callejon9.shared.error.ResourceNotFoundException;
 import com.callejon9.tenancy.TenantContext;
 import com.callejon9.user.domain.User;
 import com.callejon9.user.repository.UserRepository;
+import java.util.UUID;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
@@ -15,6 +18,10 @@ public class AuthService {
 
     /** Resultado de una autenticacion exitosa. */
     public record AuthenticatedUser(User user, String accessToken) {
+    }
+
+    /** Identidad resuelta para GET /me: el usuario autenticado y su tenant. */
+    public record CurrentUser(User user, Tenant tenant) {
     }
 
     private final TenantRepository tenantRepository;
@@ -65,6 +72,27 @@ public class AuthService {
         } finally {
             TenantContext.clear();
         }
+    }
+
+    /**
+     * Resuelve al usuario autenticado y su tenant para GET /me.
+     *
+     * <p>A diferencia de {@link #authenticate}, aqui si alcanza con
+     * {@code @Transactional} declarativo: {@link com.callejon9.tenancy.TenantFilter}
+     * ya fijo el {@link TenantContext} antes de que la peticion llegara al
+     * controller, es decir, antes de que esta transaccion se abra (regla que
+     * {@code TenantAwareTransactionManager} exige en su {@code doBegin}).
+     */
+    @Transactional(readOnly = true)
+    public CurrentUser currentUser(UUID userId) {
+        UUID tenantId = TenantContext.require();
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("El usuario no existe."));
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("El restaurante no existe."));
+
+        return new CurrentUser(user, tenant);
     }
 
     private User loadUser(String email) {
