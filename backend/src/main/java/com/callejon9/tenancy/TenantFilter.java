@@ -50,6 +50,23 @@ public class TenantFilter extends OncePerRequestFilter {
         }
     }
 
+    /**
+     * Un {@code response.sendError(...)} en un Tomcat real (no en MockMvc)
+     * dispara un segundo despacho interno con DispatcherType.ERROR hacia
+     * "/error", que atraviesa de nuevo toda la cadena de filtros de Spring
+     * Security. OncePerRequestFilter se salta ese segundo despacho por
+     * defecto, pero este filtro es quien traduce la cookie JWT en la
+     * Authentication: si no corriera tambien ahi, el segundo paso veria un
+     * contexto vacio (relleno luego por AnonymousAuthenticationFilter) y
+     * ExceptionTranslationFilter, al ver una autenticacion anonima, llamaria
+     * otra vez a sendError — esta vez con 401 — pisando el 403 correcto que
+     * ya se habia calculado en el primer paso.
+     */
+    @Override
+    protected boolean shouldNotFilterErrorDispatch() {
+        return false;
+    }
+
     private void authenticate(String token, HttpServletRequest request) {
         try {
             JwtService.TokenClaims claims = jwtService.parse(token);
