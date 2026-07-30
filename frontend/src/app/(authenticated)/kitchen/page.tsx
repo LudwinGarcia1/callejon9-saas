@@ -1,3 +1,5 @@
+import { KitchenView } from "./kitchen-view";
+
 export default function KitchenPage() {
-  return <h1>Cocina</h1>;
+  return <KitchenView />;
 }
