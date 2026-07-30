@@ -1,3 +1,5 @@
+import { CashierView } from "./cashier-view";
+
 export default function CashierPage() {
-  return <h1>Caja</h1>;
+  return <CashierView />;
 }
