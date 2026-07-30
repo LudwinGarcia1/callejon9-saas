@@ -1,0 +1,19 @@
+# Perfil exclusivo para la presentacion.
+#
+# El default de produccion son 15 minutos, y se queda asi a proposito:
+# una sesion corta es la decision correcta y es la que se defiende. Lo
+# que no se puede permitir es que el token expire a mitad de la
+# demostracion, asi que este perfil lo extiende a dos horas.
+#
+# Uso:
+#   .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=demo"
+#
+# Nunca activar este perfil en un entorno real.
+
+app:
+  jwt:
+    access-token-minutes: 120
+
+logging:
+  level:
+    com.callejon9: DEBUG
