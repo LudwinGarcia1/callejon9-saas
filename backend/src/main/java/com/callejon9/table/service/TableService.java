@@ -60,4 +60,15 @@ public class TableService {
         table.setWaiterId(waiterId);
         return tableRepository.save(table);
     }
+
+    /** Libera una mesa al cerrar la cuenta (checkout). */
+    @Transactional
+    public RestaurantTable free(UUID tableId) {
+        RestaurantTable table = tableRepository.findById(tableId)
+                .orElseThrow(() -> new ResourceNotFoundException("La mesa no existe."));
+
+        table.setStatus(TableStatus.FREE);
+        table.setWaiterId(null);
+        return tableRepository.save(table);
+    }
 }

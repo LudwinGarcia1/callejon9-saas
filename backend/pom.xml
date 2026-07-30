@@ -21,6 +21,7 @@
 		<springdoc.version>2.8.6</springdoc.version>
 		<jjwt.version>0.12.6</jjwt.version>
 		<totp.version>1.7.1</totp.version>
+		<openpdf.version>2.4.0</openpdf.version>
 	</properties>
 
 	<dependencies>
@@ -96,6 +97,15 @@
 			<groupId>dev.samstevens.totp</groupId>
 			<artifactId>totp</artifactId>
 			<version>${totp.version}</version>
+		</dependency>
+
+		<!-- Genera el PDF del ticket. 2.4.0 es la ultima version "core legacy"
+		     (paquete com.lowagie.text): las lineas 1.4.x/3.x renombran el
+		     paquete a org.openpdf y son mas nuevas/menos probadas. -->
+		<dependency>
+			<groupId>com.github.librepdf</groupId>
+			<artifactId>openpdf</artifactId>
+			<version>${openpdf.version}</version>
 		</dependency>
 
 		<dependency>
