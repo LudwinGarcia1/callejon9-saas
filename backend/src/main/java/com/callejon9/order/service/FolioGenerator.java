@@ -19,19 +19,28 @@ import org.springframework.stereotype.Component;
  * garantiza, con una operacion atomica, que cada folio nuevo use un segundo
  * estrictamente mayor al anterior — nunca repetido dentro de esta instancia
  * de la aplicacion, sin reintentos ni bloqueos de base de datos.
+ *
+ * <p>El mismo esquema sirve para los folios de ticket ({@code TCK-}): en vez
+ * de duplicar la logica de unicidad, {@link #next(String)} generaliza el
+ * prefijo y {@link #next()} conserva el comportamiento original para las
+ * ordenes.
  */
 @Component
 public class FolioGenerator {
 
-    private static final String PREFIX = "ORD-";
+    private static final String ORDER_PREFIX = "ORD-";
     private static final DateTimeFormatter FORMAT =
             DateTimeFormatter.ofPattern("yyMMddHHmmss").withZone(ZoneOffset.UTC);
 
     private final AtomicLong lastIssuedEpochSecond = new AtomicLong(0);
 
     public String next() {
+        return next(ORDER_PREFIX);
+    }
+
+    public String next(String prefix) {
         long now = Instant.now().getEpochSecond();
         long issued = lastIssuedEpochSecond.updateAndGet(previous -> Math.max(previous + 1, now));
-        return PREFIX + FORMAT.format(Instant.ofEpochSecond(issued));
+        return prefix + FORMAT.format(Instant.ofEpochSecond(issued));
     }
 }
