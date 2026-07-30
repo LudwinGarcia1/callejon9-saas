@@ -45,10 +45,20 @@ public class TableService {
                 .build());
     }
 
-    /** Ocupa una mesa libre para abrir una orden nueva. */
+    /**
+     * Ocupa una mesa libre para abrir una orden nueva.
+     *
+     * <p>Usa {@code findByIdForUpdate} (SELECT ... FOR UPDATE) en vez de
+     * {@code findById}: sin el lock, bajo READ COMMITTED, dos peticiones
+     * concurrentes pueden leer ambas el estado FREE, escribir OCCUPIED las
+     * dos y crear dos ordenes para la misma mesa sin que ninguna falle. No
+     * hay restriccion UNIQUE en {@code orders.table_id} que lo atrape: el
+     * lock de fila es lo que serializa a la segunda peticion detras de la
+     * primera para que su lectura del estado sea la actualizada.
+     */
     @Transactional
     public RestaurantTable occupy(UUID tableId, UUID waiterId) {
-        RestaurantTable table = tableRepository.findById(tableId)
+        RestaurantTable table = tableRepository.findByIdForUpdate(tableId)
                 .orElseThrow(() -> new ResourceNotFoundException("La mesa no existe."));
 
         if (table.getStatus() != TableStatus.FREE) {
