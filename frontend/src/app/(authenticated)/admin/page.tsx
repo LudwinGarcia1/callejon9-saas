@@ -1,3 +1,5 @@
+import { AdminView } from "./admin-view";
+
 export default function AdminPage() {
-  return <h1>Administracion</h1>;
+  return <AdminView />;
 }
