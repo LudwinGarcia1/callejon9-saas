@@ -7,8 +7,9 @@ spring:
   # callejon9_owner, que si puede crear y alterar el esquema.
   datasource:
     # Puerto 5433: esta maquina ya tenia un PostgreSQL 18 ocupando el 5432,
-    # asi que el instalador del 16 tomo el siguiente libre.
-    url: jdbc:postgresql://localhost:5433/callejon9
+    # asi que el instalador del 16 tomo el siguiente libre. En CI se sobreescribe
+    # con la variable de entorno DB_PORT para apuntar al contenedor de servicio.
+    url: jdbc:postgresql://localhost:${DB_PORT:5433}/callejon9
     username: callejon9_app
     password: ${DB_APP_PASSWORD:app_dev_pwd}
     hikari:
