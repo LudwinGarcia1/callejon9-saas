@@ -1,3 +1,5 @@
+import { PlatformView } from "./platform-view";
+
 export default function PlatformPage() {
-  return <h1>Panel de plataforma</h1>;
+  return <PlatformView />;
 }
