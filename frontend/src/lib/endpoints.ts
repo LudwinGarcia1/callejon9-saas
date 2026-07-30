@@ -14,35 +14,32 @@ export const endpoints = {
   platform: {
     plans: () => "/api/v1/platform/plans",
   },
+  // El backend no expone GET por id para mesas, categorias ni productos:
+  // esas colecciones se leen completas y se filtran en el cliente.
   tables: {
     list: () => "/api/v1/tables",
     create: () => "/api/v1/tables",
-    detail: (tableId: string) => `/api/v1/tables/${tableId}`,
   },
   categories: {
     list: () => "/api/v1/categories",
     create: () => "/api/v1/categories",
-    detail: (categoryId: string) => `/api/v1/categories/${categoryId}`,
   },
   products: {
     list: () => "/api/v1/products",
     create: () => "/api/v1/products",
-    detail: (productId: string) => `/api/v1/products/${productId}`,
   },
   orders: {
     list: () => "/api/v1/orders",
     open: () => "/api/v1/orders",
     detail: (orderId: string) => `/api/v1/orders/${orderId}`,
     items: (orderId: string) => `/api/v1/orders/${orderId}/items`,
-    /** No verificado contra el backend. */
+    sendToKitchen: (orderId: string) => `/api/v1/orders/${orderId}/send-to-kitchen`,
     checkout: (orderId: string) => `/api/v1/orders/${orderId}/checkout`,
   },
-  /** No verificado contra el backend: workstream de cocina en construccion. */
   kitchen: {
     orders: () => "/api/v1/kitchen/orders",
     itemStatus: (itemId: string) => `/api/v1/kitchen/items/${itemId}/status`,
   },
-  /** No verificado contra el backend: workstream de tickets en construccion. */
   tickets: {
     detail: (ticketId: string) => `/api/v1/tickets/${ticketId}`,
     pdf: (ticketId: string) => `/api/v1/tickets/${ticketId}/pdf`,
