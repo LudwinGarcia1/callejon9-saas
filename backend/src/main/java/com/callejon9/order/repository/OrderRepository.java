@@ -11,4 +11,7 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     List<Order> findAllByOrderByOpenedAtDesc();
 
     List<Order> findByStatusOrderByOpenedAtDesc(OrderStatus status);
+
+    /** Tablero de cocina: las ordenes enviadas, la mas antigua primero. */
+    List<Order> findByStatusOrderBySentToKitchenAtAsc(OrderStatus status);
 }
