@@ -6,8 +6,10 @@ import com.callejon9.order.domain.KitchenItemStatus;
 import com.callejon9.order.domain.Order;
 import com.callejon9.order.domain.OrderItem;
 import com.callejon9.order.domain.OrderStatus;
+import com.callejon9.order.event.OrderSentToKitchenEvent;
 import com.callejon9.order.repository.OrderItemRepository;
 import com.callejon9.order.repository.OrderRepository;
+import com.callejon9.order.web.dto.OrderResponse;
 import com.callejon9.shared.error.BusinessRuleException;
 import com.callejon9.shared.error.ResourceNotFoundException;
 import com.callejon9.table.service.TableService;
@@ -15,6 +17,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,18 +34,21 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final TableService tableService;
     private final FolioGenerator folioGenerator;
+    private final ApplicationEventPublisher eventPublisher;
 
     public OrderService(
             OrderRepository orderRepository,
             OrderItemRepository orderItemRepository,
             ProductRepository productRepository,
             TableService tableService,
-            FolioGenerator folioGenerator) {
+            FolioGenerator folioGenerator,
+            ApplicationEventPublisher eventPublisher) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.productRepository = productRepository;
         this.tableService = tableService;
         this.folioGenerator = folioGenerator;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -123,7 +129,10 @@ public class OrderService {
         items.forEach(item -> item.setKitchenStatus(KitchenItemStatus.PENDING));
         orderItemRepository.saveAll(items);
 
-        return new OrderWithItems(order, items);
+        OrderWithItems result = new OrderWithItems(order, items);
+        eventPublisher.publishEvent(
+                new OrderSentToKitchenEvent(order.getTenantId(), OrderResponse.from(result)));
+        return result;
     }
 
     private OrderItem toOrderItem(UUID orderId, NewOrderItem newItem, Instant now) {
