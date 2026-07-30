@@ -1,3 +1,15 @@
+### Secretos: nunca commitear ###
+.env
+.env.local
+
+### Frontend ###
+node_modules/
+.next/
+out/
+
+### Logs ###
+*.log
+
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
