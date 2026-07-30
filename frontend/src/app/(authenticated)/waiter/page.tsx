@@ -1,3 +1,5 @@
+import { WaiterView } from "./waiter-view";
+
 export default function WaiterPage() {
-  return <h1>Meseros</h1>;
+  return <WaiterView />;
 }
