@@ -7,6 +7,9 @@ export const queryKeys = {
   session: {
     me: () => ["session", "me"] as const,
   },
+  platform: {
+    plans: () => ["platform", "plans"] as const,
+  },
   tables: {
     all: () => ["tables"] as const,
     detail: (tableId: string) => ["tables", tableId] as const,

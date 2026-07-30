@@ -162,13 +162,7 @@ export interface AddOrderItemsRequest {
   }[];
 }
 
-// ---------------------------------------------------------------------------
-// No verificado todavia contra el backend: este trabajo esta aterrizando en
-// paralelo en el workstream de backend. Escrito contra el contrato esperado;
-// puede requerir ajustes cuando los endpoints existan de verdad.
-// ---------------------------------------------------------------------------
-
-/** GET /api/v1/auth/me — todavia no existe en el backend. */
+/** GET /api/v1/auth/me — verificado contra AuthController.me / MeResponse. */
 export interface SessionResponse {
   userId: string;
   fullName: string;
@@ -178,30 +172,66 @@ export interface SessionResponse {
   restaurantName: string;
 }
 
-/** GET /api/v1/tickets/{id} — mejor esfuerzo, no verificado. */
-export interface TicketResponse {
+// ---------------------------------------------------------------------------
+// Cocina, cobro y tickets: verificado contra KitchenController/KitchenService,
+// CheckoutController/CheckoutService y TicketController en
+// backend/src/main/java/com/callejon9/{kitchen,sale,ticket}.
+// ---------------------------------------------------------------------------
+
+/** GET /api/v1/kitchen/orders — verificado contra KitchenItemResponse. */
+export interface KitchenItemResponse {
   id: string;
   orderId: string;
-  folio: string;
-  total: number;
-  paymentMethod: PaymentMethod;
-  tipAmount: number;
-  issuedAt: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  kitchenStatus: KitchenItemStatus;
+  notes: string | null;
 }
 
-/** POST /api/v1/orders/{id}/checkout — mejor esfuerzo, no verificado. */
+/** GET /api/v1/kitchen/orders — verificado contra KitchenOrderResponse. */
+export interface KitchenOrderResponse {
+  id: string;
+  folio: string;
+  tableId: string | null;
+  status: OrderStatus;
+  sentToKitchenAt: string | null;
+  items: KitchenItemResponse[];
+}
+
+/** POST /api/v1/kitchen/items/{itemId}/status — verificado contra UpdateKitchenItemStatusRequest. */
+export interface UpdateKitchenItemStatusRequest {
+  status: KitchenItemStatus;
+}
+
+/** POST /api/v1/orders/{id}/checkout — verificado contra CheckoutRequest (sale). */
 export interface CheckoutRequest {
   paymentMethod: PaymentMethod;
   tipPercent: number;
 }
 
-/** GET /api/v1/kitchen/orders — mejor esfuerzo, no verificado. */
-export interface KitchenOrder {
+/** Fotografia inmutable de una linea del ticket — verificado contra TicketItemSnapshot. */
+export interface TicketItemSnapshot {
+  productId: string;
+  productName: string;
+  unitPrice: number;
+  quantity: number;
+  subtotal: number;
+}
+
+/** GET /api/v1/tickets/{id} y respuesta de POST checkout — verificado contra TicketResponse. */
+export interface TicketResponse {
+  id: string;
+  saleId: string;
   orderId: string;
   folio: string;
-  tableNumber: number | null;
-  openedAt: string;
-  items: OrderItemResponse[];
+  items: TicketItemSnapshot[];
+  subtotal: number;
+  tip: number;
+  tipPercent: number;
+  total: number;
+  paymentMethod: PaymentMethod;
+  closedAt: string;
 }
 
 // ---------------------------------------------------------------------------
