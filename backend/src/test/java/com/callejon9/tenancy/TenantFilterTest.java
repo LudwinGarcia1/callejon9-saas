@@ -52,6 +52,13 @@ class TenantFilterTest {
 
     @Test
     void adminIsForbiddenFromPlatformEndpoints() throws Exception {
+        // MockMvc solo ve la primera pasada de la cadena de filtros:
+        // MockHttpServletResponse.sendError(...) anota el codigo de estado
+        // pero no reproduce el redespacho de error de un Tomcat real
+        // (DispatcherType.ERROR hacia "/error"), que vuelve a atravesar toda
+        // la cadena de Spring Security. Por eso esta prueba no es suficiente
+        // por si sola para garantizar el 403 contra el servidor real — ver
+        // TenantFilterHttpTest, que si levanta un Tomcat embebido de verdad.
         mockMvc.perform(get("/api/v1/platform/plans")
                         .cookie(new Cookie("access_token", tokenFor(UserRole.ADMIN))))
                 .andExpect(status().isForbidden());
