@@ -59,17 +59,12 @@ class TenantFilterTest {
 
     @Test
     void loginEndpointIsPublic() throws Exception {
-        // POST /api/v1/auth/login todavia no existe (llega en una tarea
-        // posterior); por eso un GET no puede dar 405 Method Not Allowed
-        // como haria una vez este mapeado, porque no hay ningun handler
-        // registrado bajo esa ruta. Lo que si prueba esta asercion es que la
-        // peticion no fue rechazada por el filtro de seguridad: un 401 aqui
-        // significaria que "/api/v1/auth/**" dejo de ser publico. Un 404
-        // demuestra que la peticion atraveso la cadena de seguridad sin
-        // autenticacion y llego al DispatcherServlet, que es la garantia que
-        // este test necesita verificar en esta tarea.
+        // Un GET contra una ruta mapeada solo a POST da 405 Method Not
+        // Allowed. Eso prueba que la peticion atraveso la cadena de seguridad
+        // sin autenticacion y llego al DispatcherServlet: un 401 aqui
+        // significaria que "/api/v1/auth/**" dejo de ser publico.
         mockMvc.perform(get("/api/v1/auth/login"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isMethodNotAllowed());
     }
 
     @Test

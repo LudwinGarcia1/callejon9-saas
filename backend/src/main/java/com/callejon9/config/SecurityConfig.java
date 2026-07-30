@@ -41,7 +41,8 @@ public class SecurityConfig {
                         new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**", "/api/v1/signup").permitAll()
-                        .requestMatchers("/actuator/health", "/v3/api-docs/**", "/swagger-ui/**")
+                        .requestMatchers("/actuator/health", "/v3/api-docs/**",
+                                "/swagger-ui.html", "/swagger-ui/**")
                             .permitAll()
                         .requestMatchers("/api/v1/platform/**").hasRole("SUPER_ADMIN")
                         .anyRequest().authenticated())
