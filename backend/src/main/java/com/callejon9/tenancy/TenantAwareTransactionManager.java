@@ -16,21 +16,20 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * A LA TRANSACCION. Esto es lo que impide que el tenant se filtre a otra
  * peticion cuando HikariCP devuelve la conexion al pool.
  *
- * IMPORTANTE: la variable se fija en TODAS las transacciones, incluso sin
- * tenant activo. Postgres crea "app.tenant_id" como un GUC de tipo placeholder
- * la primera vez que se usa en una conexion; a partir de ese momento,
- * current_setting('app.tenant_id', true) ya no vuelve a devolver NULL cuando
- * la variable esta "sin fijar" dentro de esa misma conexion fisica, sino
- * cadena vacia (''), y ''::uuid lanza una excepcion en vez de simplemente no
- * revelar filas. Con un pool de conexiones (HikariCP) esto es inevitable en
- * cuanto una transaccion cualquiera fijo el tenant en esa conexion. Por eso,
- * cuando no hay tenant activo se fija el UUID nulo (todo ceros), que nunca
- * coincide con un tenant_id real (tenants.id usa gen_random_uuid()): RLS sigue
- * ocultando todas las filas, pero de forma silenciosa en vez de lanzar error.
+ * Sin tenant no se fija la variable: RLS entonces no revela ninguna fila.
+ * Fallar cerrado es deliberado. Esto es seguro incluso cuando una conexion
+ * pooled ya tuvo un tenant real fijado antes (y por lo tanto
+ * current_setting('app.tenant_id', true) devuelve '' en vez de NULL, un
+ * detalle de los GUC personalizados de Postgres) porque la politica RLS
+ * (V5__rls_policy_null_safe.sql) envuelve la lectura en
+ * nullif(current_setting(...), '')::uuid, convirtiendo esa cadena vacia en
+ * NULL antes del cast. La garantia de aislamiento vive en el motor, no aqui:
+ * cualquier otro camino que llegue a estas tablas sin pasar por este
+ * TransactionManager (otro bean transaccional, un job con JdbcTemplate
+ * crudo, una conexion tomada directo del pool) queda igual de cerrado por
+ * la politica, sin depender de que Java recuerde fijar nada.
  */
 public class TenantAwareTransactionManager extends JpaTransactionManager {
-
-    private static final UUID NO_TENANT = new UUID(0L, 0L);
 
     public TenantAwareTransactionManager(EntityManagerFactory entityManagerFactory) {
         super(entityManagerFactory);
@@ -41,7 +40,11 @@ public class TenantAwareTransactionManager extends JpaTransactionManager {
         super.doBegin(transaction, definition);
 
         UUID tenantId = TenantContext.currentOrNull();
-        String tenantValue = (tenantId != null ? tenantId : NO_TENANT).toString();
+        if (tenantId == null) {
+            // Sin tenant no se fija la variable: RLS entonces no revela ninguna
+            // fila. Fallar cerrado es deliberado.
+            return;
+        }
 
         EntityManagerFactory emf = Objects.requireNonNull(getEntityManagerFactory());
         EntityManagerHolder holder =
@@ -50,7 +53,7 @@ public class TenantAwareTransactionManager extends JpaTransactionManager {
 
         entityManager
                 .createNativeQuery("SELECT set_config('app.tenant_id', :tenantId, true)")
-                .setParameter("tenantId", tenantValue)
+                .setParameter("tenantId", tenantId.toString())
                 .getSingleResult();
     }
 }
