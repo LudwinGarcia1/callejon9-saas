@@ -21,7 +21,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -63,6 +65,16 @@ class TableControllerTest {
 
     private Cookie cookieFor(User user) {
         return new Cookie("access_token", jwtService.generateAccessToken(user));
+    }
+
+    private UUID createTable(int number, int capacity) throws Exception {
+        String body = mockMvc.perform(post("/api/v1/tables")
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"number\":" + number + ",\"capacity\":" + capacity + "}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return UUID.fromString(body.replaceAll(".*\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
     }
 
     @Test
@@ -128,5 +140,78 @@ class TableControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].number").value(3))
                 .andExpect(jsonPath("$[0].status").value("FREE"));
+    }
+
+    @Test
+    @DisplayName("ADMIN puede renumerar una mesa y cambiar su capacidad")
+    void adminCanUpdateATable() throws Exception {
+        UUID tableId = createTable(7, 4);
+
+        mockMvc.perform(put("/api/v1/tables/" + tableId)
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"number\":8,\"capacity\":6}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.number").value(8))
+                .andExpect(jsonPath("$.capacity").value(6));
+    }
+
+    @Test
+    @DisplayName("renumerar una mesa a un numero ya usado por otra mesa da 409")
+    void renumberingATableOntoAnExistingNumberIsRejected() throws Exception {
+        createTable(1, 4);
+        UUID secondTableId = createTable(2, 4);
+
+        mockMvc.perform(put("/api/v1/tables/" + secondTableId)
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"number\":1,\"capacity\":4}"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    @DisplayName("editar una mesa que no existe da 404")
+    void updatingANonexistentTableGives404() throws Exception {
+        mockMvc.perform(put("/api/v1/tables/" + UUID.randomUUID())
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"number\":1,\"capacity\":4}"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("PATCH da de baja una mesa y esta deja de aparecer en el listado")
+    void patchDeactivatesATableAndItDisappearsFromTheListing() throws Exception {
+        UUID tableId = createTable(9, 4);
+
+        mockMvc.perform(patch("/api/v1/tables/" + tableId)
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"active\":false}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.active").value(false));
+
+        mockMvc.perform(get("/api/v1/tables").cookie(cookieFor(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("un WAITER no puede editar ni dar de baja mesas")
+    void waiterCannotUpdateOrDeactivateTables() throws Exception {
+        UUID tableId = createTable(4, 4);
+        User waiter = fakeUser(tenant.getId(), UserRole.WAITER);
+
+        mockMvc.perform(put("/api/v1/tables/" + tableId)
+                        .cookie(cookieFor(waiter))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"number\":10,\"capacity\":4}"))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(patch("/api/v1/tables/" + tableId)
+                        .cookie(cookieFor(waiter))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"active\":false}"))
+                .andExpect(status().isForbidden());
     }
 }

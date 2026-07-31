@@ -8,11 +8,12 @@ public record TableResponse(
         int number,
         int capacity,
         String status,
-        UUID waiterId) {
+        UUID waiterId,
+        boolean active) {
 
     public static TableResponse from(RestaurantTable table) {
         return new TableResponse(
                 table.getId(), table.getNumber(), table.getCapacity(),
-                table.getStatus().name(), table.getWaiterId());
+                table.getStatus().name(), table.getWaiterId(), table.isActive());
     }
 }
