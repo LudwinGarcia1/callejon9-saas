@@ -85,6 +85,7 @@ export interface TableResponse {
   capacity: number;
   status: TableStatus;
   waiterId: string | null;
+  active: boolean;
 }
 
 export interface CategoryResponse {
@@ -147,6 +148,39 @@ export interface CreateProductRequest {
   description?: string;
   price: number;
   categoryId?: string;
+}
+
+/** PUT /api/v1/products/{id} — verificado contra UpdateProductRequest. El
+ * precio nuevo nunca toca las lineas de ordenes ya existentes: cada una
+ * conserva su propia copia del precio al momento de agregarse. */
+export interface UpdateProductRequest {
+  name: string;
+  description?: string;
+  price: number;
+  categoryId?: string;
+}
+
+/** PATCH /api/v1/products/{id} — verificado contra UpdateProductStatusRequest. */
+export interface UpdateProductStatusRequest {
+  active: boolean;
+}
+
+/** PUT /api/v1/categories/{id} — verificado contra UpdateCategoryRequest.
+ * A diferencia del alta, aqui `sortOrder` es obligatorio. */
+export interface UpdateCategoryRequest {
+  name: string;
+  sortOrder: number;
+}
+
+/** PUT /api/v1/tables/{id} — verificado contra UpdateTableRequest. */
+export interface UpdateTableRequest {
+  number: number;
+  capacity: number;
+}
+
+/** PATCH /api/v1/tables/{id} — verificado contra UpdateTableStatusRequest. */
+export interface UpdateTableStatusRequest {
+  active: boolean;
 }
 
 /**
