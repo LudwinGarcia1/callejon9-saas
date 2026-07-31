@@ -19,14 +19,21 @@ export const endpoints = {
   tables: {
     list: () => "/api/v1/tables",
     create: () => "/api/v1/tables",
+    /** PUT: corrige numero/capacidad. PATCH: da de alta o de baja. Mismo path. */
+    update: (tableId: string) => `/api/v1/tables/${tableId}`,
+    updateStatus: (tableId: string) => `/api/v1/tables/${tableId}`,
   },
   categories: {
     list: () => "/api/v1/categories",
     create: () => "/api/v1/categories",
+    update: (categoryId: string) => `/api/v1/categories/${categoryId}`,
   },
   products: {
     list: () => "/api/v1/products",
     create: () => "/api/v1/products",
+    /** PUT: corrige nombre/descripcion/precio/categoria. PATCH: alta o baja. */
+    update: (productId: string) => `/api/v1/products/${productId}`,
+    updateStatus: (productId: string) => `/api/v1/products/${productId}`,
   },
   users: {
     list: () => "/api/v1/users",
@@ -40,6 +47,7 @@ export const endpoints = {
     items: (orderId: string) => `/api/v1/orders/${orderId}/items`,
     sendToKitchen: (orderId: string) => `/api/v1/orders/${orderId}/send-to-kitchen`,
     checkout: (orderId: string) => `/api/v1/orders/${orderId}/checkout`,
+    cancel: (orderId: string) => `/api/v1/orders/${orderId}/cancel`,
   },
   kitchen: {
     orders: () => "/api/v1/kitchen/orders",
