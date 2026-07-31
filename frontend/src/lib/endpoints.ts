@@ -56,5 +56,11 @@ export const endpoints = {
   tickets: {
     detail: (ticketId: string) => `/api/v1/tickets/${ticketId}`,
     pdf: (ticketId: string) => `/api/v1/tickets/${ticketId}/pdf`,
+    /** El folio va como query param (?folio=...), no como segmento de ruta. */
+    byFolio: () => "/api/v1/tickets",
+  },
+  sales: {
+    /** GET; acepta los query params opcionales `from`/`to` (fechas ISO). */
+    history: () => "/api/v1/sales",
   },
 };

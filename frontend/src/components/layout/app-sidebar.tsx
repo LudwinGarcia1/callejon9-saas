@@ -13,25 +13,29 @@ const NAV_ADMIN = { href: "/admin", label: "Administracion" };
 const NAV_WAITER = { href: "/waiter", label: "Mesas" };
 const NAV_KITCHEN = { href: "/kitchen", label: "Cocina" };
 const NAV_CASHIER = { href: "/cashier", label: "Caja" };
+const NAV_HISTORY = { href: "/history", label: "Historial" };
 
 /**
  * Navegacion disponible por rol.
  *
- * ADMIN ve las cuatro secciones operativas, y no es una concesion: en el
+ * ADMIN ve las cinco secciones operativas, y no es una concesion: en el
  * backend ADMIN aparece en todos los @PreAuthorize del flujo -- ordenes son
  * hasAnyRole('WAITER','ADMIN'), el tablero de cocina es hasAnyRole('KITCHEN',
  * 'ADMIN') y el cobro es hasAnyRole('CASHIER','ADMIN'). La barra refleja la
  * autoridad real en vez de inventar una restriccion que el servidor no aplica.
+ * El historial de ventas (GET /api/v1/sales) no tiene @PreAuthorize -- cualquier
+ * autenticado puede consultarlo -- pero solo tiene sentido operativo para quien
+ * cobra (CASHIER) o administra el restaurante (ADMIN).
  *
  * SUPER_ADMIN solo ve la plataforma porque pertenece al tenant tecnico
  * 'platform', que no tiene mesas, productos ni comandas.
  */
 const NAV_ITEMS_BY_ROLE: Record<UserRole, { href: string; label: string }[]> = {
   SUPER_ADMIN: [{ href: "/platform", label: "Plataforma" }],
-  ADMIN: [NAV_ADMIN, NAV_WAITER, NAV_KITCHEN, NAV_CASHIER],
+  ADMIN: [NAV_ADMIN, NAV_WAITER, NAV_KITCHEN, NAV_CASHIER, NAV_HISTORY],
   WAITER: [NAV_WAITER],
   KITCHEN: [NAV_KITCHEN],
-  CASHIER: [NAV_CASHIER],
+  CASHIER: [NAV_CASHIER, NAV_HISTORY],
 };
 
 /**

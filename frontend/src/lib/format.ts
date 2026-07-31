@@ -35,3 +35,8 @@ export function formatShortDate(iso: string): string {
 export function formatShortTime(iso: string): string {
   return timeFormatter.format(new Date(iso));
 }
+
+/** Fecha de hoy en formato `yyyy-MM-dd`, para precargar un input `type="date"`. */
+export function todayIsoDate(): string {
+  return new Date().toISOString().slice(0, 10);
+}
