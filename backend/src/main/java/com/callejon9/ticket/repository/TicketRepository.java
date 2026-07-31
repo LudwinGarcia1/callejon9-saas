@@ -1,6 +1,7 @@
 package com.callejon9.ticket.repository;
 
 import com.callejon9.ticket.domain.Ticket;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -9,4 +10,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * limitan las filas visibles al tenant activo.
  */
 public interface TicketRepository extends JpaRepository<Ticket, UUID> {
+
+    Optional<Ticket> findByFolio(String folio);
 }

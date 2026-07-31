@@ -32,6 +32,13 @@ public class TicketService {
                 .orElseThrow(() -> new ResourceNotFoundException("El ticket " + id + " no existe."));
     }
 
+    /** Para el historial de ventas: encontrar un ticket cuando solo se conoce su folio. */
+    @Transactional(readOnly = true)
+    public Ticket getTicketByFolio(String folio) {
+        return ticketRepository.findByFolio(folio)
+                .orElseThrow(() -> new ResourceNotFoundException("El ticket con folio " + folio + " no existe."));
+    }
+
     @Transactional(readOnly = true)
     public byte[] generatePdf(UUID id) {
         Ticket ticket = getTicket(id);
