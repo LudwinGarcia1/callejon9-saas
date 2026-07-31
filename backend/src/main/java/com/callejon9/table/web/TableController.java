@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -31,8 +32,9 @@ public class TableController {
     }
 
     @GetMapping
-    public List<TableResponse> list() {
-        return tableService.listActiveTables().stream()
+    public List<TableResponse> list(
+            @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
+        return tableService.listTables(includeInactive).stream()
                 .map(TableResponse::from)
                 .toList();
     }

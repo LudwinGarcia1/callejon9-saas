@@ -197,6 +197,53 @@ class TableControllerTest {
     }
 
     @Test
+    @DisplayName("GET /tables?includeInactive=true incluye mesas dadas de baja")
+    void listWithIncludeInactiveIncludesInactiveTables() throws Exception {
+        UUID tableId = createTable(11, 4);
+
+        mockMvc.perform(patch("/api/v1/tables/" + tableId)
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"active\":false}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/tables").cookie(cookieFor(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        mockMvc.perform(get("/api/v1/tables").param("includeInactive", "true")
+                        .cookie(cookieFor(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].number").value(11))
+                .andExpect(jsonPath("$[0].active").value(false));
+    }
+
+    @Test
+    @DisplayName("reactivar una mesa la hace reaparecer en el listado por defecto")
+    void reactivatingATableMakesItReappearInTheDefaultListing() throws Exception {
+        UUID tableId = createTable(12, 4);
+
+        mockMvc.perform(patch("/api/v1/tables/" + tableId)
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"active\":false}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(patch("/api/v1/tables/" + tableId)
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"active\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.active").value(true));
+
+        mockMvc.perform(get("/api/v1/tables").cookie(cookieFor(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].number").value(12));
+    }
+
+    @Test
     @DisplayName("un WAITER no puede editar ni dar de baja mesas")
     void waiterCannotUpdateOrDeactivateTables() throws Exception {
         UUID tableId = createTable(4, 4);
