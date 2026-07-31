@@ -9,5 +9,8 @@ public interface CategoryRepository extends JpaRepository<Category, UUID> {
 
     boolean existsByName(String name);
 
+    /** Para renombrar una categoria existente sin chocar contra si misma. */
+    boolean existsByNameAndIdNot(String name, UUID id);
+
     List<Category> findAllByOrderBySortOrderAscNameAsc();
 }

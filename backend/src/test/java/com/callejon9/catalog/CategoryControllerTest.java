@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -59,6 +60,16 @@ class CategoryControllerTest {
 
     private Cookie cookieFor(User user) {
         return new Cookie("access_token", jwtService.generateAccessToken(user));
+    }
+
+    private UUID createCategory(String name) throws Exception {
+        String body = mockMvc.perform(post("/api/v1/categories")
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"" + name + "\"}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        return UUID.fromString(body.replaceAll(".*\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
     }
 
     @Test
@@ -115,5 +126,42 @@ class CategoryControllerTest {
                 .andExpect(jsonPath("$[0].name").value("Primero"))
                 .andExpect(jsonPath("$[1].name").value("Alfa"))
                 .andExpect(jsonPath("$[2].name").value("Zeta"));
+    }
+
+    @Test
+    @DisplayName("ADMIN puede editar el nombre y el orden de una categoria")
+    void adminCanUpdateACategory() throws Exception {
+        UUID categoryId = createCategory("Bebidas");
+
+        mockMvc.perform(put("/api/v1/categories/" + categoryId)
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Bebidas Frias\",\"sortOrder\":5}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Bebidas Frias"))
+                .andExpect(jsonPath("$.sortOrder").value(5));
+    }
+
+    @Test
+    @DisplayName("renombrar una categoria a un nombre ya usado por otra categoria da 409")
+    void renamingACategoryOntoAnExistingNameIsRejected() throws Exception {
+        createCategory("Bebidas");
+        UUID postresId = createCategory("Postres");
+
+        mockMvc.perform(put("/api/v1/categories/" + postresId)
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Bebidas\",\"sortOrder\":0}"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    @DisplayName("editar una categoria que no existe da 404")
+    void updatingANonexistentCategoryGives404() throws Exception {
+        mockMvc.perform(put("/api/v1/categories/" + UUID.randomUUID())
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Bebidas\",\"sortOrder\":0}"))
+                .andExpect(status().isNotFound());
     }
 }

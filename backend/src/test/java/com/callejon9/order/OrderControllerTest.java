@@ -31,7 +31,9 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -58,6 +60,7 @@ class OrderControllerTest {
     @Autowired private ProductRepository productRepository;
 
     private Tenant tenant;
+    private User admin;
     private User waiter;
     private RestaurantTable table;
     private Product product;
@@ -69,6 +72,9 @@ class OrderControllerTest {
 
         TenantContext.set(tenant.getId());
         try {
+            admin = transactionTemplate.execute(
+                    status -> userRepository.findByEmail("admin@ordenes.com").orElseThrow());
+
             waiter = transactionTemplate.execute(status -> userRepository.save(User.builder()
                     .email("mesero@ordenes.com").passwordHash("x").fullName("Mesero")
                     .role(UserRole.WAITER).active(true).build()));
@@ -133,6 +139,23 @@ class OrderControllerTest {
                 .andExpect(status().isConflict());
     }
 
+    @Test
+    @DisplayName("una mesa dada de baja no se puede abrir para una orden nueva")
+    void cannotOpenAnOrderOnADeactivatedTable() throws Exception {
+        mockMvc.perform(patch("/api/v1/tables/" + table.getId())
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"active\":false}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.active").value(false));
+
+        mockMvc.perform(post("/api/v1/orders")
+                        .cookie(cookieFor(waiter))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tableId\":\"" + table.getId() + "\",\"guestCount\":2}"))
+                .andExpect(status().isConflict());
+    }
+
     private UUID openOrder() throws Exception {
         String body = mockMvc.perform(post("/api/v1/orders")
                         .cookie(cookieFor(waiter))
@@ -175,6 +198,62 @@ class OrderControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].unitPrice").value(25.00))
                 .andExpect(jsonPath("$.total").value(50.00));
+    }
+
+    @Test
+    @DisplayName("cambiar el precio de un producto por PUT no afecta las ordenes ya abiertas")
+    void updatingAProductPriceThroughThePutEndpointDoesNotAffectAlreadyPlacedOrders() throws Exception {
+        UUID orderId = openOrder();
+        mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
+                        .cookie(cookieFor(waiter))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"items\":[{\"productId\":\"" + product.getId()
+                                + "\",\"quantity\":1}]}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(put("/api/v1/products/" + product.getId())
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"Taco","description":"Taco al pastor","price":99.00}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.price").value(99.00));
+
+        mockMvc.perform(get("/api/v1/orders/" + orderId).cookie(cookieFor(waiter)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].unitPrice").value(25.00))
+                .andExpect(jsonPath("$.total").value(25.00));
+    }
+
+    @Test
+    @DisplayName("dar de baja un producto no afecta las ordenes que ya lo incluyen; "
+            + "solo desaparece del catalogo")
+    void deactivatingAProductDoesNotAffectExistingOrdersOnlyHidesItFromTheCatalog() throws Exception {
+        UUID orderId = openOrder();
+        mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
+                        .cookie(cookieFor(waiter))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"items\":[{\"productId\":\"" + product.getId()
+                                + "\",\"quantity\":1}]}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(patch("/api/v1/products/" + product.getId())
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"active\":false}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.active").value(false));
+
+        mockMvc.perform(get("/api/v1/products").cookie(cookieFor(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        mockMvc.perform(get("/api/v1/orders/" + orderId).cookie(cookieFor(waiter)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].productName").value("Taco"))
+                .andExpect(jsonPath("$.items[0].unitPrice").value(25.00))
+                .andExpect(jsonPath("$.total").value(25.00));
     }
 
     @Test

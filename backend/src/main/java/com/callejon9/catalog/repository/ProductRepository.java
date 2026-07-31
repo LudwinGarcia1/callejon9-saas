@@ -10,4 +10,7 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
     List<Product> findByActiveTrueOrderByName();
 
     List<Product> findByActiveTrueAndCategoryIdOrderByName(UUID categoryId);
+
+    /** Para renombrar un producto existente sin chocar contra si mismo. */
+    boolean existsByNameAndIdNot(String name, UUID id);
 }

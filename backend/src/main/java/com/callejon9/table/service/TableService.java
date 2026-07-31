@@ -61,6 +61,11 @@ public class TableService {
         RestaurantTable table = tableRepository.findByIdForUpdate(tableId)
                 .orElseThrow(() -> new ResourceNotFoundException("La mesa no existe."));
 
+        if (!table.isActive()) {
+            throw new BusinessRuleException(
+                    "La mesa " + table.getNumber() + " esta dada de baja.");
+        }
+
         if (table.getStatus() != TableStatus.FREE) {
             throw new BusinessRuleException(
                     "La mesa " + table.getNumber() + " no esta disponible (" + table.getStatus() + ").");
@@ -79,6 +84,37 @@ public class TableService {
 
         table.setStatus(TableStatus.FREE);
         table.setWaiterId(null);
+        return tableRepository.save(table);
+    }
+
+    /** Corrige el numero o la capacidad de una mesa ya creada. */
+    @Transactional
+    public RestaurantTable updateTable(UUID tableId, int number, int capacity) {
+        RestaurantTable table = tableRepository.findById(tableId)
+                .orElseThrow(() -> new ResourceNotFoundException("La mesa no existe."));
+
+        if (tableRepository.existsByNumberAndIdNot(number, tableId)) {
+            throw new BusinessRuleException(
+                    "Ya existe una mesa con el numero " + number + ".");
+        }
+
+        table.setNumber(number);
+        table.setCapacity(capacity);
+        return tableRepository.save(table);
+    }
+
+    /**
+     * Da de alta o de baja una mesa. La baja es siempre logica (active =
+     * false): la mesa queda referenciada por las ordenes historicas que se
+     * abrieron en ella, y borrarla perderia esa atribucion. Una mesa dada de
+     * baja no aparece en el listado y {@link #occupy} la rechaza.
+     */
+    @Transactional
+    public RestaurantTable setActive(UUID tableId, boolean active) {
+        RestaurantTable table = tableRepository.findById(tableId)
+                .orElseThrow(() -> new ResourceNotFoundException("La mesa no existe."));
+
+        table.setActive(active);
         return tableRepository.save(table);
     }
 }
