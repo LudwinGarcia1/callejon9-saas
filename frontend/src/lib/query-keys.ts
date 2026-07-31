@@ -11,14 +11,23 @@ export const queryKeys = {
     plans: () => ["platform", "plans"] as const,
   },
   tables: {
-    all: () => ["tables"] as const,
+    /** Sin argumento: solo mesas activas (default del backend). Con
+     * `includeInactive = true`: la clave usada por la pantalla de
+     * administracion, que necesita ver tambien las dadas de baja. */
+    all: (includeInactive?: boolean) =>
+      includeInactive ? (["tables", { includeInactive: true }] as const) : (["tables"] as const),
     detail: (tableId: string) => ["tables", tableId] as const,
   },
   categories: {
     all: () => ["categories"] as const,
   },
   products: {
-    all: () => ["products"] as const,
+    /** Mismo criterio que {@link tables.all}: la administracion pide
+     * `includeInactive = true` para poder reactivar productos dados de baja. */
+    all: (includeInactive?: boolean) =>
+      includeInactive
+        ? (["products", { includeInactive: true }] as const)
+        : (["products"] as const),
     detail: (productId: string) => ["products", productId] as const,
   },
   users: {

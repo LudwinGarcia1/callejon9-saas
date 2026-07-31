@@ -31,10 +31,6 @@ interface EditTableDialogProps {
  * Dialogo para corregir el numero o la capacidad de una mesa ya existente.
  * Un numero repetido llega como 409 generico (violacion de restriccion
  * UNIQUE), igual que en el alta.
- *
- * No se invalida la lista de mesas al guardar: el GET solo devuelve mesas
- * activas, y si esta mesa estuviera inactiva un refetch la haria
- * desaparecer justo despues de editarla. Se actualiza el cache local.
  */
 export function EditTableDialog({ table, onOpenChange }: EditTableDialogProps) {
   const queryClient = useQueryClient();
@@ -47,9 +43,7 @@ export function EditTableDialog({ table, onOpenChange }: EditTableDialogProps) {
       return api.put<TableResponse>(endpoints.tables.update(table.id), payload);
     },
     onSuccess: (updated) => {
-      queryClient.setQueryData<TableResponse[]>(queryKeys.tables.all(), (previous) =>
-        previous?.map((item) => (item.id === updated.id ? updated : item)),
-      );
+      queryClient.invalidateQueries({ queryKey: queryKeys.tables.all(true) });
       toast.success(`Mesa ${updated.number} actualizada.`);
       onOpenChange(false);
     },
