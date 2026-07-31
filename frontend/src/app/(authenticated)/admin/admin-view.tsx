@@ -70,17 +70,20 @@ export function AdminView() {
   const [editingTable, setEditingTable] = useState<TableResponse | null>(null);
   const [editingCategory, setEditingCategory] = useState<CategoryResponse | null>(null);
   const [editingProduct, setEditingProduct] = useState<ProductResponse | null>(null);
+  /** A diferencia del mesero o el mapa de mesas, la administracion necesita
+   * ver (y reactivar) las filas dadas de baja, asi que pide el catalogo
+   * completo con `includeInactive = true`. */
   const tablesQuery = useQuery({
-    queryKey: queryKeys.tables.all(),
-    queryFn: () => api.get<TableResponse[]>(endpoints.tables.list()),
+    queryKey: queryKeys.tables.all(true),
+    queryFn: () => api.get<TableResponse[]>(endpoints.tables.list(), { includeInactive: true }),
   });
   const categoriesQuery = useQuery({
     queryKey: queryKeys.categories.all(),
     queryFn: () => api.get<CategoryResponse[]>(endpoints.categories.list()),
   });
   const productsQuery = useQuery({
-    queryKey: queryKeys.products.all(),
-    queryFn: () => api.get<ProductResponse[]>(endpoints.products.list()),
+    queryKey: queryKeys.products.all(true),
+    queryFn: () => api.get<ProductResponse[]>(endpoints.products.list(), { includeInactive: true }),
   });
   const ordersQuery = useQuery({
     queryKey: queryKeys.orders.all(),
@@ -109,21 +112,16 @@ export function AdminView() {
     },
   });
 
-  /**
-   * Da de alta o de baja una mesa. No se invalida la lista: GET /tables solo
-   * devuelve mesas activas, y un refetch justo despues de dar de baja
-   * escondería la fila que se acaba de desactivar, cuando la baja es logica
-   * y debe seguir viendose (marcada como inactiva) para poder reactivarla.
-   */
+  /** Da de alta o de baja una mesa. La lista de administracion pide
+   * `includeInactive = true`, asi que invalidarla y refetchear muestra la
+   * fila recien desactivada (marcada como inactiva) en vez de esconderla. */
   const toggleTableActiveMutation = useMutation({
     mutationFn: ({ tableId, active }: { tableId: string; active: boolean }) =>
       api.patch<TableResponse>(endpoints.tables.updateStatus(tableId), {
         active,
       } satisfies UpdateTableStatusRequest),
     onSuccess: (table) => {
-      queryClient.setQueryData<TableResponse[]>(queryKeys.tables.all(), (previous) =>
-        previous?.map((item) => (item.id === table.id ? table : item)),
-      );
+      queryClient.invalidateQueries({ queryKey: queryKeys.tables.all(true) });
       toast.success(
         table.active ? `Mesa ${table.number} activada.` : `Mesa ${table.number} desactivada.`,
       );
@@ -135,17 +133,14 @@ export function AdminView() {
     },
   });
 
-  /** Igual razonamiento que {@link toggleTableActiveMutation}: GET /products
-   * solo devuelve productos activos. */
+  /** Igual razonamiento que {@link toggleTableActiveMutation}. */
   const toggleProductActiveMutation = useMutation({
     mutationFn: ({ productId, active }: { productId: string; active: boolean }) =>
       api.patch<ProductResponse>(endpoints.products.updateStatus(productId), {
         active,
       } satisfies UpdateProductStatusRequest),
     onSuccess: (product) => {
-      queryClient.setQueryData<ProductResponse[]>(queryKeys.products.all(), (previous) =>
-        previous?.map((item) => (item.id === product.id ? product : item)),
-      );
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all(true) });
       toast.success(
         product.active
           ? `Producto "${product.name}" activado.`

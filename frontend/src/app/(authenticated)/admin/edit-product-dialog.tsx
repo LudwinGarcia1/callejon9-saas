@@ -45,11 +45,6 @@ interface EditProductDialogProps {
  * producto ya existente. El precio nuevo solo aplica hacia adelante: cada
  * linea de orden ya guarda su propia copia del precio al momento de
  * agregarse, asi que editar aqui nunca altera una orden pasada.
- *
- * No se invalida la lista de productos al guardar: el GET solo devuelve
- * productos activos, y si este producto estuviera inactivo (rareza, pero
- * posible) un refetch lo haria desaparecer justo despues de editarlo. Se
- * actualiza el cache local en su lugar.
  */
 export function EditProductDialog({ product, categories, onOpenChange }: EditProductDialogProps) {
   const [categoryId, setCategoryId] = useState<string>(product?.categoryId ?? NO_CATEGORY);
@@ -63,9 +58,7 @@ export function EditProductDialog({ product, categories, onOpenChange }: EditPro
       return api.put<ProductResponse>(endpoints.products.update(product.id), payload);
     },
     onSuccess: (updated) => {
-      queryClient.setQueryData<ProductResponse[]>(queryKeys.products.all(), (previous) =>
-        previous?.map((item) => (item.id === updated.id ? updated : item)),
-      );
+      queryClient.invalidateQueries({ queryKey: queryKeys.products.all(true) });
       toast.success(`Producto "${updated.name}" actualizado.`);
       onOpenChange(false);
     },
