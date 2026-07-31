@@ -280,7 +280,7 @@ export interface TicketItemSnapshot {
   subtotal: number;
 }
 
-/** GET /api/v1/tickets/{id} y respuesta de POST checkout — verificado contra TicketResponse. */
+/** GET /api/v1/tickets/{id}, GET /api/v1/tickets?folio= y respuesta de POST checkout — verificado contra TicketResponse. */
 export interface TicketResponse {
   id: string;
   saleId: string;
@@ -293,6 +293,42 @@ export interface TicketResponse {
   total: number;
   paymentMethod: PaymentMethod;
   closedAt: string;
+}
+
+// ---------------------------------------------------------------------------
+// Historial de ventas: verificado contra SaleHistoryRow, SaleHistorySummary y
+// SalesHistoryResponse en backend/src/main/java/com/callejon9/sale/web/dto.
+// ---------------------------------------------------------------------------
+
+/**
+ * Una fila del historial de ventas. `tableNumber`, `cashierName` y
+ * `ticketId` pueden venir nulos (mesa eliminada, cajero dado de baja, o —
+ * en teoria— una venta sin ticket todavia), asi que la pantalla debe
+ * tolerarlos antes de mostrarlos o de armar un enlace al ticket.
+ */
+export interface SaleHistoryRow {
+  id: string;
+  orderFolio: string;
+  tableNumber: number | null;
+  cashierName: string | null;
+  ticketId: string | null;
+  paymentMethod: PaymentMethod;
+  subtotal: number;
+  tip: number;
+  total: number;
+  createdAt: string;
+}
+
+/** Numero de ventas y suma de sus totales para el rango solicitado, calculado por el servidor. */
+export interface SaleHistorySummary {
+  count: number;
+  total: number;
+}
+
+/** GET /api/v1/sales — verificado contra SalesHistoryResponse. */
+export interface SalesHistoryResponse {
+  sales: SaleHistoryRow[];
+  summary: SaleHistorySummary;
 }
 
 // ---------------------------------------------------------------------------

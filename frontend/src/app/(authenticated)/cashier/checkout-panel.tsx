@@ -20,10 +20,9 @@ import {
 } from "@/components/ui/table";
 import { Money } from "@/components/shared/money";
 import { QueryState } from "@/components/shared/query-state";
-import { StatusBadge } from "@/components/shared/status-badge";
+import { TicketSummary } from "@/components/shared/ticket-summary";
 import { ApiError, api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
-import { formatShortTime } from "@/lib/format";
 import { queryKeys } from "@/lib/query-keys";
 import {
   PAYMENT_METHOD_LABELS,
@@ -64,7 +63,6 @@ export function CheckoutPanel({ orderId }: CheckoutPanelProps) {
   const [customTip, setCustomTip] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [ticket, setTicket] = useState<TicketResponse | null>(null);
-  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   const orderQuery = useQuery({
     queryKey: queryKeys.orders.detail(orderId),
@@ -101,36 +99,6 @@ export function CheckoutPanel({ orderId }: CheckoutPanelProps) {
     const parsed = Number(value);
     if (value !== "" && Number.isFinite(parsed) && parsed >= 0) {
       setTipPercent(parsed);
-    }
-  }
-
-  async function handleDownloadPdf(ticketId: string, folio: string) {
-    setIsDownloadingPdf(true);
-    try {
-      // fetch directo con credenciales: la ruta necesita la cookie httpOnly,
-      // y una descarga por window.open no la reenviaria de forma confiable a
-      // traves del proxy. El blob se convierte en un object URL efimero solo
-      // para disparar la descarga.
-      const response = await fetch(endpoints.tickets.pdf(ticketId), {
-        credentials: "include",
-      });
-      if (!response.ok) {
-        throw new Error("El servidor no pudo generar el PDF del ticket.");
-      }
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `ticket-${folio}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-    } catch {
-      toast.error("No se pudo descargar el PDF del ticket.");
-    } finally {
-      setIsDownloadingPdf(false);
     }
   }
 
@@ -175,11 +143,7 @@ export function CheckoutPanel({ orderId }: CheckoutPanelProps) {
               </Table>
 
               {ticket ? (
-                <TicketSummary
-                  ticket={ticket}
-                  onDownloadPdf={handleDownloadPdf}
-                  isDownloading={isDownloadingPdf}
-                />
+                <TicketSummary ticket={ticket} />
               ) : order.status === "PAID" ? (
                 <Alert>
                   <AlertTitle>Orden ya cobrada</AlertTitle>
@@ -276,52 +240,5 @@ export function CheckoutPanel({ orderId }: CheckoutPanelProps) {
         </QueryState>
       </CardContent>
     </Card>
-  );
-}
-
-interface TicketSummaryProps {
-  ticket: TicketResponse;
-  onDownloadPdf: (ticketId: string, folio: string) => void;
-  isDownloading: boolean;
-}
-
-/** Resumen del ticket ya emitido: cifras autoritativas del servidor, sin
- * recalcular nada aqui. */
-function TicketSummary({ ticket, onDownloadPdf, isDownloading }: TicketSummaryProps) {
-  return (
-    <div className="flex flex-col gap-3 rounded-lg border p-4">
-      <div className="flex items-center justify-between">
-        <p className="font-semibold">Ticket {ticket.folio}</p>
-        <StatusBadge kind="payment" status={ticket.paymentMethod} />
-      </div>
-      <p className="text-xs text-muted-foreground">
-        Cobrado a las {formatShortTime(ticket.closedAt)}
-      </p>
-
-      <Separator />
-
-      <div className="flex flex-col gap-1 text-sm">
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Subtotal</span>
-          <Money amount={ticket.subtotal} />
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground">Propina ({ticket.tipPercent}%)</span>
-          <Money amount={ticket.tip} />
-        </div>
-        <div className="flex items-center justify-between text-base font-semibold">
-          <span>Total cobrado</span>
-          <Money amount={ticket.total} />
-        </div>
-      </div>
-
-      <Button
-        variant="outline"
-        disabled={isDownloading}
-        onClick={() => onDownloadPdf(ticket.id, ticket.folio)}
-      >
-        {isDownloading ? "Descargando..." : "Descargar ticket en PDF"}
-      </Button>
-    </div>
   );
 }
