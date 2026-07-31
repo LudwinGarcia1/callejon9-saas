@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -35,6 +35,8 @@ import {
   type OrderSummaryResponse,
   type ProductResponse,
   type TableResponse,
+  type UpdateProductStatusRequest,
+  type UpdateTableStatusRequest,
   type UpdateUserStatusRequest,
   type UserResponse,
 } from "@/lib/types";
@@ -42,6 +44,9 @@ import { CreateCategoryDialog } from "./create-category-dialog";
 import { CreateProductDialog } from "./create-product-dialog";
 import { CreateTableDialog } from "./create-table-dialog";
 import { CreateUserDialog } from "./create-user-dialog";
+import { EditCategoryDialog } from "./edit-category-dialog";
+import { EditProductDialog } from "./edit-product-dialog";
+import { EditTableDialog } from "./edit-table-dialog";
 
 /** Considera "de hoy" cualquier orden abierta en el dia local del navegador. */
 function isToday(iso: string): boolean {
@@ -62,6 +67,9 @@ function isToday(iso: string): boolean {
 export function AdminView() {
   const { user: currentUser } = useSession();
   const queryClient = useQueryClient();
+  const [editingTable, setEditingTable] = useState<TableResponse | null>(null);
+  const [editingCategory, setEditingCategory] = useState<CategoryResponse | null>(null);
+  const [editingProduct, setEditingProduct] = useState<ProductResponse | null>(null);
   const tablesQuery = useQuery({
     queryKey: queryKeys.tables.all(),
     queryFn: () => api.get<TableResponse[]>(endpoints.tables.list()),
@@ -83,7 +91,7 @@ export function AdminView() {
     queryFn: () => api.get<UserResponse[]>(endpoints.users.list()),
   });
 
-  const toggleActiveMutation = useMutation({
+  const toggleUserActiveMutation = useMutation({
     mutationFn: ({ userId, active }: { userId: string; active: boolean }) =>
       api.patch<UserResponse>(endpoints.users.updateStatus(userId), {
         active,
@@ -97,6 +105,56 @@ export function AdminView() {
     onError: (error) => {
       const message =
         error instanceof ApiError ? error.message : "No se pudo actualizar el usuario.";
+      toast.error(message);
+    },
+  });
+
+  /**
+   * Da de alta o de baja una mesa. No se invalida la lista: GET /tables solo
+   * devuelve mesas activas, y un refetch justo despues de dar de baja
+   * escondería la fila que se acaba de desactivar, cuando la baja es logica
+   * y debe seguir viendose (marcada como inactiva) para poder reactivarla.
+   */
+  const toggleTableActiveMutation = useMutation({
+    mutationFn: ({ tableId, active }: { tableId: string; active: boolean }) =>
+      api.patch<TableResponse>(endpoints.tables.updateStatus(tableId), {
+        active,
+      } satisfies UpdateTableStatusRequest),
+    onSuccess: (table) => {
+      queryClient.setQueryData<TableResponse[]>(queryKeys.tables.all(), (previous) =>
+        previous?.map((item) => (item.id === table.id ? table : item)),
+      );
+      toast.success(
+        table.active ? `Mesa ${table.number} activada.` : `Mesa ${table.number} desactivada.`,
+      );
+    },
+    onError: (error) => {
+      const message =
+        error instanceof ApiError ? error.message : "No se pudo actualizar la mesa.";
+      toast.error(message);
+    },
+  });
+
+  /** Igual razonamiento que {@link toggleTableActiveMutation}: GET /products
+   * solo devuelve productos activos. */
+  const toggleProductActiveMutation = useMutation({
+    mutationFn: ({ productId, active }: { productId: string; active: boolean }) =>
+      api.patch<ProductResponse>(endpoints.products.updateStatus(productId), {
+        active,
+      } satisfies UpdateProductStatusRequest),
+    onSuccess: (product) => {
+      queryClient.setQueryData<ProductResponse[]>(queryKeys.products.all(), (previous) =>
+        previous?.map((item) => (item.id === product.id ? product : item)),
+      );
+      toast.success(
+        product.active
+          ? `Producto "${product.name}" activado.`
+          : `Producto "${product.name}" desactivado.`,
+      );
+    },
+    onError: (error) => {
+      const message =
+        error instanceof ApiError ? error.message : "No se pudo actualizar el producto.";
       toast.error(message);
     },
   });
@@ -181,19 +239,57 @@ export function AdminView() {
                     <TableRow>
                       <TableHead>Numero</TableHead>
                       <TableHead>Capacidad</TableHead>
-                      <TableHead>Estado</TableHead>
+                      <TableHead>Ocupacion</TableHead>
+                      <TableHead>Alta</TableHead>
+                      <TableHead />
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {tablesQuery.data?.map((table) => (
-                      <TableRow key={table.id}>
-                        <TableCell>{table.number}</TableCell>
-                        <TableCell>{table.capacity}</TableCell>
-                        <TableCell>
-                          <StatusBadge kind="table" status={table.status} />
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {tablesQuery.data?.map((table) => {
+                      const isTogglingThisRow =
+                        toggleTableActiveMutation.isPending &&
+                        toggleTableActiveMutation.variables?.tableId === table.id;
+                      return (
+                        <TableRow key={table.id}>
+                          <TableCell>{table.number}</TableCell>
+                          <TableCell>{table.capacity}</TableCell>
+                          <TableCell>
+                            <StatusBadge kind="table" status={table.status} />
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={table.active ? "secondary" : "outline"}>
+                              {table.active ? "Activa" : "Inactiva"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="flex justify-end gap-2 text-right">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setEditingTable(table)}
+                            >
+                              Editar
+                            </Button>
+                            <Button
+                              variant={table.active ? "destructive" : "outline"}
+                              size="sm"
+                              disabled={isTogglingThisRow}
+                              onClick={() =>
+                                toggleTableActiveMutation.mutate({
+                                  tableId: table.id,
+                                  active: !table.active,
+                                })
+                              }
+                            >
+                              {isTogglingThisRow
+                                ? "Guardando..."
+                                : table.active
+                                  ? "Dar de baja"
+                                  : "Reactivar"}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </QueryState>
@@ -218,6 +314,7 @@ export function AdminView() {
                     <TableRow>
                       <TableHead>Nombre</TableHead>
                       <TableHead>Orden</TableHead>
+                      <TableHead />
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -225,6 +322,15 @@ export function AdminView() {
                       <TableRow key={category.id}>
                         <TableCell>{category.name}</TableCell>
                         <TableCell>{category.sortOrder}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setEditingCategory(category)}
+                          >
+                            Editar
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -253,22 +359,60 @@ export function AdminView() {
                       <TableHead>Descripcion</TableHead>
                       <TableHead>Precio</TableHead>
                       <TableHead>Categoria</TableHead>
+                      <TableHead>Alta</TableHead>
+                      <TableHead />
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {productsQuery.data?.map((product) => (
-                      <TableRow key={product.id}>
-                        <TableCell>{product.name}</TableCell>
-                        <TableCell>{product.description ?? "-"}</TableCell>
-                        <TableCell>
-                          <Money amount={product.price} />
-                        </TableCell>
-                        <TableCell>
-                          {categoriesQuery.data?.find((category) => category.id === product.categoryId)
-                            ?.name ?? "Sin categoria"}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {productsQuery.data?.map((product) => {
+                      const isTogglingThisRow =
+                        toggleProductActiveMutation.isPending &&
+                        toggleProductActiveMutation.variables?.productId === product.id;
+                      return (
+                        <TableRow key={product.id}>
+                          <TableCell>{product.name}</TableCell>
+                          <TableCell>{product.description ?? "-"}</TableCell>
+                          <TableCell>
+                            <Money amount={product.price} />
+                          </TableCell>
+                          <TableCell>
+                            {categoriesQuery.data?.find((category) => category.id === product.categoryId)
+                              ?.name ?? "Sin categoria"}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={product.active ? "secondary" : "outline"}>
+                              {product.active ? "Activo" : "Inactivo"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="flex justify-end gap-2 text-right">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setEditingProduct(product)}
+                            >
+                              Editar
+                            </Button>
+                            <Button
+                              variant={product.active ? "destructive" : "outline"}
+                              size="sm"
+                              disabled={isTogglingThisRow}
+                              onClick={() =>
+                                toggleProductActiveMutation.mutate({
+                                  productId: product.id,
+                                  active: !product.active,
+                                })
+                              }
+                            >
+                              {isTogglingThisRow
+                                ? "Guardando..."
+                                : product.active
+                                  ? "Dar de baja"
+                                  : "Reactivar"}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </QueryState>
@@ -301,8 +445,8 @@ export function AdminView() {
                   <TableBody>
                     {usersQuery.data?.map((user) => {
                       const isTogglingThisRow =
-                        toggleActiveMutation.isPending &&
-                        toggleActiveMutation.variables?.userId === user.id;
+                        toggleUserActiveMutation.isPending &&
+                        toggleUserActiveMutation.variables?.userId === user.id;
                       return (
                         <TableRow key={user.id}>
                           <TableCell>
@@ -326,7 +470,7 @@ export function AdminView() {
                               size="sm"
                               disabled={isTogglingThisRow}
                               onClick={() =>
-                                toggleActiveMutation.mutate({
+                                toggleUserActiveMutation.mutate({
                                   userId: user.id,
                                   active: !user.active,
                                 })
@@ -349,6 +493,33 @@ export function AdminView() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <EditTableDialog
+        table={editingTable}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingTable(null);
+          }
+        }}
+      />
+      <EditCategoryDialog
+        category={editingCategory}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingCategory(null);
+          }
+        }}
+      />
+      <EditProductDialog
+        key={editingProduct?.id ?? "none"}
+        product={editingProduct}
+        categories={categoriesQuery.data ?? []}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingProduct(null);
+          }
+        }}
+      />
     </div>
   );
 }
