@@ -67,10 +67,10 @@ El frontend nunca llama a `:8080` directamente. Un `rewrites()` en `next.config.
 ### Estructura
 
 ```
-backend/    Spring Boot · Maven Wrapper · 77 tests
-frontend/   Next.js · TypeScript · Tailwind · shadcn/ui
+backend/    Spring Boot · Maven Wrapper · 120 tests · 25 rutas de API
+frontend/   Next.js · TypeScript · Tailwind · shadcn/ui · 9 pantallas
 scripts/    setup-db.sql, verify-rls.sql, run-dev.ps1
-docs/       glosario, guion de demo, spec y plan de implementación
+docs/       glosario, guion de demo, specs y planes de implementación
 ```
 
 Los paquetes del backend se organizan por funcionalidad, no por capa: `auth`, `user`, `table`, `catalog`, `order`, `kitchen`, `sale`, `ticket`, `realtime`, `platform`, más `tenancy` y `shared`. Cada uno contiene `web/`, `domain/`, `service/` y `repository/`.
@@ -152,13 +152,15 @@ cd backend
 .\mvnw.cmd verify
 ```
 
-77 pruebas contra un PostgreSQL 16 real. **No se usa H2**, y la razón es de fondo: H2 no soporta Row Level Security, así que probar contra H2 invalidaría exactamente la garantía que el proyecto demuestra.
+120 pruebas contra un PostgreSQL 16 real. **No se usa H2**, y la razón es de fondo: H2 no soporta Row Level Security, así que probar contra H2 invalidaría exactamente la garantía que el proyecto demuestra.
 
 Las que más importan:
 
 | Prueba | Qué demuestra |
 |---|---|
 | `TenantIsolationTest` | Los cinco casos de aislamiento impuesto por el motor |
+| `UserServiceConcurrencyTest` | Dos hilos desactivando administradores distintos no pueden dejar al restaurante sin ninguno |
+| `PlanLimitServiceConcurrencyTest` | Dos altas simultáneas no pueden exceder el tope del plan |
 | `TenantFilterHttpTest` | Autorización sobre Tomcat embebido real, no MockMvc |
 | `BcryptCompatibilityTest` | Un hash generado por la librería `bcrypt` de Python valida bajo Spring Security |
 | `TenantSubscriptionInterceptorTest` | Un inquilino no puede suscribirse al canal de tiempo real de otro |
@@ -176,7 +178,15 @@ Las que más importan:
 
 ### Implementado
 
-Autenticación con roles y JWT en cookie `httpOnly`; SaaS multi-inquilino con alta de restaurantes, planes y suscripciones; flujo completo de pedido —mesas, catálogo, comandas, cocina, cobro, ticket en PDF—; canal STOMP con validación de inquilino por suscripción; y documentación OpenAPI.
+**Plataforma.** Alta de restaurantes con su suscripción, planes con límites que se aplican de verdad, y panel de super-administrador.
+
+**Personal.** Alta de usuarios por rol —administrador, mesero, cocina, caja—, con baja lógica que deja a la persona fuera de inmediato. Un administrador no puede desactivarse a sí mismo ni dejar al restaurante sin ningún administrador activo.
+
+**Operación.** Mesas, catálogo, comandas con precio congelado al agregarse, tablero de cocina con transiciones solo hacia adelante, cobro con propina, ticket en PDF, e historial de ventas con búsqueda por folio.
+
+**Correcciones.** Editar y dar de baja productos, categorías y mesas; cancelar una comanda y liberar su mesa. Nada se borra físicamente: los productos y las mesas están referenciados por el histórico.
+
+**Infraestructura.** Autenticación con JWT en cookie `httpOnly`, canal STOMP con validación de inquilino por suscripción, y documentación OpenAPI navegable.
 
 ### Diferido, con su diseño
 
@@ -184,7 +194,9 @@ Delivery y rastreo en vivo; analítica y aprendizaje automático (K-means, Rando
 
 ### Deuda registrada
 
-`FolioGenerator` garantiza unicidad por JVM, no entre instancias. `PlanLimitService` no se invoca desde ningún endpoint de producción. `addItems` no verifica que el producto siga activo. No existe endpoint para crear usuarios con rol distinto a `ADMIN`, por lo que la demostración completa se hace desde una sola cuenta. `GET /orders` y `GET /orders/{id}` no llevan `@PreAuthorize`: cualquier rol autenticado lee cualquier comanda de su propio inquilino.
+`FolioGenerator` garantiza unicidad por JVM, no entre instancias: dos instancias podrían colisionar dentro del mismo segundo para el mismo restaurante. `addItems` no verifica que el producto siga activo, así que un platillo retirado puede agregarse a una comanda si se conoce su identificador. `GET /orders` y `GET /orders/{id}` no llevan `@PreAuthorize`: cualquier rol autenticado lee cualquier comanda de su propio inquilino. No hay cambio de contraseña por el propio usuario ni recuperación de contraseña.
+
+Tres carencias que sí se cerraron y vale la pena nombrar, porque marcaban la diferencia entre una demostración y un sistema: no existía forma de crear usuarios —los cinco roles eran teoría—, nada podía editarse ni darse de baja, y `PlanLimitService` estaba escrito sin que ningún endpoint lo llamara.
 
 ---
 
