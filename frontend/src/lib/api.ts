@@ -104,6 +104,8 @@ export const api = {
     request<TResponse>(path, { ...options, method: "POST", body }),
   put: <TResponse>(path: string, body?: unknown, options?: RequestOptions) =>
     request<TResponse>(path, { ...options, method: "PUT", body }),
+  patch: <TResponse>(path: string, body?: unknown, options?: RequestOptions) =>
+    request<TResponse>(path, { ...options, method: "PATCH", body }),
   del: <TResponse>(path: string, options?: RequestOptions) =>
     request<TResponse>(path, { ...options, method: "DELETE" }),
 };

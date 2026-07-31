@@ -28,6 +28,11 @@ export const endpoints = {
     list: () => "/api/v1/products",
     create: () => "/api/v1/products",
   },
+  users: {
+    list: () => "/api/v1/users",
+    create: () => "/api/v1/users",
+    updateStatus: (userId: string) => `/api/v1/users/${userId}`,
+  },
   orders: {
     list: () => "/api/v1/orders",
     open: () => "/api/v1/orders",

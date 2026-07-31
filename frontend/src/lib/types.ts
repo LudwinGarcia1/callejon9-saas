@@ -149,6 +149,33 @@ export interface CreateProductRequest {
   categoryId?: string;
 }
 
+/**
+ * GET/POST /api/v1/users — verificado contra UserResponse en
+ * backend/src/main/java/com/callejon9/user/web/dto. Nunca incluye datos de
+ * autenticacion (hash de password, secreto TOTP).
+ */
+export interface UserResponse {
+  id: string;
+  email: string;
+  fullName: string;
+  role: UserRole;
+  active: boolean;
+}
+
+/** POST /api/v1/users — verificado contra CreateUserRequest. El rol nunca
+ * puede ser SUPER_ADMIN: el backend lo rechaza con 400. */
+export interface CreateUserRequest {
+  email: string;
+  fullName: string;
+  role: UserRole;
+  password: string;
+}
+
+/** PATCH /api/v1/users/{id} — verificado contra UpdateUserStatusRequest. */
+export interface UpdateUserStatusRequest {
+  active: boolean;
+}
+
 export interface OpenOrderRequest {
   tableId: string;
   guestCount: number;
@@ -267,4 +294,12 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   TRANSFER: "Transferencia",
   MIXED: "Mixto",
   MERCADOPAGO: "MercadoPago",
+};
+
+export const USER_ROLE_LABELS: Record<UserRole, string> = {
+  SUPER_ADMIN: "Super administrador",
+  ADMIN: "Administrador",
+  WAITER: "Mesero",
+  KITCHEN: "Cocina",
+  CASHIER: "Cajero",
 };
