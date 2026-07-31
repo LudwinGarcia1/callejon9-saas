@@ -71,6 +71,12 @@ public class OrderController {
         return OrderResponse.from(orderService.sendToKitchen(id));
     }
 
+    @PostMapping("/{id}/cancel")
+    @PreAuthorize("hasAnyRole('WAITER','ADMIN')")
+    public OrderResponse cancel(@PathVariable UUID id) {
+        return OrderResponse.from(orderService.cancelOrder(id));
+    }
+
     private UUID waiterIdOf(Authentication authentication) {
         return (UUID) authentication.getPrincipal();
     }
