@@ -58,6 +58,14 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    @ExceptionHandler(InvalidRoleException.class)
+    ProblemDetail onInvalidRole(InvalidRoleException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, exception.getMessage());
+        problem.setTitle("Rol invalido");
+        return problem;
+    }
+
     @ExceptionHandler(NoTenantContextException.class)
     ProblemDetail onMissingTenant(NoTenantContextException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
