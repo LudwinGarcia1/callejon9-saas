@@ -263,6 +263,86 @@ class OrderControllerTest {
     }
 
     @Test
+    @DisplayName("cancelar una orden la marca CANCELED, libera la mesa y conserva sus lineas")
+    void cancelingAnOrderFreesTheTableAndKeepsItsItems() throws Exception {
+        UUID orderId = openOrder();
+        mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
+                        .cookie(cookieFor(waiter))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"items\":[{\"productId\":\"" + product.getId()
+                                + "\",\"quantity\":1}]}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/v1/orders/" + orderId + "/cancel").cookie(cookieFor(waiter)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELED"))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].productName").value("Taco"));
+
+        TenantContext.set(tenant.getId());
+        try {
+            RestaurantTable reloaded = transactionTemplate.execute(
+                    status -> tableRepository.findById(table.getId()).orElseThrow());
+            assertThat(reloaded.getStatus()).isEqualTo(TableStatus.FREE);
+            assertThat(reloaded.getWaiterId()).isNull();
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    @Test
+    @DisplayName("una mesa liberada por cancelacion se puede volver a ocupar")
+    void aTableFreedByCancellationCanBeOccupiedAgain() throws Exception {
+        UUID orderId = openOrder();
+        mockMvc.perform(post("/api/v1/orders/" + orderId + "/cancel").cookie(cookieFor(waiter)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/v1/orders")
+                        .cookie(cookieFor(waiter))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tableId\":\"" + table.getId() + "\",\"guestCount\":3}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("NEW"));
+    }
+
+    @Test
+    @DisplayName("cancelar una orden ya PAID o ya CANCELED da 409")
+    void cancelingAClosedOrderIsRejected() throws Exception {
+        UUID orderId = openOrder();
+
+        TenantContext.set(tenant.getId());
+        try {
+            transactionTemplate.executeWithoutResult(status ->
+                    jdbcTemplate.update("UPDATE orders SET status = 'PAID' WHERE id = ?", orderId));
+        } finally {
+            TenantContext.clear();
+        }
+
+        mockMvc.perform(post("/api/v1/orders/" + orderId + "/cancel").cookie(cookieFor(waiter)))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    @DisplayName("cancelar una orden dos veces da 409 la segunda vez")
+    void doubleCancellationIsRejected() throws Exception {
+        UUID orderId = openOrder();
+
+        mockMvc.perform(post("/api/v1/orders/" + orderId + "/cancel").cookie(cookieFor(waiter)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/v1/orders/" + orderId + "/cancel").cookie(cookieFor(waiter)))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    @DisplayName("cancelar una orden que no existe da 404")
+    void cancelingANonexistentOrderGives404() throws Exception {
+        mockMvc.perform(post("/api/v1/orders/" + UUID.randomUUID() + "/cancel")
+                        .cookie(cookieFor(waiter)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     @DisplayName("aislamiento entre tenants: listar ordenes de A nunca revela ordenes de B")
     void crossTenantIsolationHoldsForOrders() throws Exception {
         UUID orderIdA = openOrder();

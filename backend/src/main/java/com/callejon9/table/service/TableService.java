@@ -71,7 +71,7 @@ public class TableService {
         return tableRepository.save(table);
     }
 
-    /** Libera una mesa al cerrar la cuenta (checkout). */
+    /** Libera una mesa al cerrar la cuenta (checkout) o al cancelar una orden. */
     @Transactional
     public RestaurantTable free(UUID tableId) {
         RestaurantTable table = tableRepository.findById(tableId)

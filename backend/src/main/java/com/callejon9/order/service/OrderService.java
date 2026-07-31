@@ -107,6 +107,34 @@ public class OrderService {
         return new OrderWithItems(order, allItems);
     }
 
+    /**
+     * Cancela una orden y libera su mesa, todo en una sola transaccion: si
+     * algo falla a la mitad, nada de esto debe quedar a medias (mismo
+     * criterio que {@code CheckoutService.checkout}). Las lineas de la orden
+     * se conservan intactas para el registro; solo cambia el estado.
+     */
+    @Transactional
+    public OrderWithItems cancelOrder(UUID orderId) {
+        Order order = requireOrder(orderId);
+
+        if (order.getStatus() == OrderStatus.PAID || order.getStatus() == OrderStatus.CANCELED) {
+            throw new BusinessRuleException(
+                    "La orden " + order.getFolio() + " ya esta " + order.getStatus()
+                            + " y no se puede cancelar.");
+        }
+
+        order.setStatus(OrderStatus.CANCELED);
+        order.setClosedAt(Instant.now());
+        orderRepository.save(order);
+
+        if (order.getTableId() != null) {
+            tableService.free(order.getTableId());
+        }
+
+        List<OrderItem> items = orderItemRepository.findByOrderIdOrderByOrderedAt(orderId);
+        return new OrderWithItems(order, items);
+    }
+
     @Transactional
     public OrderWithItems sendToKitchen(UUID orderId) {
         Order order = requireOrder(orderId);
