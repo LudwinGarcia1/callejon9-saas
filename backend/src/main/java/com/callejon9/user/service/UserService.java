@@ -1,5 +1,6 @@
 package com.callejon9.user.service;
 
+import com.callejon9.platform.tenant.repository.TenantRepository;
 import com.callejon9.platform.tenant.service.PlanLimitService;
 import com.callejon9.shared.error.BusinessRuleException;
 import com.callejon9.shared.error.InvalidRoleException;
@@ -27,14 +28,17 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final PlanLimitService planLimitService;
+    private final TenantRepository tenantRepository;
 
     public UserService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            PlanLimitService planLimitService) {
+            PlanLimitService planLimitService,
+            TenantRepository tenantRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.planLimitService = planLimitService;
+        this.tenantRepository = tenantRepository;
     }
 
     @Transactional
@@ -71,9 +75,18 @@ public class UserService {
      * Activa o desactiva a un usuario. La desactivacion es siempre logica
      * (active = false): el usuario queda referenciado por las ordenes que
      * tomo y las ventas que cobro, y borrarlo perderia esa atribucion.
+     *
+     * <p>Bloquea la fila del tenant ANTES de contar administradores activos:
+     * sin este lock, dos peticiones concurrentes que desactivan a dos
+     * administradores distintos pueden leer ambas el mismo conteo (2), pasar
+     * las dos la validacion y dejar el restaurante sin ningun administrador
+     * activo. Con el lock, la segunda espera a que la primera confirme y
+     * relee el conteo ya actualizado.
      */
     @Transactional
     public User setActive(UUID userId, boolean active, UUID callerId) {
+        tenantRepository.findByIdForUpdate(TenantContext.require());
+
         User target = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("El usuario no existe."));
 
