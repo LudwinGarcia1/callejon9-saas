@@ -32,8 +32,10 @@ public class ProductController {
     }
 
     @GetMapping
-    public List<ProductResponse> list(@RequestParam(required = false) UUID categoryId) {
-        return productService.listProducts(categoryId).stream()
+    public List<ProductResponse> list(
+            @RequestParam(required = false) UUID categoryId,
+            @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
+        return productService.listProducts(categoryId, includeInactive).stream()
                 .map(ProductResponse::from)
                 .toList();
     }

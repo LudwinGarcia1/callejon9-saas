@@ -19,12 +19,24 @@ public class ProductService {
         this.productRepository = productRepository;
     }
 
+    /**
+     * Lista el catalogo. Por defecto solo devuelve productos activos: es lo
+     * que necesitan el selector del mesero y cualquier consumidor que no
+     * pida explicitamente lo contrario. La pantalla de administracion pasa
+     * {@code includeInactive = true} para poder ver (y reactivar) los
+     * productos dados de baja, que de otro modo quedarian atrapados sin
+     * forma de deshacerse.
+     */
     @Transactional(readOnly = true)
-    public List<Product> listProducts(UUID categoryId) {
+    public List<Product> listProducts(UUID categoryId, boolean includeInactive) {
         if (categoryId != null) {
-            return productRepository.findByActiveTrueAndCategoryIdOrderByName(categoryId);
+            return includeInactive
+                    ? productRepository.findByCategoryIdOrderByName(categoryId)
+                    : productRepository.findByActiveTrueAndCategoryIdOrderByName(categoryId);
         }
-        return productRepository.findByActiveTrueOrderByName();
+        return includeInactive
+                ? productRepository.findAllByOrderByName()
+                : productRepository.findByActiveTrueOrderByName();
     }
 
     @Transactional

@@ -25,9 +25,18 @@ public class TableService {
         this.tableRepository = tableRepository;
     }
 
+    /**
+     * Lista las mesas. Por defecto solo las activas: es lo que necesitan el
+     * mapa de mesas del mesero, cocina y caja. La pantalla de administracion
+     * pasa {@code includeInactive = true} para poder ver (y reactivar) las
+     * mesas dadas de baja, que de otro modo quedarian atrapadas sin forma de
+     * deshacerse.
+     */
     @Transactional(readOnly = true)
-    public List<RestaurantTable> listActiveTables() {
-        return tableRepository.findByActiveTrueOrderByNumber();
+    public List<RestaurantTable> listTables(boolean includeInactive) {
+        return includeInactive
+                ? tableRepository.findAllByOrderByNumber()
+                : tableRepository.findByActiveTrueOrderByNumber();
     }
 
     @Transactional

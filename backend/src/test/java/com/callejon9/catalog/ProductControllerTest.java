@@ -188,6 +188,53 @@ class ProductControllerTest {
     }
 
     @Test
+    @DisplayName("GET /products?includeInactive=true incluye productos dados de baja")
+    void listWithIncludeInactiveIncludesInactiveProducts() throws Exception {
+        UUID productId = createProduct("Taco", "25.00");
+
+        mockMvc.perform(patch("/api/v1/products/" + productId)
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"active\":false}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/products").cookie(cookieFor(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        mockMvc.perform(get("/api/v1/products").param("includeInactive", "true")
+                        .cookie(cookieFor(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].name").value("Taco"))
+                .andExpect(jsonPath("$[0].active").value(false));
+    }
+
+    @Test
+    @DisplayName("reactivar un producto lo hace reaparecer en el listado por defecto")
+    void reactivatingAProductMakesItReappearInTheDefaultListing() throws Exception {
+        UUID productId = createProduct("Taco", "25.00");
+
+        mockMvc.perform(patch("/api/v1/products/" + productId)
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"active\":false}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(patch("/api/v1/products/" + productId)
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"active\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.active").value(true));
+
+        mockMvc.perform(get("/api/v1/products").cookie(cookieFor(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].name").value("Taco"));
+    }
+
+    @Test
     @DisplayName("un WAITER no puede editar ni dar de baja productos")
     void waiterCannotUpdateOrDeactivateProducts() throws Exception {
         UUID productId = createProduct("Taco", "25.00");

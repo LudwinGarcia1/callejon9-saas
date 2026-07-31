@@ -23,6 +23,9 @@ public interface RestaurantTableRepository extends JpaRepository<RestaurantTable
 
     List<RestaurantTable> findByActiveTrueOrderByNumber();
 
+    /** Para includeInactive=true: todas las mesas, sin filtrar por estado. */
+    List<RestaurantTable> findAllByOrderByNumber();
+
     /**
      * Igual que {@code findById}, pero con {@code SELECT ... FOR UPDATE}: bloquea
      * la fila hasta que la transaccion actual termine. Sin este lock, dos

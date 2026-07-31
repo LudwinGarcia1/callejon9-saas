@@ -11,6 +11,12 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 
     List<Product> findByActiveTrueAndCategoryIdOrderByName(UUID categoryId);
 
+    /** Para includeInactive=true: catalogo completo, sin filtrar por estado. */
+    List<Product> findAllByOrderByName();
+
+    /** Para includeInactive=true con categoria: sin filtrar por estado. */
+    List<Product> findByCategoryIdOrderByName(UUID categoryId);
+
     /** Para renombrar un producto existente sin chocar contra si mismo. */
     boolean existsByNameAndIdNot(String name, UUID id);
 }
