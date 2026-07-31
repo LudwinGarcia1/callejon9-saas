@@ -1,12 +1,21 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import {
   Table,
@@ -27,6 +36,7 @@ import type {
   AddOrderItemsRequest,
   CategoryResponse,
   OrderResponse,
+  OrderStatus,
   ProductResponse,
 } from "@/lib/types";
 import { ProductPicker, type CartLine } from "./product-picker";
@@ -35,6 +45,11 @@ interface OrderViewProps {
   orderId: string;
 }
 
+/** Estados en los que la orden todavia se puede cancelar: coincide con la
+ * guarda de {@code OrderService.cancelOrder}, que solo rechaza PAID y
+ * CANCELED. */
+const CANCELABLE_ORDER_STATUSES = new Set<OrderStatus>(["NEW", "SENT", "READY"]);
+
 /**
  * Pantalla de una orden: sus productos con el total autoritativo del
  * servidor a la izquierda, el selector de productos por categoria y el
@@ -42,8 +57,10 @@ interface OrderViewProps {
  * producto: se junta localmente y se confirma en un solo POST por lote.
  */
 export function OrderView({ orderId }: OrderViewProps) {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [cart, setCart] = useState<CartLine[]>([]);
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
 
   const orderQuery = useQuery({
     queryKey: queryKeys.orders.detail(orderId),
@@ -91,6 +108,29 @@ export function OrderView({ orderId }: OrderViewProps) {
     onError: (error) => {
       toast.error(
         error instanceof ApiError ? error.message : "No se pudo enviar la orden a cocina.",
+      );
+    },
+  });
+
+  /**
+   * Cancela la orden y libera la mesa (lo hace el backend en la misma
+   * transaccion). El estado puede haber cambiado desde que se cargo la
+   * pantalla — otro mesero la cobro, por ejemplo — asi que el 409 se
+   * muestra como aviso normal en vez de dejar que se vea como una falla.
+   */
+  const cancelOrderMutation = useMutation({
+    mutationFn: () => api.post<OrderResponse>(endpoints.orders.cancel(orderId)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tables.all() });
+      setConfirmCancelOpen(false);
+      toast.success("Orden cancelada. La mesa quedo libre.");
+      router.push("/waiter");
+    },
+    onError: (error) => {
+      setConfirmCancelOpen(false);
+      toast.error(
+        error instanceof ApiError ? error.message : "No se pudo cancelar la orden.",
       );
     },
   });
@@ -199,8 +239,53 @@ export function OrderView({ orderId }: OrderViewProps) {
                 isPending={sendToKitchenMutation.isPending}
                 onSend={() => sendToKitchenMutation.mutate()}
               />
+
+              {CANCELABLE_ORDER_STATUSES.has(order.status) && (
+                <>
+                  <Separator />
+                  <div className="flex justify-end">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => setConfirmCancelOpen(true)}
+                    >
+                      Cancelar orden
+                    </Button>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
+
+          <Dialog open={confirmCancelOpen} onOpenChange={setConfirmCancelOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Cancelar orden {order.folio}</DialogTitle>
+                <DialogDescription>
+                  Esta accion no se puede deshacer. Los productos ya agregados se conservan
+                  en el historial, pero la orden queda marcada como cancelada y la mesa se
+                  libera de inmediato.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  disabled={cancelOrderMutation.isPending}
+                  onClick={() => setConfirmCancelOpen(false)}
+                >
+                  Volver
+                </Button>
+                <Button
+                  variant="destructive"
+                  disabled={cancelOrderMutation.isPending}
+                  onClick={() => cancelOrderMutation.mutate()}
+                >
+                  {cancelOrderMutation.isPending ? "Cancelando..." : "Si, cancelar orden"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           <Card>
             <CardHeader>
