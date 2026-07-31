@@ -1,0 +1,65 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      // Modo desarrollo: recarga en caliente, pero compila cada ruta la
+      // primera vez que se visita. Para dia a dia, no para presentar.
+      "label": "frontend: dev",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "isBackground": true,
+      "problemMatcher": {
+        "pattern": { "regexp": "^$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".*(Starting|Compiling).*",
+          "endsPattern": ".*(Ready|ready) in.*"
+        }
+      },
+      "presentation": { "group": "servidores", "panel": "dedicated" }
+    },
+    {
+      // Para la presentacion: compilado, las pantallas entran al instante.
+      // No ejecutar a la vez que "frontend: dev": comparten el directorio
+      // .next y se pisan.
+      "label": "frontend: build y start (para la demo)",
+      "type": "shell",
+      "command": "npm run build; if ($?) { npm start }",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "presentation": { "group": "servidores", "panel": "dedicated" }
+    },
+    {
+      "label": "backend: suite completa",
+      "type": "shell",
+      "command": ".\\mvnw.cmd -B verify",
+      "options": {
+        "cwd": "${workspaceFolder}/backend",
+        "env": {
+          "JAVA_HOME": "C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.11.10-hotspot",
+          "DB_APP_PASSWORD": "app_dev_pwd",
+          "DB_OWNER_PASSWORD": "owner_dev_pwd",
+          "JWT_SECRET": "dev-only-secret-change-me-min-32-bytes-long!!"
+        }
+      },
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      // La evidencia central del proyecto: el aislamiento lo impone el
+      // motor. Se ejecuta como callejon9_app, el rol sujeto a las politicas.
+      "label": "verificar aislamiento RLS",
+      "type": "shell",
+      "command": "$env:PGPASSWORD='app_dev_pwd'; & 'C:\\Program Files\\PostgreSQL\\16\\bin\\psql.exe' -U callejon9_app -p 5433 -d callejon9_test -f scripts\\verify-rls.sql",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": []
+    },
+    {
+      "label": "frontend: typecheck",
+      "type": "shell",
+      "command": "npx tsc --noEmit",
+      "options": { "cwd": "${workspaceFolder}/frontend" },
+      "problemMatcher": ["$tsc"]
+    }
+  ]
+}

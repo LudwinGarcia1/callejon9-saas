@@ -1,0 +1,46 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // Arranca el backend con el perfil demo: el token dura 2 horas en vez
+      // de 15 minutos, para que una sesion no expire a media presentacion.
+      "type": "java",
+      "name": "Backend (perfil demo)",
+      "request": "launch",
+      "mainClass": "com.callejon9.Callejon9Application",
+      "projectName": "backend",
+      "args": "--spring.profiles.active=demo",
+      "env": {
+        "DB_APP_PASSWORD": "app_dev_pwd",
+        "DB_OWNER_PASSWORD": "owner_dev_pwd",
+        "JWT_SECRET": "dev-only-secret-change-me-min-32-bytes-long!!",
+        "DB_PORT": "5433"
+      }
+    },
+    {
+      // Mismo backend pero con los valores de produccion: token de 15
+      // minutos. Util para comprobar que el default sigue siendo el correcto.
+      "type": "java",
+      "name": "Backend (sin perfil demo)",
+      "request": "launch",
+      "mainClass": "com.callejon9.Callejon9Application",
+      "projectName": "backend",
+      "env": {
+        "DB_APP_PASSWORD": "app_dev_pwd",
+        "DB_OWNER_PASSWORD": "owner_dev_pwd",
+        "JWT_SECRET": "dev-only-secret-change-me-min-32-bytes-long!!",
+        "DB_PORT": "5433"
+      }
+    }
+  ],
+  "compounds": [
+    {
+      // Levanta backend y frontend juntos. El frontend arranca como tarea
+      // porque no es un proceso de depuracion de Java.
+      "name": "Todo (backend + frontend)",
+      "configurations": ["Backend (perfil demo)"],
+      "preLaunchTask": "frontend: dev",
+      "stopAll": true
+    }
+  ]
+}
