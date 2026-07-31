@@ -1,8 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -22,18 +25,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Money } from "@/components/shared/money";
 import { QueryState } from "@/components/shared/query-state";
 import { StatusBadge } from "@/components/shared/status-badge";
-import { api } from "@/lib/api";
+import { useSession } from "@/hooks/use-session";
+import { ApiError, api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { queryKeys } from "@/lib/query-keys";
-import type {
-  CategoryResponse,
-  OrderSummaryResponse,
-  ProductResponse,
-  TableResponse,
+import {
+  USER_ROLE_LABELS,
+  type CategoryResponse,
+  type OrderSummaryResponse,
+  type ProductResponse,
+  type TableResponse,
+  type UpdateUserStatusRequest,
+  type UserResponse,
 } from "@/lib/types";
 import { CreateCategoryDialog } from "./create-category-dialog";
 import { CreateProductDialog } from "./create-product-dialog";
 import { CreateTableDialog } from "./create-table-dialog";
+import { CreateUserDialog } from "./create-user-dialog";
 
 /** Considera "de hoy" cualquier orden abierta en el dia local del navegador. */
 function isToday(iso: string): boolean {
@@ -52,6 +60,8 @@ function isToday(iso: string): boolean {
  * mesas, categorias, productos y ordenes de hoy con su total.
  */
 export function AdminView() {
+  const { user: currentUser } = useSession();
+  const queryClient = useQueryClient();
   const tablesQuery = useQuery({
     queryKey: queryKeys.tables.all(),
     queryFn: () => api.get<TableResponse[]>(endpoints.tables.list()),
@@ -68,6 +78,28 @@ export function AdminView() {
     queryKey: queryKeys.orders.all(),
     queryFn: () => api.get<OrderSummaryResponse[]>(endpoints.orders.list()),
   });
+  const usersQuery = useQuery({
+    queryKey: queryKeys.users.all(),
+    queryFn: () => api.get<UserResponse[]>(endpoints.users.list()),
+  });
+
+  const toggleActiveMutation = useMutation({
+    mutationFn: ({ userId, active }: { userId: string; active: boolean }) =>
+      api.patch<UserResponse>(endpoints.users.updateStatus(userId), {
+        active,
+      } satisfies UpdateUserStatusRequest),
+    onSuccess: (user) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.all() });
+      toast.success(
+        user.active ? `Usuario "${user.fullName}" activado.` : `Usuario "${user.fullName}" desactivado.`,
+      );
+    },
+    onError: (error) => {
+      const message =
+        error instanceof ApiError ? error.message : "No se pudo actualizar el usuario.";
+      toast.error(message);
+    },
+  });
 
   const todayOrders = useMemo(
     () => (ordersQuery.data ?? []).filter((order) => isToday(order.openedAt)),
@@ -83,11 +115,11 @@ export function AdminView() {
       <div>
         <h1 className="text-xl font-semibold">Administracion</h1>
         <p className="text-sm text-muted-foreground">
-          Resumen del restaurante, y alta de mesas, categorias y productos.
+          Resumen del restaurante, y alta de mesas, categorias, productos y usuarios.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <SummaryCard
           label="Mesas"
           value={tablesQuery.data?.length}
@@ -102,6 +134,11 @@ export function AdminView() {
           label="Productos"
           value={productsQuery.data?.length}
           isLoading={productsQuery.isLoading}
+        />
+        <SummaryCard
+          label="Usuarios"
+          value={usersQuery.data?.length}
+          isLoading={usersQuery.isLoading}
         />
         <Card>
           <CardHeader>
@@ -124,6 +161,7 @@ export function AdminView() {
           <TabsTrigger value="tables">Mesas</TabsTrigger>
           <TabsTrigger value="categories">Categorias</TabsTrigger>
           <TabsTrigger value="products">Productos</TabsTrigger>
+          <TabsTrigger value="users">Usuarios</TabsTrigger>
         </TabsList>
 
         <TabsContent value="tables" className="flex flex-col gap-4">
@@ -231,6 +269,79 @@ export function AdminView() {
                         </TableCell>
                       </TableRow>
                     ))}
+                  </TableBody>
+                </Table>
+              </QueryState>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="users" className="flex flex-col gap-4">
+          <div className="flex justify-end">
+            <CreateUserDialog />
+          </div>
+          <Card>
+            <CardContent>
+              <QueryState
+                isLoading={usersQuery.isLoading}
+                error={usersQuery.error}
+                isEmpty={usersQuery.data?.length === 0}
+                emptyMessage="Todavia no hay usuarios. Crea el primero con el boton de arriba."
+              >
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>Correo</TableHead>
+                      <TableHead>Rol</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {usersQuery.data?.map((user) => {
+                      const isTogglingThisRow =
+                        toggleActiveMutation.isPending &&
+                        toggleActiveMutation.variables?.userId === user.id;
+                      return (
+                        <TableRow key={user.id}>
+                          <TableCell>
+                            {user.fullName}
+                            {user.id === currentUser?.userId && (
+                              <span className="ml-1.5 text-xs text-muted-foreground">(tu)</span>
+                            )}
+                          </TableCell>
+                          <TableCell>{user.email}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">{USER_ROLE_LABELS[user.role]}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={user.active ? "secondary" : "outline"}>
+                              {user.active ? "Activo" : "Inactivo"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant={user.active ? "destructive" : "outline"}
+                              size="sm"
+                              disabled={isTogglingThisRow}
+                              onClick={() =>
+                                toggleActiveMutation.mutate({
+                                  userId: user.id,
+                                  active: !user.active,
+                                })
+                              }
+                            >
+                              {isTogglingThisRow
+                                ? "Guardando..."
+                                : user.active
+                                  ? "Desactivar"
+                                  : "Activar"}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </QueryState>
