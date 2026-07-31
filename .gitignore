@@ -42,4 +42,10 @@ build/
 !**/src/test/**/build/
 
 ### VS Code ###
-.vscode/
+# La configuracion compartida si se versiona: deja el proyecto listo para
+# correr con un clic. Lo personal de cada quien queda fuera.
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/settings.json
