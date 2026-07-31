@@ -1,6 +1,7 @@
 package com.callejon9.user.repository;
 
 import com.callejon9.user.domain.User;
+import com.callejon9.user.domain.UserRole;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,4 +16,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmail(String email);
 
     long countByTenantId(UUID tenantId);
+
+    long countByRoleAndActiveTrue(UserRole role);
 }
