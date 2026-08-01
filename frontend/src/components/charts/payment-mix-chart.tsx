@@ -39,8 +39,9 @@ export function PaymentMixChart({ data }: PaymentMixChartProps) {
   const maxTotal = Math.max(...data.map((row) => row.total), 1);
   const xFor = (value: number) => MARGIN.left + (value / (maxTotal * 1.15)) * PLOT_WIDTH;
 
+  // Ancho acotado: ver la nota en pareto-chart.tsx.
   return (
-    <div className="relative">
+    <div className="relative w-full max-w-3xl">
       <svg
         viewBox={`0 0 ${VB_WIDTH} ${vbHeight}`}
         className="w-full"

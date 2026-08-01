@@ -4,10 +4,18 @@
  * por encima del piso de contraste 3:1. No sustituir estos valores.
  *
  * Las variables se declaran sobre `.scope` (no sobre `:root` global) para
- * que solo afecten a esta pantalla. El modo oscuro se resuelve dos veces --
- * por preferencia del sistema y por el atributo `data-theme` que un futuro
- * selector de tema pondria en la raiz -- para que ese selector siempre gane
- * sobre la preferencia del sistema, en cualquier direccion.
+ * que solo afecten a esta pantalla.
+ *
+ * DELIBERADAMENTE NO se atiende `prefers-color-scheme`. El resto de la
+ * aplicacion no tiene modo oscuro ni selector de tema: es siempre clara. Si
+ * la grafica siguiera la preferencia del sistema, en una maquina configurada
+ * en oscuro quedaria un recuadro casi negro dentro de una pantalla blanca, y
+ * eso se lee como un error de renderizado, no como una decision. Una parte de
+ * la interfaz no puede cambiar de tema por su cuenta mientras el resto no.
+ *
+ * Los pasos oscuros se conservan bajo `data-theme="dark"`, listos para el dia
+ * en que exista un selector de tema de verdad. Ese dia basta con que el
+ * selector estampe el atributo en la raiz.
  */
 
 .scope {
@@ -21,20 +29,7 @@
   --baseline: #c3c2b7;
 }
 
-@media (prefers-color-scheme: dark) {
-  .scope {
-    --series-1: #3987e5;
-    --series-2: #d95926;
-    --surface: #1a1a19;
-    --ink-primary: #ffffff;
-    --ink-secondary: #c3c2b7;
-    --ink-muted: #898781;
-    --gridline: #2c2c2a;
-    --baseline: #383835;
-  }
-}
-
-/* Un selector de tema explicito siempre gana, en cualquier direccion, sobre `prefers-color-scheme`. */
+/* Pasos oscuros validados, activos solo con un selector de tema explicito. */
 :global(:root[data-theme="dark"]) .scope {
   --series-1: #3987e5;
   --series-2: #d95926;
