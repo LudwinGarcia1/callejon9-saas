@@ -70,7 +70,15 @@ export function ParetoChart({ data }: ParetoChartProps) {
         ]}
       />
 
-      <div className="relative">
+      {/*
+        El ancho se acota a proposito. Con `w-full` a secas el SVG se estira a
+        todo el contenedor y, al conservar la relacion de aspecto del viewBox,
+        la altura crecia hasta ~685px: una pantalla entera por grafica y una
+        pagina de 2200px para tres graficas chicas. Acotar el contenedor (y no
+        el SVG) mantiene correcto el calculo de posicion de los tooltips, que
+        se mide contra este mismo elemento.
+      */}
+      <div className="relative w-full max-w-3xl">
         <svg
           viewBox={`0 0 ${VB_WIDTH} ${VB_HEIGHT}`}
           className="w-full"

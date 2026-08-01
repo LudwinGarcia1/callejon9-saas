@@ -49,8 +49,9 @@ export function DailySalesChart({ data }: DailySalesChartProps) {
   const yFor = (value: number) => MARGIN.top + PLOT_HEIGHT - (value / scaleMax) * PLOT_HEIGHT;
   const maxIndex = data.reduce((best, row, i) => (row.total > data[best].total ? i : best), 0);
 
+  // Ancho acotado: ver la nota en pareto-chart.tsx.
   return (
-    <div className="relative">
+    <div className="relative w-full max-w-3xl">
       <svg
         viewBox={`0 0 ${VB_WIDTH} ${VB_HEIGHT}`}
         className="w-full"
