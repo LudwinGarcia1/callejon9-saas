@@ -18,6 +18,7 @@ import jakarta.servlet.http.Cookie;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -154,12 +155,20 @@ class SalesControllerTest {
      * filas en silencio.
      */
     private void backdateSale(UUID saleId, LocalDate day) {
-        Instant backdated = day.atTime(12, 0).toInstant(ZoneOffset.UTC);
+        backdateSaleToInstant(saleId, day.atTime(12, 0).toInstant(ZoneOffset.UTC));
+    }
+
+    /**
+     * Igual que {@link #backdateSale(UUID, LocalDate)} pero recibe el
+     * instante exacto, para probar limites de dia (primer/ultimo minuto)
+     * en vez de mediodia.
+     */
+    private void backdateSaleToInstant(UUID saleId, Instant instant) {
         TenantContext.set(tenant.getId());
         try {
             transactionTemplate.executeWithoutResult(status -> jdbcTemplate.update(
                     "UPDATE sales SET created_at = ? WHERE id = ?",
-                    java.sql.Timestamp.from(backdated), saleId));
+                    java.sql.Timestamp.from(instant), saleId));
         } finally {
             TenantContext.clear();
         }
@@ -193,6 +202,76 @@ class SalesControllerTest {
                 .andExpect(jsonPath("$.sales[1].subtotal").value(25.00))
                 .andExpect(jsonPath("$.sales[1].tip").value(2.50))
                 .andExpect(jsonPath("$.sales[1].total").value(27.50));
+    }
+
+    /**
+     * El defecto, reproducido de forma determinista.
+     *
+     * Un dia del negocio va de medianoche a medianoche EN LA ZONA DEL
+     * NEGOCIO. Con Mexico City en -06:00, las 23:30 del dia D locales son
+     * las 05:30 UTC del dia D+1: resolviendo el rango en UTC esa venta cae
+     * fuera del dia D, y la del ultimo minuto del dia D-1 cae dentro. El
+     * historial termina mostrando la cena de anoche y escondiendo la de hoy.
+     *
+     * Este test afirma CUALES ventas vuelven, no cuantas. Contar no basta:
+     * con la logica en UTC tambien vuelven dos filas, solo que son las
+     * equivocadas, y una asercion de cantidad pasaria sin notarlo.
+     *
+     * Usa un dia fijo del pasado, asi que no depende de la hora a la que se
+     * ejecute la suite.
+     */
+    @Test
+    @DisplayName("un rango explicito cubre el dia completo en la zona del negocio, no en UTC")
+    void explicitRangeCoversTheFullLocalDayNotTheUtcDay() throws Exception {
+        Product taco = createProduct("Taco", "25.00");
+        ZoneId businessZone = ZoneId.of("America/Mexico_City");
+        LocalDate targetDay = LocalDate.now(businessZone).minusDays(10);
+
+        // 23:30 locales del dia D. En UTC ya es D+1: con el bug, se pierde.
+        CheckoutResult dinner = checkout(waiter, cashier, table, taco, 1, "CASH", 0);
+        UUID dinnerSaleId = UUID.fromString(dinner.ticket().get("saleId").asText());
+        backdateSaleToInstant(dinnerSaleId, targetDay.atTime(23, 30).atZone(businessZone).toInstant());
+
+        // 23:30 locales del dia ANTERIOR. En UTC cae dentro de D: con el bug, se cuela.
+        CheckoutResult previousNight = checkout(waiter, cashier, table, taco, 1, "CASH", 0);
+        UUID previousNightSaleId = UUID.fromString(previousNight.ticket().get("saleId").asText());
+        backdateSaleToInstant(previousNightSaleId,
+                targetDay.minusDays(1).atTime(23, 30).atZone(businessZone).toInstant());
+
+        mockMvc.perform(get("/api/v1/sales")
+                        .param("from", targetDay.toString())
+                        .param("to", targetDay.toString())
+                        .cookie(cookieFor(cashier)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sales.length()").value(1))
+                .andExpect(jsonPath("$.sales[0].id").value(dinnerSaleId.toString()))
+                .andExpect(jsonPath("$.summary.count").value(1));
+    }
+
+    /**
+     * El primer instante del dia local tambien tiene que entrar: 00:00:30
+     * locales del dia D son las 06:00:30 UTC del mismo dia D, asi que este
+     * caso pasa con ambas logicas. Se conserva igual para fijar el borde
+     * inferior y detectar un arreglo que corra el rango de mas.
+     */
+    @Test
+    @DisplayName("un rango explicito incluye el primer minuto del dia local")
+    void explicitRangeIncludesTheFirstMinuteOfTheLocalDay() throws Exception {
+        Product taco = createProduct("Taco", "25.00");
+        ZoneId businessZone = ZoneId.of("America/Mexico_City");
+        LocalDate targetDay = LocalDate.now(businessZone).minusDays(20);
+
+        CheckoutResult firstMinute = checkout(waiter, cashier, table, taco, 1, "CASH", 0);
+        UUID firstMinuteSaleId = UUID.fromString(firstMinute.ticket().get("saleId").asText());
+        backdateSaleToInstant(firstMinuteSaleId, targetDay.atTime(0, 0, 30).atZone(businessZone).toInstant());
+
+        mockMvc.perform(get("/api/v1/sales")
+                        .param("from", targetDay.toString())
+                        .param("to", targetDay.toString())
+                        .cookie(cookieFor(cashier)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sales.length()").value(1))
+                .andExpect(jsonPath("$.sales[0].id").value(firstMinuteSaleId.toString()));
     }
 
     @Test
