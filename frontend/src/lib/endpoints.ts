@@ -63,4 +63,8 @@ export const endpoints = {
     /** GET; acepta los query params opcionales `from`/`to` (fechas ISO). */
     history: () => "/api/v1/sales",
   },
+  analytics: {
+    /** GET; acepta los query params opcionales `from`/`to` (fechas ISO). Default: ultimos 7 dias. */
+    summary: () => "/api/v1/analytics",
+  },
 };

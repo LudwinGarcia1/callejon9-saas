@@ -40,3 +40,17 @@ export function formatShortTime(iso: string): string {
 export function todayIsoDate(): string {
   return new Date().toISOString().slice(0, 10);
 }
+
+/**
+ * Formatea una fecha ISO *sin hora* (`yyyy-MM-dd`, ej. la de un dia de
+ * `salesByDay`) como fecha corta, ej. `20/07/2026`.
+ *
+ * A diferencia de {@link formatShortDate}, arma la fecha con sus componentes
+ * en vez de dejar que `new Date(iso)` la interprete como un instante UTC: si
+ * se hiciera asi, en una zona detras de UTC (Mexico, UTC-6) la fecha se veria
+ * corrida un dia hacia atras.
+ */
+export function formatIsoDate(isoDate: string): string {
+  const [year, month, day] = isoDate.split("-").map(Number);
+  return dateFormatter.format(new Date(year, month - 1, day));
+}

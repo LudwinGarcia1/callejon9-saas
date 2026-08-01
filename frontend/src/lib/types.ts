@@ -332,6 +332,44 @@ export interface SalesHistoryResponse {
 }
 
 // ---------------------------------------------------------------------------
+// Analitica: verificado contra ParetoRow, SalesByDayRow, PaymentMixRow y
+// AnalyticsResponse en backend/src/main/java/com/callejon9/analytics/web/dto.
+// Los tres porcentajes (`revenueShare`, `cumulativeShare`, `share`) viajan en
+// escala 0-100, nunca como fraccion 0-1.
+// ---------------------------------------------------------------------------
+
+/** Una fila del Pareto de productos. Los ultimos productos por ingreso se pliegan en una fila "Otros". */
+export interface ParetoRow {
+  productName: string;
+  revenue: number;
+  revenueShare: number;
+  cumulativeShare: number;
+}
+
+/** Ventas de un dia del rango. Un dia sin ventas viene igual, con `total` y `count` en cero. */
+export interface SalesByDayRow {
+  /** Fecha ISO (`yyyy-MM-dd`), ya resuelta en la zona horaria del negocio. */
+  day: string;
+  total: number;
+  count: number;
+}
+
+/** Ventas del rango agrupadas por metodo de pago. */
+export interface PaymentMixRow {
+  method: PaymentMethod;
+  count: number;
+  total: number;
+  share: number;
+}
+
+/** GET /api/v1/analytics — verificado contra AnalyticsResponse. */
+export interface AnalyticsResponse {
+  pareto: ParetoRow[];
+  salesByDay: SalesByDayRow[];
+  paymentMix: PaymentMixRow[];
+}
+
+// ---------------------------------------------------------------------------
 // Etiquetas en espanol. Este archivo es el unico lugar donde los
 // identificadores en ingles y la copia en espanol se encuentran.
 // ---------------------------------------------------------------------------
