@@ -1,0 +1,58 @@
+/*
+ * Paleta validada para las graficas de analitica (ver informe de diseno):
+ * peor Delta-E CVD 24.7 claro / 26.8 oscuro, vision normal 33.6 / 31.8, ambos
+ * por encima del piso de contraste 3:1. No sustituir estos valores.
+ *
+ * Las variables se declaran sobre `.scope` (no sobre `:root` global) para
+ * que solo afecten a esta pantalla. El modo oscuro se resuelve dos veces --
+ * por preferencia del sistema y por el atributo `data-theme` que un futuro
+ * selector de tema pondria en la raiz -- para que ese selector siempre gane
+ * sobre la preferencia del sistema, en cualquier direccion.
+ */
+
+.scope {
+  --series-1: #2a78d6; /* barras: participacion de ingresos / ventas del dia / metodo de pago */
+  --series-2: #eb6834; /* linea: acumulado del Pareto */
+  --surface: #fcfcfb;
+  --ink-primary: #0b0b0b;
+  --ink-secondary: #52514e;
+  --ink-muted: #898781;
+  --gridline: #e1e0d9;
+  --baseline: #c3c2b7;
+}
+
+@media (prefers-color-scheme: dark) {
+  .scope {
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --surface: #1a1a19;
+    --ink-primary: #ffffff;
+    --ink-secondary: #c3c2b7;
+    --ink-muted: #898781;
+    --gridline: #2c2c2a;
+    --baseline: #383835;
+  }
+}
+
+/* Un selector de tema explicito siempre gana, en cualquier direccion, sobre `prefers-color-scheme`. */
+:global(:root[data-theme="dark"]) .scope {
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --surface: #1a1a19;
+  --ink-primary: #ffffff;
+  --ink-secondary: #c3c2b7;
+  --ink-muted: #898781;
+  --gridline: #2c2c2a;
+  --baseline: #383835;
+}
+
+:global(:root[data-theme="light"]) .scope {
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --surface: #fcfcfb;
+  --ink-primary: #0b0b0b;
+  --ink-secondary: #52514e;
+  --ink-muted: #898781;
+  --gridline: #e1e0d9;
+  --baseline: #c3c2b7;
+}

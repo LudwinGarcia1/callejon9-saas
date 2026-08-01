@@ -14,6 +14,7 @@ const NAV_WAITER = { href: "/waiter", label: "Mesas" };
 const NAV_KITCHEN = { href: "/kitchen", label: "Cocina" };
 const NAV_CASHIER = { href: "/cashier", label: "Caja" };
 const NAV_HISTORY = { href: "/history", label: "Historial" };
+const NAV_ANALYTICS = { href: "/analytics", label: "Analitica" };
 
 /**
  * Navegacion disponible por rol.
@@ -27,12 +28,17 @@ const NAV_HISTORY = { href: "/history", label: "Historial" };
  * autenticado puede consultarlo -- pero solo tiene sentido operativo para quien
  * cobra (CASHIER) o administra el restaurante (ADMIN).
  *
+ * La analitica (GET /api/v1/analytics) tampoco tiene @PreAuthorize -- cualquier
+ * autenticado puede consultarla -- pero solo tiene sentido para quien administra
+ * el restaurante, asi que la barra la restringe a ADMIN aunque el servidor no
+ * lo exija.
+ *
  * SUPER_ADMIN solo ve la plataforma porque pertenece al tenant tecnico
  * 'platform', que no tiene mesas, productos ni comandas.
  */
 const NAV_ITEMS_BY_ROLE: Record<UserRole, { href: string; label: string }[]> = {
   SUPER_ADMIN: [{ href: "/platform", label: "Plataforma" }],
-  ADMIN: [NAV_ADMIN, NAV_WAITER, NAV_KITCHEN, NAV_CASHIER, NAV_HISTORY],
+  ADMIN: [NAV_ADMIN, NAV_WAITER, NAV_KITCHEN, NAV_CASHIER, NAV_HISTORY, NAV_ANALYTICS],
   WAITER: [NAV_WAITER],
   KITCHEN: [NAV_KITCHEN],
   CASHIER: [NAV_CASHIER, NAV_HISTORY],
