@@ -32,6 +32,11 @@ spring:
           time_zone: UTC
 
 app:
+  # Zona horaria del negocio. Define que instantes delimitan "un dia" en el
+  # historial de ventas. Resolverlo en UTC vaciaba la pantalla a partir de las
+  # 18:00 locales, justo durante el servicio de la noche.
+  timezone: America/Mexico_City
+
   jwt:
     secret: ${JWT_SECRET:dev-only-secret-change-me-min-32-bytes-long!!}
     access-token-minutes: 15
