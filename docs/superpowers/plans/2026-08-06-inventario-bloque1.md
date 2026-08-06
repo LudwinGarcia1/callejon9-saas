@@ -3024,7 +3024,7 @@ function optionalNumber(value: FormDataEntryValue | null): number | undefined {
 
 - [ ] **Step 4: Crear la pantalla con la pestaña Insumos**
 
-`frontend/src/app/(authenticated)/inventory/inventory-view.tsx`. La pestaña *Movimientos* llega en la tarea 8; aquí se deja el `TabsTrigger` y un `TabsContent` con un marcador que esa tarea reemplaza.
+`frontend/src/app/(authenticated)/inventory/inventory-view.tsx`. La pestaña *Movimientos* llega en la tarea 8. Aquí el `Tabs` lleva **una sola** pestaña: no se deja ningún marcador de "pendiente" en pantalla, porque una pantalla a medias no se distingue de una pantalla rota. La tarea 8 añade el `TabsTrigger` y su contenido de una vez.
 
 ```tsx
 "use client";
@@ -3148,7 +3148,6 @@ export function InventoryView() {
       <Tabs defaultValue="items">
         <TabsList>
           <TabsTrigger value="items">Insumos</TabsTrigger>
-          <TabsTrigger value="movements">Movimientos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="items" className="flex flex-col gap-4">
@@ -3247,13 +3246,6 @@ export function InventoryView() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="movements">
-          <Card>
-            <CardContent className="py-12 text-center text-sm text-muted-foreground">
-              El historial de movimientos llega en la siguiente tarea.
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
 
       <EditItemDialog
@@ -3575,9 +3567,18 @@ Y el diálogo junto a `EditItemDialog`:
 
 `disabled={!item.active}` refleja el `409` del backend por adelantado: un insumo dado de baja no se mueve.
 
-- [ ] **Step 3: Reemplazar el marcador de la pestaña Movimientos**
+- [ ] **Step 3: Añadir la pestaña Movimientos**
 
-Sustituir el `TabsContent value="movements"` completo por:
+En `inventory-view.tsx`, agregar el `TabsTrigger` junto al de *Insumos*:
+
+```tsx
+        <TabsList>
+          <TabsTrigger value="items">Insumos</TabsTrigger>
+          <TabsTrigger value="movements">Movimientos</TabsTrigger>
+        </TabsList>
+```
+
+Y su contenido, después del `TabsContent value="items"` y antes del cierre de `</Tabs>`:
 
 ```tsx
         <TabsContent value="movements" className="flex flex-col gap-4">
