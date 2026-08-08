@@ -246,8 +246,15 @@ export function InventoryView() {
         </TabsContent>
       </Tabs>
 
+      {/*
+        La key fuerza el remontaje al cambiar de insumo, para que los
+        defaultValue no arrastren los del anterior. Va prefijada por dialogo
+        porque los dos son hermanos: sin el prefijo, con ambos cerrados los dos
+        caerian en la misma key centinela y React los tratara como el mismo
+        hijo.
+      */}
       <EditItemDialog
-        key={editingItem?.id ?? "none"}
+        key={`edit-${editingItem?.id ?? "none"}`}
         item={editingItem}
         onOpenChange={(open) => {
           if (!open) {
@@ -257,7 +264,7 @@ export function InventoryView() {
       />
 
       <RegisterMovementDialog
-        key={movingItem?.id ?? "none"}
+        key={`move-${movingItem?.id ?? "none"}`}
         item={movingItem}
         onOpenChange={(open) => {
           if (!open) {
@@ -378,10 +385,12 @@ function MovementsPanel({ items }: MovementsPanelProps) {
                       <StatusBadge kind="movement" status={movement.movementType} />
                     </TableCell>
                     <TableCell
-                      className={cn(movement.quantity < 0 ? "text-destructive" : "text-foreground")}
+                      className={cn(
+                        movement.signedQuantity < 0 ? "text-destructive" : "text-foreground",
+                      )}
                     >
-                      {movement.quantity > 0 ? "+" : ""}
-                      {movement.quantity} {movement.unit}
+                      {movement.signedQuantity > 0 ? "+" : ""}
+                      {movement.signedQuantity} {movement.unit}
                     </TableCell>
                     <TableCell>{movement.reason ?? "—"}</TableCell>
                     <TableCell>{movement.userName ?? "—"}</TableCell>

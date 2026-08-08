@@ -395,7 +395,10 @@ export interface InventoryMovementRow {
   itemName: string;
   unit: string;
   movementType: InventoryMovementType;
+  /** Como se capturo: sin signo salvo en ajustes. Para mostrar, usa `signedQuantity`. */
   quantity: number;
+  /** El efecto sobre el stock con su signo, ya resuelto por el backend: una salida de 5 llega como -5. */
+  signedQuantity: number;
   reason: string | null;
   userName: string | null;
   createdAt: string;
