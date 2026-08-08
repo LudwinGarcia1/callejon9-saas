@@ -336,6 +336,26 @@ class InventoryMovementControllerTest {
     }
 
     @Test
+    @DisplayName("el listado manda el efecto con signo: una salida viaja negativa")
+    void theListingCarriesTheSignedEffect() throws Exception {
+        UUID itemId = createItem("Cebolla");
+        register(itemId, "\"movementType\":\"IN\",\"quantity\":20.000}");
+        register(itemId, "\"movementType\":\"OUT\",\"quantity\":5.000}");
+
+        // quantity guarda lo que se capturo (5, sin signo) y signedQuantity el
+        // efecto (-5). Sin el segundo, la interfaz pintaria "+5" en una salida.
+        mockMvc.perform(get("/api/v1/inventory/movements")
+                        .param("itemId", itemId.toString())
+                        .cookie(cookieFor(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].movementType").value("OUT"))
+                .andExpect(jsonPath("$[0].quantity").value(5.000))
+                .andExpect(jsonPath("$[0].signedQuantity").value(-5.000))
+                .andExpect(jsonPath("$[1].movementType").value("IN"))
+                .andExpect(jsonPath("$[1].signedQuantity").value(20.000));
+    }
+
+    @Test
     @DisplayName("el listado filtra por itemId")
     void theListingFiltersByItem() throws Exception {
         UUID onionId = createItem("Cebolla");
