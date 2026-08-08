@@ -68,8 +68,11 @@ export function RegisterMovementDialog({ item, onOpenChange }: RegisterMovementD
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.items(true) });
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.items() });
       queryClient.invalidateQueries({ queryKey: ["inventory", "movements"] });
+      // "Movimiento registrado" y no "<Tipo> registrada": las cuatro etiquetas
+      // no comparten genero -- "Ajuste registrada" no concuerda.
       toast.success(
-        `${MOVEMENT_TYPE_LABELS[movement.movementType]} registrada: ${movement.quantity} ${item?.unit ?? ""}.`,
+        `Movimiento registrado: ${MOVEMENT_TYPE_LABELS[movement.movementType].toLowerCase()}`
+          + ` de ${movement.quantity} ${item?.unit ?? ""}.`,
       );
       close();
     },

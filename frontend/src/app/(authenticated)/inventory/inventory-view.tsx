@@ -150,7 +150,11 @@ export function InventoryView() {
                 isLoading={itemsQuery.isLoading}
                 error={itemsQuery.error}
                 isEmpty={items.length === 0}
-                emptyMessage="Todavia no hay insumos. Crea el primero con el boton de arriba."
+                emptyMessage={
+                  canManageCatalog
+                    ? "Todavia no hay insumos. Crea el primero con el boton de arriba."
+                    : "Todavia no hay insumos. Pide a un administrador que los de de alta."
+                }
               >
                 <Table>
                   <TableHeader>
