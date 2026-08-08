@@ -2,7 +2,6 @@ package com.callejon9.inventory.repository;
 
 import com.callejon9.inventory.domain.InventoryMovement;
 import com.callejon9.inventory.web.dto.InventoryMovementRow;
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -44,14 +43,14 @@ public interface InventoryMovementRepository extends JpaRepository<InventoryMove
                                            @Param("itemId") UUID itemId);
 
     /**
-     * Suma de las cantidades de un insumo. La invariante del modulo es que
-     * esta suma cuadre siempre con inventory_items.stock; la prueba de
-     * concurrencia se apoya en ella.
+     * Los movimientos de un insumo, para reconstruir su stock desde el ledger.
+     *
+     * Devuelve las filas y no una suma en SQL a proposito: la columna quantity
+     * guarda la cantidad SIN signo salvo en ADJUSTMENT, y quien conoce el signo
+     * de cada tipo es {@link com.callejon9.inventory.domain.InventoryMovementType}.
+     * Un {@code sum(quantity)} sumaria una salida como si fuera una entrada, y
+     * reproducir ese signo en un CASE de JPQL duplicaria en SQL una regla que
+     * ya vive en el enum.
      */
-    @Query("""
-            select coalesce(sum(m.quantity), 0)
-            from InventoryMovement m
-            where m.inventoryItemId = :itemId
-            """)
-    BigDecimal sumQuantityByInventoryItemId(@Param("itemId") UUID itemId);
+    List<InventoryMovement> findByInventoryItemId(UUID inventoryItemId);
 }

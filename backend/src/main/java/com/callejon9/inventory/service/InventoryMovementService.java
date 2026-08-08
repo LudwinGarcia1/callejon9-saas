@@ -44,12 +44,17 @@ public class InventoryMovementService {
      * En un ADJUSTMENT el delta se calcula aqui, contra el stock que acaba de
      * leerse: {@code countedStock - stock}. Es la unica forma de que el
      * numero guardado corresponda al conteo que la persona hizo.
+     *
+     * El insumo se lee con lock pesimista, y el lock va ANTES de leer el
+     * stock: tanto el delta de un ajuste como la suma de cualquier otro
+     * movimiento se calculan a partir de ese valor, y leerlo sin bloquear es
+     * justo la ventana por la que se pierde un movimiento.
      */
     @Transactional
     public InventoryMovement register(UUID itemId, InventoryMovementType type,
                                       BigDecimal quantity, BigDecimal countedStock,
                                       String reason, UUID userId) {
-        InventoryItem item = itemRepository.findById(itemId)
+        InventoryItem item = itemRepository.findByIdForUpdate(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("El insumo no existe."));
 
         if (!item.isActive()) {
