@@ -6,6 +6,7 @@ import com.callejon9.platform.tenant.service.TenantOnboardingService;
 import com.callejon9.tenancy.TenantContext;
 import com.callejon9.user.domain.User;
 import com.callejon9.user.domain.UserRole;
+import com.callejon9.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -19,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -37,6 +39,8 @@ class InventoryItemControllerTest {
     @Autowired private TenantOnboardingService onboardingService;
     @Autowired private JwtService jwtService;
     @Autowired private JdbcTemplate jdbcTemplate;
+    @Autowired private TransactionTemplate transactionTemplate;
+    @Autowired private UserRepository userRepository;
 
     private Tenant tenant;
     private User admin;
@@ -45,7 +49,7 @@ class InventoryItemControllerTest {
     void seed() {
         tenant = onboardingService.onboard("Insumos Test", "insumos-test",
                 "admin@insumos.com", "Admin", "Secreto123!", "FREE");
-        admin = fakeUser(UserRole.ADMIN);
+        admin = persistedUser(UserRole.ADMIN);
     }
 
     @AfterEach
@@ -58,13 +62,21 @@ class InventoryItemControllerTest {
         return new Cookie("access_token", jwtService.generateAccessToken(user));
     }
 
-    private User fakeUser(UserRole role) {
-        User user = User.builder()
-                .email(role.name().toLowerCase() + "@insumos.com").passwordHash("x")
-                .fullName(role.name()).role(role).active(true).build();
-        user.setId(UUID.randomUUID());
-        user.setTenantId(tenant.getId());
-        return user;
+    /**
+     * El usuario se persiste de verdad: dar de alta un insumo con stock inicial
+     * escribe un movimiento, e inventory_movements.user_id tiene FK a users. Un
+     * principal inventado haria fallar ese INSERT. El correo lleva dominio
+     * propio para no chocar con el admin que ya creo el onboarding.
+     */
+    private User persistedUser(UserRole role) {
+        TenantContext.set(tenant.getId());
+        try {
+            return transactionTemplate.execute(status -> userRepository.save(User.builder()
+                    .email(role.name().toLowerCase() + "@inventario.com").passwordHash("x")
+                    .fullName(role.name()).role(role).active(true).build()));
+        } finally {
+            TenantContext.clear();
+        }
     }
 
     private UUID createItem(String name, String unit) throws Exception {
@@ -153,7 +165,7 @@ class InventoryItemControllerTest {
     @DisplayName("un WAITER puede consultar insumos pero no crearlos ni editarlos")
     void waiterCanReadButNotWrite() throws Exception {
         UUID itemId = createItem("Cebolla", "kg");
-        User waiter = fakeUser(UserRole.WAITER);
+        User waiter = persistedUser(UserRole.WAITER);
 
         mockMvc.perform(get("/api/v1/inventory/items").cookie(cookieFor(waiter)))
                 .andExpect(status().isOk())
@@ -277,5 +289,81 @@ class InventoryItemControllerTest {
                 .andExpect(jsonPath("$[0].name").value("Aceite"))
                 .andExpect(jsonPath("$[1].name").value("Cebolla"))
                 .andExpect(jsonPath("$[2].name").value("Tomate"));
+    }
+
+    @Test
+    @DisplayName("crear un insumo con stock inicial deja el stock y su movimiento IN")
+    void initialStockLeavesAnEntryInTheLedger() throws Exception {
+        String body = mockMvc.perform(post("/api/v1/inventory/items")
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"Cebolla","unit":"kg","initialStock":20.000}
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.stock").value(20.000))
+                .andReturn().getResponse().getContentAsString();
+        UUID itemId = UUID.fromString(body.replaceAll(".*\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
+
+        // El stock no aparecio de la nada: hay una fila que lo explica.
+        mockMvc.perform(get("/api/v1/inventory/movements")
+                        .param("itemId", itemId.toString())
+                        .cookie(cookieFor(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].movementType").value("IN"))
+                .andExpect(jsonPath("$[0].quantity").value(20.000))
+                .andExpect(jsonPath("$[0].reason").value("Stock inicial"));
+    }
+
+    @Test
+    @DisplayName("crear un insumo sin stock inicial no genera ningun movimiento")
+    void withoutInitialStockThereIsNoMovement() throws Exception {
+        UUID itemId = createItem("Cebolla", "kg");
+
+        mockMvc.perform(get("/api/v1/inventory/movements")
+                        .param("itemId", itemId.toString())
+                        .cookie(cookieFor(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("se puede cambiar la unidad mientras el insumo no tenga movimientos")
+    void theUnitCanChangeWhileThereIsNoHistory() throws Exception {
+        UUID itemId = createItem("Cebolla", "kg");
+
+        mockMvc.perform(put("/api/v1/inventory/items/" + itemId)
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Cebolla\",\"unit\":\"gramo\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.unit").value("gramo"));
+    }
+
+    @Test
+    @DisplayName("cambiar la unidad de un insumo con movimientos da 409, pero el resto si se corrige")
+    void theUnitIsLockedOnceThereIsHistory() throws Exception {
+        UUID itemId = createItem("Cebolla", "kg");
+        mockMvc.perform(post("/api/v1/inventory/movements")
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"inventoryItemId\":\"" + itemId
+                                + "\",\"movementType\":\"IN\",\"quantity\":20.000}"))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(put("/api/v1/inventory/items/" + itemId)
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Cebolla\",\"unit\":\"gramo\"}"))
+                .andExpect(status().isConflict());
+
+        // Mandar la MISMA unidad no es un cambio y no debe estorbar.
+        mockMvc.perform(put("/api/v1/inventory/items/" + itemId)
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Cebolla blanca\",\"unit\":\"kg\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Cebolla blanca"));
     }
 }
