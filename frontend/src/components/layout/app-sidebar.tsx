@@ -15,6 +15,7 @@ const NAV_KITCHEN = { href: "/kitchen", label: "Cocina" };
 const NAV_CASHIER = { href: "/cashier", label: "Caja" };
 const NAV_HISTORY = { href: "/history", label: "Historial" };
 const NAV_ANALYTICS = { href: "/analytics", label: "Analitica" };
+const NAV_INVENTORY = { href: "/inventory", label: "Inventario" };
 
 /**
  * Navegacion disponible por rol.
@@ -33,14 +34,20 @@ const NAV_ANALYTICS = { href: "/analytics", label: "Analitica" };
  * el restaurante, asi que la barra la restringe a ADMIN aunque el servidor no
  * lo exija.
  *
+ * KITCHEN ve Inventario porque POST /api/v1/inventory/movements es
+ * hasAnyRole('ADMIN','KITCHEN'): la cocina es quien ve la merma y quien saca
+ * los insumos del estante. Como el alta y la edicion de insumos si son solo
+ * de ADMIN, la pantalla oculta esos botones por rol -- la barra concede la
+ * seccion, no cada operacion dentro de ella.
+ *
  * SUPER_ADMIN solo ve la plataforma porque pertenece al tenant tecnico
  * 'platform', que no tiene mesas, productos ni comandas.
  */
 const NAV_ITEMS_BY_ROLE: Record<UserRole, { href: string; label: string }[]> = {
   SUPER_ADMIN: [{ href: "/platform", label: "Plataforma" }],
-  ADMIN: [NAV_ADMIN, NAV_WAITER, NAV_KITCHEN, NAV_CASHIER, NAV_HISTORY, NAV_ANALYTICS],
+  ADMIN: [NAV_ADMIN, NAV_WAITER, NAV_KITCHEN, NAV_CASHIER, NAV_INVENTORY, NAV_HISTORY, NAV_ANALYTICS],
   WAITER: [NAV_WAITER],
-  KITCHEN: [NAV_KITCHEN],
+  KITCHEN: [NAV_KITCHEN, NAV_INVENTORY],
   CASHIER: [NAV_CASHIER, NAV_HISTORY],
 };
 

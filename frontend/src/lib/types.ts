@@ -79,6 +79,10 @@ export type KitchenItemStatus =
 
 export type PaymentMethod = "CASH" | "CARD" | "TRANSFER" | "MIXED" | "MERCADOPAGO";
 
+export type InventoryMovementType = "IN" | "OUT" | "ADJUSTMENT" | "WASTE";
+
+export type StockLevel = "OK" | "LOW" | "NEGATIVE";
+
 export interface TableResponse {
   id: string;
   number: number;
@@ -369,6 +373,76 @@ export interface AnalyticsResponse {
   paymentMix: PaymentMixRow[];
 }
 
+/** GET /api/v1/inventory/items — verificado contra InventoryItemResponse. */
+export interface InventoryItemResponse {
+  id: string;
+  name: string;
+  unit: string;
+  stock: number;
+  minStock: number;
+  unitCost: number;
+  active: boolean;
+  level: StockLevel;
+}
+
+/**
+ * Una fila del ledger. `reason` y `userName` pueden venir nulos: el motivo es
+ * opcional salvo en mermas, y el usuario pudo darse de baja.
+ */
+export interface InventoryMovementRow {
+  id: string;
+  inventoryItemId: string;
+  itemName: string;
+  unit: string;
+  movementType: InventoryMovementType;
+  quantity: number;
+  reason: string | null;
+  userName: string | null;
+  createdAt: string;
+}
+
+export interface RegisteredMovementResponse {
+  id: string;
+  inventoryItemId: string;
+  movementType: InventoryMovementType;
+  quantity: number;
+  reason: string | null;
+  createdAt: string;
+}
+
+export interface CreateInventoryItemRequest {
+  name: string;
+  unit: string;
+  minStock?: number;
+  unitCost?: number;
+  /** Opcional. Si viene, el backend registra su movimiento IN "Stock inicial". */
+  initialStock?: number;
+}
+
+export interface UpdateInventoryItemRequest {
+  name: string;
+  unit: string;
+  minStock?: number;
+  unitCost?: number;
+}
+
+export interface UpdateInventoryItemStatusRequest {
+  active: boolean;
+}
+
+/**
+ * `quantity` en entradas, salidas y mermas; `countedStock` solo en ajustes, y
+ * nunca los dos: el backend rechaza la combinacion con 400. El delta de un
+ * ajuste lo calcula el servidor, no este cliente.
+ */
+export interface RegisterMovementRequest {
+  inventoryItemId: string;
+  movementType: InventoryMovementType;
+  quantity?: number;
+  countedStock?: number;
+  reason?: string;
+}
+
 // ---------------------------------------------------------------------------
 // Etiquetas en espanol. Este archivo es el unico lugar donde los
 // identificadores en ingles y la copia en espanol se encuentran.
@@ -402,6 +476,19 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   TRANSFER: "Transferencia",
   MIXED: "Mixto",
   MERCADOPAGO: "MercadoPago",
+};
+
+export const MOVEMENT_TYPE_LABELS: Record<InventoryMovementType, string> = {
+  IN: "Entrada",
+  OUT: "Salida",
+  ADJUSTMENT: "Ajuste",
+  WASTE: "Merma",
+};
+
+export const STOCK_LEVEL_LABELS: Record<StockLevel, string> = {
+  OK: "Suficiente",
+  LOW: "Bajo mínimo",
+  NEGATIVE: "Negativo",
 };
 
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
