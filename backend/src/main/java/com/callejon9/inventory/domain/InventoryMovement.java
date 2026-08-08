@@ -15,9 +15,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * Una fila del ledger. La suma de las cantidades de todos los movimientos de
- * un insumo cuadra siempre con su columna stock: no existe ningun camino que
- * cambie el stock sin dejar una fila aqui.
+ * Una fila del ledger. Aplicar en orden el efecto con signo de todos los
+ * movimientos de un insumo -- ver {@link InventoryMovementType#signedEffect} --
+ * reproduce siempre su columna stock: no existe ningun camino que cambie el
+ * stock sin dejar una fila aqui.
+ *
+ * No es la suma cruda de quantity: la columna guarda la cantidad sin signo
+ * salvo en ADJUSTMENT, y es el tipo el que dice la direccion.
  */
 @Entity
 @Table(name = "inventory_movements")
