@@ -1,7 +1,9 @@
 package com.callejon9.inventory.service;
 
 import com.callejon9.inventory.domain.InventoryItem;
+import com.callejon9.inventory.domain.InventoryMovementType;
 import com.callejon9.inventory.repository.InventoryItemRepository;
+import com.callejon9.inventory.repository.InventoryMovementRepository;
 import com.callejon9.shared.error.BusinessRuleException;
 import com.callejon9.shared.error.ResourceNotFoundException;
 import java.math.BigDecimal;
@@ -16,9 +18,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class InventoryItemService {
 
     private final InventoryItemRepository itemRepository;
+    private final InventoryMovementRepository movementRepository;
+    private final InventoryMovementService movementService;
 
-    public InventoryItemService(InventoryItemRepository itemRepository) {
+    public InventoryItemService(InventoryItemRepository itemRepository,
+                                InventoryMovementRepository movementRepository,
+                                InventoryMovementService movementService) {
         this.itemRepository = itemRepository;
+        this.movementRepository = movementRepository;
+        this.movementService = movementService;
     }
 
     /**
@@ -33,14 +41,23 @@ public class InventoryItemService {
                 : itemRepository.findByActiveTrueOrderByName();
     }
 
+    /**
+     * El stock inicial no se escribe en la columna: se registra como un
+     * movimiento IN, y el movimiento es el que mueve el stock. Asi no existe
+     * ningun camino por el que la columna cambie sin una fila que lo explique,
+     * ni siquiera el alta.
+     *
+     * Es una sola transaccion: si el movimiento falla, el insumo no queda
+     * creado con un stock que nada justifica.
+     */
     @Transactional
-    public InventoryItem createItem(String name, String unit,
-                                    BigDecimal minStock, BigDecimal unitCost) {
+    public InventoryItem createItem(String name, String unit, BigDecimal minStock,
+                                    BigDecimal unitCost, BigDecimal initialStock, UUID userId) {
         if (itemRepository.existsByName(name)) {
             throw new BusinessRuleException("Ya existe un insumo llamado '" + name + "'.");
         }
 
-        return itemRepository.save(InventoryItem.builder()
+        InventoryItem item = itemRepository.save(InventoryItem.builder()
                 .name(name)
                 .unit(unit)
                 .stock(BigDecimal.ZERO)
@@ -48,11 +65,22 @@ public class InventoryItemService {
                 .unitCost(Objects.requireNonNullElse(unitCost, BigDecimal.ZERO))
                 .active(true)
                 .build());
+
+        if (initialStock != null && initialStock.signum() > 0) {
+            movementService.register(item.getId(), InventoryMovementType.IN,
+                    initialStock, null, "Stock inicial", userId);
+        }
+        return item;
     }
 
     /**
      * Corrige nombre, unidad, minimo y costo. No toca el stock: cambiarlo aqui
      * dejaria un salto en el historial que ninguna fila explicaria.
+     *
+     * La unidad queda fija en cuanto el insumo tiene movimientos. Sin esta
+     * regla, un 20 registrado en kilos se convierte en gramos y nada en el
+     * historial dice en que unidad se capturo cada fila. Mandar la misma
+     * unidad no cuenta como cambio.
      */
     @Transactional
     public InventoryItem updateItem(UUID itemId, String name, String unit,
@@ -62,6 +90,12 @@ public class InventoryItemService {
 
         if (itemRepository.existsByNameAndIdNot(name, itemId)) {
             throw new BusinessRuleException("Ya existe un insumo llamado '" + name + "'.");
+        }
+
+        if (!item.getUnit().equals(unit) && movementRepository.existsByInventoryItemId(itemId)) {
+            throw new BusinessRuleException("El insumo '" + item.getName() + "' ya tiene movimientos en '"
+                    + item.getUnit() + "'. Cambiar la unidad haria ilegible su historial; "
+                    + "crea otro insumo con la unidad correcta.");
         }
 
         item.setName(name);
