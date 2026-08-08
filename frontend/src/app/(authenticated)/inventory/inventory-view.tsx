@@ -7,6 +7,15 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -22,11 +31,17 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { useSession } from "@/hooks/use-session";
 import { ApiError, api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
+import { formatShortDate, formatShortTime, todayIsoDate } from "@/lib/format";
 import { queryKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
-import type { InventoryItemResponse, UpdateInventoryItemStatusRequest } from "@/lib/types";
+import type {
+  InventoryItemResponse,
+  InventoryMovementRow,
+  UpdateInventoryItemStatusRequest,
+} from "@/lib/types";
 import { CreateItemDialog } from "./create-item-dialog";
 import { EditItemDialog } from "./edit-item-dialog";
+import { RegisterMovementDialog } from "./register-movement-dialog";
 
 /**
  * Pantalla de inventario. ADMIN administra el catalogo y registra movimientos;
@@ -38,6 +53,7 @@ export function InventoryView() {
   const { user } = useSession();
   const queryClient = useQueryClient();
   const [editingItem, setEditingItem] = useState<InventoryItemResponse | null>(null);
+  const [movingItem, setMovingItem] = useState<InventoryItemResponse | null>(null);
 
   const canManageCatalog = user?.role === "ADMIN";
 
@@ -119,6 +135,7 @@ export function InventoryView() {
       <Tabs defaultValue="items">
         <TabsList>
           <TabsTrigger value="items">Insumos</TabsTrigger>
+          <TabsTrigger value="movements">Movimientos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="items" className="flex flex-col gap-4">
@@ -178,6 +195,13 @@ export function InventoryView() {
                             </TableCell>
                           )}
                           <TableCell className="flex justify-end gap-2 text-right">
+                            <Button
+                              size="sm"
+                              disabled={!item.active}
+                              onClick={() => setMovingItem(item)}
+                            >
+                              Movimiento
+                            </Button>
                             {canManageCatalog && (
                               <>
                                 <Button
@@ -217,6 +241,9 @@ export function InventoryView() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="movements" className="flex flex-col gap-4">
+          <MovementsPanel items={items} />
+        </TabsContent>
       </Tabs>
 
       <EditItemDialog
@@ -228,6 +255,143 @@ export function InventoryView() {
           }
         }}
       />
+
+      <RegisterMovementDialog
+        key={movingItem?.id ?? "none"}
+        item={movingItem}
+        onOpenChange={(open) => {
+          if (!open) {
+            setMovingItem(null);
+          }
+        }}
+      />
     </div>
+  );
+}
+
+interface MovementsPanelProps {
+  items: InventoryItemResponse[];
+}
+
+/** Valor centinela para "todos los insumos": Radix Select no admite value="". */
+const ALL_ITEMS = "all";
+
+/**
+ * Historial del ledger. El rango se resuelve en la zona del negocio del lado
+ * del servidor; aqui solo se mandan las fechas. Mismo formulario no controlado
+ * que el historial de ventas.
+ */
+function MovementsPanel({ items }: MovementsPanelProps) {
+  const today = todayIsoDate();
+  const [range, setRange] = useState({ from: today, to: today });
+  const [itemId, setItemId] = useState<string>(ALL_ITEMS);
+
+  const movementsQuery = useQuery({
+    queryKey: queryKeys.inventory.movements(
+      range.from,
+      range.to,
+      itemId === ALL_ITEMS ? undefined : itemId,
+    ),
+    queryFn: () =>
+      api.get<InventoryMovementRow[]>(endpoints.inventory.movements(), {
+        from: range.from,
+        to: range.to,
+        itemId: itemId === ALL_ITEMS ? undefined : itemId,
+      }),
+  });
+
+  function handleRangeSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    setRange({
+      from: String(formData.get("from") || today),
+      to: String(formData.get("to") || today),
+    });
+  }
+
+  const movements = movementsQuery.data ?? [];
+
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Filtros</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleRangeSubmit} className="flex flex-wrap items-end gap-3">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="movements-from">Desde</Label>
+              <Input id="movements-from" name="from" type="date" defaultValue={today} required />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="movements-to">Hasta</Label>
+              <Input id="movements-to" name="to" type="date" defaultValue={today} required />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="movements-item">Insumo</Label>
+              <Select value={itemId} onValueChange={setItemId}>
+                <SelectTrigger id="movements-item" className="w-56">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={ALL_ITEMS}>Todos</SelectItem>
+                  {items.map((item) => (
+                    <SelectItem key={item.id} value={item.id}>
+                      {item.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit">Buscar</Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent>
+          <QueryState
+            isLoading={movementsQuery.isLoading}
+            error={movementsQuery.error}
+            isEmpty={movements.length === 0}
+            emptyMessage="No hay movimientos en el rango seleccionado."
+          >
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Insumo</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Cantidad</TableHead>
+                  <TableHead>Motivo</TableHead>
+                  <TableHead>Registro</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {movements.map((movement) => (
+                  <TableRow key={movement.id}>
+                    <TableCell>
+                      {formatShortDate(movement.createdAt)} {formatShortTime(movement.createdAt)}
+                    </TableCell>
+                    <TableCell>{movement.itemName}</TableCell>
+                    <TableCell>
+                      <StatusBadge kind="movement" status={movement.movementType} />
+                    </TableCell>
+                    <TableCell
+                      className={cn(movement.quantity < 0 ? "text-destructive" : "text-foreground")}
+                    >
+                      {movement.quantity > 0 ? "+" : ""}
+                      {movement.quantity} {movement.unit}
+                    </TableCell>
+                    <TableCell>{movement.reason ?? "—"}</TableCell>
+                    <TableCell>{movement.userName ?? "—"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </QueryState>
+        </CardContent>
+      </Card>
+    </>
   );
 }
