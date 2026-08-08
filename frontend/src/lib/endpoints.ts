@@ -67,4 +67,14 @@ export const endpoints = {
     /** GET; acepta los query params opcionales `from`/`to` (fechas ISO). Default: ultimos 7 dias. */
     summary: () => "/api/v1/analytics",
   },
+  inventory: {
+    items: () => "/api/v1/inventory/items",
+    createItem: () => "/api/v1/inventory/items",
+    /** PUT: corrige nombre/unidad/minimo/costo. PATCH: alta o baja. Mismo path. */
+    updateItem: (itemId: string) => `/api/v1/inventory/items/${itemId}`,
+    updateItemStatus: (itemId: string) => `/api/v1/inventory/items/${itemId}`,
+    /** GET; acepta `from`/`to` (fechas ISO) e `itemId`. Default: hoy. */
+    movements: () => "/api/v1/inventory/movements",
+    registerMovement: () => "/api/v1/inventory/movements",
+  },
 };
