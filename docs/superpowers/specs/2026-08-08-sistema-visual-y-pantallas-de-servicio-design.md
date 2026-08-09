@@ -91,9 +91,9 @@ Hoy la tarjeta dice *"enviada 16:44"*. A metro y medio, en plena comanda, nadie 
 
 | Antigüedad | Señal |
 |---|---|
-| Menos de 10 min | Normal |
-| 10 a 20 min | Atención |
-| Más de 20 min | Crítico |
+| Menos de 15 min | Normal |
+| 15 a 25 min | Atención |
+| Más de 25 min | Crítico |
 
 Es lo que convierte una lista de comandas en una pantalla de cocina: la información que hace falta es *qué lleva más tiempo esperando*, y el sistema ya la tiene sin mostrarla. No requiere ningún dato nuevo del backend — `sentToKitchenAt` ya viaja en la respuesta.
 
