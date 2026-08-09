@@ -25,10 +25,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    // Las variables de fuente van en <html> y no en <body>: globals.css aplica
+    // la familia al elemento raiz, y una custom property definida en el body no
+    // es visible desde su padre. Con ellas en el body, `html { font-sans }` no
+    // resolvia y toda la aplicacion caia a la fuente por defecto del navegador.
+    <html lang="es" className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className="antialiased">
         <Providers>{children}</Providers>
         <Toaster />
       </body>
