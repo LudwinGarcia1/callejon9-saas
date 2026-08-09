@@ -7,9 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
+  --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-geist-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -81,6 +81,18 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Escala de estado: significado, no marca. El restaurante podra elegir su
+     color corporativo, pero nunca estos: si un cliente con identidad roja
+     pudiera tenir la interfaz, sus alertas dejarian de distinguirse.
+     No existe un --state-normal: lo normal usa los tokens neutros, porque un
+     estado que no requiere atencion no debe pedirla. */
+  --state-critical: oklch(0.55 0.2 27);
+  --state-critical-foreground: oklch(0.98 0 0);
+  --state-warning: oklch(0.75 0.15 75);
+  --state-warning-foreground: oklch(0.22 0 0);
+  --state-ready: oklch(0.6 0.13 150);
+  --state-ready-foreground: oklch(0.98 0 0);
 }
 
 .dark {
@@ -115,6 +127,52 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Mismas señales, calibradas para fondo oscuro. */
+  --state-critical: oklch(0.62 0.19 27);
+  --state-critical-foreground: oklch(0.15 0 0);
+  --state-warning: oklch(0.78 0.14 75);
+  --state-warning-foreground: oklch(0.15 0 0);
+  --state-ready: oklch(0.68 0.12 150);
+  --state-ready-foreground: oklch(0.15 0 0);
+}
+
+/*
+ * Tres calibraciones para tres contextos fisicos reales:
+ *   compact     -> PC en caja, sentado y con raton
+ *   comfortable -> tablet en el piso, de pie y con prisa (44px tactiles)
+ *   spacious    -> pantalla de cocina, leida a metro y medio y tocada con dedos
+ *
+ * Salen de los mismos tokens: se calibra una vez, no se redisena tres veces.
+ * Se aplican con data-density en el contenedor raiz de cada pantalla.
+ *
+ * --control-height es la altura minima de cualquier cosa que se toque. Los
+ * tamanos de button.tsx van de 24 a 36 px y ninguno alcanza los 44 px
+ * tactiles, asi que la altura sale de aqui y se aplica con className, sin
+ * tocar el componente generado.
+ */
+[data-density="compact"] {
+  --density-text-sm: 0.75rem;
+  --density-text-base: 0.875rem;
+  --density-text-lg: 1rem;
+  --density-gap: 0.5rem;
+  --control-height: 2rem;
+}
+
+[data-density="comfortable"] {
+  --density-text-sm: 0.875rem;
+  --density-text-base: 1rem;
+  --density-text-lg: 1.25rem;
+  --density-gap: 0.75rem;
+  --control-height: 2.75rem;
+}
+
+[data-density="spacious"] {
+  --density-text-sm: 1rem;
+  --density-text-base: 1.25rem;
+  --density-text-lg: 1.75rem;
+  --density-gap: 1rem;
+  --control-height: 3.5rem;
 }
 
 @layer base {
@@ -126,5 +184,11 @@
   }
   html {
     @apply font-sans;
+  }
+  /* Los digitos tabulares tienen todos el mismo ancho, asi que las cifras
+     alinean en columna. Va en table y no en body a proposito: ayuda en
+     columnas y estorba en texto corrido. */
+  table {
+    font-variant-numeric: tabular-nums;
   }
 }
