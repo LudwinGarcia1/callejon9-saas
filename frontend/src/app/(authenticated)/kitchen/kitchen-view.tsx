@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -11,8 +12,9 @@ import { QueryState } from "@/components/shared/query-state";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { ApiError, api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
-import { formatShortTime } from "@/lib/format";
+import { elapsedLabel, orderAge, type OrderAge } from "@/lib/kitchen-timing";
 import { queryKeys } from "@/lib/query-keys";
+import { cn } from "@/lib/utils";
 import {
   KITCHEN_STATUS_LABELS,
   type KitchenItemResponse,
@@ -27,6 +29,26 @@ import {
  * reenvia. Se apaga en segundo plano para no seguir golpeando al backend
  * con una pestaña sin foco. */
 const KITCHEN_POLL_INTERVAL_MS = 5_000;
+
+/** El reloj avanza solo para que el tiempo transcurrido no se congele entre
+ * refetches. Treinta segundos basta: los umbrales estan en minutos. */
+const CLOCK_TICK_MS = 30_000;
+
+/**
+ * El nivel normal no lleva color: un estado que no requiere atencion no debe
+ * pedirla. Solo destacan las comandas que llevan esperando demasiado.
+ */
+const AGE_CARD_STYLES: Record<OrderAge, string> = {
+  normal: "",
+  warning: "border-2 border-[var(--state-warning)]",
+  critical: "border-2 border-[var(--state-critical)] bg-[var(--state-critical)]/10",
+};
+
+const AGE_TEXT_STYLES: Record<OrderAge, string> = {
+  normal: "text-muted-foreground",
+  warning: "text-[var(--state-warning)] font-medium",
+  critical: "text-[var(--state-critical)] font-semibold",
+};
 
 /** Espejo exacto de KitchenService.FORWARD_SEQUENCE: solo sirve para decidir
  * que boton ofrecer, nunca como fuente de verdad del estado real. */
@@ -65,6 +87,26 @@ function isReadyOrBeyond(status: KitchenItemStatus): boolean {
  */
 export function KitchenView() {
   const queryClient = useQueryClient();
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), CLOCK_TICK_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  /**
+   * Cocina es oscura de punta a punta, no solo en su contenido: el oscuro se
+   * marca en <html> para que alcance tambien a la barra lateral y al alto
+   * completo de la pagina. Aplicarlo solo al contenedor dejaba una franja
+   * negra recortada sobre fondo blanco, peor que no tenerlo.
+   *
+   * Se revierte al desmontar, asi que salir de cocina devuelve el resto de la
+   * aplicacion a su tema claro.
+   */
+  useEffect(() => {
+    document.documentElement.classList.add("dark");
+    return () => document.documentElement.classList.remove("dark");
+  }, []);
 
   const ordersQuery = useQuery({
     queryKey: queryKeys.kitchen.orders(),
@@ -123,7 +165,7 @@ export function KitchenView() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6" data-density="spacious">
       <div>
         <h1 className="text-xl font-semibold">Cocina</h1>
         <p className="text-sm text-muted-foreground">
@@ -141,16 +183,27 @@ export function KitchenView() {
           <BoardSkeleton />
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {ordersQuery.data?.map((order) => (
-              <Card key={order.id}>
+            {ordersQuery.data?.map((order) => {
+              const age = orderAge(order.sentToKitchenAt, now);
+              return (
+              <Card key={order.id} className={AGE_CARD_STYLES[age]}>
                 <CardHeader className="flex flex-row items-start justify-between gap-2">
                   <div>
-                    <CardTitle>Orden {order.folio}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
+                    {/* La mesa es el titulo y el folio baja a tercera linea: el
+                        folio le sirve a caja, no a cocina. */}
+                    <CardTitle className="text-[length:var(--density-text-lg)]">
                       {tableLabel(order.tableId)}
-                      {order.sentToKitchenAt
-                        ? ` · enviada ${formatShortTime(order.sentToKitchenAt)}`
-                        : ""}
+                    </CardTitle>
+                    <p
+                      className={cn(
+                        "text-[length:var(--density-text-base)]",
+                        AGE_TEXT_STYLES[age],
+                      )}
+                    >
+                      {elapsedLabel(order.sentToKitchenAt, now)}
+                    </p>
+                    <p className="text-[length:var(--density-text-sm)] text-muted-foreground">
+                      Orden {order.folio}
                     </p>
                   </div>
                   <StatusBadge kind="order" status={order.status} />
@@ -165,22 +218,29 @@ export function KitchenView() {
                     return (
                       <div key={item.id} className="flex flex-col gap-2">
                         {index > 0 && <Separator />}
-                        <div className="flex items-center justify-between gap-2">
+                        <div
+                          className={cn(
+                            "flex items-center justify-between gap-2",
+                            isReadyOrBeyond(item.kitchenStatus) && "opacity-50",
+                          )}
+                        >
                           <div>
-                            <p className="text-sm font-medium">
+                            <p className="text-[length:var(--density-text-base)] font-medium">
                               {item.quantity} x {item.productName}
                             </p>
                             {item.notes && (
-                              <p className="text-xs text-muted-foreground">{item.notes}</p>
+                              <p className="text-[length:var(--density-text-sm)] text-muted-foreground">
+                                {item.notes}
+                              </p>
                             )}
                           </div>
                           <StatusBadge kind="kitchen" status={item.kitchenStatus} />
                         </div>
                         {next && (
                           <Button
-                            size="sm"
                             variant="outline"
                             disabled={isPending}
+                            className="h-[var(--control-height)] w-full text-[length:var(--density-text-base)]"
                             onClick={() =>
                               advanceItemMutation.mutate({ itemId: item.id, status: next })
                             }
@@ -195,7 +255,8 @@ export function KitchenView() {
                   })}
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
       </QueryState>
