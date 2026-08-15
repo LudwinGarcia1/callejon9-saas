@@ -58,34 +58,35 @@ export function TicketSummary({ ticket }: TicketSummaryProps) {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border p-4">
-      <div className="flex items-center justify-between">
-        <p className="font-semibold">Ticket {ticket.folio}</p>
+    <div className="flex flex-col gap-3 rounded-md border bg-card p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="eyebrow">Ticket · {formatShortTime(ticket.closedAt)}</p>
+          <p className="font-mono text-[15px]">{ticket.folio}</p>
+        </div>
         <StatusBadge kind="payment" status={ticket.paymentMethod} />
       </div>
-      <p className="text-xs text-muted-foreground">
-        Cobrado a las {formatShortTime(ticket.closedAt)}
-      </p>
 
       <Separator />
 
-      <div className="flex flex-col gap-1 text-sm">
+      <div className="flex flex-col gap-1.5 text-sm">
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Subtotal</span>
-          <Money amount={ticket.subtotal} />
+          <Money amount={ticket.subtotal} className="font-mono" />
         </div>
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground">Propina ({ticket.tipPercent}%)</span>
-          <Money amount={ticket.tip} />
-        </div>
-        <div className="flex items-center justify-between text-base font-semibold">
-          <span>Total cobrado</span>
-          <Money amount={ticket.total} />
+          <Money amount={ticket.tip} className="font-mono" />
         </div>
       </div>
 
+      <div>
+        <p className="eyebrow">Total cobrado</p>
+        <Money amount={ticket.total} className="block font-display text-[34px] leading-none" />
+      </div>
+
       <Button variant="outline" disabled={isDownloading} onClick={handleDownloadPdf}>
-        {isDownloading ? "Descargando..." : "Descargar ticket en PDF"}
+        {isDownloading ? "Descargando…" : "Descargar ticket en PDF"}
       </Button>
     </div>
   );
