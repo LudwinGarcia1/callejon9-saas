@@ -89,7 +89,7 @@ export function CreateProductDialog({ categories }: CreateProductDialogProps) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Nuevo producto</DialogTitle>
-          <DialogDescription>Agrega un producto al menu.</DialogDescription>
+          <DialogDescription>Agrega un producto al menú.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {apiError && !hasFieldErrors && (
@@ -112,7 +112,7 @@ export function CreateProductDialog({ categories }: CreateProductDialogProps) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="description">Descripcion (opcional)</Label>
+            <Label htmlFor="description">Descripción (opcional)</Label>
             <Textarea id="description" name="description" disabled={createMutation.isPending} />
             <FieldError error={apiError} field="description" />
           </div>
@@ -132,7 +132,7 @@ export function CreateProductDialog({ categories }: CreateProductDialogProps) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="categoryId">Categoria (opcional)</Label>
+            <Label htmlFor="categoryId">Categoría (opcional)</Label>
             <Select
               value={categoryId}
               onValueChange={setCategoryId}
@@ -142,7 +142,7 @@ export function CreateProductDialog({ categories }: CreateProductDialogProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={NO_CATEGORY}>Sin categoria</SelectItem>
+                <SelectItem value={NO_CATEGORY}>Sin categoría</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}
@@ -153,8 +153,8 @@ export function CreateProductDialog({ categories }: CreateProductDialogProps) {
           </div>
 
           <DialogFooter>
-            <Button type="submit" disabled={createMutation.isPending}>
-              {createMutation.isPending ? "Guardando..." : "Crear producto"}
+            <Button type="submit" size="lg" disabled={createMutation.isPending}>
+              {createMutation.isPending ? "Guardando…" : "Crear producto"}
             </Button>
           </DialogFooter>
         </form>

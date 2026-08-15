@@ -2,7 +2,13 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/*
+ * El modo oscuro se activa poniendo la clase `dark` en cualquier contenedor:
+ * el propio elemento tambien cuenta, no solo sus descendientes. Eso permite
+ * que caja y cocina —estaciones fijas de turno largo— vayan en oscuro aunque
+ * el restaurante haya elegido modo claro, envolviendo solo esa pantalla.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
   --color-background: var(--background);
@@ -38,31 +44,101 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
+
+  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  /* Tipografia de display del restaurante: una de las tres opciones probadas
+   * (Instrument Serif, Space Grotesk o Geist). La elige el tenant. */
+  --font-display: var(--font-display-family);
+  --font-heading: var(--font-display-family);
+
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Superficie alterna: sidebar, catalogo, paneles de apoyo. */
+  --color-surface-alt: var(--surface-alt);
+
+  /* Marca del restaurante. `brand` es el acento del modo activo; `brand-strong`
+   * es la version mas luminosa que solo usa el total a cobrar en caja. */
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-tint: var(--brand-tint);
+  --color-brand-tint-border: var(--brand-tint-border);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Radios deliberadamente cerrados: la jerarquia la construyen la superficie
+   * y el borde de 1px, no la curvatura ni la sombra. */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 4px;
+  --radius-xl: 5px;
+  --radius-2xl: 6px;
+  --radius-3xl: 8px;
+  --radius-4xl: 8px;
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  /* --- Identidad del restaurante -----------------------------------------
+   * Se guarda el hue (y su chroma), no dos hex sueltos: asi el par
+   * claro/oscuro del acento nunca queda descoordinado. El layout autenticado
+   * sobrescribe estas cuatro propiedades con la configuracion del tenant.
+   */
+  --brand-hue: 34;
+  --brand-chroma: 0.13;
+  --brand-hue-dark: 45;
+  --brand-chroma-dark: 0.14;
+  --font-display-family: var(--font-instrument-serif), Georgia, serif;
+
+  /* --- Sala claro --------------------------------------------------------- */
+  --background: oklch(0.955 0.012 85);
+  --foreground: oklch(0.24 0.015 60);
+  --card: oklch(0.985 0.008 85);
+  --card-foreground: oklch(0.24 0.015 60);
+  --popover: oklch(0.985 0.008 85);
+  --popover-foreground: oklch(0.24 0.015 60);
+  --surface-alt: oklch(0.965 0.012 82);
+
+  /* Tinta: el boton primario de pantalla y los chips activos. El acento de
+   * marca se reserva para cifras clave y altas comerciales. */
+  --primary: oklch(0.24 0.015 60);
+  --primary-foreground: oklch(0.97 0.008 85);
+  --secondary: oklch(0.93 0.012 82);
+  --secondary-foreground: oklch(0.24 0.015 60);
+  --muted: oklch(0.93 0.012 82);
+  --muted-foreground: oklch(0.5 0.02 60);
+  --accent: oklch(0.93 0.02 60);
+  --accent-foreground: oklch(0.24 0.015 60);
+
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
@@ -93,23 +169,77 @@
   --state-warning-foreground: oklch(0.22 0 0);
   --state-ready: oklch(0.6 0.13 150);
   --state-ready-foreground: oklch(0.98 0 0);
+  --border: oklch(0.9 0.012 78);
+  --border-strong: oklch(0.88 0.012 75);
+  --input: oklch(0.86 0.012 75);
+
+  --brand: oklch(0.52 var(--brand-chroma) var(--brand-hue));
+  --brand-foreground: oklch(0.98 0.01 85);
+  --brand-strong: oklch(0.52 var(--brand-chroma) var(--brand-hue));
+  --brand-tint: oklch(0.955 0.02 40);
+  --brand-tint-border: oklch(0.87 0.03 45);
+  --ring: var(--brand);
+
+  /* Tonos de estado. Cada uno declara color solido (punto, texto suelto) y el
+   * trio del chip: fondo tinte, borde y texto. */
+  --tone-green: oklch(0.5 0.1 155);
+  --tone-green-bg: oklch(0.95 0.03 150);
+  --tone-green-border: oklch(0.72 0.1 145);
+  --tone-green-text: oklch(0.44 0.1 155);
+
+  --tone-brand: var(--brand);
+  --tone-brand-bg: oklch(0.955 0.02 40);
+  --tone-brand-border: oklch(0.87 0.03 45);
+  --tone-brand-text: oklch(0.46 var(--brand-chroma) var(--brand-hue));
+
+  --tone-amber: oklch(0.62 0.13 75);
+  --tone-amber-bg: oklch(0.96 0.04 88);
+  --tone-amber-border: oklch(0.8 0.09 80);
+  --tone-amber-text: oklch(0.5 0.11 70);
+
+  --tone-neutral: oklch(0.6 0.02 250);
+  --tone-neutral-bg: oklch(0.95 0.008 250);
+  --tone-neutral-border: oklch(0.87 0.012 250);
+  --tone-neutral-text: oklch(0.47 0.02 250);
+
+  --chart-1: var(--brand);
+  --chart-2: oklch(0.5 0.1 155);
+  --chart-3: oklch(0.62 0.13 75);
+  --chart-4: oklch(0.6 0.02 250);
+  --chart-5: oklch(0.42 0.06 300);
+
+  --sidebar: oklch(0.965 0.012 82);
+  --sidebar-foreground: oklch(0.24 0.015 60);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: oklch(0.98 0.01 85);
+  --sidebar-accent: oklch(0.93 0.02 60);
+  --sidebar-accent-foreground: oklch(0.24 0.015 60);
+  --sidebar-border: oklch(0.9 0.012 78);
+  --sidebar-ring: var(--brand);
 }
 
+/* --- Sala oscuro: piso, cocina y caja ------------------------------------
+ * Mismo hue de marca, distinta luminancia (L 0.52 en claro, 0.72 en oscuro).
+ * Nunca se usa el acento claro sobre fondo oscuro ni al reves.
+ */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: oklch(0.19 0.008 60);
+  --foreground: oklch(0.95 0.006 85);
+  --card: oklch(0.21 0.01 60);
+  --card-foreground: oklch(0.95 0.006 85);
+  --popover: oklch(0.21 0.01 60);
+  --popover-foreground: oklch(0.95 0.006 85);
+  --surface-alt: oklch(0.17 0.008 60);
+
+  --primary: oklch(0.95 0.006 85);
+  --primary-foreground: oklch(0.19 0.01 60);
+  --secondary: oklch(0.28 0.012 60);
+  --secondary-foreground: oklch(0.95 0.006 85);
+  --muted: oklch(0.26 0.01 60);
+  --muted-foreground: oklch(0.7 0.01 70);
+  --accent: oklch(0.28 0.012 60);
+  --accent-foreground: oklch(0.95 0.006 85);
+
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
@@ -173,11 +303,56 @@
   --density-text-lg: 1.75rem;
   --density-gap: 1rem;
   --control-height: 3.5rem;
+  --border: oklch(0.3 0.012 60);
+  --border-strong: oklch(0.36 0.012 60);
+  --input: oklch(0.32 0.012 60);
+
+  --brand: oklch(0.72 var(--brand-chroma-dark) var(--brand-hue-dark));
+  --brand-foreground: oklch(0.19 0.01 60);
+  --brand-strong: oklch(0.8 var(--brand-chroma-dark) calc(var(--brand-hue-dark) + 3));
+  --brand-tint: oklch(0.23 0.025 45);
+  --brand-tint-border: var(--brand);
+  --ring: var(--brand);
+
+  --tone-green: oklch(0.74 0.14 155);
+  --tone-green-bg: oklch(0.28 0.05 155);
+  --tone-green-border: oklch(0.42 0.09 155);
+  --tone-green-text: oklch(0.85 0.13 155);
+
+  --tone-brand: var(--brand);
+  --tone-brand-bg: oklch(0.32 0.07 45);
+  --tone-brand-border: oklch(0.45 0.1 45);
+  --tone-brand-text: oklch(0.88 0.12 60);
+
+  --tone-amber: oklch(0.82 0.13 80);
+  --tone-amber-bg: oklch(0.3 0.06 70);
+  --tone-amber-border: oklch(0.5 0.1 75);
+  --tone-amber-text: oklch(0.85 0.12 80);
+
+  --tone-neutral: oklch(0.74 0.01 70);
+  --tone-neutral-bg: oklch(0.27 0.012 60);
+  --tone-neutral-border: oklch(0.36 0.012 60);
+  --tone-neutral-text: oklch(0.8 0.01 70);
+
+  --chart-1: var(--brand);
+  --chart-2: oklch(0.74 0.14 155);
+  --chart-3: oklch(0.82 0.13 80);
+  --chart-4: oklch(0.74 0.01 70);
+  --chart-5: oklch(0.68 0.09 300);
+
+  --sidebar: oklch(0.17 0.008 60);
+  --sidebar-foreground: oklch(0.95 0.006 85);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: oklch(0.19 0.01 60);
+  --sidebar-accent: oklch(0.24 0.012 60);
+  --sidebar-accent-foreground: oklch(0.95 0.006 85);
+  --sidebar-border: oklch(0.3 0.012 60);
+  --sidebar-ring: var(--brand);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
@@ -197,4 +372,95 @@
   table {
     font-variant-numeric: tabular-nums;
   }
+}
+  /* Software de turno: la transicion es de color, nunca de tamano ni sombra. */
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  [data-slot="card"] {
+    transition-property: color, background-color, border-color, box-shadow;
+    transition-duration: 120ms;
+    transition-timing-function: ease-out;
+  }
+}
+
+@layer components {
+  /*
+   * Eyebrow: la etiqueta mas repetida del sistema. Mono 10px en mayusculas
+   * con tracking abierto. Sustituye a los labels de 14px en formularios y
+   * encabeza cada bloque de las pantallas de piso y caja.
+   */
+  .eyebrow {
+    font-family: var(--font-geist-mono), ui-monospace, monospace;
+    font-size: 10px;
+    line-height: 1.4;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+
+  .eyebrow-lg {
+    font-family: var(--font-geist-mono), ui-monospace, monospace;
+    font-size: 11px;
+    line-height: 1.4;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+
+  /*
+   * Tonos de estado. Un contenedor con `data-tone` publica el color y el trio
+   * del chip como variables locales, asi el punto, el texto y el chip de una
+   * misma tarjeta se pintan solos sin repetir la tabla de colores en TSX.
+   */
+  [data-tone],
+  [data-slot="badge"] {
+    --tone: var(--tone-neutral);
+    --tone-bg: var(--tone-neutral-bg);
+    --tone-border: var(--tone-neutral-border);
+    --tone-text: var(--tone-neutral-text);
+  }
+  [data-tone="green"] {
+    --tone: var(--tone-green);
+    --tone-bg: var(--tone-green-bg);
+    --tone-border: var(--tone-green-border);
+    --tone-text: var(--tone-green-text);
+  }
+  [data-tone="brand"] {
+    --tone: var(--tone-brand);
+    --tone-bg: var(--tone-brand-bg);
+    --tone-border: var(--tone-brand-border);
+    --tone-text: var(--tone-brand-text);
+  }
+  [data-tone="amber"] {
+    --tone: var(--tone-amber);
+    --tone-bg: var(--tone-amber-bg);
+    --tone-border: var(--tone-amber-border);
+    --tone-text: var(--tone-amber-text);
+  }
+  [data-tone="neutral"] {
+    --tone: var(--tone-neutral);
+    --tone-bg: var(--tone-neutral-bg);
+    --tone-border: var(--tone-neutral-border);
+    --tone-text: var(--tone-neutral-text);
+  }
+}
+
+@utility focus-sala {
+  &:focus-visible {
+    outline: none;
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--brand) 12%, transparent);
+  }
+}
+
+/* Cifras y titulos en display llevan interlineado cerrado para que la serif se
+ * lea como numero y no como texto corrido. */
+@utility numeric {
+  font-family: var(--font-display-family);
+  font-weight: 400;
+  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
 }

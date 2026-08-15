@@ -23,7 +23,7 @@ export function ChartTooltip({ xPercent, yPercent, visible, children }: ChartToo
   return (
     <div
       role="tooltip"
-      className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-[calc(100%+8px)] rounded-md border bg-popover px-2.5 py-1.5 text-xs whitespace-nowrap text-popover-foreground shadow-md"
+      className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-[calc(100%+8px)] rounded-md border bg-popover px-2.5 py-1.5 text-xs whitespace-nowrap text-popover-foreground"
       style={{ left: `${xPercent}%`, top: `${yPercent}%` }}
     >
       {children}

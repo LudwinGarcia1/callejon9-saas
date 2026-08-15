@@ -5,9 +5,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScreenMetric, ScreenShell } from "@/components/layout/screen-shell";
 import { QueryState } from "@/components/shared/query-state";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { ApiError, api } from "@/lib/api";
@@ -134,7 +133,7 @@ export function KitchenView() {
         );
         if (everyItemReadyOrBeyond && updatedItem.kitchenStatus === "READY") {
           toast.info(
-            `Todos los productos de la orden ${order.folio} estan listos. Pasara a "Lista" en el tablero.`,
+            `Todos los productos de la orden ${order.folio} están listos. Pasará a "Lista" en el tablero.`,
           );
         }
       }
@@ -168,10 +167,23 @@ export function KitchenView() {
         error={ordersQuery.error}
         isEmpty={ordersQuery.data?.length === 0}
         emptyMessage="No hay ordenes en cocina en este momento."
+    // Cocina es estacion fija de turno largo: va en oscuro aunque el
+    // restaurante haya elegido modo claro. Lo aplica el layout autenticado.
+    <div className="flex flex-1 flex-col bg-background text-foreground">
+      <ScreenShell
+        title="Cocina"
+        subtitle="Órdenes enviadas a cocina, de la más antigua a la más reciente."
+        actions={
+          <ScreenMetric label="En preparación" value={ordersQuery.data?.length ?? "—"} />
+        }
       >
-        {ordersQuery.isLoading ? (
-          <BoardSkeleton />
-        ) : (
+        <QueryState
+          isLoading={ordersQuery.isLoading}
+          error={ordersQuery.error}
+          isEmpty={ordersQuery.data?.length === 0}
+          emptyMessage="No hay órdenes en cocina en este momento."
+          skeleton={<BoardSkeleton />}
+        >
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {ordersQuery.data?.map((order) => {
               const age = orderAge(order.sentToKitchenAt, now);
@@ -194,12 +206,28 @@ export function KitchenView() {
                     </p>
                     <p className="text-[length:var(--density-text-sm)] text-muted-foreground">
                       Orden {order.folio}
+            {ordersQuery.data?.map((order) => (
+              <article
+                key={order.id}
+                className="flex flex-col rounded-xl border bg-card p-[18px]"
+              >
+                <header className="flex items-start justify-between gap-3 border-b pb-3.5">
+                  <div>
+                    <p className="eyebrow">
+                      {order.folio}
+                      {order.sentToKitchenAt
+                        ? ` · enviada ${formatShortTime(order.sentToKitchenAt)}`
+                        : ""}
+                    </p>
+                    <p className="mt-0.5 font-display text-[28px] leading-none">
+                      {tableLabel(order.tableId)}
                     </p>
                   </div>
                   <StatusBadge kind="order" status={order.status} />
-                </CardHeader>
-                <CardContent className="flex flex-col gap-3">
-                  {order.items.map((item, index) => {
+                </header>
+
+                <div className="flex flex-col">
+                  {order.items.map((item) => {
                     const next = nextKitchenStatus(item.kitchenStatus);
                     const isPending =
                       advanceItemMutation.isPending &&
@@ -217,6 +245,17 @@ export function KitchenView() {
                           <div>
                             <p className="text-[length:var(--density-text-base)] font-medium">
                               {item.quantity} x {item.productName}
+                      <div
+                        key={item.id}
+                        className="flex flex-col gap-2.5 border-b border-dotted border-border-strong py-3.5 last:border-b-0"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-[15px]">
+                              <span className="font-mono text-[13px] text-muted-foreground">
+                                {item.quantity}×
+                              </span>{" "}
+                              {item.productName}
                             </p>
                             {item.notes && (
                               <p className="text-[length:var(--density-text-sm)] text-muted-foreground">
@@ -229,6 +268,7 @@ export function KitchenView() {
                         {next && (
                           <Button
                             variant="outline"
+                            className="h-11 w-full justify-center"
                             disabled={isPending}
                             className="h-[var(--control-height)] w-full text-[length:var(--density-text-base)]"
                             onClick={() =>
@@ -236,7 +276,7 @@ export function KitchenView() {
                             }
                           >
                             {isPending
-                              ? "Actualizando..."
+                              ? "Actualizando…"
                               : `Marcar como ${KITCHEN_STATUS_LABELS[next]}`}
                           </Button>
                         )}
@@ -247,9 +287,12 @@ export function KitchenView() {
               </Card>
               );
             })}
+                </div>
+              </article>
+            ))}
           </div>
-        )}
-      </QueryState>
+        </QueryState>
+      </ScreenShell>
     </div>
   );
 }
@@ -258,7 +301,7 @@ function BoardSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
       {Array.from({ length: 3 }).map((_, index) => (
-        <Skeleton key={index} className="h-48 w-full" />
+        <Skeleton key={index} className="h-56 w-full rounded-xl" />
       ))}
     </div>
   );

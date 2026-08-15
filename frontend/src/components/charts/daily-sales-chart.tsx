@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ChartEmpty } from "./chart-empty";
 import { ChartTooltip } from "./chart-tooltip";
 import { formatCurrency, formatIsoDate } from "@/lib/format";
 import type { SalesByDayRow } from "@/lib/types";
@@ -34,9 +35,7 @@ export function DailySalesChart({ data }: DailySalesChartProps) {
 
   if (hasNoSales(data)) {
     return (
-      <p className="py-12 text-center text-sm text-muted-foreground">
-        No hay ventas en el rango seleccionado.
-      </p>
+      <ChartEmpty />
     );
   }
 
@@ -171,9 +170,7 @@ export function DailySalesChart({ data }: DailySalesChartProps) {
 export function DailySalesTable({ data }: DailySalesChartProps) {
   if (hasNoSales(data)) {
     return (
-      <p className="py-12 text-center text-sm text-muted-foreground">
-        No hay ventas en el rango seleccionado.
-      </p>
+      <ChartEmpty />
     );
   }
 
@@ -189,9 +186,13 @@ export function DailySalesTable({ data }: DailySalesChartProps) {
       <TableBody>
         {data.map((row) => (
           <TableRow key={row.day}>
-            <TableCell>{formatIsoDate(row.day)}</TableCell>
-            <TableCell>{row.count}</TableCell>
-            <TableCell>{formatCurrency(row.total)}</TableCell>
+            <TableCell className="font-mono text-[13px] tabular-nums">
+              {formatIsoDate(row.day)}
+            </TableCell>
+            <TableCell className="font-mono text-[13px] tabular-nums">{row.count}</TableCell>
+            <TableCell className="font-mono text-[13px] tabular-nums">
+              {formatCurrency(row.total)}
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>

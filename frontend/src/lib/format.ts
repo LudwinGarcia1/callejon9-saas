@@ -21,9 +21,24 @@ const timeFormatter = new Intl.DateTimeFormat("es-MX", {
   minute: "2-digit",
 });
 
+const roundedCurrencyFormatter = new Intl.NumberFormat("es-MX", {
+  style: "currency",
+  currency: "MXN",
+  maximumFractionDigits: 0,
+});
+
 /** Formatea un monto como moneda mexicana, ej. `$499.00`. */
 export function formatCurrency(amount: number): string {
   return currencyFormatter.format(amount);
+}
+
+/**
+ * Formatea un monto sin centavos, ej. `$1,000`. Solo para cifras que de por si
+ * son redondas — los billetes sugeridos del bloque de efectivo en caja — donde
+ * escribir `.00` seria ruido.
+ */
+export function formatRoundedCurrency(amount: number): string {
+  return roundedCurrencyFormatter.format(amount);
 }
 
 /** Formatea una fecha ISO como fecha corta, ej. `28/07/2026`. */

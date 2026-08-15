@@ -32,7 +32,7 @@ export function CreateCategoryDialog() {
       api.post<CategoryResponse>(endpoints.categories.create(), payload),
     onSuccess: (category) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.categories.all() });
-      toast.success(`Categoria "${category.name}" creada.`);
+      toast.success(`Categoría "${category.name}" creada.`);
       setOpen(false);
     },
   });
@@ -62,17 +62,17 @@ export function CreateCategoryDialog() {
       }}
     >
       <DialogTrigger asChild>
-        <Button>Nueva categoria</Button>
+        <Button>Nueva categoría</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Nueva categoria</DialogTitle>
-          <DialogDescription>Agrupa los productos del menu.</DialogDescription>
+          <DialogTitle>Nueva categoría</DialogTitle>
+          <DialogDescription>Agrupa los productos del menú.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {apiError && !hasFieldErrors && (
             <Alert variant="destructive">
-              <AlertTitle>No se pudo crear la categoria</AlertTitle>
+              <AlertTitle>No se pudo crear la categoría</AlertTitle>
               <AlertDescription>{apiError.message}</AlertDescription>
             </Alert>
           )}
@@ -102,8 +102,8 @@ export function CreateCategoryDialog() {
           </div>
 
           <DialogFooter>
-            <Button type="submit" disabled={createMutation.isPending}>
-              {createMutation.isPending ? "Guardando..." : "Crear categoria"}
+            <Button type="submit" size="lg" disabled={createMutation.isPending}>
+              {createMutation.isPending ? "Guardando…" : "Crear categoría"}
             </Button>
           </DialogFooter>
         </form>

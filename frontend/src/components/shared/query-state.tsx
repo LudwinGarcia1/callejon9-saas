@@ -8,6 +8,8 @@ interface QueryStateProps {
   error?: unknown;
   isEmpty?: boolean;
   emptyMessage?: string;
+  /** Esqueleto con la forma final del bloque. Nunca un spinner centrado. */
+  skeleton?: ReactNode;
   children: ReactNode;
 }
 
@@ -23,32 +25,50 @@ export function QueryState({
   error,
   isEmpty = false,
   emptyMessage = "No hay datos para mostrar.",
+  skeleton,
   children,
 }: QueryStateProps) {
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-2">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-      </div>
+      skeleton ?? (
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+        </div>
+      )
     );
   }
 
   if (error) {
     const message =
       error instanceof ApiError && error.status === 403
-        ? "No tienes permiso para ver esta informacion."
+        ? "No tienes permiso para ver esta información."
         : error instanceof Error
           ? error.message
-          : "Ocurrio un error al cargar la informacion.";
+          : "Ocurrió un error al cargar la información.";
 
-    return <p className="text-sm text-destructive">{message}</p>;
+    return (
+      <div className="rounded-md border border-destructive/50 px-3.5 py-3">
+        <p className="eyebrow text-destructive/80">Error</p>
+        <p className="mt-0.5 text-sm text-destructive">{message}</p>
+      </div>
+    );
   }
 
   if (isEmpty) {
-    return <p className="text-sm text-muted-foreground">{emptyMessage}</p>;
+    return <EmptyState message={emptyMessage} />;
   }
 
   return <>{children}</>;
+}
+
+/** Estado vacio del sistema: eyebrow y una frase. Sin ilustracion. */
+export function EmptyState({ message, label = "Sin datos" }: { message: string; label?: string }) {
+  return (
+    <div className="py-6">
+      <p className="eyebrow">{label}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{message}</p>
+    </div>
+  );
 }
