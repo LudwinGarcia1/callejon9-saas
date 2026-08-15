@@ -3,6 +3,7 @@ package com.callejon9.table.web;
 import com.callejon9.table.service.TableService;
 import com.callejon9.table.web.dto.CreateTableRequest;
 import com.callejon9.table.web.dto.TableResponse;
+import com.callejon9.table.web.dto.UpdateTableActiveRequest;
 import com.callejon9.table.web.dto.UpdateTableRequest;
 import com.callejon9.table.web.dto.UpdateTableStatusRequest;
 import jakarta.validation.Valid;
@@ -54,7 +55,24 @@ public class TableController {
 
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public TableResponse patch(@PathVariable UUID id, @Valid @RequestBody UpdateTableStatusRequest request) {
+    public TableResponse patch(@PathVariable UUID id, @Valid @RequestBody UpdateTableActiveRequest request) {
         return TableResponse.from(tableService.setActive(id, request.active()));
+    }
+
+    /**
+     * Reservar, mandar a limpieza o devolver a libre.
+     *
+     * <p>Subrecurso en vez de otro campo del PATCH porque no es asignar un
+     * valor: es una transicion con reglas. Sigue la forma que ya usa
+     * {@code POST /kitchen/items/{itemId}/status}.
+     *
+     * <p>Lo abre a WAITER, a diferencia del resto del controlador: quien ve
+     * que una mesa quedo sucia esta en el piso, no en la oficina.
+     */
+    @PostMapping("/{id}/status")
+    @PreAuthorize("hasAnyRole('ADMIN','WAITER')")
+    public TableResponse changeStatus(@PathVariable UUID id,
+                                      @Valid @RequestBody UpdateTableStatusRequest request) {
+        return TableResponse.from(tableService.changeStatus(id, request.status()));
     }
 }

@@ -185,9 +185,15 @@
   html {
     @apply font-sans;
   }
-  /* Los digitos tabulares tienen todos el mismo ancho, asi que las cifras
-     alinean en columna. Va en table y no en body a proposito: ayuda en
-     columnas y estorba en texto corrido. */
+  /* Los digitos tabulares tienen todos el mismo ancho, asi que una cifra
+     ocupa lo mismo sea 111 o 999 y las columnas dejan de bailar al
+     actualizarse. Va en table y no en body a proposito: ayuda en columnas y
+     estorba en texto corrido.
+
+     No basta para alinear una columna: eso lo decide la alineacion de la
+     celda. Una celda a la izquierda deja "-84 kg" y "3 kg" empezando en el
+     mismo borde, con los digitos desalineados igual. Las columnas numericas
+     llevan ademas text-right. */
   table {
     font-variant-numeric: tabular-nums;
   }
