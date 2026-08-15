@@ -7,7 +7,6 @@ import { toast } from "sonner";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -16,15 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Money } from "@/components/shared/money";
 import { QueryState } from "@/components/shared/query-state";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -38,6 +29,7 @@ import type {
   OrderResponse,
   OrderStatus,
   ProductResponse,
+  TableResponse,
 } from "@/lib/types";
 import { ProductPicker, type CartLine } from "./product-picker";
 
@@ -51,10 +43,10 @@ interface OrderViewProps {
 const CANCELABLE_ORDER_STATUSES = new Set<OrderStatus>(["NEW", "SENT", "READY"]);
 
 /**
- * Pantalla de una orden: sus productos con el total autoritativo del
- * servidor a la izquierda, el selector de productos por categoria y el
- * carrito local a la derecha. El carrito nunca se envia producto por
- * producto: se junta localmente y se confirma en un solo POST por lote.
+ * Pantalla de una orden. La orden manda y ocupa la columna ancha; el catalogo
+ * es un panel de apoyo de 430px a la derecha. El carrito nunca se envia
+ * producto por producto: se junta localmente y se confirma en un solo POST por
+ * lote.
  */
 export function OrderView({ orderId }: OrderViewProps) {
   const router = useRouter();
@@ -65,6 +57,10 @@ export function OrderView({ orderId }: OrderViewProps) {
   const orderQuery = useQuery({
     queryKey: queryKeys.orders.detail(orderId),
     queryFn: () => api.get<OrderResponse>(endpoints.orders.detail(orderId)),
+  });
+  const tablesQuery = useQuery({
+    queryKey: queryKeys.tables.all(),
+    queryFn: () => api.get<TableResponse[]>(endpoints.tables.list()),
   });
   const categoriesQuery = useQuery({
     queryKey: queryKeys.categories.all(),
@@ -124,14 +120,12 @@ export function OrderView({ orderId }: OrderViewProps) {
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all() });
       queryClient.invalidateQueries({ queryKey: queryKeys.tables.all() });
       setConfirmCancelOpen(false);
-      toast.success("Orden cancelada. La mesa quedo libre.");
+      toast.success("Orden cancelada. La mesa quedó libre.");
       router.push("/waiter");
     },
     onError: (error) => {
       setConfirmCancelOpen(false);
-      toast.error(
-        error instanceof ApiError ? error.message : "No se pudo cancelar la orden.",
-      );
+      toast.error(error instanceof ApiError ? error.message : "No se pudo cancelar la orden.");
     },
   });
 
@@ -174,98 +168,136 @@ export function OrderView({ orderId }: OrderViewProps) {
   }
 
   const order = orderQuery.data;
+  const table = tablesQuery.data?.find((candidate) => candidate.id === order?.tableId);
+  const isCancelable = order ? CANCELABLE_ORDER_STATUSES.has(order.status) : false;
 
   return (
     <QueryState
       isLoading={orderQuery.isLoading}
       error={orderQuery.error}
       isEmpty={!order}
-      emptyMessage="No se encontro la orden."
+      emptyMessage="No se encontró la orden."
+      skeleton={<OrderSkeleton />}
     >
       {order && (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <Card>
-            <CardHeader className="flex flex-row items-start justify-between gap-2">
+        <div className="flex flex-1 flex-col xl:grid xl:grid-cols-[minmax(0,1fr)_430px]">
+          <section className="flex flex-col xl:border-r">
+            <header className="flex flex-wrap items-end justify-between gap-4 border-b px-[18px] pt-4 pb-4 sm:px-7 sm:pt-[26px] sm:pb-[18px]">
               <div>
-                <CardTitle>Orden {order.folio}</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  {order.guestCount} comensales
+                <p className="eyebrow">
+                  {order.folio} · abierta {formatShortTime(order.openedAt)}
                 </p>
+                <h1 className="mt-0.5 font-display text-[28px] leading-none font-normal sm:text-[36px]">
+                  {table ? `Mesa ${table.number}` : "Para llevar"} · {order.guestCount}{" "}
+                  {order.guestCount === 1 ? "comensal" : "comensales"}
+                </h1>
               </div>
               <StatusBadge kind="order" status={order.status} />
-            </CardHeader>
-            <CardContent className="flex flex-col gap-4">
+            </header>
+
+            <div className="flex flex-1 flex-col px-[18px] py-5 sm:px-7">
               {order.items.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Aun no se han agregado productos a esta orden.
-                </p>
+                <div className="py-4">
+                  <p className="eyebrow">Comanda vacía</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Aún no se han agregado productos a esta orden.
+                  </p>
+                </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Producto</TableHead>
-                      <TableHead>Cantidad</TableHead>
-                      <TableHead>Precio</TableHead>
-                      <TableHead>Subtotal</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {order.items.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.productName}</TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell>
-                          <Money amount={item.unitPrice} />
-                        </TableCell>
-                        <TableCell>
-                          <Money amount={item.unitPrice * item.quantity} />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                <>
+                  <div className="eyebrow flex items-center gap-3 border-b pb-2">
+                    <span className="w-[34px]">Cant</span>
+                    <span className="flex-1">Producto</span>
+                    <span className="hidden sm:inline">Precio</span>
+                    <span className="w-24 text-right">Subtotal</span>
+                  </div>
+                  {order.items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-3 border-b border-dotted border-border-strong py-[13px]"
+                    >
+                      <span className="w-[34px] font-mono text-[13px] text-muted-foreground">
+                        {item.quantity}×
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[15px]">{item.productName}</p>
+                        {item.notes && (
+                          <p className="text-xs text-muted-foreground">{item.notes}</p>
+                        )}
+                      </div>
+                      <Money
+                        amount={item.unitPrice}
+                        className="hidden font-mono text-[13px] text-muted-foreground sm:inline"
+                      />
+                      <Money
+                        amount={item.unitPrice * item.quantity}
+                        className="w-24 text-right text-[15px]"
+                      />
+                    </div>
+                  ))}
+                </>
               )}
 
-              <Separator />
+              <div className="mt-auto pt-6">
+                <div className="flex items-baseline justify-between gap-4 border-t border-border-strong pt-4">
+                  <span className="eyebrow">Total de la orden</span>
+                  <Money
+                    amount={order.total}
+                    className="font-display text-[34px] leading-none sm:text-[44px]"
+                  />
+                </div>
 
-              <div className="flex items-center justify-between">
-                <span className="font-medium">Total</span>
-                <Money amount={order.total} className="text-xl font-semibold" />
-              </div>
-
-              <SendToKitchenAction
-                order={order}
-                cartIsEmpty={cart.length === 0}
-                isPending={sendToKitchenMutation.isPending}
-                onSend={() => sendToKitchenMutation.mutate()}
-              />
-
-              {CANCELABLE_ORDER_STATUSES.has(order.status) && (
-                <>
-                  <Separator />
-                  <div className="flex justify-end">
+                <div className="mt-[18px] flex flex-col gap-2.5 sm:flex-row">
+                  <SendToKitchenAction
+                    order={order}
+                    cartIsEmpty={cart.length === 0}
+                    isPending={sendToKitchenMutation.isPending}
+                    onSend={() => sendToKitchenMutation.mutate()}
+                  />
+                  {isCancelable && (
                     <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive hover:text-destructive"
+                      variant="outline"
+                      size="xl"
+                      className="text-brand sm:w-[180px]"
                       onClick={() => setConfirmCancelOpen(true)}
                     >
                       Cancelar orden
                     </Button>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
+                  )}
+                </div>
+
+                {isCancelable && (
+                  <p className="mt-2.5 text-xs text-muted-foreground">
+                    Cancelar libera la mesa de inmediato. Los productos quedan en el historial.
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+
+          <ProductPicker
+            categories={categoriesQuery.data ?? []}
+            products={productsQuery.data ?? []}
+            isLoading={categoriesQuery.isLoading || productsQuery.isLoading}
+            cart={cart}
+            onAddProduct={addProductToCart}
+            onIncrement={incrementLine}
+            onDecrement={decrementLine}
+            onRemove={removeLine}
+            onCommit={() => addItemsMutation.mutate(cart)}
+            isCommitting={addItemsMutation.isPending}
+            disabled={order.status === "PAID" || order.status === "CANCELED"}
+            alreadySentToKitchen={order.status === "SENT" || order.status === "READY"}
+          />
 
           <Dialog open={confirmCancelOpen} onOpenChange={setConfirmCancelOpen}>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Cancelar orden {order.folio}</DialogTitle>
                 <DialogDescription>
-                  Esta accion no se puede deshacer. Los productos ya agregados se conservan
-                  en el historial, pero la orden queda marcada como cancelada y la mesa se
-                  libera de inmediato.
+                  Esta acción no se puede deshacer. Los productos ya agregados se conservan en
+                  el historial, pero la orden queda marcada como cancelada y la mesa se libera
+                  de inmediato.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
@@ -281,33 +313,11 @@ export function OrderView({ orderId }: OrderViewProps) {
                   disabled={cancelOrderMutation.isPending}
                   onClick={() => cancelOrderMutation.mutate()}
                 >
-                  {cancelOrderMutation.isPending ? "Cancelando..." : "Si, cancelar orden"}
+                  {cancelOrderMutation.isPending ? "Cancelando…" : "Sí, cancelar orden"}
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Agregar productos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ProductPicker
-                categories={categoriesQuery.data ?? []}
-                products={productsQuery.data ?? []}
-                isLoading={categoriesQuery.isLoading || productsQuery.isLoading}
-                cart={cart}
-                onAddProduct={addProductToCart}
-                onIncrement={incrementLine}
-                onDecrement={decrementLine}
-                onRemove={removeLine}
-                onCommit={() => addItemsMutation.mutate(cart)}
-                isCommitting={addItemsMutation.isPending}
-                disabled={order.status === "PAID" || order.status === "CANCELED"}
-                alreadySentToKitchen={order.status === "SENT" || order.status === "READY"}
-              />
-            </CardContent>
-          </Card>
         </div>
       )}
     </QueryState>
@@ -328,23 +338,23 @@ function SendToKitchenAction({ order, cartIsEmpty, isPending, onSend }: SendToKi
   if (order.status === "NEW") {
     return (
       <Button
-        size="lg"
-        className="w-full"
+        size="xl"
+        className="flex-1"
         disabled={isPending || (order.items.length === 0 && cartIsEmpty)}
         onClick={onSend}
       >
-        {isPending ? "Enviando..." : "Enviar a cocina"}
+        {isPending ? "Enviando…" : "Enviar a cocina"}
       </Button>
     );
   }
 
   if (order.status === "SENT" || order.status === "READY") {
     return (
-      <Alert>
-        <AlertTitle>Ya esta en cocina</AlertTitle>
+      <Alert className="flex-1">
+        <AlertTitle>Ya está en cocina</AlertTitle>
         <AlertDescription>
           {order.sentToKitchenAt
-            ? `Se envio a cocina a las ${formatShortTime(order.sentToKitchenAt)}.`
+            ? `Se envió a cocina a las ${formatShortTime(order.sentToKitchenAt)}.`
             : "Esta orden ya fue enviada a cocina."}
         </AlertDescription>
       </Alert>
@@ -352,11 +362,22 @@ function SendToKitchenAction({ order, cartIsEmpty, isPending, onSend }: SendToKi
   }
 
   return (
-    <Alert variant="destructive">
+    <Alert variant="destructive" className="flex-1">
       <AlertTitle>Orden cerrada</AlertTitle>
       <AlertDescription>
         {order.status === "PAID" ? "Esta orden ya fue pagada." : "Esta orden fue cancelada."}
       </AlertDescription>
     </Alert>
+  );
+}
+
+function OrderSkeleton() {
+  return (
+    <div className="flex flex-1 flex-col gap-3 px-[18px] py-6 sm:px-7">
+      <Skeleton className="h-9 w-64" />
+      {Array.from({ length: 5 }).map((_, index) => (
+        <Skeleton key={index} className="h-11 w-full" />
+      ))}
+    </div>
   );
 }

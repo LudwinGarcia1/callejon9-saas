@@ -86,6 +86,7 @@ Los paquetes del backend se organizan por funcionalidad, no por capa: `auth`, `u
 | JDK | 21 (Temurin) | `winget install EclipseAdoptium.Temurin.21.JDK` |
 | PostgreSQL | 16 | `winget install PostgreSQL.PostgreSQL.16` |
 | Node.js | 24 | |
+| pnpm | 10 | `corepack enable` lo resuelve desde el campo `packageManager` |
 | Maven | — | No hace falta: el proyecto trae Maven Wrapper |
 | Docker | — | No se usa |
 
@@ -125,13 +126,15 @@ El perfil `demo` extiende el token de acceso a dos horas. **El valor de producci
 
 ```powershell
 cd frontend
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 Queda en `http://localhost:3000`.
 
-Para una demostración conviene usar `npm run build` seguido de `npm start` en lugar de `npm run dev`: en modo desarrollo Turbopack compila cada ruta la primera vez que se visita, y esa pausa de unos segundos se nota. Los dos comandos comparten el directorio `.next`, así que no deben ejecutarse a la vez.
+El gestor de paquetes es **pnpm** y el lockfile versionado es `pnpm-lock.yaml`. Mezclarlo con `npm install` deja el `node_modules` a medias —pnpm aparta lo que instaló npm en `node_modules/.ignored`— y hay que borrar el directorio para recuperarse.
+
+Para una demostración conviene usar `pnpm build` seguido de `pnpm start` en lugar de `pnpm dev`: en modo desarrollo Turbopack compila cada ruta la primera vez que se visita, y esa pausa de unos segundos se nota. Los dos comandos comparten el directorio `.next`, así que no deben ejecutarse a la vez.
 
 ### Cuentas
 

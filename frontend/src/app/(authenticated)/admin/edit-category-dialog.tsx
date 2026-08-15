@@ -22,13 +22,13 @@ import { queryKeys } from "@/lib/query-keys";
 import type { CategoryResponse, UpdateCategoryRequest } from "@/lib/types";
 
 interface EditCategoryDialogProps {
-  /** Categoria a editar, o null si el dialogo esta cerrado. */
+  /** Categoría a editar, o null si el dialogo esta cerrado. */
   category: CategoryResponse | null;
   onOpenChange: (open: boolean) => void;
 }
 
-/** Dialogo para corregir el nombre o el orden de una categoria ya existente.
- * Un nombre repetido llega como 409 con el detalle "Ya existe una categoria
+/** Dialogo para corregir el nombre o el orden de una categoría ya existente.
+ * Un nombre repetido llega como 409 con el detalle "Ya existe una categoría
  * llamada '...'." — GET /categories no filtra por estado, asi que aqui si
  * conviene invalidar la lista tras guardar. */
 export function EditCategoryDialog({ category, onOpenChange }: EditCategoryDialogProps) {
@@ -37,18 +37,18 @@ export function EditCategoryDialog({ category, onOpenChange }: EditCategoryDialo
   const updateMutation = useMutation({
     mutationFn: (payload: UpdateCategoryRequest) => {
       if (!category) {
-        throw new Error("No hay categoria seleccionada.");
+        throw new Error("No hay categoría seleccionada.");
       }
       return api.put<CategoryResponse>(endpoints.categories.update(category.id), payload);
     },
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.categories.all() });
-      toast.success(`Categoria "${updated.name}" actualizada.`);
+      toast.success(`Categoría "${updated.name}" actualizada.`);
       onOpenChange(false);
     },
     onError: (error) => {
       const message =
-        error instanceof ApiError ? error.message : "No se pudo actualizar la categoria.";
+        error instanceof ApiError ? error.message : "No se pudo actualizar la categoría.";
       toast.error(message);
     },
   });
@@ -78,14 +78,14 @@ export function EditCategoryDialog({ category, onOpenChange }: EditCategoryDialo
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Editar categoria</DialogTitle>
-          <DialogDescription>Corrige el nombre o el orden de la categoria.</DialogDescription>
+          <DialogTitle>Editar categoría</DialogTitle>
+          <DialogDescription>Corrige el nombre o el orden de la categoría.</DialogDescription>
         </DialogHeader>
         {category && (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {apiError && !hasFieldErrors && (
               <Alert variant="destructive">
-                <AlertTitle>No se pudo actualizar la categoria</AlertTitle>
+                <AlertTitle>No se pudo actualizar la categoría</AlertTitle>
                 <AlertDescription>{apiError.message}</AlertDescription>
               </Alert>
             )}
@@ -118,8 +118,8 @@ export function EditCategoryDialog({ category, onOpenChange }: EditCategoryDialo
             </div>
 
             <DialogFooter>
-              <Button type="submit" disabled={updateMutation.isPending}>
-                {updateMutation.isPending ? "Guardando..." : "Guardar cambios"}
+              <Button type="submit" size="lg" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? "Guardando…" : "Guardar cambios"}
               </Button>
             </DialogFooter>
           </form>

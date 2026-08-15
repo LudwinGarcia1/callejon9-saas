@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ScreenShell } from "@/components/layout/screen-shell";
 import { QueryState } from "@/components/shared/query-state";
 import { Money } from "@/components/shared/money";
 import { useSession } from "@/hooks/use-session";
@@ -35,14 +36,11 @@ export function PlatformView() {
   });
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-xl font-semibold">Panel de plataforma</h1>
-        <p className="text-sm text-muted-foreground">
-          Planes disponibles para los restaurantes de Callejon 9.
-        </p>
-      </div>
-
+    <ScreenShell
+      eyebrow="Callejón 9"
+      title="Panel de plataforma"
+      subtitle="Planes disponibles para los restaurantes de Callejón 9."
+    >
       {isSessionLoading ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {Array.from({ length: 3 }).map((_, index) => (
@@ -53,7 +51,7 @@ export function PlatformView() {
         <Alert>
           <AlertTitle>Sin permiso</AlertTitle>
           <AlertDescription>
-            Esta seccion requiere una cuenta de super administrador.
+            Esta sección requiere una cuenta de super administrador.
           </AlertDescription>
         </Alert>
       ) : (
@@ -61,32 +59,28 @@ export function PlatformView() {
           isLoading={plansQuery.isLoading}
           error={plansQuery.error}
           isEmpty={plansQuery.data?.length === 0}
-          emptyMessage="Todavia no hay planes registrados."
+          emptyMessage="Todavía no hay planes registrados."
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {plansQuery.data?.map((plan) => (
               <Card key={plan.code}>
                 <CardHeader>
-                  <CardDescription>{plan.code}</CardDescription>
+                  <CardDescription className="eyebrow">{plan.code}</CardDescription>
                   <CardTitle>{plan.name}</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-2">
-                  <p className="text-2xl font-semibold">
-                    <Money amount={plan.priceMonthly} />
-                    <span className="text-sm font-normal text-muted-foreground"> / mes</span>
+                  <p>
+                    <Money amount={plan.priceMonthly} className="font-display text-[34px]" />
+                    <span className="text-sm text-muted-foreground"> / mes</span>
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    Hasta {plan.maxUsers} usuarios
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Hasta {plan.maxTables} mesas
-                  </p>
+                  <p className="text-sm text-muted-foreground">Hasta {plan.maxUsers} usuarios</p>
+                  <p className="text-sm text-muted-foreground">Hasta {plan.maxTables} mesas</p>
                 </CardContent>
               </Card>
             ))}
           </div>
         </QueryState>
       )}
-    </div>
+    </ScreenShell>
   );
 }

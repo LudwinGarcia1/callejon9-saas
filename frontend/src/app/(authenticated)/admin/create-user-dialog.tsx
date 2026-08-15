@@ -122,7 +122,7 @@ export function CreateUserDialog() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="password">Contrasena</Label>
+            <Label htmlFor="password">Contraseña</Label>
             <Input
               id="password"
               name="password"
@@ -157,8 +157,8 @@ export function CreateUserDialog() {
           </div>
 
           <DialogFooter>
-            <Button type="submit" disabled={createMutation.isPending}>
-              {createMutation.isPending ? "Guardando..." : "Crear usuario"}
+            <Button type="submit" size="lg" disabled={createMutation.isPending}>
+              {createMutation.isPending ? "Guardando…" : "Crear usuario"}
             </Button>
           </DialogFooter>
         </form>

@@ -68,7 +68,7 @@ export function CreateTableDialog() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Nueva mesa</DialogTitle>
-          <DialogDescription>Agrega una mesa al salon.</DialogDescription>
+          <DialogDescription>Agrega una mesa al salón.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {apiError && !hasFieldErrors && (
@@ -79,7 +79,7 @@ export function CreateTableDialog() {
           )}
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="number">Numero</Label>
+            <Label htmlFor="number">Número</Label>
             <Input
               id="number"
               name="number"
@@ -105,8 +105,8 @@ export function CreateTableDialog() {
           </div>
 
           <DialogFooter>
-            <Button type="submit" disabled={createMutation.isPending}>
-              {createMutation.isPending ? "Guardando..." : "Crear mesa"}
+            <Button type="submit" size="lg" disabled={createMutation.isPending}>
+              {createMutation.isPending ? "Guardando…" : "Crear mesa"}
             </Button>
           </DialogFooter>
         </form>

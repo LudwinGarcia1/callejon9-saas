@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScreenShell } from "@/components/layout/screen-shell";
 import { QueryState } from "@/components/shared/query-state";
 import { DailySalesChart, DailySalesTable } from "@/components/charts/daily-sales-chart";
 import { ParetoChart, ParetoTable } from "@/components/charts/pareto-chart";
@@ -63,18 +64,16 @@ export function AnalyticsView() {
   const analytics = analyticsQuery.data;
 
   return (
-    <div className={`flex flex-col gap-6 ${styles.scope}`}>
-      <div>
-        <h1 className="text-xl font-semibold">Analitica</h1>
-        <p className="text-sm text-muted-foreground">
-          Pareto de productos, ventas por dia y mezcla de metodos de pago del rango seleccionado.
-        </p>
-      </div>
-
+    <ScreenShell
+      title="Analítica"
+      subtitle="Pareto de productos, ventas por día y mezcla de métodos de pago del rango seleccionado."
+      className={styles.scope}
+      contentClassName="flex flex-col gap-6"
+    >
       <Card>
         <CardHeader>
           <CardTitle>Rango de fechas</CardTitle>
-          <CardDescription>Por defecto, los ultimos 7 dias terminando hoy.</CardDescription>
+          <CardDescription>Por defecto, los últimos 7 días terminando hoy.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleRangeSubmit} className="flex flex-wrap items-end gap-3">
@@ -108,7 +107,7 @@ export function AnalyticsView() {
           <div className="flex flex-col gap-6">
             <ChartCard
               title="Pareto de productos"
-              description="Participacion de ingresos por producto y su acumulado, con referencia en 80%."
+              description="Participación de ingresos por producto y su acumulado, con referencia en 80%."
             >
               {(view) =>
                 view === "chart" ? (
@@ -119,7 +118,7 @@ export function AnalyticsView() {
               }
             </ChartCard>
 
-            <ChartCard title="Ventas por dia" description="Total cobrado cada dia del rango.">
+            <ChartCard title="Ventas por día" description="Total cobrado cada día del rango.">
               {(view) =>
                 view === "chart" ? (
                   <DailySalesChart data={analytics.salesByDay} />
@@ -129,7 +128,7 @@ export function AnalyticsView() {
               }
             </ChartCard>
 
-            <ChartCard title="Metodos de pago" description="Ventas e ingreso por metodo de pago.">
+            <ChartCard title="Métodos de pago" description="Ventas e ingreso por método de pago.">
               {(view) =>
                 view === "chart" ? (
                   <PaymentMixChart data={analytics.paymentMix} />
@@ -141,7 +140,7 @@ export function AnalyticsView() {
           </div>
         )}
       </QueryState>
-    </div>
+    </ScreenShell>
   );
 }
 

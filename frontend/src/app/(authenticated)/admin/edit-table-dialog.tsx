@@ -80,7 +80,7 @@ export function EditTableDialog({ table, onOpenChange }: EditTableDialogProps) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Editar mesa</DialogTitle>
-          <DialogDescription>Corrige el numero o la capacidad de la mesa.</DialogDescription>
+          <DialogDescription>Corrige el número o la capacidad de la mesa.</DialogDescription>
         </DialogHeader>
         {table && (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -92,7 +92,7 @@ export function EditTableDialog({ table, onOpenChange }: EditTableDialogProps) {
             )}
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="edit-table-number">Numero</Label>
+              <Label htmlFor="edit-table-number">Número</Label>
               <Input
                 id="edit-table-number"
                 name="number"
@@ -120,8 +120,8 @@ export function EditTableDialog({ table, onOpenChange }: EditTableDialogProps) {
             </div>
 
             <DialogFooter>
-              <Button type="submit" disabled={updateMutation.isPending}>
-                {updateMutation.isPending ? "Guardando..." : "Guardar cambios"}
+              <Button type="submit" size="lg" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? "Guardando…" : "Guardar cambios"}
               </Button>
             </DialogFooter>
           </form>

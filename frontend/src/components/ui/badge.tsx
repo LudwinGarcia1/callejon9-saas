@@ -4,32 +4,37 @@ import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Chip del sistema Sala: 26px de alto, radio de 3px, mono de 10px en
+ * mayusculas con tracking abierto. Nunca es una pastilla redonda: es una
+ * etiqueta de dato.
+ *
+ * La variante `tone` se pinta con las variables que publica un contenedor con
+ * `data-tone` (verde, marca, ambar o neutro), asi que el mismo chip sirve para
+ * las cuatro familias de estado sin repetir la tabla de colores.
+ */
 const badgeVariants = cva(
-  "group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
+  "group/badge inline-flex h-[26px] w-fit shrink-0 items-center justify-center gap-1.5 overflow-hidden rounded-sm border border-transparent px-2.5 font-mono text-[10px] font-medium tracking-[0.12em] whitespace-nowrap uppercase [&>svg]:pointer-events-none [&>svg]:size-3!",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
-        secondary:
-          "bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80",
-        destructive:
-          "bg-destructive/10 text-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/20",
-        outline:
-          "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
-        ghost:
-          "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
-        link: "text-primary underline-offset-4 hover:underline",
+        tone: "border-[var(--tone-border)] bg-[var(--tone-bg)] text-[var(--tone-text)]",
+        default: "bg-primary text-primary-foreground",
+        brand: "bg-brand text-brand-foreground",
+        secondary: "bg-secondary text-secondary-foreground",
+        destructive: "border-destructive/40 text-destructive",
+        outline: "border-border text-muted-foreground",
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: "tone",
     },
   }
 )
 
 function Badge({
   className,
-  variant = "default",
+  variant = "tone",
   asChild = false,
   ...props
 }: React.ComponentProps<"span"> &

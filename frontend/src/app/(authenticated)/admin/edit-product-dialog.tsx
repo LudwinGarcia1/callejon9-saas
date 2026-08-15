@@ -127,7 +127,7 @@ export function EditProductDialog({ product, categories, onOpenChange }: EditPro
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="edit-product-description">Descripcion (opcional)</Label>
+              <Label htmlFor="edit-product-description">Descripción (opcional)</Label>
               <Textarea
                 id="edit-product-description"
                 name="description"
@@ -153,7 +153,7 @@ export function EditProductDialog({ product, categories, onOpenChange }: EditPro
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="edit-product-category">Categoria (opcional)</Label>
+              <Label htmlFor="edit-product-category">Categoría (opcional)</Label>
               <Select
                 value={categoryId}
                 onValueChange={setCategoryId}
@@ -163,7 +163,7 @@ export function EditProductDialog({ product, categories, onOpenChange }: EditPro
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NO_CATEGORY}>Sin categoria</SelectItem>
+                  <SelectItem value={NO_CATEGORY}>Sin categoría</SelectItem>
                   {categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
@@ -174,8 +174,8 @@ export function EditProductDialog({ product, categories, onOpenChange }: EditPro
             </div>
 
             <DialogFooter>
-              <Button type="submit" disabled={updateMutation.isPending}>
-                {updateMutation.isPending ? "Guardando..." : "Guardar cambios"}
+              <Button type="submit" size="lg" disabled={updateMutation.isPending}>
+                {updateMutation.isPending ? "Guardando…" : "Guardar cambios"}
               </Button>
             </DialogFooter>
           </form>

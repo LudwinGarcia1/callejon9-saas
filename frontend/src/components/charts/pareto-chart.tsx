@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ChartEmpty } from "./chart-empty";
 import { ChartLegend } from "./chart-legend";
 import { ChartTooltip } from "./chart-tooltip";
 import { formatCurrency } from "@/lib/format";
@@ -45,9 +46,7 @@ export function ParetoChart({ data }: ParetoChartProps) {
 
   if (data.length === 0) {
     return (
-      <p className="py-12 text-center text-sm text-muted-foreground">
-        No hay ventas en el rango seleccionado.
-      </p>
+      <ChartEmpty />
     );
   }
 
@@ -65,7 +64,7 @@ export function ParetoChart({ data }: ParetoChartProps) {
     <div className="flex flex-col gap-3">
       <ChartLegend
         items={[
-          { colorVar: "--series-1", label: "Participacion de ingresos" },
+          { colorVar: "--series-1", label: "Participación de ingresos" },
           { colorVar: "--series-2", label: "Acumulado" },
         ]}
       />
@@ -225,9 +224,7 @@ export function ParetoChart({ data }: ParetoChartProps) {
 export function ParetoTable({ data }: ParetoChartProps) {
   if (data.length === 0) {
     return (
-      <p className="py-12 text-center text-sm text-muted-foreground">
-        No hay ventas en el rango seleccionado.
-      </p>
+      <ChartEmpty />
     );
   }
 
@@ -245,9 +242,15 @@ export function ParetoTable({ data }: ParetoChartProps) {
         {data.map((row) => (
           <TableRow key={row.productName}>
             <TableCell>{row.productName}</TableCell>
-            <TableCell>{formatCurrency(row.revenue)}</TableCell>
-            <TableCell>{row.revenueShare.toFixed(1)}%</TableCell>
-            <TableCell>{row.cumulativeShare.toFixed(1)}%</TableCell>
+            <TableCell className="font-mono text-[13px] tabular-nums">
+              {formatCurrency(row.revenue)}
+            </TableCell>
+            <TableCell className="font-mono text-[13px] tabular-nums">
+              {row.revenueShare.toFixed(1)}%
+            </TableCell>
+            <TableCell className="font-mono text-[13px] tabular-nums">
+              {row.cumulativeShare.toFixed(1)}%
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>

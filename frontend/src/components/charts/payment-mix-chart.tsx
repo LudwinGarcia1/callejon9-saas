@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ChartEmpty } from "./chart-empty";
 import { ChartTooltip } from "./chart-tooltip";
 import { formatCurrency } from "@/lib/format";
 import { PAYMENT_METHOD_LABELS, type PaymentMixRow } from "@/lib/types";
@@ -29,9 +30,7 @@ export function PaymentMixChart({ data }: PaymentMixChartProps) {
 
   if (data.length === 0) {
     return (
-      <p className="py-12 text-center text-sm text-muted-foreground">
-        No hay ventas en el rango seleccionado.
-      </p>
+      <ChartEmpty />
     );
   }
 
@@ -138,9 +137,7 @@ export function PaymentMixChart({ data }: PaymentMixChartProps) {
 export function PaymentMixTable({ data }: PaymentMixChartProps) {
   if (data.length === 0) {
     return (
-      <p className="py-12 text-center text-sm text-muted-foreground">
-        No hay ventas en el rango seleccionado.
-      </p>
+      <ChartEmpty />
     );
   }
 
@@ -158,9 +155,13 @@ export function PaymentMixTable({ data }: PaymentMixChartProps) {
         {data.map((row) => (
           <TableRow key={row.method}>
             <TableCell>{PAYMENT_METHOD_LABELS[row.method]}</TableCell>
-            <TableCell>{row.count}</TableCell>
-            <TableCell>{formatCurrency(row.total)}</TableCell>
-            <TableCell>{row.share.toFixed(1)}%</TableCell>
+            <TableCell className="font-mono text-[13px] tabular-nums">{row.count}</TableCell>
+            <TableCell className="font-mono text-[13px] tabular-nums">
+              {formatCurrency(row.total)}
+            </TableCell>
+            <TableCell className="font-mono text-[13px] tabular-nums">
+              {row.share.toFixed(1)}%
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>
