@@ -9,7 +9,11 @@ spring:
     # Puerto 5433: esta maquina ya tenia un PostgreSQL 18 ocupando el 5432,
     # asi que el instalador del 16 tomo el siguiente libre. En CI se sobreescribe
     # con la variable de entorno DB_PORT para apuntar al contenedor de servicio.
-    url: jdbc:postgresql://localhost:${DB_PORT:5433}/callejon9
+    #
+    # El nombre tambien es variable porque "callejon9" puede estar ocupado por
+    # otro sistema en el mismo servidor. Apuntar ahi seria peor que fallar: son
+    # dos esquemas distintos del mismo dominio.
+    url: jdbc:postgresql://localhost:${DB_PORT:5433}/${DB_NAME:callejon9}
     username: callejon9_app
     password: ${DB_APP_PASSWORD:app_dev_pwd}
     hikari:

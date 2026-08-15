@@ -85,6 +85,45 @@ public class TableService {
         return tableRepository.save(table);
     }
 
+    /**
+     * Cambio manual del estado de servicio: reservar una mesa, mandarla a
+     * limpieza o devolverla a libre.
+     *
+     * <p>{@code OCCUPIED} queda fuera en los dos sentidos, y por la misma
+     * razon: ese estado solo lo justifica una comanda abierta. Ponerlo a mano
+     * crearia una mesa ocupada sin comanda, y quitarlo a una mesa que lo tiene
+     * dejaria la comanda viva sobre una mesa marcada como libre, lista para
+     * que se siente otro grupo. Para eso estan cancelar y cobrar.
+     *
+     * <p>Toma el mismo lock que {@link #occupy}: sin el, reservar una mesa y
+     * abrir una comanda sobre ella pueden leer ambos {@code FREE} y escribir
+     * cada uno lo suyo.
+     */
+    @Transactional
+    public RestaurantTable changeStatus(UUID tableId, TableStatus newStatus) {
+        if (newStatus == TableStatus.OCCUPIED) {
+            throw new BusinessRuleException(
+                    "Una mesa se ocupa abriendo una comanda, no cambiando su estado.");
+        }
+
+        RestaurantTable table = tableRepository.findByIdForUpdate(tableId)
+                .orElseThrow(() -> new ResourceNotFoundException("La mesa no existe."));
+
+        if (!table.isActive()) {
+            throw new BusinessRuleException(
+                    "La mesa " + table.getNumber() + " esta dada de baja.");
+        }
+
+        if (table.getStatus() == TableStatus.OCCUPIED) {
+            throw new BusinessRuleException(
+                    "La mesa " + table.getNumber() + " tiene una comanda abierta. "
+                            + "Cobrala o cancelala para liberarla.");
+        }
+
+        table.setStatus(newStatus);
+        return tableRepository.save(table);
+    }
+
     /** Libera una mesa al cerrar la cuenta (checkout) o al cancelar una orden. */
     @Transactional
     public RestaurantTable free(UUID tableId) {

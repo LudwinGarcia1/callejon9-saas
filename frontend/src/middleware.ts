@@ -9,6 +9,13 @@ import type { NextRequest } from "next/server";
  * la firma y la expiracion ocurre en cada peticion al backend a traves de
  * su propio filtro de seguridad.
  */
+/**
+ * Next no le pasa la ruta a un layout de servidor, y el layout raiz necesita
+ * saberla para decidir el tema antes del primer pintado. Publicarla como
+ * cabecera de peticion es la via soportada.
+ */
+export const PATHNAME_HEADER = "x-pathname";
+
 export function middleware(request: NextRequest) {
   const hasAccessToken = request.cookies.has("access_token");
 
@@ -18,7 +25,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.next();
+  const headers = new Headers(request.headers);
+  headers.set(PATHNAME_HEADER, request.nextUrl.pathname);
+
+  return NextResponse.next({ request: { headers } });
 }
 
 /**

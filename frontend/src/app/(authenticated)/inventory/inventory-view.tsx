@@ -160,10 +160,13 @@ export function InventoryView() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nombre</TableHead>
-                      <TableHead>Stock</TableHead>
+                      {/* Las columnas de cifras van a la derecha: los digitos
+                          tabulares igualan anchos, pero solo alinean en columna
+                          si la celda alinea por el mismo borde. */}
+                      <TableHead className="text-right">Stock</TableHead>
                       <TableHead>Nivel</TableHead>
-                      <TableHead>Minimo</TableHead>
-                      <TableHead>Costo</TableHead>
+                      <TableHead className="text-right">Minimo</TableHead>
+                      <TableHead className="text-right">Costo</TableHead>
                       {canManageCatalog && <TableHead>Alta</TableHead>}
                       <TableHead />
                     </TableRow>
@@ -179,16 +182,16 @@ export function InventoryView() {
                           className={cn(item.level === "NEGATIVE" && "bg-destructive/10")}
                         >
                           <TableCell>{item.name}</TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
                             {item.stock} {item.unit}
                           </TableCell>
                           <TableCell>
                             <StatusBadge kind="stock" status={item.level} />
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
                             {item.minStock > 0 ? `${item.minStock} ${item.unit}` : "—"}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
                             <Money amount={item.unitCost} />
                           </TableCell>
                           {canManageCatalog && (

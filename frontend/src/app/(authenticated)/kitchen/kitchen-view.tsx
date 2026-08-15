@@ -94,19 +94,9 @@ export function KitchenView() {
     return () => clearInterval(id);
   }, []);
 
-  /**
-   * Cocina es oscura de punta a punta, no solo en su contenido: el oscuro se
-   * marca en <html> para que alcance tambien a la barra lateral y al alto
-   * completo de la pagina. Aplicarlo solo al contenedor dejaba una franja
-   * negra recortada sobre fondo blanco, peor que no tenerlo.
-   *
-   * Se revierte al desmontar, asi que salir de cocina devuelve el resto de la
-   * aplicacion a su tema claro.
-   */
-  useEffect(() => {
-    document.documentElement.classList.add("dark");
-    return () => document.documentElement.classList.remove("dark");
-  }, []);
+  // El tema oscuro de esta pantalla lo marca el layout raiz en <html> segun la
+  // ruta, no un efecto de aqui: puesto tras el montaje llegaba tarde al primer
+  // pintado y la pantalla destellaba en blanco al cargarse.
 
   const ordersQuery = useQuery({
     queryKey: queryKeys.kitchen.orders(),
