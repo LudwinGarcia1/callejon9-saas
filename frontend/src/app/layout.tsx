@@ -32,10 +32,12 @@ const instrumentSerif = Instrument_Serif({
  * romperia la jerarquia de numeros de mesa y totales, que es donde vive la
  * legibilidad del sistema.
  */
+// Sin `weight`: Space Grotesk es una fuente variable y Google sirve el rango
+// completo en un solo archivo. Pedirle pesos sueltos genera un CSS que apunta a
+// instancias estaticas inexistentes y el build no resuelve esos modulos.
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-space-grotesk",
   subsets: ["latin"],
-  weight: ["500", "700"],
 });
 
 export const metadata: Metadata = {
