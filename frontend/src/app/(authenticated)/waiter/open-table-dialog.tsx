@@ -83,7 +83,7 @@ export function OpenTableDialog({ table, onOpenChange }: OpenTableDialogProps) {
         <DialogHeader>
           <DialogTitle>Abrir mesa {table?.number}</DialogTitle>
           <DialogDescription>
-            Indica cuantos comensales se sentaron para abrir la orden.
+            Indica cuántos comensales se sentaron para abrir la orden.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -95,7 +95,7 @@ export function OpenTableDialog({ table, onOpenChange }: OpenTableDialogProps) {
           )}
 
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="guestCount">Numero de comensales</Label>
+            <Label htmlFor="guestCount">Número de comensales</Label>
             <Input
               id="guestCount"
               name="guestCount"
@@ -109,8 +109,8 @@ export function OpenTableDialog({ table, onOpenChange }: OpenTableDialogProps) {
           </div>
 
           <DialogFooter>
-            <Button type="submit" disabled={openOrderMutation.isPending}>
-              {openOrderMutation.isPending ? "Abriendo..." : "Abrir orden"}
+            <Button type="submit" size="lg" disabled={openOrderMutation.isPending}>
+              {openOrderMutation.isPending ? "Abriendo…" : "Abrir orden"}
             </Button>
           </DialogFooter>
         </form>
