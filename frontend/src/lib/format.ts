@@ -51,9 +51,19 @@ export function formatShortTime(iso: string): string {
   return timeFormatter.format(new Date(iso));
 }
 
-/** Fecha de hoy en formato `yyyy-MM-dd`, para precargar un input `type="date"`. */
+/**
+ * Fecha de hoy en formato `yyyy-MM-dd`, para precargar un input `type="date"`.
+ *
+ * Se resuelve en la zona horaria del dispositivo, NO en UTC. Con
+ * `toISOString()` la fecha se adelantaba un dia a partir de las 18:00 en
+ * Mexico (UTC-6): el historial y el inventario abrian pidiendo el dia
+ * siguiente y salian vacios a media cena. Es el mismo problema que
+ * `BusinessCalendar` resuelve del lado del servidor.
+ *
+ * `en-CA` se usa porque su formato numerico corto ya es `yyyy-MM-dd`.
+ */
 export function todayIsoDate(): string {
-  return new Date().toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat("en-CA").format(new Date());
 }
 
 /**

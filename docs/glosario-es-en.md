@@ -24,8 +24,12 @@ La documentación se queda en español porque su público es distinto: el jurado
 | Renglón de comanda | `OrderItem` | `order_items` |
 | Venta | `Sale` | `sales` |
 | Ticket | `Ticket` | `tickets` |
+| Insumo | `InventoryItem` | `inventory_items` |
+| Movimiento de inventario | `InventoryMovement` | `inventory_movements` |
 
 `RestaurantTable` no se llama `Table` porque `TABLE` es palabra reservada en SQL y el nombre corto genera fricción constante con JPA y con las herramientas.
+
+`InventoryMovement` no se llama `StockMovement` porque la tabla del esquema original ya se llamaba `inventory_movements`, y renombrar el concepto en el código para que dejara de coincidir con la tabla habría creado exactamente la fricción que este glosario existe para evitar.
 
 `Product` unifica dos colecciones del sistema original —`productos` y `platillos`— que modelaban el mismo concepto por duplicado.
 

@@ -51,4 +51,15 @@ export const queryKeys = {
     /** Igual criterio que `sales.history`: el rango es parte de la clave. */
     summary: (from: string, to: string) => ["analytics", { from, to }] as const,
   },
+  inventory: {
+    /** Mismo criterio que {@link products.all}: la pantalla pide
+     * `includeInactive` para poder reactivar insumos dados de baja. */
+    items: (includeInactive?: boolean) =>
+      includeInactive
+        ? (["inventory", "items", { includeInactive: true }] as const)
+        : (["inventory", "items"] as const),
+    /** El rango y el filtro de insumo son parte de la clave. */
+    movements: (from: string, to: string, itemId?: string) =>
+      ["inventory", "movements", { from, to, itemId: itemId ?? null }] as const,
+  },
 };

@@ -6,6 +6,7 @@ import com.callejon9.platform.tenant.service.TenantOnboardingService;
 import com.callejon9.tenancy.TenantContext;
 import com.callejon9.user.domain.User;
 import com.callejon9.user.domain.UserRole;
+import com.callejon9.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -19,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -37,15 +39,33 @@ class TableControllerTest {
     @Autowired private TenantOnboardingService onboardingService;
     @Autowired private JwtService jwtService;
     @Autowired private JdbcTemplate jdbcTemplate;
+    @Autowired private UserRepository userRepository;
+    @Autowired private TransactionTemplate transactionTemplate;
 
     private Tenant tenant;
     private User admin;
+
+    /**
+     * El administrador que el onboarding si persiste. Hace falta para abrir
+     * comandas: {@code restaurant_tables.waiter_id} tiene una FK contra
+     * {@code users}, y un usuario de mentira la viola. Para el CRUD de mesas
+     * basta {@link #admin}, que solo existe para firmar el JWT.
+     */
+    private User persistedAdmin;
 
     @BeforeEach
     void seed() {
         tenant = onboardingService.onboard("Mesas Test", "mesas-test",
                 "admin@mesas.com", "Admin", "Secreto123!", "FREE");
         admin = fakeUser(tenant.getId(), UserRole.ADMIN);
+
+        TenantContext.set(tenant.getId());
+        try {
+            persistedAdmin = transactionTemplate.execute(
+                    status -> userRepository.findByEmail("admin@mesas.com").orElseThrow());
+        } finally {
+            TenantContext.clear();
+        }
     }
 
     @AfterEach
@@ -260,5 +280,138 @@ class TableControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"active\":false}"))
                 .andExpect(status().isForbidden());
+    }
+
+    // ---------------------------------------------------------------
+    // Estado de la mesa: RESERVED y CLEANING
+    //
+    // OCCUPIED queda fuera de este endpoint en los dos sentidos: no se
+    // pone a mano porque solo una comanda abierta lo justifica, y no se
+    // le cambia el estado a una mesa que lo tenga porque liberarla
+    // sentaria a dos grupos en la misma mesa.
+    // ---------------------------------------------------------------
+
+    private void setStatus(UUID tableId, User user, String status, int expectedHttpStatus)
+            throws Exception {
+        mockMvc.perform(post("/api/v1/tables/" + tableId + "/status")
+                        .cookie(cookieFor(user))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"" + status + "\"}"))
+                .andExpect(status().is(expectedHttpStatus));
+    }
+
+    private void openOrderOn(UUID tableId) throws Exception {
+        mockMvc.perform(post("/api/v1/orders")
+                        .cookie(cookieFor(persistedAdmin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tableId\":\"" + tableId + "\",\"guestCount\":2}"))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("ADMIN reserva una mesa libre")
+    void adminCanReserveAFreeTable() throws Exception {
+        UUID tableId = createTable(20, 4);
+
+        mockMvc.perform(post("/api/v1/tables/" + tableId + "/status")
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"status":"RESERVED"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("RESERVED"));
+    }
+
+    @Test
+    @DisplayName("una mesa reservada pasa a limpieza")
+    void aReservedTableCanBeSentToCleaning() throws Exception {
+        UUID tableId = createTable(21, 4);
+        setStatus(tableId, admin, "RESERVED", 200);
+
+        mockMvc.perform(post("/api/v1/tables/" + tableId + "/status")
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"CLEANING\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CLEANING"));
+    }
+
+    @Test
+    @DisplayName("una mesa en limpieza vuelve a quedar libre")
+    void aTableInCleaningCanBeFreed() throws Exception {
+        UUID tableId = createTable(22, 4);
+        setStatus(tableId, admin, "CLEANING", 200);
+
+        mockMvc.perform(post("/api/v1/tables/" + tableId + "/status")
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"FREE\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("FREE"));
+    }
+
+    @Test
+    @DisplayName("un WAITER tambien puede cambiar el estado de una mesa")
+    void waiterCanChangeTableStatus() throws Exception {
+        UUID tableId = createTable(23, 4);
+        User waiter = fakeUser(tenant.getId(), UserRole.WAITER);
+
+        setStatus(tableId, waiter, "CLEANING", 200);
+    }
+
+    @Test
+    @DisplayName("un CASHIER no puede cambiar el estado de una mesa")
+    void cashierCannotChangeTableStatus() throws Exception {
+        UUID tableId = createTable(24, 4);
+        User cashier = fakeUser(tenant.getId(), UserRole.CASHIER);
+
+        setStatus(tableId, cashier, "CLEANING", 403);
+    }
+
+    @Test
+    @DisplayName("poner OCCUPIED a mano da 409: solo una comanda abierta lo justifica")
+    void settingOccupiedByHandIsRejected() throws Exception {
+        UUID tableId = createTable(25, 4);
+
+        setStatus(tableId, admin, "OCCUPIED", 409);
+    }
+
+    @Test
+    @DisplayName("cambiar el estado de una mesa ocupada da 409")
+    void changingTheStatusOfAnOccupiedTableIsRejected() throws Exception {
+        UUID tableId = createTable(26, 4);
+        openOrderOn(tableId);
+
+        setStatus(tableId, admin, "FREE", 409);
+    }
+
+    @Test
+    @DisplayName("cambiar el estado de una mesa dada de baja da 409")
+    void changingTheStatusOfAnInactiveTableIsRejected() throws Exception {
+        UUID tableId = createTable(27, 4);
+        mockMvc.perform(patch("/api/v1/tables/" + tableId)
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"active\":false}"))
+                .andExpect(status().isOk());
+
+        setStatus(tableId, admin, "RESERVED", 409);
+    }
+
+    @Test
+    @DisplayName("una mesa reservada rechaza comandas hasta que se libera")
+    void aReservedTableRejectsANewOrderUntilItIsFreed() throws Exception {
+        UUID tableId = createTable(28, 4);
+        setStatus(tableId, admin, "RESERVED", 200);
+
+        mockMvc.perform(post("/api/v1/orders")
+                        .cookie(cookieFor(persistedAdmin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tableId\":\"" + tableId + "\",\"guestCount\":2}"))
+                .andExpect(status().isConflict());
+
+        setStatus(tableId, admin, "FREE", 200);
+        openOrderOn(tableId);
     }
 }

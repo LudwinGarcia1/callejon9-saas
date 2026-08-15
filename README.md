@@ -67,13 +67,13 @@ El frontend nunca llama a `:8080` directamente. Un `rewrites()` en `next.config.
 ### Estructura
 
 ```
-backend/    Spring Boot · Maven Wrapper · 120 tests · 25 rutas de API
+backend/    Spring Boot · Maven Wrapper · 174 tests · 31 rutas de API
 frontend/   Next.js · TypeScript · Tailwind · shadcn/ui · 9 pantallas
 scripts/    setup-db.sql, verify-rls.sql, run-dev.ps1
 docs/       glosario, guion de demo, specs y planes de implementación
 ```
 
-Los paquetes del backend se organizan por funcionalidad, no por capa: `auth`, `user`, `table`, `catalog`, `order`, `kitchen`, `sale`, `ticket`, `realtime`, `platform`, más `tenancy` y `shared`. Cada uno contiene `web/`, `domain/`, `service/` y `repository/`.
+Los paquetes del backend se organizan por funcionalidad, no por capa: `auth`, `user`, `table`, `catalog`, `order`, `kitchen`, `sale`, `ticket`, `inventory`, `analytics`, `realtime`, `platform`, más `tenancy` y `shared`. Cada uno contiene `web/`, `domain/`, `service/` y `repository/`.
 
 ---
 
