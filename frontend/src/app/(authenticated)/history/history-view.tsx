@@ -16,6 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ScreenMetric, ScreenShell } from "@/components/layout/screen-shell";
 import { Money } from "@/components/shared/money";
 import { QueryState } from "@/components/shared/query-state";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -57,7 +58,7 @@ export function HistoryView() {
     onError: (error) => {
       toast.error(
         error instanceof ApiError && error.status === 404
-          ? "No existe ningun ticket con ese folio."
+          ? "No existe ningún ticket con ese folio."
           : "No se pudo buscar el ticket.",
       );
     },
@@ -90,31 +91,17 @@ export function HistoryView() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-xl font-semibold">Historial de ventas</h1>
-        <p className="text-sm text-muted-foreground">
-          Consulta lo que se ha cobrado en un rango de fechas o encuentra un ticket por folio.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Card>
-          <CardContent className="flex flex-col gap-1 py-4">
-            <span className="text-sm text-muted-foreground">Ventas en el rango</span>
-            <span className="text-2xl font-semibold">{summary?.count ?? 0}</span>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex flex-col gap-1 py-4">
-            <span className="text-sm text-muted-foreground">Total cobrado</span>
-            <span className="text-2xl font-semibold">
-              <Money amount={summary?.total ?? 0} />
-            </span>
-          </CardContent>
-        </Card>
-      </div>
-
+    <ScreenShell
+      title="Historial de ventas"
+      subtitle="Consulta lo que se ha cobrado en un rango de fechas o encuentra un ticket por folio."
+      actions={
+        <>
+          <ScreenMetric label="Ventas en el rango" value={summary?.count ?? 0} />
+          <ScreenMetric label="Total cobrado" value={<Money amount={summary?.total ?? 0} />} accent />
+        </>
+      }
+      contentClassName="flex flex-col gap-6"
+    >
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
@@ -146,7 +133,7 @@ export function HistoryView() {
                 <Input id="folio" name="folio" placeholder="TCK-260731225310" />
               </div>
               <Button type="submit" disabled={folioMutation.isPending}>
-                {folioMutation.isPending ? "Buscando..." : "Buscar"}
+                {folioMutation.isPending ? "Buscando…" : "Buscar"}
               </Button>
             </form>
           </CardContent>
@@ -183,10 +170,10 @@ export function HistoryView() {
                       onClick={() => handleSelectSale(sale.id)}
                       className={cn(
                         "cursor-pointer",
-                        selectedSaleId === sale.id && "bg-muted",
+                        selectedSaleId === sale.id && "bg-accent",
                       )}
                     >
-                      <TableCell>{sale.orderFolio}</TableCell>
+                      <TableCell className="font-mono text-[13px]">{sale.orderFolio}</TableCell>
                       <TableCell>
                         {sale.tableNumber !== null ? `Mesa ${sale.tableNumber}` : "Para llevar"}
                       </TableCell>
@@ -197,7 +184,7 @@ export function HistoryView() {
                       <TableCell>
                         <Money amount={sale.total} />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="font-mono text-[13px] text-muted-foreground">
                         {formatShortDate(sale.createdAt)} {formatShortTime(sale.createdAt)}
                       </TableCell>
                     </TableRow>
@@ -210,7 +197,7 @@ export function HistoryView() {
 
         <SaleTicketPanel saleId={selectedSaleId} sales={sales} folioResult={folioResult} />
       </div>
-    </div>
+    </ScreenShell>
   );
 }
 
@@ -282,7 +269,7 @@ function SaleTicketPanel({ saleId, sales, folioResult }: SaleTicketPanelProps) {
           isLoading={ticketQuery.isLoading}
           error={ticketQuery.error}
           isEmpty={!ticketQuery.data}
-          emptyMessage="No se encontro el ticket."
+          emptyMessage="No se encontró el ticket."
         >
           {ticketQuery.data && <TicketSummary ticket={ticketQuery.data} />}
         </QueryState>

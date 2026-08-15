@@ -22,6 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScreenMetric, ScreenShell } from "@/components/layout/screen-shell";
 import { Money } from "@/components/shared/money";
 import { QueryState } from "@/components/shared/query-state";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -164,14 +165,18 @@ export function AdminView() {
   );
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-xl font-semibold">Administracion</h1>
-        <p className="text-sm text-muted-foreground">
-          Resumen del restaurante, y alta de mesas, categorias, productos y usuarios.
-        </p>
-      </div>
-
+    <ScreenShell
+      title="Administración"
+      subtitle="Resumen del restaurante, y alta de mesas, categorías, productos y usuarios."
+      actions={
+        <ScreenMetric
+          label="Cobrado hoy"
+          value={ordersQuery.isLoading ? "—" : <Money amount={todayTotal} />}
+          accent
+        />
+      }
+      contentClassName="flex flex-col gap-6"
+    >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         <SummaryCard
           label="Mesas"
@@ -179,7 +184,7 @@ export function AdminView() {
           isLoading={tablesQuery.isLoading}
         />
         <SummaryCard
-          label="Categorias"
+          label="Categorías"
           value={categoriesQuery.data?.length}
           isLoading={categoriesQuery.isLoading}
         />
@@ -195,15 +200,14 @@ export function AdminView() {
         />
         <Card>
           <CardHeader>
-            <CardDescription>Ordenes de hoy</CardDescription>
-            <CardTitle className="text-2xl">
-              {ordersQuery.isLoading ? "…" : todayOrders.length}
+            <CardDescription className="eyebrow">Órdenes de hoy</CardDescription>
+            <CardTitle className="text-[34px] leading-none">
+              {ordersQuery.isLoading ? "—" : todayOrders.length}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Total:{" "}
-              {ordersQuery.isLoading ? "…" : <Money amount={todayTotal} />}
+              Total: {ordersQuery.isLoading ? "—" : <Money amount={todayTotal} />}
             </p>
           </CardContent>
         </Card>
@@ -212,7 +216,7 @@ export function AdminView() {
       <Tabs defaultValue="tables">
         <TabsList>
           <TabsTrigger value="tables">Mesas</TabsTrigger>
-          <TabsTrigger value="categories">Categorias</TabsTrigger>
+          <TabsTrigger value="categories">Categorías</TabsTrigger>
           <TabsTrigger value="products">Productos</TabsTrigger>
           <TabsTrigger value="users">Usuarios</TabsTrigger>
         </TabsList>
@@ -227,14 +231,14 @@ export function AdminView() {
                 isLoading={tablesQuery.isLoading}
                 error={tablesQuery.error}
                 isEmpty={tablesQuery.data?.length === 0}
-                emptyMessage="Todavia no hay mesas. Crea la primera con el boton de arriba."
+                emptyMessage="Todavía no hay mesas. Crea la primera con el botón de arriba."
               >
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Numero</TableHead>
+                      <TableHead>Número</TableHead>
                       <TableHead>Capacidad</TableHead>
-                      <TableHead>Ocupacion</TableHead>
+                      <TableHead>Ocupación</TableHead>
                       <TableHead>Alta</TableHead>
                       <TableHead />
                     </TableRow>
@@ -246,13 +250,17 @@ export function AdminView() {
                         toggleTableActiveMutation.variables?.tableId === table.id;
                       return (
                         <TableRow key={table.id}>
-                          <TableCell>{table.number}</TableCell>
-                          <TableCell>{table.capacity}</TableCell>
+                          <TableCell className="font-mono text-[13px] tabular-nums">
+                            {table.number}
+                          </TableCell>
+                          <TableCell className="font-mono text-[13px] tabular-nums">
+                            {table.capacity}
+                          </TableCell>
                           <TableCell>
                             <StatusBadge kind="table" status={table.status} />
                           </TableCell>
                           <TableCell>
-                            <Badge variant={table.active ? "secondary" : "outline"}>
+                            <Badge data-tone={table.active ? "green" : "neutral"}>
                               {table.active ? "Activa" : "Inactiva"}
                             </Badge>
                           </TableCell>
@@ -276,7 +284,7 @@ export function AdminView() {
                               }
                             >
                               {isTogglingThisRow
-                                ? "Guardando..."
+                                ? "Guardando…"
                                 : table.active
                                   ? "Dar de baja"
                                   : "Reactivar"}
@@ -302,7 +310,7 @@ export function AdminView() {
                 isLoading={categoriesQuery.isLoading}
                 error={categoriesQuery.error}
                 isEmpty={categoriesQuery.data?.length === 0}
-                emptyMessage="Todavia no hay categorias. Crea la primera con el boton de arriba."
+                emptyMessage="Todavía no hay categorías. Crea la primera con el botón de arriba."
               >
                 <Table>
                   <TableHeader>
@@ -316,7 +324,9 @@ export function AdminView() {
                     {categoriesQuery.data?.map((category) => (
                       <TableRow key={category.id}>
                         <TableCell>{category.name}</TableCell>
-                        <TableCell>{category.sortOrder}</TableCell>
+                        <TableCell className="font-mono text-[13px] tabular-nums">
+                          {category.sortOrder}
+                        </TableCell>
                         <TableCell className="text-right">
                           <Button
                             variant="outline"
@@ -345,15 +355,15 @@ export function AdminView() {
                 isLoading={productsQuery.isLoading}
                 error={productsQuery.error}
                 isEmpty={productsQuery.data?.length === 0}
-                emptyMessage="Todavia no hay productos. Crea el primero con el boton de arriba."
+                emptyMessage="Todavía no hay productos. Crea el primero con el botón de arriba."
               >
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nombre</TableHead>
-                      <TableHead>Descripcion</TableHead>
+                      <TableHead>Descripción</TableHead>
                       <TableHead>Precio</TableHead>
-                      <TableHead>Categoria</TableHead>
+                      <TableHead>Categoría</TableHead>
                       <TableHead>Alta</TableHead>
                       <TableHead />
                     </TableRow>
@@ -366,16 +376,18 @@ export function AdminView() {
                       return (
                         <TableRow key={product.id}>
                           <TableCell>{product.name}</TableCell>
-                          <TableCell>{product.description ?? "-"}</TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {product.description ?? "—"}
+                          </TableCell>
                           <TableCell>
-                            <Money amount={product.price} />
+                            <Money amount={product.price} className="font-mono text-[13px]" />
                           </TableCell>
                           <TableCell>
                             {categoriesQuery.data?.find((category) => category.id === product.categoryId)
-                              ?.name ?? "Sin categoria"}
+                              ?.name ?? "Sin categoría"}
                           </TableCell>
                           <TableCell>
-                            <Badge variant={product.active ? "secondary" : "outline"}>
+                            <Badge data-tone={product.active ? "green" : "neutral"}>
                               {product.active ? "Activo" : "Inactivo"}
                             </Badge>
                           </TableCell>
@@ -399,7 +411,7 @@ export function AdminView() {
                               }
                             >
                               {isTogglingThisRow
-                                ? "Guardando..."
+                                ? "Guardando…"
                                 : product.active
                                   ? "Dar de baja"
                                   : "Reactivar"}
@@ -425,7 +437,7 @@ export function AdminView() {
                 isLoading={usersQuery.isLoading}
                 error={usersQuery.error}
                 isEmpty={usersQuery.data?.length === 0}
-                emptyMessage="Todavia no hay usuarios. Crea el primero con el boton de arriba."
+                emptyMessage="Todavía no hay usuarios. Crea el primero con el botón de arriba."
               >
                 <Table>
                   <TableHeader>
@@ -452,10 +464,10 @@ export function AdminView() {
                           </TableCell>
                           <TableCell>{user.email}</TableCell>
                           <TableCell>
-                            <Badge variant="secondary">{USER_ROLE_LABELS[user.role]}</Badge>
+                            <Badge variant="outline">{USER_ROLE_LABELS[user.role]}</Badge>
                           </TableCell>
                           <TableCell>
-                            <Badge variant={user.active ? "secondary" : "outline"}>
+                            <Badge data-tone={user.active ? "green" : "neutral"}>
                               {user.active ? "Activo" : "Inactivo"}
                             </Badge>
                           </TableCell>
@@ -472,7 +484,7 @@ export function AdminView() {
                               }
                             >
                               {isTogglingThisRow
-                                ? "Guardando..."
+                                ? "Guardando…"
                                 : user.active
                                   ? "Desactivar"
                                   : "Activar"}
@@ -515,7 +527,7 @@ export function AdminView() {
           }
         }}
       />
-    </div>
+    </ScreenShell>
   );
 }
 
@@ -529,8 +541,10 @@ function SummaryCard({ label, value, isLoading }: SummaryCardProps) {
   return (
     <Card>
       <CardHeader>
-        <CardDescription>{label}</CardDescription>
-        <CardTitle className="text-2xl">{isLoading ? "…" : (value ?? 0)}</CardTitle>
+        <CardDescription className="eyebrow">{label}</CardDescription>
+        <CardTitle className="text-[34px] leading-none">
+          {isLoading ? "—" : (value ?? 0)}
+        </CardTitle>
       </CardHeader>
     </Card>
   );

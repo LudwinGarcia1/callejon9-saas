@@ -6,16 +6,11 @@
  * Las variables se declaran sobre `.scope` (no sobre `:root` global) para
  * que solo afecten a esta pantalla.
  *
- * DELIBERADAMENTE NO se atiende `prefers-color-scheme`. El resto de la
- * aplicacion no tiene modo oscuro ni selector de tema: es siempre clara. Si
- * la grafica siguiera la preferencia del sistema, en una maquina configurada
- * en oscuro quedaria un recuadro casi negro dentro de una pantalla blanca, y
- * eso se lee como un error de renderizado, no como una decision. Una parte de
- * la interfaz no puede cambiar de tema por su cuenta mientras el resto no.
- *
- * Los pasos oscuros se conservan bajo `data-theme="dark"`, listos para el dia
- * en que exista un selector de tema de verdad. Ese dia basta con que el
- * selector estampe el atributo en la raiz.
+ * Los pasos oscuros ya no esperan a un selector de tema propio: el sistema
+ * Sala tiene modo oscuro real y lo activa la clase `.dark` que el layout
+ * autenticado pone segun la preferencia del restaurante (y que caja y cocina
+ * fuerzan). La grafica sigue esa clase, asi que nunca queda un recuadro
+ * oscuro dentro de una pantalla clara ni al reves.
  */
 
 .scope {
@@ -29,8 +24,9 @@
   --baseline: #c3c2b7;
 }
 
-/* Pasos oscuros validados, activos solo con un selector de tema explicito. */
-:global(:root[data-theme="dark"]) .scope {
+/* Pasos oscuros validados, activos cuando la pantalla esta en modo oscuro. */
+:global(.dark) .scope,
+.scope:global(.dark) {
   --series-1: #3987e5;
   --series-2: #d95926;
   --surface: #1a1a19;
@@ -39,15 +35,4 @@
   --ink-muted: #898781;
   --gridline: #2c2c2a;
   --baseline: #383835;
-}
-
-:global(:root[data-theme="light"]) .scope {
-  --series-1: #2a78d6;
-  --series-2: #eb6834;
-  --surface: #fcfcfb;
-  --ink-primary: #0b0b0b;
-  --ink-secondary: #52514e;
-  --ink-muted: #898781;
-  --gridline: #e1e0d9;
-  --baseline: #c3c2b7;
 }
