@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "linear_callejon9": {
+      "type": "http",
+      "url": "https://mcp.linear.app/mcp"
+    }
+  }
+}

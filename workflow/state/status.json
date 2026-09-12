@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "activeIssue": null,
+  "activePhase": null,
+  "lastReview": null,
+  "lastBacklogSync": {
+    "date": "2026-09-11",
+    "projectId": "29d324c8-6703-4eca-809b-6285f4f3cb72",
+    "issuesRewritten": 40,
+    "phases": 6,
+    "postPhaseBacklog": 12,
+    "userStoriesAdded": 40,
+    "issuesAssignedToCycles": 28,
+    "cycles": 6,
+    "projectOverviewUpdated": true,
+    "projectResourceLinks": 2,
+    "teamResourceDocuments": 3,
+    "sourceBaseline": "feat/identidad-por-restaurante@b036e4d"
+  },
+  "linearSync": {
+    "enabled": true,
+    "workspace": {
+      "name": "Callejon19",
+      "slug": "callejon19",
+      "id": "964a8330-86ce-4a33-8757-5de4f1ba3c4b"
+    },
+    "team": {
+      "name": "Callejon19",
+      "key": null,
+      "id": "ce3d455a-06ad-409b-a3ba-af256f90178e"
+    }
+  }
+}

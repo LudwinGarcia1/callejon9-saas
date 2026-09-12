@@ -1,5 +1,7 @@
 # Callejón 9 — SaaS multi-restaurante
 
+> Para trabajo asistido por agentes, consulta [`AGENTS.md`](AGENTS.md) y el [`workflow/README.md`](workflow/README.md). El mismo harness corre en Codex y en Claude Code —este último entra por [`CLAUDE.md`](CLAUDE.md)— e incluye skills de build, review, ship y planeación, especialistas opcionales y una conexión de proyecto independiente para Linear.
+
 Migración a Java del sistema de gestión de restaurantes [Callejón 9](https://github.com/Ludwingarcia14/Restaurante-Callejon-9), originalmente construido en Flask con MongoDB, convertido en una plataforma SaaS multi-inquilino.
 
 ## La tesis del proyecto

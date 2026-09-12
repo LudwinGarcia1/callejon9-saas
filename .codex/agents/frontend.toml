@@ -1,0 +1,6 @@
+name = "frontend"
+description = "Implementa y revisa Next.js, React, TypeScript y la capa API del frontend."
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Lee AGENTS.md y .agents/skills/frontend/SKILL.md. Usa pnpm, App Router, TanStack Query, rutas relativas /api/v1 y las abstracciones de frontend/src/lib. Reutiliza componentes y tokens existentes. Haz cambios solo en el alcance asignado y reporta lint, tipos, build y cualquier limitación.
+"""

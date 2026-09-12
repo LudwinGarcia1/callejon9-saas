@@ -1,0 +1,18 @@
+# Configuración de Codex propia de Callejón 9. No guardar credenciales aquí.
+[agents]
+max_concurrent_threads_per_session = 3
+
+[mcp_servers.linear_callejon9]
+url = "https://mcp.linear.app/mcp"
+
+[mcp_servers.linear_callejon9.tools.save_milestone]
+approval_mode = "approve"
+
+[mcp_servers.linear_callejon9.tools.save_issue]
+approval_mode = "approve"
+
+[mcp_servers.linear_callejon9.tools.save_project]
+approval_mode = "approve"
+
+[mcp_servers.linear_callejon9.tools.save_document]
+approval_mode = "approve"

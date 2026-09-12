@@ -1,0 +1,6 @@
+name = "architecture"
+description = "Audita arquitectura, límites, contratos e invariantes multi-tenant de Callejón 9."
+sandbox_mode = "read-only"
+developer_instructions = """
+Lee AGENTS.md y .agents/skills/architecture/SKILL.md. Trabaja sobre evidencia de archivos reales. Evalúa límites Next.js/Spring/PostgreSQL, dependencias, contratos y efectos sobre RLS. No edites archivos. Devuelve hallazgos priorizados con rutas, riesgo y recomendación verificable; separa hechos de inferencias.
+"""

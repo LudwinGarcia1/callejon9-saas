@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "documents": [
+    {"path": "README.md", "kind": "project-overview", "authority": "high"},
+    {"path": "AGENTS.md", "kind": "agent-instructions", "authority": "highest"},
+    {"path": "workflow/product/product-brief.md", "kind": "product", "authority": "high"},
+    {"path": "workflow/product/product-map.md", "kind": "product-map", "authority": "high"},
+    {"path": "workflow/product/definition-of-done.md", "kind": "quality", "authority": "high"},
+    {"path": "workflow/plan/roadmap.md", "kind": "roadmap", "authority": "medium"},
+    {"path": "docs/glosario-es-en.md", "kind": "domain-language", "authority": "medium"},
+    {"path": "docs/guion-demo.md", "kind": "demo", "authority": "medium"}
+  ]
+}
