@@ -49,3 +49,10 @@ build/
 !.vscode/launch.json
 !.vscode/tasks.json
 !.vscode/settings.json
+
+### Harness de Claude Code ###
+# .claude/skills y .claude/agents son un espejo generado desde .agents/ con
+# scripts/sync-claude-harness.ps1. Versionar las dos copias las deja divergir
+# en silencio. Lo unico que se comparte es la configuracion de permisos.
+.claude/*
+!.claude/settings.json

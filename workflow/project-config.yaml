@@ -1,0 +1,50 @@
+schema_version: 1
+project:
+  name: "Callejón 9"
+  repository: "LudwinGarcia1/callejon9-saas"
+  base_branch: "main"
+  language:
+    code: "en"
+    product_docs: "es"
+
+linear:
+  enabled: true
+  mcp_server: "linear_callejon9"
+  workspace:
+    name: "Callejon19"
+    slug: "callejon19"
+    id: "964a8330-86ce-4a33-8757-5de4f1ba3c4b"
+  team:
+    name: "Callejon19"
+    key: "CAL"
+    id: "ce3d455a-06ad-409b-a3ba-af256f90178e"
+  issue_prefix: "CAL"
+  note: "Workspace, team, ciclos y prefijo verificados mediante linear_callejon9 el 2026-09-11. Las mutaciones requieren petición explícita."
+
+paths:
+  backend: "backend"
+  frontend: "frontend"
+  product: "workflow/product"
+  roadmap: "workflow/plan/roadmap.md"
+  decisions: "workflow/decisions"
+  review_history: "workflow/state/review-history.jsonl"
+  docs_registry: "workflow/docs/registry.json"
+
+commands:
+  backend_verify: "cd backend; .\\mvnw.cmd -B verify"
+  frontend_lint: "cd frontend; pnpm lint"
+  frontend_typecheck: "cd frontend; pnpm exec tsc --noEmit"
+  frontend_build: "cd frontend; pnpm build"
+  dev_all: ".\\scripts\\run-dev.ps1"
+
+quality_gates:
+  backend_changes: ["backend_verify"]
+  frontend_changes: ["frontend_lint", "frontend_typecheck", "frontend_build"]
+  docs_only: []
+  security_or_tenancy: ["backend_verify", "rls_evidence"]
+
+priorities:
+  critical: "seguridad, aislamiento, pérdida de datos o operación bloqueada"
+  high: "flujo principal roto o deuda con riesgo cercano"
+  normal: "mejora funcional o técnica planificable"
+  low: "pulido sin impacto operativo inmediato"

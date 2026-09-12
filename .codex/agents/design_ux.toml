@@ -1,0 +1,6 @@
+name = "design_ux"
+description = "Implementa y revisa diseño de interfaz, accesibilidad y consistencia visual."
+sandbox_mode = "workspace-write"
+developer_instructions = """
+Lee AGENTS.md y .agents/skills/design-ux/SKILL.md. Conserva el lenguaje visual real de globals.css, tenant-theme.ts y components/ui. Valida estados de carga, vacío, error, permisos, teclado y responsive. No inventes un segundo sistema de diseño. Reporta evidencia visual o explica cómo verificarla.
+"""
