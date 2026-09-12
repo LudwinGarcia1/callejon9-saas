@@ -9,7 +9,7 @@ Sincronizado con el proyecto de Linear [Callejón 9 SaaS — Plan de profesional
 - Los puntos siguen siendo una estimación inicial para un equipo de tres personas. Deben calibrarse durante refinamiento.
 - Se mantienen seis fases de dos semanas como estructura de compromiso. Cada fase está representada por un project milestone y asignada al cycle equivalente de Linear.
 
-## Fase 1 — Cerrar la puerta · Cycle 1 · 14–28 sep 2026 · 23 SP
+## Fase 1 — Cerrar la puerta · Cycle 1 · 14–28 sep 2026 · 31 SP
 
 | Issue | Resultado |
 |---|---|
@@ -19,6 +19,8 @@ Sincronizado con el proyecto de Linear [Callejón 9 SaaS — Plan de profesional
 | CAL-8 | Cabeceras y cookies en la frontera pública |
 | CAL-9 | Gobernanza y protección del repositorio |
 | CAL-10 | Rechazar productos inactivos en comandas |
+| CAL-45 | Proteger con pruebas las rutas autenticadas de Next.js |
+| CAL-46 | Validar el destino posterior al inicio de sesión |
 
 ## Fase 2 — Que corra en cualquier máquina · Cycle 2 · 28 sep–12 oct 2026 · 27 SP
 
@@ -85,6 +87,7 @@ Sincronizado con el proyecto de Linear [Callejón 9 SaaS — Plan de profesional
 ## Dependencias críticas
 
 - CAL-7 depende de CAL-5; CAL-25 depende de CAL-6.
+- CAL-46 depende de CAL-45; CAL-35 reutiliza la configuración frontend que entrega CAL-45.
 - CAL-17 depende de CAL-11 y CAL-13; CAL-27 depende de CAL-15 y CAL-17.
 - CAL-21 y CAL-24 dependen de CAL-23.
 - CAL-28 depende de CAL-11; CAL-29 y CAL-30 dependen de CAL-27.
