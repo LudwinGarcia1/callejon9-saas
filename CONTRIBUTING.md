@@ -205,6 +205,15 @@ quien administre el repositorio:
 > ruleset. Aplicarlo en el orden inverso deja el repositorio sin forma de
 > integrar nada.
 
+> **Los nombres de los checks van a cambiar.** Por decisión del 2026-09-21, el
+> motor de CI pasa de GitHub Actions a Jenkins (CAL-86 a CAL-90). Cuando CAL-90
+> retire Actions, los contextos `backend` y `frontend` de
+> `branch-protection.json` dejarán de reportar, y un check requerido que nunca
+> llega bloquea igual que uno en rojo. CAL-89 sustituye esos dos contextos por
+> el que publica Jenkins mediante su GitHub App, e incluir el `integration_id`
+> de esa App evita que otro integrador pueda reportar un verde falso. La
+> protección de rama en sí no se mueve: la impone GitHub, no el motor de CI.
+
 La configuración está versionada en
 [`.github/branch-protection.json`](.github/branch-protection.json) para que sea
 revisable y reproducible, en lugar de un recuerdo de quien la aplicó. Con `gh`
