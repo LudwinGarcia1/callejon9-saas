@@ -1,0 +1,122 @@
+name: Proponer una mejora
+description: Funcionalidad nueva, cambio de comportamiento o trabajo técnico.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        La planeación del equipo vive en Linear. Este formulario sirve para
+        proponer algo desde fuera de ese flujo o para dejar registrado un hueco
+        encontrado en el repositorio. Una propuesta se convierte en trabajo
+        cuando tiene criterios verificables, no cuando suena razonable.
+
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Resultado buscado
+      description: >-
+        Qué podrá hacer alguien cuando esto exista, y no puede hacer hoy.
+        Escríbelo como resultado, no como solución técnica.
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema o evidencia
+      description: >-
+        Qué falla o falta hoy. Cita archivos, rutas o comportamiento observado
+        en lugar de impresiones.
+    validations:
+      required: true
+
+  - type: textarea
+    id: users
+    attributes:
+      label: A quién afecta
+      description: Qué roles o restaurantes lo notan, y con qué frecuencia.
+    validations:
+      required: true
+
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Criterios de aceptación
+      description: >-
+        Observables y verificables. El formato Given / When / Then es el que usa
+        el proyecto.
+      placeholder: |
+        1. Given un mesero autenticado, when abre una comanda cancelada, then
+           la mesa aparece liberada.
+        2. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Fuera de alcance
+      description: >-
+        Lo que alguien podría entender incluido y no lo está. Delimitar ahorra
+        una discusión después.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área principal
+      options:
+        - Frontend (pantallas, navegación, estados)
+        - Backend / API
+        - Base de datos o migraciones
+        - Autenticación, roles o sesión
+        - Aislamiento entre restaurantes
+        - Tiempo real
+        - Infraestructura, CI o harness
+        - Documentación
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: tenancy
+    attributes:
+      label: Efecto sobre el aislamiento
+      description: >-
+        La garantía central del proyecto es que PostgreSQL impone el aislamiento
+        entre restaurantes.
+      options:
+        - label: >-
+            Esta propuesta no requiere leer ni escribir datos de más de un
+            restaurante en la misma operación.
+        - label: >-
+            Sí lo requiere, y lo describo abajo. (Si es el caso, casi siempre
+            hace falta una decisión de arquitectura antes de implementar.)
+
+  - type: textarea
+    id: tenancy-notes
+    attributes:
+      label: Detalle del efecto sobre tenancy, roles o datos personales
+      description: >-
+        Datos nuevos que se guardarían, rutas nuevas y el rol que debería
+        exigirse en cada una.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+      description: >-
+        Incluida la de no hacer nada. Si ya existe una forma de rodear el
+        problema, dila.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Antes de enviar
+      options:
+        - label: >-
+            Busqué issues abiertos y revisé la sección de alcance del README
+            para no proponer algo ya implementado o ya diferido con diseño.
+          required: true
+        - label: >-
+            No incluí contraseñas, tokens ni datos personales de nadie en esta
+            propuesta.
+          required: true

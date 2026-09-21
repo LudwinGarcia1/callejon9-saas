@@ -1,0 +1,120 @@
+name: Reportar un defecto
+description: Algo del sistema no se comporta como debería.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **¿Es un problema de seguridad?** No lo describas aquí. Usa el
+        [reporte privado de vulnerabilidades](https://github.com/LudwinGarcia1/callejon9-saas/security/advisories/new);
+        los plazos están en
+        [SECURITY.md](https://github.com/LudwinGarcia1/callejon9-saas/blob/main/SECURITY.md).
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Qué ocurre
+      description: Una o dos frases. Lo observado, no la causa que supones.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para reproducir
+      placeholder: |
+        1. Entrar como ... en el restaurante ...
+        2. Ir a ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Qué esperabas
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Qué pasó en realidad
+      description: >-
+        Incluye el mensaje de error literal si lo hay, y el código de respuesta
+        HTTP si el fallo viene de la API.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área
+      options:
+        - Frontend (pantallas, navegación, estados)
+        - Backend / API
+        - Base de datos o migraciones
+        - Autenticación o sesión
+        - Aislamiento entre restaurantes
+        - Tiempo real (cocina, tablero)
+        - Harness, CI o herramientas
+        - No lo sé
+    validations:
+      required: true
+
+  - type: dropdown
+    id: role
+    attributes:
+      label: Rol con el que ocurre
+      description: La autorización depende del rol, así que esto acota mucho.
+      options:
+        - SUPER_ADMIN
+        - ADMIN
+        - WAITER
+        - KITCHEN
+        - CASHIER
+        - Sin autenticar
+        - Varios o no aplica
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Commit o rama
+      description: Sobre qué versión lo reprodujiste.
+      placeholder: main@94c59b3
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Entorno
+      description: >-
+        Navegador y versión si es de frontend; sistema operativo, versión de
+        PostgreSQL y de JDK si es de backend.
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impacto
+      description: >-
+        ¿Bloquea la operación del restaurante? ¿Hay una forma de rodearlo?
+        ¿Cuántas personas lo notan?
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Antes de enviar
+      options:
+        - label: Busqué issues abiertos y no encontré este defecto ya reportado.
+          required: true
+        - label: >-
+            No estoy describiendo una vulnerabilidad de seguridad (si lo fuera,
+            iría por el canal privado).
+          required: true
+        - label: >-
+            No incluí contraseñas, tokens ni datos personales de nadie en este
+            reporte.
+          required: true

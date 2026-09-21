@@ -1,0 +1,12 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Reportar una vulnerabilidad de seguridad
+    url: https://github.com/LudwinGarcia1/callejon9-saas/security/advisories/new
+    about: >-
+      No uses un issue público. El reporte privado de vulnerabilidades es el
+      canal correcto; los plazos de respuesta están en SECURITY.md.
+  - name: Cómo contribuir
+    url: https://github.com/LudwinGarcia1/callejon9-saas/blob/main/CONTRIBUTING.md
+    about: >-
+      Ramas, commits convencionales, proceso de pull request, revisión y puertas
+      de calidad.
