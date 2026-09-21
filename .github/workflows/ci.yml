@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, 'feat/**']
+    branches: [main, 'feat/**', 'fix/**', 'docs/**', 'chore/**']
   pull_request:
 
 jobs:
@@ -47,3 +47,36 @@ jobs:
           DB_OWNER_PASSWORD: owner_dev_pwd
           JWT_SECRET: ci-only-secret-at-least-32-bytes-long!!
         run: ./mvnw --batch-mode verify
+
+  frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # La version de pnpm sale del campo packageManager de frontend/package.json.
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      # --frozen-lockfile falla si package.json y pnpm-lock.yaml divergen, que es
+      # justo lo que debe bloquear un PR.
+      - name: Install dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        working-directory: frontend
+        run: pnpm lint
+
+      - name: Typecheck
+        working-directory: frontend
+        run: pnpm exec tsc --noEmit
+
+      - name: Production build
+        working-directory: frontend
+        run: pnpm build
