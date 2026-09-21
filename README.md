@@ -212,4 +212,11 @@ Tres carencias que sí se cerraron y vale la pena nombrar, porque marcaban la di
 - [`docs/superpowers/specs/`](docs/superpowers/specs/) — diseño y decisiones de arquitectura
 - [`docs/superpowers/plans/`](docs/superpowers/plans/) — plan de implementación
 
+### Gobernanza
+
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — ramas, commits, pull requests, revisión y puertas de calidad
+- [`SECURITY.md`](SECURITY.md) — cómo reportar una vulnerabilidad en privado y los plazos de respuesta
+- [`LICENSE`](LICENSE) — licencia propietaria; el repositorio es visible, pero no concede derechos de uso
+- [`workflow/decisions/`](workflow/decisions/) — decisiones aceptadas y su caducidad
+
 El código fuente está en inglés y la documentación en español. Es la convención habitual en Java: las anotaciones, los tipos y las librerías ya están en inglés, y mezclar idiomas dentro de una clase se lee mal.

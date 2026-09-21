@@ -3,6 +3,10 @@
   "documents": [
     {"path": "README.md", "kind": "project-overview", "authority": "high"},
     {"path": "AGENTS.md", "kind": "agent-instructions", "authority": "highest"},
+    {"path": "CONTRIBUTING.md", "kind": "governance", "authority": "high"},
+    {"path": "SECURITY.md", "kind": "security-policy", "authority": "high"},
+    {"path": "LICENSE", "kind": "license", "authority": "highest"},
+    {"path": "workflow/decisions/2026-09-21-gobernanza-del-repositorio.md", "kind": "decision", "authority": "high"},
     {"path": "workflow/product/product-brief.md", "kind": "product", "authority": "high"},
     {"path": "workflow/product/product-map.md", "kind": "product-map", "authority": "high"},
     {"path": "workflow/product/definition-of-done.md", "kind": "quality", "authority": "high"},
