@@ -55,7 +55,11 @@ jobs:
       - uses: actions/checkout@v4
 
       # La version de pnpm sale del campo packageManager de frontend/package.json.
+      # package_json_file es obligatorio aqui: la accion lo busca en la raiz del
+      # repositorio por defecto, y en la raiz no hay package.json.
       - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: frontend/package.json
 
       - uses: actions/setup-node@v4
         with:
