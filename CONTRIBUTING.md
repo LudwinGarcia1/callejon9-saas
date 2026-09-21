@@ -192,6 +192,19 @@ quien administre el repositorio:
 | Borrado de la rama | Bloqueado |
 | Reporte privado de vulnerabilidades | Habilitado |
 
+> **Precondición antes de aplicarlo.** Un check requerido que está en rojo en
+> `main` bloquea todos los merges, incluido el que lo arreglaría. Antes de
+> exigir `backend` y `frontend`, comprueba que los dos pasan en la punta de
+> `main`:
+>
+> ```powershell
+> gh run list --repo LudwinGarcia1/callejon9-saas --branch main --limit 1
+> ```
+>
+> Si alguno está en rojo, primero se arregla `main` y después se activa el
+> ruleset. Aplicarlo en el orden inverso deja el repositorio sin forma de
+> integrar nada.
+
 La configuración está versionada en
 [`.github/branch-protection.json`](.github/branch-protection.json) para que sea
 revisable y reproducible, en lugar de un recuerdo de quien la aplicó. Con `gh`
