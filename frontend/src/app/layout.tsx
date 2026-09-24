@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { Geist, Geist_Mono, Instrument_Serif, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
-import { PATHNAME_HEADER } from "@/middleware";
+import { PATHNAME_HEADER } from "@/lib/request-headers";
 import { Providers } from "./providers";
 
 const geistSans = Geist({
