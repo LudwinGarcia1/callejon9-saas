@@ -168,6 +168,10 @@ public class OrderService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "El producto " + newItem.productId() + " no existe."));
 
+        if (!product.isActive()) {
+            throw new BusinessRuleException("El producto " + product.getName() + " esta inactivo.");
+        }
+
         return OrderItem.builder()
                 .orderId(orderId)
                 .productId(product.getId())

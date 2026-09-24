@@ -257,6 +257,58 @@ class OrderControllerTest {
     }
 
     @Test
+    @DisplayName("un producto dado de baja no se puede agregar a una orden nueva")
+    void cannotAddAnInactiveProductToAnOrder() throws Exception {
+        UUID orderId = openOrder();
+
+        mockMvc.perform(patch("/api/v1/products/" + product.getId())
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"active\":false}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
+                        .cookie(cookieFor(waiter))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"items\":[{\"productId\":\"" + product.getId()
+                                + "\",\"quantity\":1}]}"))
+                .andExpect(status().isConflict());
+
+        mockMvc.perform(get("/api/v1/orders/" + orderId).cookie(cookieFor(waiter)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items").isEmpty())
+                .andExpect(jsonPath("$.total").value(0));
+    }
+
+    @Test
+    @DisplayName("un lote con producto inactivo es atómico y no agrega sus productos válidos")
+    void addingABatchWithAnInactiveProductRollsBackAllItems() throws Exception {
+        UUID orderId = openOrder();
+        Product inactiveProduct;
+        TenantContext.set(tenant.getId());
+        try {
+            inactiveProduct = transactionTemplate.execute(status -> productRepository.save(Product.builder()
+                    .name("Producto inactivo").description("No vendible")
+                    .price(new BigDecimal("30.00")).active(false).build()));
+        } finally {
+            TenantContext.clear();
+        }
+
+        mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
+                        .cookie(cookieFor(waiter))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"items\":[{\"productId\":\"" + product.getId()
+                                + "\",\"quantity\":1},{\"productId\":\"" + inactiveProduct.getId()
+                                + "\",\"quantity\":1}]}"))
+                .andExpect(status().isConflict());
+
+        mockMvc.perform(get("/api/v1/orders/" + orderId).cookie(cookieFor(waiter)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items").isEmpty())
+                .andExpect(jsonPath("$.total").value(0));
+    }
+
+    @Test
     @DisplayName("agregar productos a una orden PAID o CANCELED da 409")
     void cannotAddItemsToAClosedOrder() throws Exception {
         UUID orderId = openOrder();
@@ -432,12 +484,16 @@ class OrderControllerTest {
         TenantContext.set(tenantB.getId());
         User waiterB;
         RestaurantTable tableB;
+        Product productB;
         try {
             waiterB = transactionTemplate.execute(status -> userRepository.save(User.builder()
                     .email("mesero@ordenesb.com").passwordHash("x").fullName("Mesero B")
                     .role(UserRole.WAITER).active(true).build()));
             tableB = transactionTemplate.execute(status -> tableRepository.save(RestaurantTable.builder()
                     .number(1).capacity(2).status(TableStatus.FREE).active(true).build()));
+            productB = transactionTemplate.execute(status -> productRepository.save(Product.builder()
+                    .name("Producto B").description("Solo tenant B")
+                    .price(new BigDecimal("20.00")).active(true).build()));
         } finally {
             TenantContext.clear();
         }
@@ -459,6 +515,20 @@ class OrderControllerTest {
         // Y tampoco puede leerla por id: RLS la oculta, asi que responde 404.
         mockMvc.perform(get("/api/v1/orders/" + orderIdB).cookie(cookieFor(waiter)))
                 .andExpect(status().isNotFound());
+
+        // El id de producto tampoco cruza la frontera de tenant: RLS lo oculta
+        // durante addItems y la orden de A no recibe una línea parcial.
+        mockMvc.perform(post("/api/v1/orders/" + orderIdA + "/items")
+                        .cookie(cookieFor(waiter))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"items\":[{\"productId\":\"" + productB.getId()
+                                + "\",\"quantity\":1}]}"))
+                .andExpect(status().isNotFound());
+
+        mockMvc.perform(get("/api/v1/orders/" + orderIdA).cookie(cookieFor(waiter)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items").isEmpty())
+                .andExpect(jsonPath("$.total").value(0));
 
         assertThat(orderIdA).isNotEqualTo(orderIdB);
     }
