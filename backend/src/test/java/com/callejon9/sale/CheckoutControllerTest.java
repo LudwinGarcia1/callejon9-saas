@@ -222,6 +222,24 @@ class CheckoutControllerTest {
     }
 
     @Test
+    @DisplayName("caja lee la orden que va a cobrar, con sus renglones")
+    void cashierReadsTheOrderBeforeCheckout() throws Exception {
+        Product product = createProduct("Taco", "25.00");
+        UUID orderId = openOrder();
+        addItem(orderId, product, 2);
+
+        mockMvc.perform(get("/api/v1/orders/" + orderId).cookie(cookieFor(cashier)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(orderId.toString()))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.total").value(50.00));
+
+        mockMvc.perform(get("/api/v1/orders").cookie(cookieFor(cashier)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(orderId.toString()));
+    }
+
+    @Test
     @DisplayName("WAITER no puede cobrar la cuenta")
     void waiterCannotCheckout() throws Exception {
         Product product = createProduct("Taco", "25.00");

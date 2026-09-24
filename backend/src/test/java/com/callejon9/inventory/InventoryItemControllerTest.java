@@ -162,29 +162,29 @@ class InventoryItemControllerTest {
     }
 
     @Test
-    @DisplayName("un WAITER puede consultar insumos pero no crearlos ni editarlos")
-    void waiterCanReadButNotWrite() throws Exception {
+    @DisplayName("KITCHEN puede consultar insumos pero no crearlos ni editarlos")
+    void kitchenCanReadButNotWrite() throws Exception {
         UUID itemId = createItem("Cebolla", "kg");
-        User waiter = persistedUser(UserRole.WAITER);
+        User kitchen = persistedUser(UserRole.KITCHEN);
 
-        mockMvc.perform(get("/api/v1/inventory/items").cookie(cookieFor(waiter)))
+        mockMvc.perform(get("/api/v1/inventory/items").cookie(cookieFor(kitchen)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
 
         mockMvc.perform(post("/api/v1/inventory/items")
-                        .cookie(cookieFor(waiter))
+                        .cookie(cookieFor(kitchen))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Tomate\",\"unit\":\"kg\"}"))
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(put("/api/v1/inventory/items/" + itemId)
-                        .cookie(cookieFor(waiter))
+                        .cookie(cookieFor(kitchen))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Cebolla morada\",\"unit\":\"kg\"}"))
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(patch("/api/v1/inventory/items/" + itemId)
-                        .cookie(cookieFor(waiter))
+                        .cookie(cookieFor(kitchen))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"active\":false}"))
                 .andExpect(status().isForbidden());

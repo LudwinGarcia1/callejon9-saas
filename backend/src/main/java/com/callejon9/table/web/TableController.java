@@ -33,6 +33,7 @@ public class TableController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','WAITER','KITCHEN','CASHIER')")
     public List<TableResponse> list(
             @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
         return tableService.listTables(includeInactive).stream()
