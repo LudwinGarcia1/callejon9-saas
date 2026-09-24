@@ -8,14 +8,18 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TenantBadge } from "@/components/layout/tenant-badge";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
-import { NAV_ITEMS_BY_ROLE } from "@/components/layout/nav";
 import { Money } from "@/components/shared/money";
 import { useNavCounts } from "@/hooks/use-nav-counts";
 import { useSession } from "@/hooks/use-session";
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { queryKeys } from "@/lib/query-keys";
-import { USER_ROLE_LABELS, type OrderSummaryResponse, type TableResponse } from "@/lib/types";
+import {
+  USER_ROLE_LABELS,
+  type OrderSummaryResponse,
+  type TableResponse,
+  type UserRole,
+} from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const NAV_ADMIN = { href: "/admin", label: "Administracion" };

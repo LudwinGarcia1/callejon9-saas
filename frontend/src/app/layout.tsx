@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { headers } from "next/headers";
 import { Geist, Geist_Mono, Instrument_Serif, Space_Grotesk } from "next/font/google";
 import "./globals.css";
@@ -72,21 +71,14 @@ export default async function RootLayout({
   const pathname = (await headers()).get(PATHNAME_HEADER) ?? "";
 
   return (
-    // Las variables de fuente van en <html> y no en <body>: globals.css aplica
-    // la familia al elemento raiz, y una custom property definida en el body no
-    // es visible desde su padre. Con ellas en el body, `html { font-sans }` no
-    // resolvia y toda la aplicacion caia a la fuente por defecto del navegador.
-    <html
-      lang="es"
-      className={`${geistSans.variable} ${geistMono.variable}${
-        isDarkRoute(pathname) ? " dark" : ""
-      }`}
     // Las variables de fuente van en <html>, no en <body>: `globals.css`
     // declara `--font-display-family` sobre `:root` a partir de ellas, y una
     // custom property solo puede resolver otra que exista en el mismo elemento.
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${spaceGrotesk.variable}`}
+      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${spaceGrotesk.variable}${
+        isDarkRoute(pathname) ? " dark" : ""
+      }`}
     >
       <body className="antialiased">
         <Providers>{children}</Providers>
