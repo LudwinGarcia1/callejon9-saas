@@ -69,7 +69,7 @@ class TenantFilterTest {
         // Un GET contra una ruta mapeada solo a POST da 405 Method Not
         // Allowed. Eso prueba que la peticion atraveso la cadena de seguridad
         // sin autenticacion y llego al DispatcherServlet: un 401 aqui
-        // significaria que "/api/v1/auth/**" dejo de ser publico.
+        // significaria que "/api/v1/auth/login" dejo de ser publico.
         mockMvc.perform(get("/api/v1/auth/login"))
                 .andExpect(status().isMethodNotAllowed());
     }

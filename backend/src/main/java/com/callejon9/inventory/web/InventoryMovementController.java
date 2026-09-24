@@ -33,6 +33,7 @@ public class InventoryMovementController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','KITCHEN')")
     public List<InventoryMovementRow> list(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,

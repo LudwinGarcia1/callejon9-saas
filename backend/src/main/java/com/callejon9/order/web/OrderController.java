@@ -44,11 +44,13 @@ public class OrderController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('WAITER','CASHIER','ADMIN')")
     public OrderResponse get(@PathVariable UUID id) {
         return OrderResponse.from(orderService.getOrder(id));
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('WAITER','CASHIER','ADMIN')")
     public List<OrderSummaryResponse> list(@RequestParam(required = false) OrderStatus status) {
         return orderService.listOrders(status).stream()
                 .map(OrderSummaryResponse::from)
