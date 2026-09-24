@@ -11,6 +11,7 @@ const NAV_KITCHEN: NavItem = { href: "/kitchen", label: "Cocina" };
 const NAV_CASHIER: NavItem = { href: "/cashier", label: "Caja" };
 const NAV_HISTORY: NavItem = { href: "/history", label: "Historial" };
 const NAV_ANALYTICS: NavItem = { href: "/analytics", label: "Analítica" };
+const NAV_INVENTORY: NavItem = { href: "/inventory", label: "Inventario" };
 
 /**
  * Navegacion disponible por rol.
@@ -29,13 +30,16 @@ const NAV_ANALYTICS: NavItem = { href: "/analytics", label: "Analítica" };
  * el restaurante, asi que la barra la restringe a ADMIN aunque el servidor no
  * lo exija.
  *
+ * ADMIN y KITCHEN ven Inventario porque ambos pueden registrar movimientos.
+ * La pantalla limita el alta y la edicion de insumos a ADMIN.
+ *
  * SUPER_ADMIN solo ve la plataforma porque pertenece al tenant tecnico
  * 'platform', que no tiene mesas, productos ni comandas.
  */
 export const NAV_ITEMS_BY_ROLE: Record<UserRole, NavItem[]> = {
   SUPER_ADMIN: [{ href: "/platform", label: "Plataforma" }],
-  ADMIN: [NAV_ADMIN, NAV_WAITER, NAV_KITCHEN, NAV_CASHIER, NAV_HISTORY, NAV_ANALYTICS],
+  ADMIN: [NAV_ADMIN, NAV_WAITER, NAV_KITCHEN, NAV_CASHIER, NAV_INVENTORY, NAV_HISTORY, NAV_ANALYTICS],
   WAITER: [NAV_WAITER],
-  KITCHEN: [NAV_KITCHEN],
+  KITCHEN: [NAV_KITCHEN, NAV_INVENTORY],
   CASHIER: [NAV_CASHIER, NAV_HISTORY],
 };

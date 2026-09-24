@@ -24,28 +24,6 @@ type StatusBadgeProps =
   | { kind: "movement"; status: InventoryMovementType };
 
 /**
- * Badge con la etiqueta en espanol de cualquiera de las seis familias de
- * estado del dominio. `src/lib/types.ts` es la unica fuente de esas
- * etiquetas; este componente solo elige el mapa correcto segun `kind`.
- *
- * El nivel de stock es la unica familia que cambia de color: un stock negativo
- * no es un estado mas, es la senal de que el conteo fisico esta mal, y en una
- * lista de treinta insumos una insignia gris se pierde.
- */
-export function StatusBadge(props: StatusBadgeProps) {
-  return <Badge variant={variantFor(props)}>{labelFor(props)}</Badge>;
-}
-
-function variantFor(props: StatusBadgeProps): "secondary" | "destructive" | "outline" {
-  if (props.kind === "stock") {
-    if (props.status === "NEGATIVE") {
-      return "destructive";
-    }
-    if (props.status === "LOW") {
-      return "outline";
-    }
-  }
-  return "secondary";
  * Las cuatro familias de estado del dominio se reducen a cuatro tonos del
  * sistema: verde (libre o lista), marca (activa u ocupada), ambar (esperando
  * algo) y neutro (fuera de juego). Un tono se publica como `data-tone` y de
@@ -85,7 +63,10 @@ export function statusTone(props: StatusBadgeProps): StatusTone {
     case "kitchen":
       return KITCHEN_TONES[props.status];
     case "payment":
+    case "movement":
       return "neutral";
+    case "stock":
+      return props.status === "LOW" ? "amber" : "neutral";
   }
 }
 
@@ -111,7 +92,11 @@ export function statusLabel(props: StatusBadgeProps): string {
 export function StatusBadge(props: StatusBadgeProps & { className?: string }) {
   const { className, ...status } = props;
   return (
-    <Badge data-tone={statusTone(status)} className={className}>
+    <Badge
+      variant={status.kind === "stock" && status.status === "NEGATIVE" ? "destructive" : "tone"}
+      data-tone={statusTone(status)}
+      className={className}
+    >
       {statusLabel(status)}
     </Badge>
   );

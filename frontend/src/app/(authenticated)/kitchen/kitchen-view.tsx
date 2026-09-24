@@ -154,21 +154,6 @@ export function KitchenView() {
   }
 
   return (
-    <div className="flex flex-col gap-6" data-density="spacious">
-      <div>
-        <h1 className="text-xl font-semibold">Cocina</h1>
-        <p className="text-sm text-muted-foreground">
-          Ordenes enviadas a cocina, de la mas antigua a la mas reciente.
-        </p>
-      </div>
-
-      <QueryState
-        isLoading={ordersQuery.isLoading}
-        error={ordersQuery.error}
-        isEmpty={ordersQuery.data?.length === 0}
-        emptyMessage="No hay ordenes en cocina en este momento."
-    // Cocina es estacion fija de turno largo: va en oscuro aunque el
-    // restaurante haya elegido modo claro. Lo aplica el layout autenticado.
     <div className="flex flex-1 flex-col bg-background text-foreground">
       <ScreenShell
         title="Cocina"
@@ -188,39 +173,20 @@ export function KitchenView() {
             {ordersQuery.data?.map((order) => {
               const age = orderAge(order.sentToKitchenAt, now);
               return (
-              <Card key={order.id} className={AGE_CARD_STYLES[age]}>
-                <CardHeader className="flex flex-row items-start justify-between gap-2">
-                  <div>
-                    {/* La mesa es el titulo y el folio baja a tercera linea: el
-                        folio le sirve a caja, no a cocina. */}
-                    <CardTitle className="text-[length:var(--density-text-lg)]">
-                      {tableLabel(order.tableId)}
-                    </CardTitle>
-                    <p
-                      className={cn(
-                        "text-[length:var(--density-text-base)]",
-                        AGE_TEXT_STYLES[age],
-                      )}
-                    >
-                      {elapsedLabel(order.sentToKitchenAt, now)}
-                    </p>
-                    <p className="text-[length:var(--density-text-sm)] text-muted-foreground">
-                      Orden {order.folio}
-            {ordersQuery.data?.map((order) => (
               <article
                 key={order.id}
-                className="flex flex-col rounded-xl border bg-card p-[18px]"
+                className={cn("flex flex-col rounded-xl border bg-card p-[18px]", AGE_CARD_STYLES[age])}
               >
                 <header className="flex items-start justify-between gap-3 border-b pb-3.5">
                   <div>
                     <p className="eyebrow">
                       {order.folio}
-                      {order.sentToKitchenAt
-                        ? ` · enviada ${formatShortTime(order.sentToKitchenAt)}`
-                        : ""}
                     </p>
                     <p className="mt-0.5 font-display text-[28px] leading-none">
                       {tableLabel(order.tableId)}
+                    </p>
+                    <p className={cn("mt-1 text-sm", AGE_TEXT_STYLES[age])}>
+                      {elapsedLabel(order.sentToKitchenAt, now)}
                     </p>
                   </div>
                   <StatusBadge kind="order" status={order.status} />
@@ -234,20 +200,12 @@ export function KitchenView() {
                       advanceItemMutation.variables?.itemId === item.id;
 
                     return (
-                      <div key={item.id} className="flex flex-col gap-2">
-                        {index > 0 && <Separator />}
-                        <div
-                          className={cn(
-                            "flex items-center justify-between gap-2",
-                            isReadyOrBeyond(item.kitchenStatus) && "opacity-50",
-                          )}
-                        >
-                          <div>
-                            <p className="text-[length:var(--density-text-base)] font-medium">
-                              {item.quantity} x {item.productName}
                       <div
                         key={item.id}
-                        className="flex flex-col gap-2.5 border-b border-dotted border-border-strong py-3.5 last:border-b-0"
+                        className={cn(
+                          "flex flex-col gap-2.5 border-b border-dotted border-border-strong py-3.5 last:border-b-0",
+                          isReadyOrBeyond(item.kitchenStatus) && "opacity-50",
+                        )}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
@@ -268,7 +226,6 @@ export function KitchenView() {
                         {next && (
                           <Button
                             variant="outline"
-                            className="h-11 w-full justify-center"
                             disabled={isPending}
                             className="h-[var(--control-height)] w-full text-[length:var(--density-text-base)]"
                             onClick={() =>
@@ -283,13 +240,10 @@ export function KitchenView() {
                       </div>
                     );
                   })}
-                </CardContent>
-              </Card>
-              );
-            })}
                 </div>
               </article>
-            ))}
+              );
+            })}
           </div>
         </QueryState>
       </ScreenShell>
