@@ -18,7 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.SimpleTransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -52,13 +52,13 @@ class TenantOnboardingServiceCompensationTest {
     @Mock private UserRepository userRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private PlatformTransactionManager transactionManager;
-    @Mock private TransactionStatus transactionStatus;
 
     private TenantOnboardingService service;
 
     private void wireHappyPathUpToTheUserInsert(UUID tenantId) {
         when(transactionManager.getTransaction(any(TransactionDefinition.class)))
-                .thenReturn(transactionStatus);
+                // Estado real y separado por transacción; no necesita instrumentación de Mockito.
+                .thenAnswer(invocation -> new SimpleTransactionStatus());
 
         when(tenantRepository.existsBySlug("onboarding-compensacion")).thenReturn(false);
 

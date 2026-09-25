@@ -8,6 +8,8 @@
     {"path": "workflow/product/definition-of-done.md", "kind": "quality", "authority": "high"},
     {"path": "workflow/plan/roadmap.md", "kind": "roadmap", "authority": "medium"},
     {"path": "docs/glosario-es-en.md", "kind": "domain-language", "authority": "medium"},
-    {"path": "docs/guion-demo.md", "kind": "demo", "authority": "medium"}
+    {"path": "docs/guion-demo.md", "kind": "demo", "authority": "medium"},
+    {"path": "docs/propuesta-matriz-autorizacion-cal-5.md", "kind": "proposal", "authority": "low"},
+    {"path": "docs/cal-7-pruebas-autorizacion.md", "kind": "testing", "authority": "medium"}
   ]
 }
