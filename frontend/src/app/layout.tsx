@@ -10,7 +10,7 @@ import { headers } from "next/headers";
 import "./globals.css";
 
 import { Toaster } from "@/components/ui/sonner";
-import { PATHNAME_HEADER } from "@/middleware";
+import { PATHNAME_HEADER } from "@/lib/request-headers";
 import { Providers } from "./providers";
 
 const geistSans = Geist({
@@ -52,6 +52,12 @@ export default async function RootLayout({
   const pathname = (await headers()).get(PATHNAME_HEADER) ?? "";
 
   return (
+    // Las variables de fuente van en <html>, no en <body>: `globals.css`
+    // declara `--font-display-family` sobre `:root` a partir de ellas, y una
+    // custom property solo puede resolver otra que exista en el mismo elemento.
+    <html
+      lang="es"
+      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${spaceGrotesk.variable}${
     <html
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} ${

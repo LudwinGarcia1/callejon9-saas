@@ -5,8 +5,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ScreenMetric, ScreenShell } from "@/components/layout/screen-shell";
 import { QueryState } from "@/components/shared/query-state";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { ApiError, api } from "@/lib/api";
@@ -23,20 +24,9 @@ import {
   type UpdateKitchenItemStatusRequest,
 } from "@/lib/types";
 
-/** Cinco segundos es imperceptible de "en vivo" para quien mira el tablero,
- * y evita la complejidad de un STOMP cross-origin que el proxy de Next no
- * reenvia. Se apaga en segundo plano para no seguir golpeando al backend
- * con una pestaña sin foco. */
 const KITCHEN_POLL_INTERVAL_MS = 5_000;
-
-/** El reloj avanza solo para que el tiempo transcurrido no se congele entre
- * refetches. Treinta segundos basta: los umbrales estan en minutos. */
 const CLOCK_TICK_MS = 30_000;
 
-/**
- * El nivel normal no lleva color: un estado que no requiere atencion no debe
- * pedirla. Solo destacan las comandas que llevan esperando demasiado.
- */
 const AGE_CARD_STYLES: Record<OrderAge, string> = {
   normal: "",
   warning: "border-2 border-[var(--state-warning)]",
@@ -49,8 +39,6 @@ const AGE_TEXT_STYLES: Record<OrderAge, string> = {
   critical: "text-[var(--state-critical)] font-semibold",
 };
 
-/** Espejo exacto de KitchenService.FORWARD_SEQUENCE: solo sirve para decidir
- * que boton ofrecer, nunca como fuente de verdad del estado real. */
 const FORWARD_SEQUENCE: KitchenItemStatus[] = [
   "PENDING",
   "IN_PREPARATION",
@@ -60,30 +48,15 @@ const FORWARD_SEQUENCE: KitchenItemStatus[] = [
 
 function nextKitchenStatus(current: KitchenItemStatus): KitchenItemStatus | null {
   const index = FORWARD_SEQUENCE.indexOf(current);
-  if (index === -1 || index === FORWARD_SEQUENCE.length - 1) {
-    return null;
-  }
-  return FORWARD_SEQUENCE[index + 1];
+  return index === -1 || index === FORWARD_SEQUENCE.length - 1
+    ? null
+    : FORWARD_SEQUENCE[index + 1];
 }
 
-/** Un item cuenta como "listo o mas alla" para efectos de aviso local de que
- * la orden esta a punto de salir del tablero (el backend es quien decide de
- * verdad, aqui solo se anuncia). */
 function isReadyOrBeyond(status: KitchenItemStatus): boolean {
   return status === "READY" || status === "DELIVERED";
 }
 
-/**
- * Tablero de cocina: ordenes enviadas (SENT), mas antigua primero tal como
- * las entrega KitchenService.listSentOrders. Cada tarjeta lista sus
- * productos con su estado de cocina y un boton para avanzar un solo paso.
- *
- * Cuando el backend detecta que todos los productos de una orden llegaron a
- * READY, la promueve a READY por su cuenta y KitchenController.listSentOrders
- * deja de devolverla (solo lista SENT): por eso la tarjeta desaparece del
- * tablero en el siguiente refetch, que es la forma honesta de "surfacing"
- * pedida — nunca se calcula el estado de la orden en el cliente.
- */
 export function KitchenView() {
   const queryClient = useQueryClient();
   const [now, setNow] = useState(() => Date.now());
@@ -92,10 +65,6 @@ export function KitchenView() {
     const id = setInterval(() => setNow(Date.now()), CLOCK_TICK_MS);
     return () => clearInterval(id);
   }, []);
-
-  // El tema oscuro de esta pantalla lo marca el layout raiz en <html> segun la
-  // ruta, no un efecto de aqui: puesto tras el montaje llegaba tarde al primer
-  // pintado y la pantalla destellaba en blanco al cargarse.
 
   const ordersQuery = useQuery({
     queryKey: queryKeys.kitchen.orders(),
@@ -125,23 +94,21 @@ export function KitchenView() {
         `${updatedItem.productName} -> ${KITCHEN_STATUS_LABELS[updatedItem.kitchenStatus]}.`,
       );
 
-      if (order) {
-        const everyItemReadyOrBeyond = order.items.every((item) =>
+      if (
+        order?.items.every((item) =>
           item.id === updatedItem.id
             ? isReadyOrBeyond(updatedItem.kitchenStatus)
             : isReadyOrBeyond(item.kitchenStatus),
+        ) &&
+        updatedItem.kitchenStatus === "READY"
+      ) {
+        toast.info(
+          `Todos los productos de la orden ${order.folio} están listos. Pasará a "Lista" en el tablero.`,
         );
-        if (everyItemReadyOrBeyond && updatedItem.kitchenStatus === "READY") {
-          toast.info(
-            `Todos los productos de la orden ${order.folio} están listos. Pasará a "Lista" en el tablero.`,
-          );
-        }
       }
     },
     onError: (error) => {
-      toast.error(
-        error instanceof ApiError ? error.message : "No se pudo actualizar el producto.",
-      );
+      toast.error(error instanceof ApiError ? error.message : "No se pudo actualizar el producto.");
     },
   });
 
@@ -158,7 +125,7 @@ export function KitchenView() {
       <div>
         <h1 className="text-xl font-semibold">Cocina</h1>
         <p className="text-sm text-muted-foreground">
-          Ordenes enviadas a cocina, de la mas antigua a la mas reciente.
+          Órdenes enviadas a cocina, de la más antigua a la más reciente.
         </p>
       </div>
 
@@ -166,133 +133,79 @@ export function KitchenView() {
         isLoading={ordersQuery.isLoading}
         error={ordersQuery.error}
         isEmpty={ordersQuery.data?.length === 0}
-        emptyMessage="No hay ordenes en cocina en este momento."
-    // Cocina es estacion fija de turno largo: va en oscuro aunque el
-    // restaurante haya elegido modo claro. Lo aplica el layout autenticado.
-    <div className="flex flex-1 flex-col bg-background text-foreground">
-      <ScreenShell
-        title="Cocina"
-        subtitle="Órdenes enviadas a cocina, de la más antigua a la más reciente."
-        actions={
-          <ScreenMetric label="En preparación" value={ordersQuery.data?.length ?? "—"} />
-        }
+        emptyMessage="No hay órdenes en cocina en este momento."
       >
-        <QueryState
-          isLoading={ordersQuery.isLoading}
-          error={ordersQuery.error}
-          isEmpty={ordersQuery.data?.length === 0}
-          emptyMessage="No hay órdenes en cocina en este momento."
-          skeleton={<BoardSkeleton />}
-        >
+        {ordersQuery.isLoading ? (
+          <BoardSkeleton />
+        ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {ordersQuery.data?.map((order) => {
               const age = orderAge(order.sentToKitchenAt, now);
               return (
-              <Card key={order.id} className={AGE_CARD_STYLES[age]}>
-                <CardHeader className="flex flex-row items-start justify-between gap-2">
-                  <div>
-                    {/* La mesa es el titulo y el folio baja a tercera linea: el
-                        folio le sirve a caja, no a cocina. */}
-                    <CardTitle className="text-[length:var(--density-text-lg)]">
-                      {tableLabel(order.tableId)}
-                    </CardTitle>
-                    <p
-                      className={cn(
-                        "text-[length:var(--density-text-base)]",
-                        AGE_TEXT_STYLES[age],
-                      )}
-                    >
-                      {elapsedLabel(order.sentToKitchenAt, now)}
-                    </p>
-                    <p className="text-[length:var(--density-text-sm)] text-muted-foreground">
-                      Orden {order.folio}
-            {ordersQuery.data?.map((order) => (
-              <article
-                key={order.id}
-                className="flex flex-col rounded-xl border bg-card p-[18px]"
-              >
-                <header className="flex items-start justify-between gap-3 border-b pb-3.5">
-                  <div>
-                    <p className="eyebrow">
-                      {order.folio}
-                      {order.sentToKitchenAt
-                        ? ` · enviada ${formatShortTime(order.sentToKitchenAt)}`
-                        : ""}
-                    </p>
-                    <p className="mt-0.5 font-display text-[28px] leading-none">
-                      {tableLabel(order.tableId)}
-                    </p>
-                  </div>
-                  <StatusBadge kind="order" status={order.status} />
-                </header>
-
-                <div className="flex flex-col">
-                  {order.items.map((item) => {
-                    const next = nextKitchenStatus(item.kitchenStatus);
-                    const isPending =
-                      advanceItemMutation.isPending &&
-                      advanceItemMutation.variables?.itemId === item.id;
-
-                    return (
-                      <div key={item.id} className="flex flex-col gap-2">
-                        {index > 0 && <Separator />}
-                        <div
-                          className={cn(
-                            "flex items-center justify-between gap-2",
-                            isReadyOrBeyond(item.kitchenStatus) && "opacity-50",
-                          )}
-                        >
-                          <div>
-                            <p className="text-[length:var(--density-text-base)] font-medium">
-                              {item.quantity} x {item.productName}
-                      <div
-                        key={item.id}
-                        className="flex flex-col gap-2.5 border-b border-dotted border-border-strong py-3.5 last:border-b-0"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="text-[15px]">
-                              <span className="font-mono text-[13px] text-muted-foreground">
-                                {item.quantity}×
-                              </span>{" "}
-                              {item.productName}
-                            </p>
-                            {item.notes && (
-                              <p className="text-[length:var(--density-text-sm)] text-muted-foreground">
-                                {item.notes}
-                              </p>
+                <Card key={order.id} className={AGE_CARD_STYLES[age]}>
+                  <CardHeader className="flex flex-row items-start justify-between gap-2">
+                    <div>
+                      <CardTitle className="text-[length:var(--density-text-lg)]">
+                        {tableLabel(order.tableId)}
+                      </CardTitle>
+                      <p className={cn("text-[length:var(--density-text-base)]", AGE_TEXT_STYLES[age])}>
+                        {elapsedLabel(order.sentToKitchenAt, now)}
+                      </p>
+                      <p className="text-[length:var(--density-text-sm)] text-muted-foreground">
+                        Orden {order.folio}
+                      </p>
+                    </div>
+                    <StatusBadge kind="order" status={order.status} />
+                  </CardHeader>
+                  <CardContent className="flex flex-col gap-3">
+                    {order.items.map((item, index) => {
+                      const next = nextKitchenStatus(item.kitchenStatus);
+                      const isPending =
+                        advanceItemMutation.isPending &&
+                        advanceItemMutation.variables?.itemId === item.id;
+                      return (
+                        <div key={item.id} className="flex flex-col gap-2">
+                          {index > 0 && <Separator />}
+                          <div
+                            className={cn(
+                              "flex items-center justify-between gap-2",
+                              isReadyOrBeyond(item.kitchenStatus) && "opacity-50",
                             )}
-                          </div>
-                          <StatusBadge kind="kitchen" status={item.kitchenStatus} />
-                        </div>
-                        {next && (
-                          <Button
-                            variant="outline"
-                            className="h-11 w-full justify-center"
-                            disabled={isPending}
-                            className="h-[var(--control-height)] w-full text-[length:var(--density-text-base)]"
-                            onClick={() =>
-                              advanceItemMutation.mutate({ itemId: item.id, status: next })
-                            }
                           >
-                            {isPending
-                              ? "Actualizando…"
-                              : `Marcar como ${KITCHEN_STATUS_LABELS[next]}`}
-                          </Button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </CardContent>
-              </Card>
+                            <div>
+                              <p className="text-[length:var(--density-text-base)] font-medium">
+                                {item.quantity} × {item.productName}
+                              </p>
+                              {item.notes && (
+                                <p className="text-[length:var(--density-text-sm)] text-muted-foreground">
+                                  {item.notes}
+                                </p>
+                              )}
+                            </div>
+                            <StatusBadge kind="kitchen" status={item.kitchenStatus} />
+                          </div>
+                          {next && (
+                            <Button
+                              variant="outline"
+                              disabled={isPending}
+                              className="h-[var(--control-height)] w-full text-[length:var(--density-text-base)]"
+                              onClick={() =>
+                                advanceItemMutation.mutate({ itemId: item.id, status: next })
+                              }
+                            >
+                              {isPending ? "Actualizando..." : `Marcar como ${KITCHEN_STATUS_LABELS[next]}`}
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
               );
             })}
-                </div>
-              </article>
-            ))}
           </div>
-        </QueryState>
-      </ScreenShell>
+        )}
+      </QueryState>
     </div>
   );
 }
@@ -301,7 +214,7 @@ function BoardSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
       {Array.from({ length: 3 }).map((_, index) => (
-        <Skeleton key={index} className="h-56 w-full rounded-xl" />
+        <Skeleton key={index} className="h-48 w-full" />
       ))}
     </div>
   );

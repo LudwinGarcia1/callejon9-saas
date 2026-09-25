@@ -32,25 +32,7 @@ type StatusBadgeProps =
  * no es un estado mas, es la senal de que el conteo fisico esta mal, y en una
  * lista de treinta insumos una insignia gris se pierde.
  */
-export function StatusBadge(props: StatusBadgeProps) {
-  return <Badge variant={variantFor(props)}>{labelFor(props)}</Badge>;
-}
-
-function variantFor(props: StatusBadgeProps): "secondary" | "destructive" | "outline" {
-  if (props.kind === "stock") {
-    if (props.status === "NEGATIVE") {
-      return "destructive";
-    }
-    if (props.status === "LOW") {
-      return "outline";
-    }
-  }
-  return "secondary";
- * Las cuatro familias de estado del dominio se reducen a cuatro tonos del
- * sistema: verde (libre o lista), marca (activa u ocupada), ambar (esperando
- * algo) y neutro (fuera de juego). Un tono se publica como `data-tone` y de
- * ahi lo leen el chip, el punto y cualquier texto que deba ir en su color.
- */
+/** Las familias de estado del dominio se reducen a tonos del sistema. */
 export type StatusTone = "green" | "brand" | "amber" | "neutral";
 
 const ORDER_TONES: Record<OrderStatus, StatusTone> = {
@@ -75,7 +57,19 @@ const KITCHEN_TONES: Record<KitchenItemStatus, StatusTone> = {
   DELIVERED: "neutral",
 };
 
-/** Tono del sistema para cualquiera de las cuatro familias de estado. */
+const STOCK_TONES: Record<StockLevel, StatusTone> = {
+  OK: "green",
+  LOW: "amber",
+  NEGATIVE: "amber",
+};
+
+const MOVEMENT_TONES: Record<InventoryMovementType, StatusTone> = {
+  IN: "green",
+  OUT: "brand",
+  ADJUSTMENT: "neutral",
+  WASTE: "amber",
+};
+
 export function statusTone(props: StatusBadgeProps): StatusTone {
   switch (props.kind) {
     case "order":
@@ -86,9 +80,19 @@ export function statusTone(props: StatusBadgeProps): StatusTone {
       return KITCHEN_TONES[props.status];
     case "payment":
       return "neutral";
+    case "stock":
+      return STOCK_TONES[props.status];
+    case "movement":
+      return MOVEMENT_TONES[props.status];
   }
 }
 
+/*
+ * Las cuatro familias de estado del dominio se reducen a cuatro tonos del
+ * sistema: verde (libre o lista), marca (activa u ocupada), ambar (esperando
+ * algo) y neutro (fuera de juego). Un tono se publica como `data-tone` y de
+ * ahi lo leen el chip, el punto y cualquier texto que deba ir en su color.
+ */
 /** Etiqueta en espanol. `src/lib/types.ts` es la unica fuente de estos textos. */
 export function statusLabel(props: StatusBadgeProps): string {
   switch (props.kind) {

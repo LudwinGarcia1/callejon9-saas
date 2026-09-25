@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+import { loginPathFor } from "@/lib/protected-pages";
+import { PATHNAME_HEADER } from "@/lib/request-headers";
+
 /**
  * Verificacion de solo presencia: si falta la cookie `access_token` en una
  * ruta protegida, redirige a /login. No se valida la firma del JWT aqui a
@@ -14,14 +17,11 @@ import type { NextRequest } from "next/server";
  * saberla para decidir el tema antes del primer pintado. Publicarla como
  * cabecera de peticion es la via soportada.
  */
-export const PATHNAME_HEADER = "x-pathname";
-
 export function middleware(request: NextRequest) {
   const hasAccessToken = request.cookies.has("access_token");
 
   if (!hasAccessToken) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("next", request.nextUrl.pathname);
+    const loginUrl = new URL(loginPathFor(request.nextUrl.pathname), request.url);
     return NextResponse.redirect(loginUrl);
   }
 
@@ -39,7 +39,10 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/admin/:path*",
+    "/analytics/:path*",
     "/cashier/:path*",
+    "/history/:path*",
+    "/inventory/:path*",
     "/kitchen/:path*",
     "/platform/:path*",
     "/waiter/:path*",
