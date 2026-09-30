@@ -13,6 +13,9 @@
 app:
   jwt:
     access-token-minutes: 120
+  # La demostracion corre sobre http://localhost, sin HTTPS.
+  auth:
+    cookie-secure: false
 
 logging:
   level:

@@ -3,6 +3,7 @@ package com.callejon9.auth;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
 import com.callejon9.tenancy.TenantContext;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
@@ -17,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -63,6 +66,20 @@ class AuthControllerTest {
                                 {"slug":"login-test","email":"admin@login.com","password":"incorrecta"}
                                 """))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("un login fallido no borra las cookies de la sesion que ya estaba abierta")
+    void failedLoginDoesNotTouchSessionCookies() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .cookie(new Cookie("access_token", "sesion-previa"),
+                                new Cookie("refresh_token", "sesion-previa"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"slug":"login-test","email":"admin@login.com","password":"incorrecta"}
+                                """))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE));
     }
 
     @Test

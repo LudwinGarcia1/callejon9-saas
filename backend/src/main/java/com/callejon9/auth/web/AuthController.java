@@ -1,20 +1,21 @@
 package com.callejon9.auth.web;
 
 import com.callejon9.auth.service.AuthService;
+import com.callejon9.auth.service.RefreshTokenService;
 import com.callejon9.auth.web.dto.LoginRequest;
 import com.callejon9.auth.web.dto.LoginResponse;
 import com.callejon9.auth.web.dto.MeResponse;
 import com.callejon9.tenancy.TenantFilter;
 import jakarta.validation.Valid;
-import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,12 +28,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
-    private final long accessTokenMinutes;
+    private final RefreshTokenService refreshTokenService;
+    private final AuthCookies authCookies;
 
     public AuthController(AuthService authService,
-                          @Value("${app.jwt.access-token-minutes}") long accessTokenMinutes) {
+                          RefreshTokenService refreshTokenService,
+                          AuthCookies authCookies) {
         this.authService = authService;
-        this.accessTokenMinutes = accessTokenMinutes;
+        this.refreshTokenService = refreshTokenService;
+        this.authCookies = authCookies;
     }
 
     @PostMapping("/login")
@@ -40,20 +44,41 @@ public class AuthController {
         var authenticated = authService.authenticate(
                 request.slug(), request.email(), request.password());
 
-        ResponseCookie cookie = ResponseCookie.from(
-                        TenantFilter.ACCESS_TOKEN_COOKIE, authenticated.accessToken())
-                .httpOnly(true)
-                .secure(false)          // en produccion: true, detras de HTTPS
-                .sameSite("Strict")
-                .path("/")
-                .maxAge(Duration.ofMinutes(accessTokenMinutes))
-                .build();
-
         var user = authenticated.user();
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .headers(setCookies(authCookies.issue(authenticated.accessToken(),
+                        authenticated.refreshToken(), authenticated.sessionExpiresAt())))
                 .body(new LoginResponse(user.getId(), user.getFullName(),
                         user.getRole().name(), false));
+    }
+
+    /**
+     * Rota el refresh token: el presentado queda consumido y se emite un par
+     * nuevo en cookies. No requiere un access token vigente, que es justo el
+     * caso para el que existe. Cualquier rechazo responde 401 sin cuerpo y
+     * borra ambas cookies, para que el cliente no vuelva a intentarlo.
+     *
+     * <p>El rechazo se atrapa aqui y no en {@link #onBadCredentials}: ese
+     * manejador tambien atiende a /login, y un login fallido no debe cerrar
+     * la sesion que el navegador ya tenia abierta.
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<Void> refresh(
+            @CookieValue(name = AuthCookies.REFRESH_TOKEN_COOKIE, required = false) String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return unauthorizedClearingCookies();
+        }
+
+        RefreshTokenService.IssuedTokens issued;
+        try {
+            issued = refreshTokenService.rotate(refreshToken);
+        } catch (BadCredentialsException rejected) {
+            return unauthorizedClearingCookies();
+        }
+        return ResponseEntity.noContent()
+                .headers(setCookies(authCookies.issue(issued.accessToken(),
+                        issued.refreshToken(), issued.sessionExpiresAt())))
+                .build();
     }
 
     /**
@@ -85,20 +110,35 @@ public class AuthController {
                 current.tenant().getName()));
     }
 
+    /** Revoca la sesion completa (la familia del refresh token) y borra las cookies. */
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout() {
-        ResponseCookie cleared = ResponseCookie.from(TenantFilter.ACCESS_TOKEN_COOKIE, "")
-                .httpOnly(true).path("/").maxAge(Duration.ZERO).build();
+    public ResponseEntity<Void> logout(
+            @CookieValue(name = AuthCookies.REFRESH_TOKEN_COOKIE, required = false) String refreshToken) {
+        if (refreshToken != null && !refreshToken.isBlank()) {
+            refreshTokenService.revokeSession(refreshToken);
+        }
 
         return ResponseEntity.noContent()
-                .header(HttpHeaders.SET_COOKIE, cleared.toString())
+                .headers(setCookies(authCookies.clear()))
                 .build();
     }
 
     @ExceptionHandler(BadCredentialsException.class)
     ResponseEntity<Void> onBadCredentials() {
         // Mensaje deliberadamente vacio: no se revela si fallo el correo, la
-        // contrasena o el restaurante.
-        return ResponseEntity.status(401).build();
+        // contrasena o el restaurante. Tampoco toca las cookies.
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    private ResponseEntity<Void> unauthorizedClearingCookies() {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .headers(setCookies(authCookies.clear()))
+                .build();
+    }
+
+    private static HttpHeaders setCookies(List<ResponseCookie> cookies) {
+        HttpHeaders headers = new HttpHeaders();
+        cookies.forEach(cookie -> headers.add(HttpHeaders.SET_COOKIE, cookie.toString()));
+        return headers;
     }
 }

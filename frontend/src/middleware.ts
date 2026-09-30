@@ -11,6 +11,12 @@ import { PATHNAME_HEADER } from "@/lib/request-headers";
  * el frontend, algo arquitectonicamente indefendible. La validacion real de
  * la firma y la expiracion ocurre en cada peticion al backend a traves de
  * su propio filtro de seguridad.
+ *
+ * La cookie `access_token` dura lo mismo que la sesion renovable, no los 15
+ * minutos del JWT (ver `AuthCookies` en el backend). Por eso su presencia
+ * basta aqui: con el JWT vencido la pagina carga, la primera peticion recibe
+ * 401 y `api.ts` renueva la sesion con la cookie `refresh_token`, que el
+ * navegador solo envia a /api/v1/auth y este middleware nunca ve.
  */
 /**
  * Next no le pasa la ruta a un layout de servidor, y el layout raiz necesita

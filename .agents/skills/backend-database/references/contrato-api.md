@@ -1,7 +1,7 @@
 # Contrato API implementado
 
 - `/api/v1/signup`
-- `/api/v1/auth/login`, `/me`, `/logout`
+- `/api/v1/auth/login`, `/me`, `/refresh`, `/logout`
 - `/api/v1/platform/plans`
 - `/api/v1/tenants/current/branding`
 - `/api/v1/users`, `/tables`, `/categories`, `/products`

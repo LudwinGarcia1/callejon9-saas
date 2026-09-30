@@ -44,7 +44,15 @@ app:
   jwt:
     secret: ${JWT_SECRET:dev-only-secret-change-me-min-32-bytes-long!!}
     access-token-minutes: 15
+    # Vida maxima de una sesion. Renovar rota el refresh token pero no la
+    # alarga: los tokens rotados heredan la expiracion del login.
     refresh-token-days: 7
+
+  auth:
+    # Atributo Secure de las cookies de sesion. Activo por defecto: fuera de
+    # desarrollo la API solo debe servirse detras de HTTPS. Para trabajar
+    # contra http://localhost, scripts/run-dev.ps1 lo desactiva.
+    cookie-secure: ${AUTH_COOKIE_SECURE:true}
 
 server:
   port: 8080

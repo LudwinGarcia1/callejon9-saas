@@ -120,9 +120,13 @@ cd backend
 .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=demo"
 ```
 
-Flyway aplica las seis migraciones al arrancar. La API queda en `http://localhost:8080` y la documentación navegable en `http://localhost:8080/swagger-ui.html`.
+Flyway aplica las migraciones pendientes al arrancar. La API queda en `http://localhost:8080` y la documentación navegable en `http://localhost:8080/swagger-ui.html`.
 
 El perfil `demo` extiende el token de acceso a dos horas. **El valor de producción son 15 minutos y así se queda**: el perfil existe solo para que una sesión no expire a mitad de una presentación.
+
+La sesión se sostiene con un segundo token. El login emite dos cookies `httpOnly` y `SameSite=Strict`: `access_token` (JWT de 15 minutos) y `refresh_token` (limitada a `/api/v1/auth`). Cuando una petición recibe 401, el cliente llama una sola vez a `POST /api/v1/auth/refresh`, que consume el refresh token, emite un par nuevo y repite la petición original. Presentar un refresh token ya consumido revoca la sesión completa. La sesión dura como máximo `app.jwt.refresh-token-days` (7 días) desde el login: renovar no la alarga. En la base solo se guarda el SHA-256 del secreto del token.
+
+Las cookies llevan el atributo `Secure` salvo que `AUTH_COOKIE_SECURE=false`. `scripts/run-dev.ps1` y el perfil `demo` lo desactivan porque en local no hay HTTPS. En cualquier otro entorno la API debe servirse detrás de HTTPS.
 
 ### 3. Frontend
 
