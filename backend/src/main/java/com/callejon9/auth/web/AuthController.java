@@ -27,11 +27,20 @@ public class AuthController {
 
     private final AuthService authService;
     private final long accessTokenMinutes;
+    private final boolean secureCookie;
 
+    /**
+     * {@code secureCookie} decide si la cookie del token lleva el atributo
+     * Secure, que impide al navegador enviarla por HTTP plano. Se activa con
+     * AUTH_SECURE_COOKIE=true en cualquier entorno servido por HTTPS; en local
+     * queda apagado porque el backend corre sobre http://localhost.
+     */
     public AuthController(AuthService authService,
-                          @Value("${app.jwt.access-token-minutes}") long accessTokenMinutes) {
+                          @Value("${app.jwt.access-token-minutes}") long accessTokenMinutes,
+                          @Value("${app.auth.secure-cookie}") boolean secureCookie) {
         this.authService = authService;
         this.accessTokenMinutes = accessTokenMinutes;
+        this.secureCookie = secureCookie;
     }
 
     @PostMapping("/login")
@@ -42,7 +51,7 @@ public class AuthController {
         ResponseCookie cookie = ResponseCookie.from(
                         TenantFilter.ACCESS_TOKEN_COOKIE, authenticated.accessToken())
                 .httpOnly(true)
-                .secure(false)          // en produccion: true, detras de HTTPS
+                .secure(secureCookie)
                 .sameSite("Strict")
                 .path("/")
                 .maxAge(Duration.ofMinutes(accessTokenMinutes))
@@ -77,7 +86,12 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Void> logout() {
         ResponseCookie cleared = ResponseCookie.from(TenantFilter.ACCESS_TOKEN_COOKIE, "")
-                .httpOnly(true).path("/").maxAge(Duration.ZERO).build();
+                .httpOnly(true)
+                .secure(secureCookie)
+                .sameSite("Strict")
+                .path("/")
+                .maxAge(Duration.ZERO)
+                .build();
 
         return ResponseEntity.noContent()
                 .header(HttpHeaders.SET_COOKIE, cleared.toString())

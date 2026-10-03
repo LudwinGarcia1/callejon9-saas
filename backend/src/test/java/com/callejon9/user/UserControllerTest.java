@@ -55,7 +55,7 @@ class UserControllerTest {
     @BeforeEach
     void seed() {
         tenant = onboardingService.onboard("Usuarios Test", "usuarios-test",
-                "admin@usuarios.com", "Admin", "Secreto123!", "FREE");
+                "admin@usuarios.com", "Admin", "Mantel-Azul-47", "FREE");
         admin = persistedUser(tenant.getId(), "admin@usuarios.com");
     }
 
@@ -84,7 +84,7 @@ class UserControllerTest {
                         .cookie(cookieFor(caller))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"" + email + "\",\"fullName\":\"" + fullName
-                                + "\",\"role\":\"" + role + "\",\"password\":\"Secreto123!\"}"))
+                                + "\",\"role\":\"" + role + "\",\"password\":\"Mantel-Azul-47\"}"))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         return UUID.fromString(body.replaceAll(".*\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
@@ -97,7 +97,7 @@ class UserControllerTest {
                         .cookie(cookieFor(admin))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"email":"mesero@usuarios.com","fullName":"Mesero Uno","role":"WAITER","password":"Secreto123!"}
+                                {"email":"mesero@usuarios.com","fullName":"Mesero Uno","role":"WAITER","password":"Mantel-Azul-47"}
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("mesero@usuarios.com"))
@@ -105,7 +105,30 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.active").value(true));
 
         User saved = persistedUser(tenant.getId(), "mesero@usuarios.com");
-        assertThat(passwordEncoder.matches("Secreto123!", saved.getPasswordHash())).isTrue();
+        assertThat(passwordEncoder.matches("Mantel-Azul-47", saved.getPasswordHash())).isTrue();
+    }
+
+    @Test
+    @DisplayName("una contrasena debil se rechaza con 400 en errors.password y no crea el usuario")
+    void weakPasswordIsRejected() throws Exception {
+        mockMvc.perform(post("/api/v1/users")
+                        .cookie(cookieFor(admin))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"debil@usuarios.com","fullName":"Mesero Debil","role":"WAITER","password":"qwerty123456"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.password")
+                        .value("Esa contrasena es demasiado comun. Elige otra."));
+
+        TenantContext.set(tenant.getId());
+        try {
+            boolean created = transactionTemplate.execute(
+                    status -> userRepository.findByEmail("debil@usuarios.com").isPresent());
+            assertThat(created).isFalse();
+        } finally {
+            TenantContext.clear();
+        }
     }
 
     @Test
@@ -115,7 +138,7 @@ class UserControllerTest {
                         .cookie(cookieFor(admin))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"email":"repetido@usuarios.com","fullName":"Uno","role":"WAITER","password":"Secreto123!"}
+                                {"email":"repetido@usuarios.com","fullName":"Uno","role":"WAITER","password":"Mantel-Azul-47"}
                                 """))
                 .andExpect(status().isCreated());
 
@@ -123,19 +146,19 @@ class UserControllerTest {
                         .cookie(cookieFor(admin))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"email":"repetido@usuarios.com","fullName":"Dos","role":"WAITER","password":"Secreto123!"}
+                                {"email":"repetido@usuarios.com","fullName":"Dos","role":"WAITER","password":"Mantel-Azul-47"}
                                 """))
                 .andExpect(status().isConflict());
 
         Tenant otherTenant = onboardingService.onboard("Otro Restaurante", "usuarios-test-otro",
-                "admin@otro-usuarios.com", "Admin Otro", "Secreto123!", "FREE");
+                "admin@otro-usuarios.com", "Admin Otro", "Mantel-Azul-47", "FREE");
         User otherAdmin = persistedUser(otherTenant.getId(), "admin@otro-usuarios.com");
 
         mockMvc.perform(post("/api/v1/users")
                         .cookie(cookieFor(otherAdmin))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"email":"repetido@usuarios.com","fullName":"Tres","role":"WAITER","password":"Secreto123!"}
+                                {"email":"repetido@usuarios.com","fullName":"Tres","role":"WAITER","password":"Mantel-Azul-47"}
                                 """))
                 .andExpect(status().isCreated());
     }
@@ -147,7 +170,7 @@ class UserControllerTest {
                         .cookie(cookieFor(admin))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"email":"superadmin@usuarios.com","fullName":"Super","role":"SUPER_ADMIN","password":"Secreto123!"}
+                                {"email":"superadmin@usuarios.com","fullName":"Super","role":"SUPER_ADMIN","password":"Mantel-Azul-47"}
                                 """))
                 .andExpect(status().isBadRequest());
     }
@@ -163,7 +186,7 @@ class UserControllerTest {
                         .cookie(cookieFor(admin))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"email":"u4@usuarios.com","fullName":"U4","role":"WAITER","password":"Secreto123!"}
+                                {"email":"u4@usuarios.com","fullName":"U4","role":"WAITER","password":"Mantel-Azul-47"}
                                 """))
                 .andExpect(status().isConflict());
     }
@@ -232,7 +255,7 @@ class UserControllerTest {
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"slug":"usuarios-test","email":"mesero3@usuarios.com","password":"Secreto123!"}
+                                {"slug":"usuarios-test","email":"mesero3@usuarios.com","password":"Mantel-Azul-47"}
                                 """))
                 .andExpect(status().isUnauthorized());
     }
@@ -247,7 +270,7 @@ class UserControllerTest {
                         .cookie(cookieFor(waiter))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"email":"otro@usuarios.com","fullName":"Otro","role":"WAITER","password":"Secreto123!"}
+                                {"email":"otro@usuarios.com","fullName":"Otro","role":"WAITER","password":"Mantel-Azul-47"}
                                 """))
                 .andExpect(status().isForbidden());
 
@@ -265,7 +288,7 @@ class UserControllerTest {
     @DisplayName("un administrador del restaurante A nunca ve ni modifica usuarios del restaurante B")
     void crossTenantIsolationIsEnforced() throws Exception {
         Tenant tenantB = onboardingService.onboard("Restaurante B", "usuarios-test-b",
-                "admin@b-usuarios.com", "Admin B", "Secreto123!", "FREE");
+                "admin@b-usuarios.com", "Admin B", "Mantel-Azul-47", "FREE");
         User adminB = persistedUser(tenantB.getId(), "admin@b-usuarios.com");
         UUID waiterBId = createUserAs(adminB, "meserob@usuarios.com", "WAITER", "Mesero B");
 
