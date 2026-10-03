@@ -18,6 +18,12 @@ RLS aplica a 14 tablas tenant-scoped mediante `V3`, `V4` y la corrección null-s
 | `plans` | `SELECT` | Catálogo de solo lectura para la aplicación |
 | `flyway_schema_history` | ninguno | Solo lo escribe `callejon9_owner` |
 
-`DatabaseSecurityContractTest` lee el catálogo de PostgreSQL y exige esta matriz, RLS habilitada y forzada con `USING` y `WITH CHECK` sobre `app.tenant_id`, y que el rol de runtime no sea dueño, superusuario ni `BYPASSRLS`. `ALTER DEFAULT PRIVILEGES` sigue concediendo DML a las tablas nuevas, así que toda tabla nueva hace fallar la prueba hasta que se clasifica ahí; si es de control plane, su migración debe revocar lo que el código no use.
+`DatabaseSecurityContractTest` lee el catálogo de PostgreSQL y exige:
+
+- esta matriz sobre tablas, vistas, vistas materializadas y tablas foráneas;
+- RLS habilitada y forzada en las tablas por restaurante, con políticas permisivas cuya expresión `USING`/`WITH CHECK` sea exactamente la de `V5` (una política que solo mencione `app.tenant_id` no basta);
+- que el rol de runtime no sea dueño, superusuario ni `BYPASSRLS`, no pueda crear objetos y no pueda ejecutar funciones `SECURITY DEFINER` en `public`.
+
+`ALTER DEFAULT PRIVILEGES` sigue concediendo DML a tablas **y vistas** nuevas: una vista simple sobre `plans` sería actualizable por la app con los privilegios de su dueño. Por eso todo objeto nuevo hace fallar la prueba hasta que se clasifica ahí; si es de control plane o una vista, su migración debe revocar lo que el código no use.
 
 Las bajas de productos, mesas y usuarios son lógicas porque existe histórico referenciado.
