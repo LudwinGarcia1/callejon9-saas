@@ -10,7 +10,6 @@ import java.time.Duration;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -28,11 +27,20 @@ public class AuthController {
 
     private final AuthService authService;
     private final long accessTokenMinutes;
+    private final boolean secureCookie;
 
+    /**
+     * {@code secureCookie} decide si la cookie del token lleva el atributo
+     * Secure, que impide al navegador enviarla por HTTP plano. Se activa con
+     * AUTH_SECURE_COOKIE=true en cualquier entorno servido por HTTPS; en local
+     * queda apagado porque el backend corre sobre http://localhost.
+     */
     public AuthController(AuthService authService,
-                          @Value("${app.jwt.access-token-minutes}") long accessTokenMinutes) {
+                          @Value("${app.jwt.access-token-minutes}") long accessTokenMinutes,
+                          @Value("${app.auth.secure-cookie}") boolean secureCookie) {
         this.authService = authService;
         this.accessTokenMinutes = accessTokenMinutes;
+        this.secureCookie = secureCookie;
     }
 
     @PostMapping("/login")
@@ -43,7 +51,7 @@ public class AuthController {
         ResponseCookie cookie = ResponseCookie.from(
                         TenantFilter.ACCESS_TOKEN_COOKIE, authenticated.accessToken())
                 .httpOnly(true)
-                .secure(false)          // en produccion: true, detras de HTTPS
+                .secure(secureCookie)
                 .sameSite("Strict")
                 .path("/")
                 .maxAge(Duration.ofMinutes(accessTokenMinutes))
@@ -60,22 +68,12 @@ public class AuthController {
      * Recupera la identidad del usuario autenticado a partir de la cookie
      * httpOnly. Es la unica forma que tiene el frontend de saber quien esta
      * conectado tras refrescar la pagina, ya que JavaScript no puede leer una
-     * cookie httpOnly.
-     *
-     * <p>La ruta cae bajo la regla permitAll de "/api/v1/auth/**", asi que un
-     * llamado anonimo SI llega hasta aqui (con una autenticacion anonima, no
-     * nula). Por eso el rechazo es explicito: {@link TenantFilter} solo fija
-     * un {@link UUID} como principal cuando el token es valido, asi que
-     * cualquier otro tipo de principal (el "anonymousUser" de Spring
-     * Security) se trata como no autenticado.
+     * cookie httpOnly. Sin sesion valida, SecurityConfig responde 401 antes
+     * de llegar aqui.
      */
     @GetMapping("/me")
     public ResponseEntity<MeResponse> me(Authentication authentication) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof UUID userId)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        var current = authService.currentUser(userId);
+        var current = authService.currentUser((UUID) authentication.getPrincipal());
         return ResponseEntity.ok(new MeResponse(
                 current.user().getId(),
                 current.user().getFullName(),
@@ -88,7 +86,12 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Void> logout() {
         ResponseCookie cleared = ResponseCookie.from(TenantFilter.ACCESS_TOKEN_COOKIE, "")
-                .httpOnly(true).path("/").maxAge(Duration.ZERO).build();
+                .httpOnly(true)
+                .secure(secureCookie)
+                .sameSite("Strict")
+                .path("/")
+                .maxAge(Duration.ZERO)
+                .build();
 
         return ResponseEntity.noContent()
                 .header(HttpHeaders.SET_COOKIE, cleared.toString())

@@ -81,11 +81,22 @@ class AuthorizationContractTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"/api/v1/auth/contract-fixture", "/api/v1/contract-fixtures/public"})
+    @CsvSource({"/api/v1/contract-fixtures/public"})
     @DisplayName("Una ruta pública no documentada no se acepta ni bajo /auth/**")
     void rejectsUndocumentedPublicRoutes(String path) {
         assertThatThrownBy(() -> verifier.requireValid(List.of(endpoint("GET", path))))
                 .isInstanceOf(AssertionError.class).hasMessageContaining("lista pública");
+    }
+
+    @Test
+    void undocumentedAuthRoutesRequireSessionAndAnExplicitContract() throws Exception {
+        var endpoint = endpoint("GET", "/api/v1/auth/contract-fixture");
+        assertThat(verifier.inspect(endpoint).allowed()).doesNotContain("ANONYMOUS");
+        assertThatThrownBy(() -> verifier.requireValid(List.of(endpoint)))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("authenticated() general");
+        mockMvc.perform(get("/api/v1/auth/contract-fixture"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

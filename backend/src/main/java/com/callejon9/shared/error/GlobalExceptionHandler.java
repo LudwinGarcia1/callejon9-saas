@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -39,6 +40,24 @@ public class GlobalExceptionHandler {
                 .forEach(error -> fieldErrors.put(error.getField(), error.getDefaultMessage()));
         problem.setProperty("errors", fieldErrors);
 
+        return problem;
+    }
+
+    /**
+     * El cuerpo no es JSON valido o un campo trae un tipo imposible de
+     * convertir. El mensaje de Jackson incluye la clase destino y fragmentos
+     * del cuerpo recibido -- que en el login puede ser la contrasena --, asi
+     * que no se expone al cliente ni se escribe en el log: solo se registra
+     * el tipo de la causa.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    ProblemDetail onUnreadableBody(HttpMessageNotReadableException exception) {
+        log.debug("Cuerpo de solicitud ilegible: {}",
+                exception.getMostSpecificCause().getClass().getSimpleName());
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, "El cuerpo de la solicitud no tiene un formato valido.");
+        problem.setTitle("Solicitud malformada");
         return problem;
     }
 
