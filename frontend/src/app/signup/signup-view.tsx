@@ -10,9 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FieldError } from "@/components/shared/field-error";
+import { PasswordRequirements } from "@/components/shared/password-requirements";
 import { ApiError, api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { formatCurrency } from "@/lib/format";
+import { validateNewPassword } from "@/lib/password-policy";
 import type { SignupRequest, SignupResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +34,9 @@ const PLANS = [
 export function SignupView() {
   const router = useRouter();
   const [planCode, setPlanCode] = useState<string>("PRO");
+  const [password, setPassword] = useState("");
+  const [personalData, setPersonalData] = useState<string[]>([]);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const signupMutation = useMutation({
     mutationFn: (payload: SignupRequest) =>
@@ -41,9 +46,34 @@ export function SignupView() {
     },
   });
 
+  /** Datos de la cuenta que la contrasena no debe contener. */
+  function readPersonalData(formData: FormData): string[] {
+    return ["restaurantName", "slug", "adminEmail", "adminFullName"].map((field) =>
+      String(formData.get(field) ?? ""),
+    );
+  }
+
+  function handleChange(event: React.FormEvent<HTMLFormElement>) {
+    const formData = new FormData(event.currentTarget);
+    setPassword(String(formData.get("password") ?? ""));
+    setPersonalData(readPersonalData(formData));
+    setPasswordError(null);
+  }
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+
+    // El servidor vuelve a aplicar la politica; esto solo evita una peticion
+    // que de antemano se sabe rechazada.
+    const localPasswordError = validateNewPassword(
+      String(formData.get("password") ?? ""),
+      readPersonalData(formData),
+    );
+    if (localPasswordError) {
+      setPasswordError(localPasswordError);
+      return;
+    }
 
     signupMutation.mutate({
       restaurantName: String(formData.get("restaurantName") ?? ""),
@@ -70,7 +100,7 @@ export function SignupView() {
           mesas, catálogo y personal.
         </p>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+        <form onSubmit={handleSubmit} onChange={handleChange} className="flex flex-col gap-3.5">
           {apiError && !hasFieldErrors && (
             <Alert variant="destructive">
               <AlertTitle>No se pudo completar el registro</AlertTitle>
@@ -139,12 +169,18 @@ export function SignupView() {
               name="password"
               type="password"
               required
-              minLength={8}
-              maxLength={100}
-              placeholder="Mínimo 8 caracteres"
+              autoComplete="new-password"
+              maxLength={72}
+              aria-describedby="password-requirements"
+              aria-invalid={Boolean(passwordError ?? apiError?.errors?.password)}
               disabled={signupMutation.isPending}
             />
-            <FieldError error={apiError} field="password" />
+            <PasswordRequirements
+              id="password-requirements"
+              password={password}
+              personalData={personalData}
+            />
+            <FieldError error={apiError} field="password" message={passwordError ?? undefined} />
           </div>
 
           {/* Tres tarjetas apiladas en vez de un <select>: el plan es una
