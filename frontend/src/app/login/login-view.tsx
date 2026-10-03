@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { FieldError } from "@/components/shared/field-error";
 import { ROLE_LANDING_PATH } from "@/hooks/use-session";
 import { ApiError, api } from "@/lib/api";
+import { postLoginPath } from "@/lib/auth-redirect";
 import { endpoints } from "@/lib/endpoints";
 import { queryKeys } from "@/lib/query-keys";
 import type { LoginRequest, LoginResponse } from "@/lib/types";
@@ -38,7 +39,7 @@ export function LoginView() {
       api.post<LoginResponse>(endpoints.auth.login(), payload),
     onSuccess: async (data) => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.session.me() });
-      router.push(nextPath ?? ROLE_LANDING_PATH[data.role]);
+      router.push(postLoginPath(nextPath, ROLE_LANDING_PATH[data.role]));
     },
   });
 
