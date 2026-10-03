@@ -16,7 +16,6 @@ import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -78,7 +77,8 @@ public class RefreshTokenService {
     }
 
     /**
-     * Abre una familia nueva tras un login. El llamador debe haber fijado el
+     * Abre una familia nueva tras un login. El id de la familia es tambien el
+     * id de la sesion que viaja en el access token ({@code sid}). El llamador debe haber fijado el
      * tenant del usuario en {@link TenantContext}.
      *
      * <p>La sesion tiene una expiracion absoluta: los tokens rotados heredan
@@ -90,9 +90,10 @@ public class RefreshTokenService {
             refreshTokenRepository.deleteExpiredForUser(user.getId(), now);
 
             Instant sessionExpiresAt = now.plus(jwtService.refreshTokenTtl());
-            String refreshToken = persistNewToken(user, UUID.randomUUID(), sessionExpiresAt).raw();
+            UUID sessionId = UUID.randomUUID();
+            String refreshToken = persistNewToken(user, sessionId, sessionExpiresAt).raw();
 
-            return new IssuedTokens(user, jwtService.generateAccessToken(user),
+            return new IssuedTokens(user, jwtService.generateAccessToken(user, sessionId),
                     refreshToken, sessionExpiresAt);
         });
     }
@@ -111,7 +112,7 @@ public class RefreshTokenService {
     public IssuedTokens rotate(String rawRefreshToken) {
         JwtService.RefreshClaims claims = parseOrReject(rawRefreshToken);
 
-        Outcome outcome = withTenant(claims.tenantId(),
+        Outcome outcome = TenantContext.callAs(claims.tenantId(),
                 () -> transactionTemplate.execute(status -> rotateInTransaction(claims)));
 
         if (outcome instanceof Rotated rotated) {
@@ -133,11 +134,21 @@ public class RefreshTokenService {
             return;
         }
 
-        withTenant(claims.tenantId(), () -> transactionTemplate.execute(status -> {
+        TenantContext.callAs(claims.tenantId(), () -> transactionTemplate.execute(status -> {
             findOwnedToken(claims).ifPresent(token ->
                     refreshTokenRepository.revokeFamily(token.getFamilyId(), Instant.now()));
             return null;
         }));
+    }
+
+    /**
+     * Revoca la sesion de un access token ya verificado. Corre con el tenant
+     * que {@code TenantFilter} publico a partir de ese mismo token, asi que RLS
+     * solo deja tocar sesiones de su restaurante.
+     */
+    public void revokeSessionById(UUID sessionId) {
+        transactionTemplate.executeWithoutResult(status ->
+                refreshTokenRepository.revokeFamily(sessionId, Instant.now()));
     }
 
     private Outcome rotateInTransaction(JwtService.RefreshClaims claims) {
@@ -178,7 +189,8 @@ public class RefreshTokenService {
         refreshTokenRepository.markReplaced(token.getId(), next.id(), now);
 
         return new Rotated(new IssuedTokens(user.get(),
-                jwtService.generateAccessToken(user.get()), next.raw(), token.getExpiresAt()));
+                jwtService.generateAccessToken(user.get(), token.getFamilyId()), next.raw(),
+                token.getExpiresAt()));
     }
 
     private Outcome revokeFamilyOnReuse(RefreshToken token, Instant now) {
@@ -215,25 +227,6 @@ public class RefreshTokenService {
             return jwtService.parseRefreshToken(rawRefreshToken);
         } catch (RuntimeException invalidToken) {
             throw new BadCredentialsException("Sesion no renovable.");
-        }
-    }
-
-    /**
-     * Fija el tenant firmado del refresh token durante la operacion y deja el
-     * contexto como estaba: la peticion pudo traer un access token (incluso de
-     * otro restaurante) que {@code TenantFilter} ya habia publicado.
-     */
-    private static <T> T withTenant(UUID tenantId, Supplier<T> action) {
-        UUID previous = TenantContext.currentOrNull();
-        TenantContext.set(tenantId);
-        try {
-            return action.get();
-        } finally {
-            if (previous == null) {
-                TenantContext.clear();
-            } else {
-                TenantContext.set(previous);
-            }
         }
     }
 

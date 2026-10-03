@@ -55,6 +55,27 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
     int revokeFamily(@Param("familyId") UUID familyId, @Param("now") Instant now);
 
     /**
+     * Una sesion sigue vigente mientras su familia conserve un token sin
+     * revocar y sin expirar. Rotar no la interrumpe: el consumo del token
+     * viejo y el alta del nuevo ocurren en la misma transaccion, asi que
+     * ninguna lectura confirmada ve la familia sin token vivo. Logout y la
+     * deteccion de reutilizacion revocan la familia completa, y con ella
+     * cualquier access token que la cite.
+     *
+     * <p>Corre en cada peticion autenticada. {@code EXISTS} se detiene en la
+     * primera fila y el indice parcial de V9 solo contiene tokens sin revocar,
+     * asi que el costo no crece con las rotaciones acumuladas. Es SQL nativo
+     * porque JPQL no expresa {@code EXISTS} como valor de retorno; RLS aplica
+     * igual porque la consulta corre en la misma conexion transaccional.
+     */
+    @Query(nativeQuery = true, value = """
+            SELECT EXISTS (
+                SELECT 1 FROM refresh_tokens
+                 WHERE family_id = :familyId AND revoked_at IS NULL AND expires_at > :now)
+            """)
+    boolean isSessionActive(@Param("familyId") UUID familyId, @Param("now") Instant now);
+
+    /**
      * Limpieza oportunista: se invoca en cada login y solo toca las filas del
      * propio usuario dentro de su tenant, asi que no necesita un job con
      * privilegios que se salte RLS. Las filas revocadas pero aun vigentes se

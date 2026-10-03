@@ -18,8 +18,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class JwtService {
 
-    /** Claims que viajan en el token de acceso. */
-    public record TokenClaims(UUID userId, UUID tenantId, UserRole role) {
+    /**
+     * Claims que viajan en el token de acceso. {@code sessionId} es la familia
+     * de refresh tokens del login que lo emitio: es lo que permite revocar en
+     * el servidor un access token que todavia no expira.
+     */
+    public record TokenClaims(UUID userId, UUID tenantId, UserRole role, UUID sessionId) {
     }
 
     /**
@@ -33,6 +37,7 @@ public class JwtService {
     private static final String CLAIM_TENANT = "tid";
     private static final String CLAIM_ROLE = "role";
     private static final String CLAIM_TYPE = "typ";
+    private static final String CLAIM_SESSION = "sid";
     private static final String TYPE_ACCESS = "access";
     private static final String TYPE_REFRESH = "refresh";
 
@@ -53,13 +58,14 @@ public class JwtService {
         return refreshTokenTtl;
     }
 
-    public String generateAccessToken(User user) {
+    public String generateAccessToken(User user, UUID sessionId) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(user.getId().toString())
                 .claim(CLAIM_TENANT, user.getTenantId().toString())
                 .claim(CLAIM_ROLE, user.getRole().name())
                 .claim(CLAIM_TYPE, TYPE_ACCESS)
+                .claim(CLAIM_SESSION, sessionId.toString())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(now.plus(accessTokenTtl)))
                 .signWith(signingKey)
@@ -67,21 +73,30 @@ public class JwtService {
     }
 
     /**
-     * Rechaza un refresh token presentado como token de acceso: comparten
-     * firma, y sin esta comprobacion la cookie de refresco (que vive dias)
-     * serviria para llamar a la API directamente. Los tokens emitidos antes
-     * de existir el claim {@code typ} se siguen aceptando mientras no expiren.
+     * Valida firma, expiracion y forma del token de acceso. No basta por si
+     * solo para autorizar: {@link AccessTokenVerifier} comprueba ademas que la
+     * sesion siga vigente en el servidor.
+     *
+     * <p>Rechaza un refresh token presentado como token de acceso (comparten
+     * firma, y la cookie de refresco vive dias) y cualquier token sin sesion:
+     * uno asi no podria revocarse, y aceptarlo dejaria abierta justo la puerta
+     * que el claim {@code sid} cierra.
      */
     public TokenClaims parse(String token) {
         Claims claims = parseClaims(token);
-        if (TYPE_REFRESH.equals(claims.get(CLAIM_TYPE, String.class))) {
-            throw new JwtException("Un refresh token no autoriza peticiones.");
+        if (!TYPE_ACCESS.equals(claims.get(CLAIM_TYPE, String.class))) {
+            throw new JwtException("El token no es un token de acceso.");
+        }
+        String sessionId = claims.get(CLAIM_SESSION, String.class);
+        if (sessionId == null) {
+            throw new JwtException("El token de acceso no pertenece a ninguna sesion.");
         }
 
         return new TokenClaims(
                 UUID.fromString(claims.getSubject()),
                 UUID.fromString(claims.get(CLAIM_TENANT, String.class)),
-                UserRole.valueOf(claims.get(CLAIM_ROLE, String.class)));
+                UserRole.valueOf(claims.get(CLAIM_ROLE, String.class)),
+                UUID.fromString(sessionId));
     }
 
     public String generateRefreshToken(UUID userId, UUID tenantId, String secret, Instant expiresAt) {

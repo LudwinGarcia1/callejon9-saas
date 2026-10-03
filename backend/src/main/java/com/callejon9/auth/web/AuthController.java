@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -110,12 +111,24 @@ public class AuthController {
                 current.tenant().getName()));
     }
 
-    /** Revoca la sesion completa (la familia del refresh token) y borra las cookies. */
+    /**
+     * Revoca la sesion en el servidor y borra las cookies.
+     *
+     * <p>Se revoca por las dos vias que el cliente pueda presentar: la familia
+     * del refresh token y la sesion ({@code sid}) del access token que
+     * {@link TenantFilter} ya verifico. Un cliente que solo envia
+     * {@code access_token} (Swagger UI, una app movil) tambien cierra su sesion
+     * de verdad, en vez de recibir un 204 con el token todavia valido.
+     */
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
-            @CookieValue(name = AuthCookies.REFRESH_TOKEN_COOKIE, required = false) String refreshToken) {
+            @CookieValue(name = AuthCookies.REFRESH_TOKEN_COOKIE, required = false) String refreshToken,
+            @RequestAttribute(name = TenantFilter.SESSION_ID_ATTRIBUTE, required = false) UUID sessionId) {
         if (refreshToken != null && !refreshToken.isBlank()) {
             refreshTokenService.revokeSession(refreshToken);
+        }
+        if (sessionId != null) {
+            refreshTokenService.revokeSessionById(sessionId);
         }
 
         return ResponseEntity.noContent()
