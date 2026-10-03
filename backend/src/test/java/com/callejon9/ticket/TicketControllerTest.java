@@ -111,18 +111,18 @@ class TicketControllerTest {
     }
 
     @Test
-    @DisplayName("cualquier usuario autenticado puede consultar un ticket")
-    void anyAuthenticatedUserCanReadATicket() throws Exception {
+    @DisplayName("caja puede consultar un ticket de su restaurante")
+    void cashierCanReadATicket() throws Exception {
         UUID ticketId = checkoutAndGetTicketId();
 
-        mockMvc.perform(get("/api/v1/tickets/" + ticketId).cookie(cookieFor(waiter)))
+        mockMvc.perform(get("/api/v1/tickets/" + ticketId).cookie(cookieFor(cashier)))
                 .andExpect(status().isOk());
     }
 
     @Test
     @DisplayName("un ticket inexistente da 404")
     void unknownTicketIsNotFound() throws Exception {
-        mockMvc.perform(get("/api/v1/tickets/" + UUID.randomUUID()).cookie(cookieFor(waiter)))
+        mockMvc.perform(get("/api/v1/tickets/" + UUID.randomUUID()).cookie(cookieFor(cashier)))
                 .andExpect(status().isNotFound());
     }
 
@@ -131,7 +131,7 @@ class TicketControllerTest {
     void pdfEndpointReturnsAPdfDocument() throws Exception {
         UUID ticketId = checkoutAndGetTicketId();
 
-        var result = mockMvc.perform(get("/api/v1/tickets/" + ticketId + "/pdf").cookie(cookieFor(waiter)))
+        var result = mockMvc.perform(get("/api/v1/tickets/" + ticketId + "/pdf").cookie(cookieFor(cashier)))
                 .andExpect(status().isOk())
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
                         .content().contentType(MediaType.APPLICATION_PDF))

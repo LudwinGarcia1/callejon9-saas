@@ -15,19 +15,13 @@ const NAV_ANALYTICS: NavItem = { href: "/analytics", label: "Analítica" };
 /**
  * Navegacion disponible por rol.
  *
- * ADMIN ve las cinco secciones operativas, y no es una concesion: en el
- * backend ADMIN aparece en todos los @PreAuthorize del flujo -- ordenes son
- * hasAnyRole('WAITER','ADMIN'), el tablero de cocina es hasAnyRole('KITCHEN',
- * 'ADMIN') y el cobro es hasAnyRole('CASHIER','ADMIN'). La barra refleja la
- * autoridad real en vez de inventar una restriccion que el servidor no aplica.
- * El historial de ventas (GET /api/v1/sales) no tiene @PreAuthorize -- cualquier
- * autenticado puede consultarlo -- pero solo tiene sentido operativo para quien
- * cobra (CASHIER) o administra el restaurante (ADMIN).
- *
- * La analitica (GET /api/v1/analytics) tampoco tiene @PreAuthorize -- cualquier
- * autenticado puede consultarla -- pero solo tiene sentido para quien administra
- * el restaurante, asi que la barra la restringe a ADMIN aunque el servidor no
- * lo exija.
+ * La barra refleja la matriz de autorizacion del backend, no la sustituye:
+ * cada seccion aparece solo para los roles que su @PreAuthorize admite.
+ * ADMIN aparece en todas las reglas del flujo -- tomar ordenes es hasAnyRole(
+ * 'WAITER','ADMIN'), el tablero de cocina hasAnyRole('KITCHEN','ADMIN') y el
+ * cobro hasAnyRole('CASHIER','ADMIN') --, asi que ve todas las secciones.
+ * El historial (GET /api/v1/sales y /api/v1/tickets) es de CASHIER y ADMIN, y
+ * la analitica (GET /api/v1/analytics) es solo de ADMIN.
  *
  * SUPER_ADMIN solo ve la plataforma porque pertenece al tenant tecnico
  * 'platform', que no tiene mesas, productos ni comandas.

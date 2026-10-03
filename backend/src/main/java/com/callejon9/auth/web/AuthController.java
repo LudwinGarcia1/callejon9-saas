@@ -10,7 +10,6 @@ import java.time.Duration;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -60,22 +59,12 @@ public class AuthController {
      * Recupera la identidad del usuario autenticado a partir de la cookie
      * httpOnly. Es la unica forma que tiene el frontend de saber quien esta
      * conectado tras refrescar la pagina, ya que JavaScript no puede leer una
-     * cookie httpOnly.
-     *
-     * <p>La ruta cae bajo la regla permitAll de "/api/v1/auth/**", asi que un
-     * llamado anonimo SI llega hasta aqui (con una autenticacion anonima, no
-     * nula). Por eso el rechazo es explicito: {@link TenantFilter} solo fija
-     * un {@link UUID} como principal cuando el token es valido, asi que
-     * cualquier otro tipo de principal (el "anonymousUser" de Spring
-     * Security) se trata como no autenticado.
+     * cookie httpOnly. Sin sesion valida, SecurityConfig responde 401 antes
+     * de llegar aqui.
      */
     @GetMapping("/me")
     public ResponseEntity<MeResponse> me(Authentication authentication) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof UUID userId)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        var current = authService.currentUser(userId);
+        var current = authService.currentUser((UUID) authentication.getPrincipal());
         return ResponseEntity.ok(new MeResponse(
                 current.user().getId(),
                 current.user().getFullName(),
