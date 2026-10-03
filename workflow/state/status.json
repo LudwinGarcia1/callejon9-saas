@@ -3,9 +3,9 @@
   "activeIssue": null,
   "activePhase": null,
   "lastReview": {
-    "date": "2026-09-30",
-    "issue": "CAL-6",
-    "branch": "feat/cal-6-refresh-token-rotation",
+    "date": "2026-10-03",
+    "issue": "CAL-94",
+    "branch": "feat/session-revocation",
     "verdict": "hallazgos corregidos; puerta backend bloqueada por entorno"
   },
   "lastBacklogSync": {

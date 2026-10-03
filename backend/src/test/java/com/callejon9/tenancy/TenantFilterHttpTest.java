@@ -1,9 +1,8 @@
 package com.callejon9.tenancy;
 
-import com.callejon9.auth.service.JwtService;
-import com.callejon9.user.domain.User;
+import com.callejon9.support.TestSessions;
 import com.callejon9.user.domain.UserRole;
-import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,16 +45,18 @@ class TenantFilterHttpTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
+    private static final String SLUG_PREFIX = "filtro-http-test";
+
     @Autowired
-    private JwtService jwtService;
+    private TestSessions testSessions;
+
+    @AfterEach
+    void cleanUp() {
+        testSessions.deleteTenants(SLUG_PREFIX);
+    }
 
     private String tokenFor(UserRole role) {
-        User user = User.builder()
-                .email("http-demo@demo.com").passwordHash("x").fullName("Http Demo")
-                .role(role).active(true).build();
-        user.setId(UUID.randomUUID());
-        user.setTenantId(UUID.randomUUID());
-        return jwtService.generateAccessToken(user);
+        return testSessions.accessTokenForNewUser(SLUG_PREFIX, role);
     }
 
     private ResponseEntity<String> platformPlans(String accessToken) {

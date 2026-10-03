@@ -1,10 +1,9 @@
 package com.callejon9.tenancy;
 
-import com.callejon9.auth.service.JwtService;
-import com.callejon9.user.domain.User;
+import com.callejon9.support.TestSessions;
 import com.callejon9.user.domain.UserRole;
 import jakarta.servlet.http.Cookie;
-import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -25,16 +24,18 @@ class TenantFilterTest {
     @Autowired
     private MockMvc mockMvc;
 
+    private static final String SLUG_PREFIX = "filtro-test";
+
     @Autowired
-    private JwtService jwtService;
+    private TestSessions testSessions;
+
+    @AfterEach
+    void cleanUp() {
+        testSessions.deleteTenants(SLUG_PREFIX);
+    }
 
     private String tokenFor(UserRole role) {
-        User user = User.builder()
-                .email("demo@demo.com").passwordHash("x").fullName("Demo")
-                .role(role).active(true).build();
-        user.setId(UUID.randomUUID());
-        user.setTenantId(UUID.randomUUID());
-        return jwtService.generateAccessToken(user);
+        return testSessions.accessTokenForNewUser(SLUG_PREFIX, role);
     }
 
     @Test

@@ -1,8 +1,8 @@
 package com.callejon9.catalog;
 
-import com.callejon9.auth.service.JwtService;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
+import com.callejon9.support.TestSessions;
 import com.callejon9.tenancy.TenantContext;
 import com.callejon9.user.domain.User;
 import com.callejon9.user.domain.UserRole;
@@ -35,7 +35,7 @@ class ProductControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private TenantOnboardingService onboardingService;
-    @Autowired private JwtService jwtService;
+    @Autowired private TestSessions testSessions;
     @Autowired private JdbcTemplate jdbcTemplate;
 
     private Tenant tenant;
@@ -45,12 +45,7 @@ class ProductControllerTest {
     void seed() {
         tenant = onboardingService.onboard("Productos Test", "productos-test",
                 "admin@productos.com", "Admin", "Secreto123!", "FREE");
-        User user = User.builder()
-                .email("admin@productos.com").passwordHash("x")
-                .fullName("Admin").role(UserRole.ADMIN).active(true).build();
-        user.setId(UUID.randomUUID());
-        user.setTenantId(tenant.getId());
-        admin = user;
+        admin = testSessions.newUserIn(tenant.getId(), UserRole.ADMIN);
     }
 
     @AfterEach
@@ -60,16 +55,11 @@ class ProductControllerTest {
     }
 
     private Cookie cookieFor(User user) {
-        return new Cookie("access_token", jwtService.generateAccessToken(user));
+        return new Cookie("access_token", testSessions.accessTokenFor(user));
     }
 
-    private User fakeUser(UserRole role) {
-        User user = User.builder()
-                .email(role.name().toLowerCase() + "@productos.com").passwordHash("x")
-                .fullName(role.name()).role(role).active(true).build();
-        user.setId(UUID.randomUUID());
-        user.setTenantId(tenant.getId());
-        return user;
+    private User userWithRole(UserRole role) {
+        return testSessions.newUserIn(tenant.getId(), role);
     }
 
     private UUID createCategory(String name) throws Exception {
@@ -238,7 +228,7 @@ class ProductControllerTest {
     @DisplayName("un WAITER no puede editar ni dar de baja productos")
     void waiterCannotUpdateOrDeactivateProducts() throws Exception {
         UUID productId = createProduct("Taco", "25.00");
-        User waiter = fakeUser(UserRole.WAITER);
+        User waiter = userWithRole(UserRole.WAITER);
 
         mockMvc.perform(put("/api/v1/products/" + productId)
                         .cookie(cookieFor(waiter))

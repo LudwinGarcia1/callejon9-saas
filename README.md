@@ -122,9 +122,11 @@ cd backend
 
 Flyway aplica las migraciones pendientes al arrancar. La API queda en `http://localhost:8080` y la documentación navegable en `http://localhost:8080/swagger-ui.html`.
 
-El perfil `demo` extiende el token de acceso a dos horas. **El valor de producción son 15 minutos y así se queda**: el perfil existe solo para que una sesión no expire a mitad de una presentación.
-
 La sesión se sostiene con un segundo token. El login emite dos cookies `httpOnly` y `SameSite=Strict`: `access_token` (JWT de 15 minutos) y `refresh_token` (limitada a `/api/v1/auth`). Cuando una petición recibe 401, el cliente llama una sola vez a `POST /api/v1/auth/refresh`, que consume el refresh token, emite un par nuevo y repite la petición original. Presentar un refresh token ya consumido revoca la sesión completa. La sesión dura como máximo `app.jwt.refresh-token-days` (7 días) desde el login: renovar no la alarga. En la base solo se guarda el SHA-256 del secreto del token.
+
+El logout invalida la sesión en el servidor, no solo en el navegador. Cada access token lleva el identificador de su sesión (claim `sid`). En cada petición HTTP y en el handshake del WebSocket, el backend comprueba que esa sesión siga vigente. Logout, la detección de reutilización o el vencimiento de la sesión cortan al instante todos los access tokens de esa sesión, aunque su JWT todavía no expire. Las demás sesiones del mismo usuario siguen activas. La comprobación cuesta una lectura indexada por petición y corre con el tenant del token, así que RLS impide que un `sid` de otro restaurante encuentre una sesión ajena.
+
+El token de acceso dura 15 minutos en todos los perfiles, incluido `demo`. La renovación automática evita que la sesión se corte a media presentación.
 
 Las cookies llevan el atributo `Secure` salvo que `AUTH_COOKIE_SECURE=false`. `scripts/run-dev.ps1` y el perfil `demo` lo desactivan porque en local no hay HTTPS. En cualquier otro entorno la API debe servirse detrás de HTTPS.
 

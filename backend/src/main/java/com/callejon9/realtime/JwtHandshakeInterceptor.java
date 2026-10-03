@@ -1,5 +1,6 @@
 package com.callejon9.realtime;
 
+import com.callejon9.auth.service.AccessTokenVerifier;
 import com.callejon9.auth.service.JwtService;
 import com.callejon9.tenancy.TenantFilter;
 import jakarta.servlet.http.Cookie;
@@ -21,6 +22,9 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
  * se rechaza aqui mismo, antes de que el protocolo STOMP siquiera comience:
  * no hay "conexion anonima" en el canal en tiempo real como si la hay,
  * momentaneamente, en HTTP.
+ *
+ * La regla es la misma de HTTP ({@link AccessTokenVerifier}): un token de una
+ * sesion revocada por logout no abre el canal aunque su JWT siga vigente.
  */
 @Component
 public class JwtHandshakeInterceptor implements HandshakeInterceptor {
@@ -28,10 +32,10 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
     /** Bajo esta clave el Principal queda disponible para PrincipalHandshakeHandler. */
     static final String ATTR_PRINCIPAL = "authenticatedPrincipal";
 
-    private final JwtService jwtService;
+    private final AccessTokenVerifier accessTokenVerifier;
 
-    public JwtHandshakeInterceptor(JwtService jwtService) {
-        this.jwtService = jwtService;
+    public JwtHandshakeInterceptor(AccessTokenVerifier accessTokenVerifier) {
+        this.accessTokenVerifier = accessTokenVerifier;
     }
 
     @Override
@@ -46,15 +50,15 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
             return false;
         }
 
-        try {
-            JwtService.TokenClaims claims = jwtService.parse(token.get());
-            attributes.put(ATTR_PRINCIPAL,
-                    new AuthenticatedPrincipal(claims.userId(), claims.tenantId(), claims.role()));
-            return true;
-        } catch (RuntimeException tokenIsNotUsable) {
+        Optional<JwtService.TokenClaims> claims = accessTokenVerifier.verify(token.get());
+        if (claims.isEmpty()) {
             response.setStatusCode(HttpStatus.UNAUTHORIZED);
             return false;
         }
+
+        attributes.put(ATTR_PRINCIPAL, new AuthenticatedPrincipal(
+                claims.get().userId(), claims.get().tenantId(), claims.get().role()));
+        return true;
     }
 
     @Override
