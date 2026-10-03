@@ -57,9 +57,6 @@ export default async function RootLayout({
     // custom property solo puede resolver otra que exista en el mismo elemento.
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${spaceGrotesk.variable}${
-    <html
-      lang="es"
       className={`${geistSans.variable} ${geistMono.variable} ${
         instrumentSerif.variable
       } ${spaceGrotesk.variable}${
