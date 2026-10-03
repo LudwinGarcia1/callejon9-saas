@@ -86,6 +86,14 @@ public class RefreshTokenService {
      */
     public IssuedTokens issueForLogin(User user) {
         return transactionTemplate.execute(status -> {
+            // AuthService verifico al usuario en otra transaccion. Se vuelve a
+            // leer con FOR SHARE por la misma razon que en la rotacion: una
+            // desactivacion concurrente no puede dejar viva una sesion que
+            // nacio despues de su revocacion.
+            if (userRepository.findByIdForShare(user.getId()).filter(User::isActive).isEmpty()) {
+                throw new BadCredentialsException("Credenciales invalidas.");
+            }
+
             Instant now = Instant.now();
             refreshTokenRepository.deleteExpiredForUser(user.getId(), now);
 
@@ -151,6 +159,20 @@ public class RefreshTokenService {
                 refreshTokenRepository.revokeFamily(sessionId, Instant.now()));
     }
 
+    /**
+     * Revoca todas las sesiones del usuario: sus access tokens dejan de
+     * autorizar en la siguiente peticion y sus refresh tokens ya no renuevan.
+     *
+     * <p>Se une a la transaccion del llamador si existe (propagacion
+     * REQUIRED): al desactivar un usuario, la revocacion se confirma o se
+     * deshace junto con el cambio de estado. Requiere el tenant del usuario en
+     * {@link TenantContext}.
+     */
+    public void revokeAllSessionsOf(UUID userId) {
+        transactionTemplate.executeWithoutResult(status ->
+                refreshTokenRepository.revokeAllForUser(userId, Instant.now()));
+    }
+
     private Outcome rotateInTransaction(JwtService.RefreshClaims claims) {
         Instant now = Instant.now();
 
@@ -168,21 +190,31 @@ public class RefreshTokenService {
         if (!token.getExpiresAt().isAfter(now)) {
             return new Rejected();
         }
-        if (refreshTokenRepository.consume(token.getId(), now) == 0) {
-            // Otra peticion lo consumio entre la lectura y este UPDATE.
-            return revokeFamilyOnReuse(token, now);
-        }
 
         // Renovar exige lo mismo que el login: usuario y restaurante activos.
-        // Sin esto, desactivar cualquiera de los dos dejaria de cortar el
-        // acceso a los 15 minutos y la sesion seguiria viva hasta su expiracion.
-        Optional<User> user = userRepository.findById(token.getUserId()).filter(User::isActive);
+        //
+        // El usuario se lee con FOR SHARE y ANTES de consumir el token. Sin el
+        // candado, una desactivacion concurrente podia ejecutar su UPDATE de
+        // revocacion antes de que esta transaccion confirmara el token nuevo:
+        // ese token no existia en la foto de la sentencia y quedaba vivo tras
+        // una baja exitosa. Con el candado ambas se ordenan sobre la fila del
+        // usuario: si la baja va primero, aqui se lee active = false; si va
+        // despues, su revocacion ya ve el token nuevo. El orden (usuario y
+        // luego token) es el mismo que sigue la desactivacion, asi que no hay
+        // interbloqueo.
+        Optional<User> user = userRepository.findByIdForShare(token.getUserId())
+                .filter(User::isActive);
         boolean tenantActive = tenantRepository.findById(token.getTenantId())
                 .map(Tenant::isActive)
                 .orElse(false);
         if (user.isEmpty() || !tenantActive) {
             refreshTokenRepository.revokeFamily(token.getFamilyId(), now);
             return new Rejected();
+        }
+
+        if (refreshTokenRepository.consume(token.getId(), now) == 0) {
+            // Otra peticion lo consumio entre la lectura y este UPDATE.
+            return revokeFamilyOnReuse(token, now);
         }
 
         NewToken next = persistNewToken(user.get(), token.getFamilyId(), token.getExpiresAt());

@@ -55,6 +55,19 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
     int revokeFamily(@Param("familyId") UUID familyId, @Param("now") Instant now);
 
     /**
+     * Revoca todas las sesiones vivas de un usuario. Bajo RLS solo alcanza las
+     * filas del tenant activo, asi que nunca toca a un usuario de otro
+     * restaurante aunque el id coincidiera.
+     */
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+            UPDATE RefreshToken t
+               SET t.revokedAt = :now, t.updatedAt = :now
+             WHERE t.userId = :userId AND t.revokedAt IS NULL
+            """)
+    int revokeAllForUser(@Param("userId") UUID userId, @Param("now") Instant now);
+
+    /**
      * Una sesion sigue vigente mientras su familia conserve un token sin
      * revocar y sin expirar. Rotar no la interrumpe: el consumo del token
      * viejo y el alta del nuevo ocurren en la misma transaccion, asi que
