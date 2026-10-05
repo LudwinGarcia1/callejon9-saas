@@ -81,11 +81,74 @@ class AuthorizationContractTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"/api/v1/auth/contract-fixture", "/api/v1/contract-fixtures/public"})
+    @CsvSource({"/api/v1/contract-fixtures/public"})
     @DisplayName("Una ruta pública no documentada no se acepta ni bajo /auth/**")
     void rejectsUndocumentedPublicRoutes(String path) {
         assertThatThrownBy(() -> verifier.requireValid(List.of(endpoint("GET", path))))
                 .isInstanceOf(AssertionError.class).hasMessageContaining("lista pública");
+    }
+
+    @Test
+    void undocumentedAuthRoutesRequireSessionAndAnExplicitContract() throws Exception {
+        var endpoint = endpoint("GET", "/api/v1/auth/contract-fixture");
+        assertThat(verifier.inspect(endpoint).allowed()).doesNotContain("ANONYMOUS");
+        assertThatThrownBy(() -> verifier.requireValid(List.of(endpoint)))
+                .isInstanceOf(AssertionError.class).hasMessageContaining("authenticated() general");
+        mockMvc.perform(get("/api/v1/auth/contract-fixture")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void matrixRejectsNewMissingAndDuplicateEndpoints() {
+        var endpoint = endpoint("GET", "/api/v1/contract-fixtures/method");
+        var rule = ruleFor(endpoint, Set.of("ADMIN"));
+        assertThatThrownBy(() -> AuthorizationContractMatrix.requireMatches(List.of(endpoint), List.of(), verifier))
+                .hasMessageContaining("MethodRules#method").hasMessageContaining("sin decision");
+        assertThatThrownBy(() -> AuthorizationContractMatrix.requireMatches(List.of(), List.of(rule), verifier))
+                .hasMessageContaining("sin endpoint descubierto");
+        assertThatThrownBy(() -> AuthorizationContractMatrix.requireMatches(List.of(endpoint), List.of(rule, rule), verifier))
+                .hasMessageContaining("duplicada");
+    }
+
+    @Test
+    void matrixRejectsPermissionWideningAndNarrowing() {
+        var endpoint = endpoint("GET", "/api/v1/contract-fixtures/method");
+        AuthorizationContractMatrix.requireMatches(List.of(endpoint), List.of(ruleFor(endpoint, Set.of("ADMIN"))), verifier);
+        assertThatThrownBy(() -> AuthorizationContractMatrix.requireMatches(List.of(endpoint),
+                List.of(ruleFor(endpoint, Set.of("ADMIN", "WAITER"))), verifier))
+                .hasMessageContaining("esperados=").hasMessageContaining("reales=");
+        assertThatThrownBy(() -> AuthorizationContractMatrix.requireMatches(List.of(endpoint),
+                List.of(ruleFor(endpoint, Set.of("WAITER"))), verifier))
+                .hasMessageContaining("MethodRules#method");
+    }
+
+    @Test
+    void matrixPreservesMappingConditionsAndRejectsUnjustifiedDecisions() {
+        var endpoint = endpoint("GET", "/api/v1/tickets");
+        var roles = verifier.inspect(endpoint).allowed();
+        var rule = ruleFor(endpoint, roles);
+        assertThat(rule.params()).containsExactly("folio");
+        var lostCondition = new AuthorizationContractMatrix.Rule(rule.method(), rule.path(), List.of(),
+                rule.headers(), rule.consumes(), rule.produces(), rule.roles(), rule.reason());
+        assertThatThrownBy(() -> AuthorizationContractMatrix.requireMatches(List.of(endpoint), List.of(lostCondition), verifier))
+                .hasMessageContaining("TicketController#getByFolio").hasMessageContaining("sin decision");
+        var unjustified = new AuthorizationContractMatrix.Rule(rule.method(), rule.path(), rule.params(),
+                rule.headers(), rule.consumes(), rule.produces(), roles, "");
+        assertThatThrownBy(() -> AuthorizationContractMatrix.requireMatches(List.of(endpoint), List.of(unjustified), verifier))
+                .hasMessageContaining("sin roles o justificacion");
+    }
+
+    @Test
+    void implicitHeadRetainsMethodAuthorizationAndPublicClassification() {
+        var privateHead = endpoint("HEAD", "/api/v1/contract-fixtures/method");
+        assertThat(verifier.inspect(privateHead).allowed()).containsExactly("ADMIN");
+        assertThat(verifier.inspect(endpoint("HEAD", "/api/v1/auth/me")).valid()).isTrue();
+        assertThat(verifier.inspect(endpoint("HEAD", "/v3/api-docs")).allowed()).contains("ANONYMOUS");
+    }
+
+    private AuthorizationContractMatrix.Rule ruleFor(AuthorizationContractVerifier.Endpoint endpoint, Set<String> roles) {
+        var key = AuthorizationContractMatrix.key(endpoint);
+        return new AuthorizationContractMatrix.Rule(key.method(), key.path(), key.params(), key.headers(),
+                key.consumes(), key.produces(), roles, "Contrato deliberado de prueba");
     }
 
     @Test

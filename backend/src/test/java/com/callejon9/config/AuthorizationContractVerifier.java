@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.HashSet;
 import java.util.UUID;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -58,7 +59,6 @@ final class AuthorizationContractVerifier {
             new Route("POST", "/api/v1/signup"), "Registrar un restaurante sin sesión previa",
             new Route("GET", "/actuator/health"), "Comprobar disponibilidad",
             new Route("GET", "/v3/api-docs"), "Consultar OpenAPI JSON",
-            new Route("GET", "/v3/api-docs.yaml"), "Consultar OpenAPI YAML si está expuesto",
             new Route("GET", "/v3/api-docs/swagger-config"), "Configurar Swagger UI",
             new Route("GET", "/swagger-ui.html"), "Abrir Swagger UI");
     private static final Set<Route> SESSION_ROUTES = Set.of(
@@ -83,6 +83,10 @@ final class AuthorizationContractVerifier {
                     if (methods.isEmpty()) {
                         methods = Set.of(RequestMethod.values());
                     }
+                    methods = new HashSet<>(methods);
+                    if (methods.contains(RequestMethod.GET)) {
+                        methods.add(RequestMethod.HEAD);
+                    }
                     for (RequestMethod method : methods) {
                         for (String path : info.getPatternValues()) {
                             endpoints.add(new Endpoint(new Route(method.name(), path), info, handler));
@@ -94,7 +98,7 @@ final class AuthorizationContractVerifier {
 
     Finding inspect(Endpoint endpoint) {
         try {
-            Map<String, Boolean> web = webDecisions(endpoint.route());
+            Map<String, Boolean> web = webDecisions(endpoint);
             Map<String, Boolean> method = methodDecisions(endpoint.handler());
             Set<String> allowed = new TreeSet<>();
             web.forEach((subject, granted) -> {
@@ -116,7 +120,9 @@ final class AuthorizationContractVerifier {
             if (!method.isEmpty()) {
                 return new Finding(endpoint, "@PreAuthorize de método, clase o heredada", allowed, null);
             }
-            if (SESSION_ROUTES.contains(endpoint.route())) {
+            Route sessionRoute = endpoint.route().method().equals("HEAD")
+                    ? new Route("GET", endpoint.route().path()) : endpoint.route();
+            if (SESSION_ROUTES.contains(sessionRoute)) {
                 return allowed.equals(ROLES)
                         ? new Finding(endpoint, "Sesión explícita documentada", allowed, null)
                         : failure(endpoint, allowed, "La ruta de sesión no exige autenticación para todos los roles");
@@ -143,11 +149,38 @@ final class AuthorizationContractVerifier {
     }
 
     Map<String, Boolean> webDecisions(Route route) {
+        return webDecisions(route, null);
+    }
+
+    Map<String, Boolean> webDecisions(Endpoint endpoint) {
+        return webDecisions(endpoint.route(), endpoint.mapping());
+    }
+
+    private Map<String, Boolean> webDecisions(Route route, RequestMappingInfo mapping) {
         Map<String, Boolean> decisions = new LinkedHashMap<>();
         subjects().forEach((subject, authentication) -> {
             MockHttpServletRequest request = new MockHttpServletRequest(context.getServletContext(),
-                    route.method(), route.path().replaceAll("\\{[^}]+}", SAMPLE_ID.toString()));
+                    route.method(), route.path().replaceAll("\\{[^}]+}", SAMPLE_ID.toString())
+                            .replace("**", "contract-probe").replace("*", "contract-probe"));
             request.setServletPath(request.getRequestURI());
+            if (mapping != null) {
+                mapping.getParamsCondition().getExpressions().forEach(expression -> {
+                    if (!expression.isNegated()) {
+                        request.setParameter(expression.getName(), expression.getValue() == null
+                                ? "contract-probe" : expression.getValue());
+                    }
+                });
+                mapping.getHeadersCondition().getExpressions().forEach(expression -> {
+                    if (!expression.isNegated()) {
+                        request.addHeader(expression.getName(), expression.getValue() == null
+                                ? "contract-probe" : expression.getValue());
+                    }
+                });
+                mapping.getConsumesCondition().getConsumableMediaTypes().stream().findFirst()
+                        .ifPresent(type -> request.setContentType(type.toString()));
+                mapping.getProducesCondition().getProducibleMediaTypes().stream().findFirst()
+                        .ifPresent(type -> request.addHeader("Accept", type.toString()));
+            }
             var chain = filters.getFilterChains().stream().filter(candidate -> candidate.matches(request))
                     .findFirst().orElseThrow(() -> new IllegalStateException("Sin SecurityFilterChain"));
             var authorization = chain.getFilters().stream().filter(AuthorizationFilter.class::isInstance)

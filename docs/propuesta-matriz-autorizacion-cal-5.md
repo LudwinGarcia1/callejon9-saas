@@ -1,6 +1,11 @@
 # Propuesta de matriz de autorización — CAL-5 / CAL-7
 
-Fecha: 2026-09-24. Estado: **propuesta para revisión, no contrato aprobado ni permisos implementados**.
+Fecha de la propuesta: 2026-09-24. Estado: **documento histórico de propuesta**.
+
+Actualización del 2026-10-05: CAL-5 está implementada y terminada en Linear.
+Este texto conserva las decisiones propuestas en aquella fecha; el contrato
+ejecutable actual es `backend/src/test/resources/security/authorization-contract.json`.
+Su cobertura y validación se describen en [CAL-7](cal-7-pruebas-autorizacion.md).
 
 Fuentes: [CAL-5](https://linear.app/callejon19/issue/CAL-5/cerrar-la-matriz-de-autorizacion-de-la-api), [CAL-7](https://linear.app/callejon19/issue/CAL-7/hacer-exigible-el-contrato-de-autorizacion), controllers del checkout local y consumidores del frontend. El inventario siguiente se obtuvo del código; CAL-7 debe contrastarlo con los mappings del contexto Spring real.
 
