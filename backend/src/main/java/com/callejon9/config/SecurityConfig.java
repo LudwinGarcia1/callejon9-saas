@@ -39,8 +39,10 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(e -> e.authenticationEntryPoint(
                         new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                // Lista publica cerrada: todo lo demas exige sesion, y cada
+                // controller declara con @PreAuthorize que roles lo usan.
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**", "/api/v1/signup").permitAll()
+                        .requestMatchers("/api/v1/auth/login", "/api/v1/signup").permitAll()
                         .requestMatchers("/actuator/health", "/v3/api-docs/**",
                                 "/swagger-ui.html", "/swagger-ui/**")
                             .permitAll()

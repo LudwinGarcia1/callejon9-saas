@@ -5,8 +5,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { ScreenShell, ScreenMetric } from "@/components/layout/screen-shell";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ScreenMetric, ScreenShell } from "@/components/layout/screen-shell";
 import { QueryState } from "@/components/shared/query-state";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { ApiError, api } from "@/lib/api";
@@ -23,20 +23,9 @@ import {
   type UpdateKitchenItemStatusRequest,
 } from "@/lib/types";
 
-/** Cinco segundos es imperceptible de "en vivo" para quien mira el tablero,
- * y evita la complejidad de un STOMP cross-origin que el proxy de Next no
- * reenvia. Se apaga en segundo plano para no seguir golpeando al backend
- * con una pestaña sin foco. */
 const KITCHEN_POLL_INTERVAL_MS = 5_000;
-
-/** El reloj avanza solo para que el tiempo transcurrido no se congele entre
- * refetches. Treinta segundos basta: los umbrales estan en minutos. */
 const CLOCK_TICK_MS = 30_000;
 
-/**
- * El nivel normal no lleva color: un estado que no requiere atencion no debe
- * pedirla. Solo destacan las comandas que llevan esperando demasiado.
- */
 const AGE_CARD_STYLES: Record<OrderAge, string> = {
   normal: "",
   warning: "border-2 border-[var(--state-warning)]",
@@ -49,8 +38,6 @@ const AGE_TEXT_STYLES: Record<OrderAge, string> = {
   critical: "text-[var(--state-critical)] font-semibold",
 };
 
-/** Espejo exacto de KitchenService.FORWARD_SEQUENCE: solo sirve para decidir
- * que boton ofrecer, nunca como fuente de verdad del estado real. */
 const FORWARD_SEQUENCE: KitchenItemStatus[] = [
   "PENDING",
   "IN_PREPARATION",
@@ -60,30 +47,15 @@ const FORWARD_SEQUENCE: KitchenItemStatus[] = [
 
 function nextKitchenStatus(current: KitchenItemStatus): KitchenItemStatus | null {
   const index = FORWARD_SEQUENCE.indexOf(current);
-  if (index === -1 || index === FORWARD_SEQUENCE.length - 1) {
-    return null;
-  }
-  return FORWARD_SEQUENCE[index + 1];
+  return index === -1 || index === FORWARD_SEQUENCE.length - 1
+    ? null
+    : FORWARD_SEQUENCE[index + 1];
 }
 
-/** Un item cuenta como "listo o mas alla" para efectos de aviso local de que
- * la orden esta a punto de salir del tablero (el backend es quien decide de
- * verdad, aqui solo se anuncia). */
 function isReadyOrBeyond(status: KitchenItemStatus): boolean {
   return status === "READY" || status === "DELIVERED";
 }
 
-/**
- * Tablero de cocina: ordenes enviadas (SENT), mas antigua primero tal como
- * las entrega KitchenService.listSentOrders. Cada tarjeta lista sus
- * productos con su estado de cocina y un boton para avanzar un solo paso.
- *
- * Cuando el backend detecta que todos los productos de una orden llegaron a
- * READY, la promueve a READY por su cuenta y KitchenController.listSentOrders
- * deja de devolverla (solo lista SENT): por eso la tarjeta desaparece del
- * tablero en el siguiente refetch, que es la forma honesta de "surfacing"
- * pedida — nunca se calcula el estado de la orden en el cliente.
- */
 export function KitchenView() {
   const queryClient = useQueryClient();
   const [now, setNow] = useState(() => Date.now());
@@ -92,10 +64,6 @@ export function KitchenView() {
     const id = setInterval(() => setNow(Date.now()), CLOCK_TICK_MS);
     return () => clearInterval(id);
   }, []);
-
-  // El tema oscuro de esta pantalla lo marca el layout raiz en <html> segun la
-  // ruta, no un efecto de aqui: puesto tras el montaje llegaba tarde al primer
-  // pintado y la pantalla destellaba en blanco al cargarse.
 
   const ordersQuery = useQuery({
     queryKey: queryKeys.kitchen.orders(),
@@ -125,23 +93,21 @@ export function KitchenView() {
         `${updatedItem.productName} -> ${KITCHEN_STATUS_LABELS[updatedItem.kitchenStatus]}.`,
       );
 
-      if (order) {
-        const everyItemReadyOrBeyond = order.items.every((item) =>
+      if (
+        order?.items.every((item) =>
           item.id === updatedItem.id
             ? isReadyOrBeyond(updatedItem.kitchenStatus)
             : isReadyOrBeyond(item.kitchenStatus),
+        ) &&
+        updatedItem.kitchenStatus === "READY"
+      ) {
+        toast.info(
+          `Todos los productos de la orden ${order.folio} están listos. Pasará a "Lista" en el tablero.`,
         );
-        if (everyItemReadyOrBeyond && updatedItem.kitchenStatus === "READY") {
-          toast.info(
-            `Todos los productos de la orden ${order.folio} están listos. Pasará a "Lista" en el tablero.`,
-          );
-        }
       }
     },
     onError: (error) => {
-      toast.error(
-        error instanceof ApiError ? error.message : "No se pudo actualizar el producto.",
-      );
+      toast.error(error instanceof ApiError ? error.message : "No se pudo actualizar el producto.");
     },
   });
 
@@ -166,9 +132,11 @@ export function KitchenView() {
           isLoading={ordersQuery.isLoading}
           error={ordersQuery.error}
           isEmpty={ordersQuery.data?.length === 0}
-          emptyMessage="No hay órdenes en cocina en este momento."
-          skeleton={<BoardSkeleton />}
+          emptyMessage="No hay ordenes en cocina en este momento."
         >
+        {ordersQuery.isLoading ? (
+          <BoardSkeleton />
+        ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {ordersQuery.data?.map((order) => {
               const age = orderAge(order.sentToKitchenAt, now);
@@ -245,6 +213,7 @@ export function KitchenView() {
               );
             })}
           </div>
+        )}
         </QueryState>
       </ScreenShell>
     </div>
@@ -255,7 +224,7 @@ function BoardSkeleton() {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
       {Array.from({ length: 3 }).map((_, index) => (
-        <Skeleton key={index} className="h-56 w-full rounded-xl" />
+        <Skeleton key={index} className="h-48 w-full" />
       ))}
     </div>
   );

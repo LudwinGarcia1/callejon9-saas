@@ -46,6 +46,12 @@ app:
     access-token-minutes: 15
     refresh-token-days: 7
 
+  auth:
+    # Atributo Secure de la cookie access_token. Debe ser true detras de
+    # HTTPS; en local el backend corre sobre http y el navegador la
+    # descartaria.
+    secure-cookie: ${AUTH_SECURE_COOKIE:false}
+
 server:
   port: 8080
 

@@ -4,11 +4,13 @@ import com.callejon9.platform.plan.domain.Plan;
 import com.callejon9.platform.plan.repository.PlanRepository;
 import java.math.BigDecimal;
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Solo SUPER_ADMIN: la regla vive en SecurityConfig, ruta /api/v1/platform/**. */
+/** Solo SUPER_ADMIN. SecurityConfig ya cierra /api/v1/platform/**; la anotacion deja la regla visible aqui. */
+@PreAuthorize("hasRole('SUPER_ADMIN')")
 @RestController
 @RequestMapping("/api/v1/platform/plans")
 public class PlanController {

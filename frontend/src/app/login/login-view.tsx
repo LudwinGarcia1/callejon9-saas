@@ -12,7 +12,9 @@ import { Label } from "@/components/ui/label";
 import { FieldError } from "@/components/shared/field-error";
 import { ROLE_LANDING_PATH } from "@/hooks/use-session";
 import { ApiError, api } from "@/lib/api";
+import { postLoginPath } from "@/lib/auth-redirect";
 import { endpoints } from "@/lib/endpoints";
+import { type LoginFieldErrors, validateLogin } from "@/lib/login-validation";
 import { queryKeys } from "@/lib/query-keys";
 import type { LoginRequest, LoginResponse } from "@/lib/types";
 
@@ -28,6 +30,7 @@ export function LoginView() {
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
+  const [clientErrors, setClientErrors] = useState<LoginFieldErrors>({});
 
   const expired = searchParams.get("expired") === "1";
   const nextPath = searchParams.get("next");
@@ -38,18 +41,37 @@ export function LoginView() {
       api.post<LoginResponse>(endpoints.auth.login(), payload),
     onSuccess: async (data) => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.session.me() });
-      router.push(nextPath ?? ROLE_LANDING_PATH[data.role]);
+      router.push(postLoginPath(nextPath, ROLE_LANDING_PATH[data.role]));
     },
   });
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
 
-    loginMutation.mutate({
+    // Si la validacion local falla, la peticion no sale del navegador.
+    const result = validateLogin({
       slug: String(formData.get("slug") ?? ""),
       email: String(formData.get("email") ?? ""),
       password: String(formData.get("password") ?? ""),
+    });
+
+    if (!result.ok) {
+      setClientErrors(result.errors);
+      loginMutation.reset();
+      return;
+    }
+
+    setClientErrors({});
+    loginMutation.mutate(result.data, {
+      // Tras un intento fallido la contrasena no se conserva en el formulario.
+      onError: () => {
+        const password = form.elements.namedItem("password");
+        if (password instanceof HTMLInputElement) {
+          password.value = "";
+        }
+      },
     });
   }
 
@@ -91,7 +113,9 @@ export function LoginView() {
             pedimos el identificador antes.
           </p>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {/* noValidate: los mensajes los da validateLogin, no el navegador,
+              para que sean los mismos en cualquier dispositivo. */}
+          <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
             {expired && (
               <Alert>
                 <AlertTitle>Sesión expirada</AlertTitle>
@@ -127,7 +151,7 @@ export function LoginView() {
                   className="h-full min-w-0 flex-1 bg-transparent px-3 text-[15px] outline-none placeholder:text-muted-foreground disabled:opacity-50"
                 />
               </div>
-              <FieldError error={apiError} field="slug" />
+              <FieldError error={apiError} field="slug" message={clientErrors.slug} />
             </div>
 
             <div className="flex flex-col gap-[7px]">
@@ -141,7 +165,7 @@ export function LoginView() {
                 className="h-12"
                 disabled={loginMutation.isPending}
               />
-              <FieldError error={apiError} field="email" />
+              <FieldError error={apiError} field="email" message={clientErrors.email} />
             </div>
 
             <div className="flex flex-col gap-[7px]">
@@ -164,7 +188,7 @@ export function LoginView() {
                   {showPassword ? "Ocultar" : "Mostrar"}
                 </button>
               </div>
-              <FieldError error={apiError} field="password" />
+              <FieldError error={apiError} field="password" message={clientErrors.password} />
             </div>
 
             <Button type="submit" size="lg" disabled={loginMutation.isPending} className="mt-1.5">
