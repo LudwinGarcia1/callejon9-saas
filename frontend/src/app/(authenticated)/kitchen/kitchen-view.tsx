@@ -120,7 +120,7 @@ export function KitchenView() {
   }
 
   return (
-    <div className="flex flex-1 flex-col bg-background text-foreground">
+    <div className="flex flex-1 flex-col bg-background text-foreground" data-density="spacious">
       <ScreenShell
         title="Cocina"
         subtitle="Órdenes enviadas a cocina, de la más antigua a la más reciente."
