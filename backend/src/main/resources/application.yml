@@ -46,6 +46,13 @@ app:
     access-token-minutes: 15
     refresh-token-days: 7
 
+  realtime:
+    # Origenes de navegador que pueden abrir el WebSocket /ws, separados por
+    # coma y sin comodines. En produccion debe ser el dominio publico del
+    # frontend. Los clientes que no envian Origin (no navegadores) no se
+    # ven afectados.
+    allowed-origins: ${APP_ALLOWED_ORIGINS:http://localhost:3000}
+
 server:
   port: 8080
 

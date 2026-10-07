@@ -124,6 +124,8 @@ Flyway aplica las seis migraciones al arrancar. La API queda en `http://localhos
 
 El perfil `demo` extiende el token de acceso a dos horas. **El valor de producción son 15 minutos y así se queda**: el perfil existe solo para que una sesión no expire a mitad de una presentación.
 
+El WebSocket `/ws` solo acepta el handshake desde los orígenes de `APP_ALLOWED_ORIGINS` (separados por coma, sin comodines). Por omisión es `http://localhost:3000`; en cualquier otro entorno debe ser el dominio público del frontend. Con la lista vacía o con `*`, el backend no arranca.
+
 ### 3. Frontend
 
 ```powershell
