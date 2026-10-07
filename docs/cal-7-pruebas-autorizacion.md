@@ -29,6 +29,8 @@ justificación. `params=folio` y `application/pdf` no se pierden en la comparaci
 - Roles ampliados o restringidos: fallo con permisos esperados y reales.
 - Lista pública exacta para login, signup, health raíz, OpenAPI JSON/config y
   redirección Swagger; me, logout y otras rutas auth exigen sesión.
+- Login y signup solo permiten acceso anónimo mediante POST. GET, HEAD, PUT,
+  PATCH, DELETE y OPTIONS, así como sufijos y subrutas parecidos, exigen sesión.
 - HEAD conserva permisos de GET. Las sondas reproducen condiciones positivas
   de parámetros, cabeceras y medios declarados por cada mapping.
 - Infraestructura contrastada con matriz: error, enlaces Actuator, health
@@ -75,6 +77,32 @@ PostgreSQL real, conservar su código de salida y publicar los XML de Surefire
 y los informes de contrato. Debe demostrar un resultado correcto y un fallo
 inducido que deje el pipeline en rojo. Los casos negativos locales demuestran
 la detección, pero no sustituyen esa evidencia operativa.
+
+## Revalidación de autenticación — 2026-10-07
+
+Corrección sobre `valeria@fe6161d`: `SecurityConfig` limita las excepciones
+públicas de `/api/v1/auth/login` y `/api/v1/signup` a POST. Se añadieron 16 casos
+de regresión para otros métodos, subrutas y sufijos; todos devuelven 401 sin
+cookie. POST con cuerpo inválido sigue llegando al controller y devuelve 400.
+`me` y `logout` siguen exigiendo sesión. Se actualizó `TenantFilterTest`, cuya
+expectativa anterior permitía GET sobre login y provocó el único fallo de la
+primera ejecución completa.
+
+- Pruebas focalizadas: `mvn.cmd -B -DDB_PORT=5432
+  -Dtest=AuthorizationMatrixTest,AuthorizationApplicationContractTest,AuthorizationContractTest test`:
+  126 pruebas, sin fallos, errores ni omisiones.
+- Puerta final: `mvn.cmd -B -DDB_PORT=5432 verify`: BUILD SUCCESS;
+  346 pruebas, sin fallos, errores ni omisiones, finalizada a las 11:03:06
+  (America/Mexico_City).
+- `TenantIsolationTest`: 5 pruebas aprobadas dentro de la suite completa.
+- Entorno: Java 26.0.2, Maven 3.9.16 y PostgreSQL 18.6 real, `callejon9_test`.
+- El wrapper Windows falló antes de iniciar Maven; se usó Maven instalado.
+- Frontend: no modificado ni reejecutado en esta corrección. Su evidencia del
+  5 de octubre se conserva como validación anterior.
+
+Evidencia de la corrección preparada para entrega en el PR #21, basada en la
+ejecución local descrita arriba. No representa una nueva ejecución de CI ni
+de Jenkins.
 
 ## Límites
 

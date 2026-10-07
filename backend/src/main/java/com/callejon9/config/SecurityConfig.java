@@ -4,6 +4,7 @@ import com.callejon9.tenancy.TenantFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -54,7 +55,7 @@ public class SecurityConfig {
                 // Lista publica cerrada: todo lo demas exige sesion, y cada
                 // controller declara con @PreAuthorize que roles lo usan.
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/login", "/api/v1/signup").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/signup").permitAll()
                         .requestMatchers("/actuator/health", "/v3/api-docs/**",
                                 "/swagger-ui.html", "/swagger-ui/**")
                             .permitAll()
