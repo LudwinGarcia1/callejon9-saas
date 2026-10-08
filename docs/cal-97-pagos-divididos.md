@@ -38,4 +38,6 @@ Se mantienen las 14 tablas protegidas y sus políticas `ENABLE`, `FORCE`, `USING
 
 Las pruebas cubren pagos mixtos, insuficientes y excedentes; cambio, propina, precisión; rollback después de persistir los pagos; cobros concurrentes; RLS entre dos restaurantes y rechazo de vínculos cruzados; mezcla en historial/analítica; texto del PDF y estados de caja. La evidencia de las puertas ejecutadas se registra en `workflow/state/review-history.jsonl`.
 
+`SplitPaymentMigrationTest` prepara V7 con ventas y tickets de dos restaurantes, uno con un pago existente y otro sin pagos. Actualiza hasta V10 con el propietario sin privilegios para evadir RLS y verifica el backfill, la conservación del pago previo sin duplicarlo, las fotografías y las 14 tablas con RLS forzada.
+
 Tarjeta, transferencia y MercadoPago son registros manuales; no ejecutan cobros externos. Quedan fuera dividir por platillo y los reembolsos.
