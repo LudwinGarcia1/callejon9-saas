@@ -1,0 +1,1292 @@
+[
+  {
+    "method": "GET",
+    "path": "/api/v1/analytics",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-5: permisos de AnalyticsController"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/v1/analytics",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-5: permisos de AnalyticsController"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/auth/login",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "ANONYMOUS",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Acceso publico exacto: /api/v1/auth/login"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/auth/logout",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Consultar o cerrar la sesion del usuario autenticado"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/auth/me",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Consultar o cerrar la sesion del usuario autenticado"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/v1/auth/me",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Consultar o cerrar la sesion del usuario autenticado"
+  },
+  {
+    "method": "DELETE",
+    "path": "/error",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "GET",
+    "path": "/error",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "HEAD",
+    "path": "/error",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "OPTIONS",
+    "path": "/error",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "PATCH",
+    "path": "/error",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "POST",
+    "path": "/error",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "PUT",
+    "path": "/error",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "TRACE",
+    "path": "/error",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "DELETE",
+    "path": "/error",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "text/html"
+    ],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "GET",
+    "path": "/error",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "text/html"
+    ],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "HEAD",
+    "path": "/error",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "text/html"
+    ],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "OPTIONS",
+    "path": "/error",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "text/html"
+    ],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "PATCH",
+    "path": "/error",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "text/html"
+    ],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "POST",
+    "path": "/error",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "text/html"
+    ],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "PUT",
+    "path": "/error",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "text/html"
+    ],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "TRACE",
+    "path": "/error",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "text/html"
+    ],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/categories",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-5: catalogo y mesas operativos; gestion ADMIN; estado de mesa ADMIN/WAITER"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/categories",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "WAITER"
+    ],
+    "reason": "CAL-5: catalogo y mesas operativos; gestion ADMIN; estado de mesa ADMIN/WAITER"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/v1/categories",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "WAITER"
+    ],
+    "reason": "CAL-5: catalogo y mesas operativos; gestion ADMIN; estado de mesa ADMIN/WAITER"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/categories/{id}",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-5: catalogo y mesas operativos; gestion ADMIN; estado de mesa ADMIN/WAITER"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/orders/{id}/checkout",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER"
+    ],
+    "reason": "CAL-5: permisos de CheckoutController"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/inventory/items",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-5: inventario consultable por cocina; gestion administrativa"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/inventory/items",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "KITCHEN"
+    ],
+    "reason": "CAL-5: inventario consultable por cocina; gestion administrativa"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/v1/inventory/items",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "KITCHEN"
+    ],
+    "reason": "CAL-5: inventario consultable por cocina; gestion administrativa"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/inventory/items/{id}",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-5: inventario consultable por cocina; gestion administrativa"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/inventory/items/{id}",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-5: inventario consultable por cocina; gestion administrativa"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/inventory/movements",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "KITCHEN"
+    ],
+    "reason": "CAL-5: permisos de InventoryMovementController"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/v1/inventory/movements",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "KITCHEN"
+    ],
+    "reason": "CAL-5: permisos de InventoryMovementController"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/inventory/movements",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "KITCHEN"
+    ],
+    "reason": "CAL-5: permisos de InventoryMovementController"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/kitchen/items/{itemId}/status",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "KITCHEN"
+    ],
+    "reason": "CAL-5: permisos de KitchenController"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/kitchen/orders",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "KITCHEN"
+    ],
+    "reason": "CAL-5: permisos de KitchenController"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/v1/kitchen/orders",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "KITCHEN"
+    ],
+    "reason": "CAL-5: permisos de KitchenController"
+  },
+  {
+    "method": "GET",
+    "path": "/v3/api-docs",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "application/json"
+    ],
+    "roles": [
+      "ADMIN",
+      "ANONYMOUS",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Acceso publico exacto: /v3/api-docs"
+  },
+  {
+    "method": "HEAD",
+    "path": "/v3/api-docs",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "application/json"
+    ],
+    "roles": [
+      "ADMIN",
+      "ANONYMOUS",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Acceso publico exacto: /v3/api-docs"
+  },
+  {
+    "method": "GET",
+    "path": "/v3/api-docs.yaml",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "application/vnd.oai.openapi"
+    ],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "HEAD",
+    "path": "/v3/api-docs.yaml",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "application/vnd.oai.openapi"
+    ],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "GET",
+    "path": "/actuator/health",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "application/json",
+      "application/vnd.spring-boot.actuator.v2+json",
+      "application/vnd.spring-boot.actuator.v3+json"
+    ],
+    "roles": [
+      "ADMIN",
+      "ANONYMOUS",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Acceso publico exacto: /actuator/health"
+  },
+  {
+    "method": "HEAD",
+    "path": "/actuator/health",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "application/json",
+      "application/vnd.spring-boot.actuator.v2+json",
+      "application/vnd.spring-boot.actuator.v3+json"
+    ],
+    "roles": [
+      "ADMIN",
+      "ANONYMOUS",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Acceso publico exacto: /actuator/health"
+  },
+  {
+    "method": "GET",
+    "path": "/actuator/health/**",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "application/json",
+      "application/vnd.spring-boot.actuator.v2+json",
+      "application/vnd.spring-boot.actuator.v3+json"
+    ],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "HEAD",
+    "path": "/actuator/health/**",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "application/json",
+      "application/vnd.spring-boot.actuator.v2+json",
+      "application/vnd.spring-boot.actuator.v3+json"
+    ],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/orders/{id}/items",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "WAITER"
+    ],
+    "reason": "CAL-5: lectura de comandas para piso/caja; escritura para piso"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/orders/{id}/cancel",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "WAITER"
+    ],
+    "reason": "CAL-5: lectura de comandas para piso/caja; escritura para piso"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/orders/{id}",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "WAITER"
+    ],
+    "reason": "CAL-5: lectura de comandas para piso/caja; escritura para piso"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/v1/orders/{id}",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "WAITER"
+    ],
+    "reason": "CAL-5: lectura de comandas para piso/caja; escritura para piso"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/orders",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "WAITER"
+    ],
+    "reason": "CAL-5: lectura de comandas para piso/caja; escritura para piso"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/v1/orders",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "WAITER"
+    ],
+    "reason": "CAL-5: lectura de comandas para piso/caja; escritura para piso"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/orders",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "WAITER"
+    ],
+    "reason": "CAL-5: lectura de comandas para piso/caja; escritura para piso"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/orders/{id}/send-to-kitchen",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "WAITER"
+    ],
+    "reason": "CAL-5: lectura de comandas para piso/caja; escritura para piso"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/platform/plans",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "SUPER_ADMIN"
+    ],
+    "reason": "CAL-5: permisos de PlanController"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/v1/platform/plans",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "SUPER_ADMIN"
+    ],
+    "reason": "CAL-5: permisos de PlanController"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/products",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-5: catalogo y mesas operativos; gestion ADMIN; estado de mesa ADMIN/WAITER"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/products",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "WAITER"
+    ],
+    "reason": "CAL-5: catalogo y mesas operativos; gestion ADMIN; estado de mesa ADMIN/WAITER"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/v1/products",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "WAITER"
+    ],
+    "reason": "CAL-5: catalogo y mesas operativos; gestion ADMIN; estado de mesa ADMIN/WAITER"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/products/{id}",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-5: catalogo y mesas operativos; gestion ADMIN; estado de mesa ADMIN/WAITER"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/products/{id}",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-5: catalogo y mesas operativos; gestion ADMIN; estado de mesa ADMIN/WAITER"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/sales",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER"
+    ],
+    "reason": "CAL-5: permisos de SalesController"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/v1/sales",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER"
+    ],
+    "reason": "CAL-5: permisos de SalesController"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/signup",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "ANONYMOUS",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Acceso publico exacto: /api/v1/signup"
+  },
+  {
+    "method": "GET",
+    "path": "/v3/api-docs/swagger-config",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "application/json"
+    ],
+    "roles": [
+      "ADMIN",
+      "ANONYMOUS",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Acceso publico exacto: /v3/api-docs/swagger-config"
+  },
+  {
+    "method": "HEAD",
+    "path": "/v3/api-docs/swagger-config",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "application/json"
+    ],
+    "roles": [
+      "ADMIN",
+      "ANONYMOUS",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Acceso publico exacto: /v3/api-docs/swagger-config"
+  },
+  {
+    "method": "GET",
+    "path": "/swagger-ui.html",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "ANONYMOUS",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Acceso publico exacto: /swagger-ui.html"
+  },
+  {
+    "method": "HEAD",
+    "path": "/swagger-ui.html",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "ANONYMOUS",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Acceso publico exacto: /swagger-ui.html"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/tables/{id}/status",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "WAITER"
+    ],
+    "reason": "CAL-5: catalogo y mesas operativos; gestion ADMIN; estado de mesa ADMIN/WAITER"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/tables",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-5: catalogo y mesas operativos; gestion ADMIN; estado de mesa ADMIN/WAITER"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/tables",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "WAITER"
+    ],
+    "reason": "CAL-5: catalogo y mesas operativos; gestion ADMIN; estado de mesa ADMIN/WAITER"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/v1/tables",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "WAITER"
+    ],
+    "reason": "CAL-5: catalogo y mesas operativos; gestion ADMIN; estado de mesa ADMIN/WAITER"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/tables/{id}",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-5: catalogo y mesas operativos; gestion ADMIN; estado de mesa ADMIN/WAITER"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/v1/tables/{id}",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-5: catalogo y mesas operativos; gestion ADMIN; estado de mesa ADMIN/WAITER"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/tickets/{id}",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER"
+    ],
+    "reason": "CAL-5: permisos de TicketController"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/v1/tickets/{id}",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER"
+    ],
+    "reason": "CAL-5: permisos de TicketController"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/tickets",
+    "params": [
+      "folio"
+    ],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER"
+    ],
+    "reason": "CAL-5: permisos de TicketController"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/v1/tickets",
+    "params": [
+      "folio"
+    ],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "CASHIER"
+    ],
+    "reason": "CAL-5: permisos de TicketController"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/tickets/{id}/pdf",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "application/pdf"
+    ],
+    "roles": [
+      "ADMIN",
+      "CASHIER"
+    ],
+    "reason": "CAL-5: permisos de TicketController"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/v1/tickets/{id}/pdf",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "application/pdf"
+    ],
+    "roles": [
+      "ADMIN",
+      "CASHIER"
+    ],
+    "reason": "CAL-5: permisos de TicketController"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/users",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-5: permisos de UserController"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/users",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-5: permisos de UserController"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/v1/users",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-5: permisos de UserController"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/users/{id}",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-5: permisos de UserController"
+  },
+  {
+    "method": "GET",
+    "path": "/actuator",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "application/json",
+      "application/vnd.spring-boot.actuator.v2+json",
+      "application/vnd.spring-boot.actuator.v3+json"
+    ],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "HEAD",
+    "path": "/actuator",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [
+      "application/json",
+      "application/vnd.spring-boot.actuator.v2+json",
+      "application/vnd.spring-boot.actuator.v3+json"
+    ],
+    "roles": [
+      "ADMIN",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  }
+]

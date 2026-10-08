@@ -115,7 +115,11 @@ export function statusLabel(props: StatusBadgeProps): string {
 export function StatusBadge(props: StatusBadgeProps & { className?: string }) {
   const { className, ...status } = props;
   return (
-    <Badge data-tone={statusTone(status)} className={className}>
+    <Badge
+      variant={status.kind === "stock" && status.status === "NEGATIVE" ? "destructive" : "tone"}
+      data-tone={statusTone(status)}
+      className={className}
+    >
       {statusLabel(status)}
     </Badge>
   );

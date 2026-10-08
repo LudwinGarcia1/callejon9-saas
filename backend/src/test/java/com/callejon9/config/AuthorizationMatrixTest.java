@@ -82,6 +82,23 @@ class AuthorizationMatrixTest {
                 // Publicas: llegan al controller sin cookie y fallan por validacion, no por sesion.
                 Arguments.of(HttpMethod.POST, "/api/v1/auth/login", 400),
                 Arguments.of(HttpMethod.POST, "/api/v1/signup", 400),
+                // Otros metodos y rutas parecidas no heredan acceso publico.
+                Arguments.of(HttpMethod.GET, "/api/v1/auth/login", 401),
+                Arguments.of(HttpMethod.HEAD, "/api/v1/auth/login", 401),
+                Arguments.of(HttpMethod.PUT, "/api/v1/auth/login", 401),
+                Arguments.of(HttpMethod.PATCH, "/api/v1/auth/login", 401),
+                Arguments.of(HttpMethod.DELETE, "/api/v1/auth/login", 401),
+                Arguments.of(HttpMethod.OPTIONS, "/api/v1/auth/login", 401),
+                Arguments.of(HttpMethod.GET, "/api/v1/signup", 401),
+                Arguments.of(HttpMethod.HEAD, "/api/v1/signup", 401),
+                Arguments.of(HttpMethod.PUT, "/api/v1/signup", 401),
+                Arguments.of(HttpMethod.PATCH, "/api/v1/signup", 401),
+                Arguments.of(HttpMethod.DELETE, "/api/v1/signup", 401),
+                Arguments.of(HttpMethod.OPTIONS, "/api/v1/signup", 401),
+                Arguments.of(HttpMethod.POST, "/api/v1/auth/login/extra", 401),
+                Arguments.of(HttpMethod.POST, "/api/v1/signup/extra", 401),
+                Arguments.of(HttpMethod.POST, "/api/v1/auth/login-other", 401),
+                Arguments.of(HttpMethod.POST, "/api/v1/signup-other", 401),
                 Arguments.of(HttpMethod.GET, "/actuator/health", 200),
                 Arguments.of(HttpMethod.GET, "/v3/api-docs", 200),
                 // Bajo /auth pero con sesion obligatoria.
