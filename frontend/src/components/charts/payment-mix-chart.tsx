@@ -46,7 +46,7 @@ export function PaymentMixChart({ data }: PaymentMixChartProps) {
         className="w-full"
         style={{ backgroundColor: "var(--surface)" }}
         role="img"
-        aria-label="Ventas por metodo de pago"
+        aria-label="Ingresos por método de pago"
       >
         <line
           x1={MARGIN.left}
@@ -104,7 +104,7 @@ export function PaymentMixChart({ data }: PaymentMixChartProps) {
                 fill="transparent"
                 tabIndex={0}
                 role="button"
-                aria-label={`${label}: ${formatCurrency(row.total)}, ${row.count} ventas, ${row.share.toFixed(1)}% del total`}
+                aria-label={`${label}: ${formatCurrency(row.total)}, ${row.count} pagos, ${row.share.toFixed(1)}% del total`}
                 onMouseEnter={() => setHovered(i)}
                 onMouseLeave={() => setHovered(null)}
                 onFocus={() => setHovered(i)}
@@ -126,7 +126,7 @@ export function PaymentMixChart({ data }: PaymentMixChartProps) {
           </p>
           <p style={{ color: "var(--ink-secondary)" }}>
             {formatCurrency(data[hovered].total)} · {data[hovered].count}{" "}
-            {data[hovered].count === 1 ? "venta" : "ventas"} · {data[hovered].share.toFixed(1)}%
+            {data[hovered].count === 1 ? "pago" : "pagos"} · {data[hovered].share.toFixed(1)}%
           </p>
         </ChartTooltip>
       )}
@@ -146,7 +146,7 @@ export function PaymentMixTable({ data }: PaymentMixChartProps) {
       <TableHeader>
         <TableRow>
           <TableHead>Metodo</TableHead>
-          <TableHead>Ventas</TableHead>
+          <TableHead>Pagos</TableHead>
           <TableHead>Total</TableHead>
           <TableHead>% del total</TableHead>
         </TableRow>

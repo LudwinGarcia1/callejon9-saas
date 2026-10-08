@@ -45,6 +45,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @DisplayName("Checkout")
 class CheckoutControllerTest {
+    @org.springframework.test.context.bean.override.mockito.MockitoSpyBean
+    private com.callejon9.ticket.repository.TicketRepository ticketRepository;
 
     @Autowired private MockMvc mockMvc;
     @Autowired private TenantOnboardingService onboardingService;
@@ -83,11 +85,152 @@ class CheckoutControllerTest {
     @AfterEach
     void cleanUp() {
         TenantContext.clear();
-        jdbcTemplate.update("DELETE FROM tenants WHERE slug = 'checkout-test'");
+        jdbcTemplate.update("DELETE FROM tenants WHERE slug IN ('checkout-test', 'checkout-other')");
     }
 
     private Cookie cookieFor(User user) {
         return new Cookie("access_token", testSessions.accessTokenFor(user));
+    }
+
+    private UUID orderFor500() throws Exception {
+        var id = openOrder();
+        addItem(id, createProduct("Cuenta", "500.00"), 1);
+        return id;
+    }
+
+    @Test
+    void failureAfterPaymentsAreFlushedRollsBackEntireCheckout() throws Exception {
+        var id = orderFor500();
+        org.mockito.Mockito.doThrow(new IllegalStateException("forced ticket failure"))
+                .when(ticketRepository).save(org.mockito.ArgumentMatchers.any(com.callejon9.ticket.domain.Ticket.class));
+        try {
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> mockMvc.perform(
+                    post("/api/v1/orders/" + id + "/checkout").cookie(cookieFor(cashier))
+                    .contentType(MediaType.APPLICATION_JSON).content("{\"tipPercent\":0,\"payments\":[{\"method\":\"CASH\",\"amount\":500}]}")))
+                    .hasRootCauseInstanceOf(IllegalStateException.class);
+        } finally { org.mockito.Mockito.reset(ticketRepository); }
+        TenantContext.set(tenant.getId());
+        try {
+            transactionTemplate.executeWithoutResult(s -> {
+                for (var name : java.util.List.of("sales", "tickets", "payments"))
+                    assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM " + name, Integer.class)).isZero();
+                assertThat(jdbcTemplate.queryForObject("SELECT status FROM orders WHERE id=?", String.class, id)).isEqualTo("NEW");
+                assertThat(jdbcTemplate.queryForObject("SELECT status FROM restaurant_tables WHERE id=?", String.class, table.getId())).isEqualTo("OCCUPIED");
+            });
+        } finally { TenantContext.clear(); }
+    }
+
+    @Test
+    void concurrentCheckoutCreatesOnlyOneSaleAndPayment() throws Exception {
+        var id = orderFor500();
+        var start = new java.util.concurrent.CountDownLatch(1);
+        try (var executor = java.util.concurrent.Executors.newFixedThreadPool(2)) {
+            java.util.concurrent.Callable<Integer> checkout = () -> {
+                start.await();
+                return mockMvc.perform(post("/api/v1/orders/" + id + "/checkout").cookie(cookieFor(cashier))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"tipPercent\":0,\"payments\":[{\"method\":\"CASH\",\"amount\":500}]}"))
+                        .andReturn().getResponse().getStatus();
+            };
+            var first = executor.submit(checkout); var second = executor.submit(checkout); start.countDown();
+            assertThat(java.util.List.of(first.get(30, java.util.concurrent.TimeUnit.SECONDS),
+                    second.get(30, java.util.concurrent.TimeUnit.SECONDS))).containsExactlyInAnyOrder(201, 409);
+        }
+        TenantContext.set(tenant.getId());
+        try { transactionTemplate.executeWithoutResult(s -> {
+            assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM sales", Integer.class)).isEqualTo(1);
+            assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM payments", Integer.class)).isEqualTo(1);
+        }); } finally { TenantContext.clear(); }
+    }
+
+    @Test
+    void paymentsAreInvisibleAndRejectForeignTenantInsert() throws Exception {
+        var id = orderFor500();
+        var response = mockMvc.perform(post("/api/v1/orders/" + id + "/checkout").cookie(cookieFor(cashier))
+                .contentType(MediaType.APPLICATION_JSON).content("{\"tipPercent\":0,\"payments\":[{\"method\":\"CASH\",\"amount\":500}]}"))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        var saleId = UUID.fromString(new com.fasterxml.jackson.databind.ObjectMapper().readTree(response).get("saleId").asText());
+        var otherTenant = onboardingService.onboard("Other Restaurant", "checkout-other",
+                "admin@other.example", "Admin", "Secreto123!", "FREE");
+        TenantContext.set(otherTenant.getId());
+        try {
+            assertThat(transactionTemplate.<Integer>execute(s -> jdbcTemplate.queryForObject("SELECT count(*) FROM payments", Integer.class))).isZero();
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> transactionTemplate.executeWithoutResult(s ->
+                    jdbcTemplate.update("INSERT INTO payments(tenant_id,sale_id,provider,method,amount,received_amount,status) VALUES(?,?,'MANUAL','CASH',1,1,'COMPLETED')",
+                            tenant.getId(), saleId)))
+                    .rootCause().isInstanceOfSatisfying(java.sql.SQLException.class,
+                            e -> assertThat(e.getSQLState()).isEqualTo("42501"));
+            org.assertj.core.api.Assertions.assertThatThrownBy(() -> transactionTemplate.executeWithoutResult(s ->
+                    jdbcTemplate.update("INSERT INTO payments(tenant_id,sale_id,provider,method,amount,received_amount,status) VALUES(?,?,'MANUAL','CASH',1,1,'COMPLETED')",
+                            otherTenant.getId(), saleId)))
+                    .rootCause().isInstanceOfSatisfying(java.sql.SQLException.class,
+                            e -> assertThat(e.getSQLState()).isEqualTo("23503"));
+        } finally { TenantContext.clear(); }
+    }
+
+    @Test
+    void mixedPaymentsAreStoredAndAppearInTicketHistoryAndAnalytics() throws Exception {
+        var id = orderFor500();
+        var body = mockMvc.perform(post("/api/v1/orders/" + id + "/checkout")
+                .cookie(cookieFor(cashier)).contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"tipPercent":0,"payments":[{"method":"CASH","amount":300},{"method":"CARD","amount":200}]}
+                    """))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.paymentMethod").value("MIXED"))
+                .andExpect(jsonPath("$.payments.length()").value(2))
+                .andExpect(jsonPath("$.payments[0].amount").value(300))
+                .andExpect(jsonPath("$.change").value(0)).andReturn().getResponse().getContentAsString();
+        var json = new com.fasterxml.jackson.databind.ObjectMapper().readTree(body);
+        mockMvc.perform(get("/api/v1/tickets/" + json.get("id").asText()).cookie(cookieFor(cashier)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.payments[1].amount").value(200));
+        TenantContext.set(tenant.getId());
+        try {
+            assertThat(transactionTemplate.<Integer>execute(s -> jdbcTemplate.queryForObject(
+                    "SELECT count(*) FROM payments WHERE sale_id = ?", Integer.class,
+                    UUID.fromString(json.get("saleId").asText())))).isEqualTo(2);
+        } finally { TenantContext.clear(); }
+        mockMvc.perform(get("/api/v1/sales").cookie(cookieFor(cashier)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.paymentMix[0].method").value("CASH"))
+                .andExpect(jsonPath("$.paymentMix[0].total").value(300))
+                .andExpect(jsonPath("$.paymentMix[1].total").value(200));
+        TenantContext.set(tenant.getId());
+        UUID adminId;
+        try { adminId = transactionTemplate.execute(s -> jdbcTemplate.queryForObject(
+                "SELECT id FROM users WHERE role = 'ADMIN'", UUID.class)); }
+        finally { TenantContext.clear(); }
+        var admin = User.builder().role(UserRole.ADMIN).build();
+        admin.setId(adminId); admin.setTenantId(tenant.getId());
+        mockMvc.perform(get("/api/v1/analytics").cookie(cookieFor(admin)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.paymentMix[0].total").value(300))
+                .andExpect(jsonPath("$.paymentMix[1].total").value(200));
+    }
+
+    @Test
+    void cashOverpaymentProducesChangeAndAppliedPaymentOnly() throws Exception {
+        var id = orderFor500();
+        mockMvc.perform(post("/api/v1/orders/" + id + "/checkout").cookie(cookieFor(cashier))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"tipPercent\":0,\"payments\":[{\"method\":\"CASH\",\"amount\":600}]}"))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.payments[0].amount").value(500))
+                .andExpect(jsonPath("$.payments[0].receivedAmount").value(600))
+                .andExpect(jsonPath("$.change").value(100));
+    }
+
+    @Test
+    void invalidPaymentTotalsLeaveNoSaleTicketOrPayments() throws Exception {
+        var id = orderFor500();
+        for (var payment : java.util.List.of("{\"method\":\"CASH\",\"amount\":400}",
+                "{\"method\":\"CARD\",\"amount\":600}", "{\"method\":\"MIXED\",\"amount\":500}")) {
+            mockMvc.perform(post("/api/v1/orders/" + id + "/checkout").cookie(cookieFor(cashier))
+                    .contentType(MediaType.APPLICATION_JSON).content("{\"tipPercent\":0,\"payments\":[" + payment + "]}"))
+                    .andExpect(status().isUnprocessableEntity());
+        }
+        TenantContext.set(tenant.getId());
+        try {
+            transactionTemplate.executeWithoutResult(s -> {
+                for (var name : java.util.List.of("sales", "tickets", "payments"))
+                    assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM " + name, Integer.class)).isZero();
+            });
+        } finally { TenantContext.clear(); }
     }
 
     private Product createProduct(String name, String price) {
