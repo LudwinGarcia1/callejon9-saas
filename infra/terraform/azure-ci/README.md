@@ -38,6 +38,7 @@ El endpoint privado de Jenkins es la URL de la VM en la tailnet (`jenkins_url`).
 - Terraform 1.9 o superior y Azure CLI.
 - Una cuenta con permiso para crear asignaciones de rol en la suscripción (Owner, o Contributor más User Access Administrator).
 - Suscripción objetivo: Azure for Students, región East US (`eastus`). La suscripción tiene asignada la política «Allowed resource deployment regions», que solo permite `westus`, `eastus`, `centralus`, `westus2` y `canadacentral` (verificado con `az policy assignment list` el 2026-10-08). Cualquier otra región se rechaza en el `apply`.
+- El tamaño `Standard_D2as_v4` usa disco SCSI, que es lo que asume `infra/jenkins/provision.sh`. Los tamaños v6 y v7 exigen NVMe y no se han probado.
 
 ## Procedimiento
 

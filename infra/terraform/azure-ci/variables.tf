@@ -31,7 +31,7 @@ variable "jenkins_home_disk_size_gb" {
 variable "jenkins_vm_size" {
   description = "VM size for the Jenkins controller and its local agent."
   type        = string
-  default     = "Standard_B2ms"
+  default     = "Standard_D2as_v4"
 }
 
 variable "admin_ssh_public_key" {

@@ -6,7 +6,7 @@ Servidor de CI de RestoHub: un controller Jenkins LTS y un agente local en una V
 
 | Pieza | Dónde | Detalle |
 |---|---|---|
-| VM | `vm-jenkins` (`infra/terraform/azure-ci/jenkins.tf`) | Ubuntu 24.04 LTS, `Standard_B2ms` por defecto, identidad `id-jenkins` |
+| VM | `vm-jenkins` (`infra/terraform/azure-ci/jenkins.tf`) | Ubuntu 24.04 LTS, `Standard_D2as_v4` (2 vCPU, 8 GB, disco SCSI) por defecto, identidad `id-jenkins` |
 | Controller | Contenedor `jenkins` (`systemd/jenkins-controller.service`) | Imagen `Dockerfile`: Jenkins `2.580.1-lts-jdk21` fijada por digest; publicado solo en `127.0.0.1:8080`; 0 ejecutores |
 | Plugins | `plugins.txt` | Lock completo de 83 plugins, incluidas dependencias transitivas |
 | Configuración | `casc/jenkins.yaml` | JCasC: usuario `admin`, sin registro, sin lectura anónima, nodo `local-agent` |
