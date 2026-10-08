@@ -120,9 +120,17 @@ cd backend
 .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=demo"
 ```
 
-Flyway aplica las seis migraciones al arrancar. La API queda en `http://localhost:8080` y la documentación navegable en `http://localhost:8080/swagger-ui.html`.
+Flyway aplica las migraciones pendientes al arrancar. La API queda en `http://localhost:8080` y la documentación navegable en `http://localhost:8080/swagger-ui.html`.
 
-El perfil `demo` extiende el token de acceso a dos horas. **El valor de producción son 15 minutos y así se queda**: el perfil existe solo para que una sesión no expire a mitad de una presentación.
+La sesión se sostiene con un segundo token. El login emite dos cookies `httpOnly` y `SameSite=Strict`: `access_token` (JWT de 15 minutos) y `refresh_token` (limitada a `/api/v1/auth`). Cuando una petición recibe 401, el cliente llama una sola vez a `POST /api/v1/auth/refresh`, que consume el refresh token, emite un par nuevo y repite la petición original. Presentar un refresh token ya consumido revoca la sesión completa. La sesión dura como máximo `app.jwt.refresh-token-days` (7 días) desde el login: renovar no la alarga. En la base solo se guarda el SHA-256 del secreto del token.
+
+El logout invalida la sesión en el servidor, no solo en el navegador. Cada access token lleva el identificador de su sesión (claim `sid`). En cada petición HTTP y en el handshake del WebSocket, el backend comprueba que esa sesión siga vigente. Logout, la detección de reutilización o el vencimiento de la sesión cortan al instante todos los access tokens de esa sesión, aunque su JWT todavía no expire. Las demás sesiones del mismo usuario siguen activas. Desactivar a un usuario revoca todas sus sesiones en la misma transacción, así que pierde el acceso en su siguiente petición; si la desactivación se rechaza (último administrador o autodesactivación), no se revoca nada. La comprobación cuesta una lectura indexada por petición y corre con el tenant del token, así que RLS impide que un `sid` de otro restaurante encuentre una sesión ajena. El logout exige una sesión vigente; si el access token ya venció, el cliente renueva la sesión y repite el logout para que se revoque en el servidor.
+
+Las conexiones WebSocket ya abiertas también se cortan. Cada instancia del backend lleva el registro de sus conexiones con el `sid` de cada una, y cada `app.realtime.session-check-interval` (30 s por defecto) consulta en la base cuáles de esas sesiones siguen vigentes y cierra las demás con el código 1008. Como la fuente de verdad es la base, una revocación hecha en otra instancia se detecta igual. La latencia máxima entre revocar y cortar es ese intervalo; el costo es una consulta indexada por restaurante con conexiones abiertas en cada ciclo, sin consultas por mensaje.
+
+El token de acceso dura 15 minutos en todos los perfiles, incluido `demo`. La renovación automática evita que la sesión se corte a media presentación.
+
+Las cookies llevan el atributo `Secure` salvo que `AUTH_COOKIE_SECURE=false`. `scripts/run-dev.ps1` y el perfil `demo` lo desactivan porque en local no hay HTTPS. En cualquier otro entorno la API debe servirse detrás de HTTPS.
 
 ### 3. Frontend
 
@@ -191,6 +199,7 @@ Las que más importan:
 | `TenantFilterHttpTest` | Autorización sobre Tomcat embebido real, no MockMvc |
 | `BcryptCompatibilityTest` | Un hash generado por la librería `bcrypt` de Python valida bajo Spring Security |
 | `TenantSubscriptionInterceptorTest` | Un inquilino no puede suscribirse al canal de tiempo real de otro |
+| `RevokedSessionSweeperTest` | Revocar una sesión, aun desde otra instancia, cierra sus conexiones WebSocket sin tocar las demás |
 | `TenantOnboardingServiceCompensationTest` | El alta revierte el inquilino si falla la creación del administrador |
 
 `BcryptCompatibilityTest` merece una nota: confirma que los usuarios del sistema Flask conservan su contraseña tras la migración. Dejó de ser una suposición del diseño y pasó a ser una prueba automatizada.

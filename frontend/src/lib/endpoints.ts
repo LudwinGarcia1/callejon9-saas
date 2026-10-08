@@ -8,6 +8,8 @@ export const endpoints = {
     signup: () => "/api/v1/signup",
     login: () => "/api/v1/auth/login",
     logout: () => "/api/v1/auth/logout",
+    /** Rota el refresh token (cookie httpOnly) y emite un par nuevo. 204 o 401. */
+    refresh: () => "/api/v1/auth/refresh",
     /** No verificado: GET /api/v1/auth/me todavia no existe en el backend. */
     me: () => "/api/v1/auth/me",
   },

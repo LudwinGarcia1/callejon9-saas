@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Money } from "@/components/shared/money";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { formatShortTime } from "@/lib/format";
 import type { TicketResponse } from "@/lib/types";
@@ -31,18 +32,11 @@ export function TicketSummary({ ticket }: TicketSummaryProps) {
   async function handleDownloadPdf() {
     setIsDownloading(true);
     try {
-      // fetch directo con credenciales: la ruta necesita la cookie httpOnly,
-      // y una descarga por window.open no la reenviaria de forma confiable a
-      // traves del proxy. El blob se convierte en un object URL efimero solo
-      // para disparar la descarga.
-      const response = await fetch(endpoints.tickets.pdf(ticket.id), {
-        credentials: "include",
-      });
-      if (!response.ok) {
-        throw new Error("El servidor no pudo generar el PDF del ticket.");
-      }
-
-      const blob = await response.blob();
+      // Descarga por fetch con credenciales: la ruta necesita la cookie
+      // httpOnly, y una descarga por window.open no la reenviaria de forma
+      // confiable a traves del proxy ni renovaria una sesion vencida. El blob
+      // se convierte en un object URL efimero solo para disparar la descarga.
+      const blob = await api.blob(endpoints.tickets.pdf(ticket.id));
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;

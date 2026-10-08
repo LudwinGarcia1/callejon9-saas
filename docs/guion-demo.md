@@ -29,7 +29,7 @@ npm run build
 npm start
 ```
 
-El perfil `demo` extiende el token a dos horas. **Sin él la sesión expira a los quince minutos**, probablemente a media presentación.
+El token de acceso dura quince minutos también en el perfil `demo`. La sesión no se corta a media presentación porque el cliente la renueva solo. El perfil `demo` solo desactiva el atributo `Secure` de las cookies, porque en local no hay HTTPS.
 
 Usar `npm start` y no `npm run dev`: en desarrollo Turbopack compila cada ruta la primera vez que se visita, y esa pausa de varios segundos se nota. Los dos comandos comparten el directorio `.next` y no deben correr a la vez.
 

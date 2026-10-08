@@ -1,10 +1,10 @@
 package com.callejon9.sale;
 
-import com.callejon9.auth.service.JwtService;
 import com.callejon9.catalog.domain.Product;
 import com.callejon9.catalog.repository.ProductRepository;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
+import com.callejon9.support.TestSessions;
 import com.callejon9.table.domain.RestaurantTable;
 import com.callejon9.table.domain.TableStatus;
 import com.callejon9.table.repository.RestaurantTableRepository;
@@ -50,7 +50,7 @@ class CheckoutControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private TenantOnboardingService onboardingService;
-    @Autowired private JwtService jwtService;
+    @Autowired private TestSessions testSessions;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private TransactionTemplate transactionTemplate;
     @Autowired private UserRepository userRepository;
@@ -89,7 +89,7 @@ class CheckoutControllerTest {
     }
 
     private Cookie cookieFor(User user) {
-        return new Cookie("access_token", jwtService.generateAccessToken(user));
+        return new Cookie("access_token", testSessions.accessTokenFor(user));
     }
 
     private UUID orderFor500() throws Exception {

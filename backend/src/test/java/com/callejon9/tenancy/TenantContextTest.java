@@ -55,4 +55,35 @@ class TenantContextTest {
 
         assertThat(seenByOtherThread[0]).isNull();
     }
+
+    @Test
+    void callAsRestoresThePreviousTenant() {
+        UUID requestTenant = UUID.randomUUID();
+        UUID tokenTenant = UUID.randomUUID();
+        TenantContext.set(requestTenant);
+
+        UUID seenInside = TenantContext.callAs(tokenTenant, TenantContext::require);
+
+        assertThat(seenInside).isEqualTo(tokenTenant);
+        assertThat(TenantContext.require()).isEqualTo(requestTenant);
+    }
+
+    @Test
+    void callAsLeavesNoTenantBehindWhenThereWasNone() {
+        TenantContext.callAs(UUID.randomUUID(), TenantContext::require);
+
+        assertThat(TenantContext.currentOrNull()).isNull();
+    }
+
+    @Test
+    void callAsRestoresTheContextEvenWhenTheActionFails() {
+        UUID requestTenant = UUID.randomUUID();
+        TenantContext.set(requestTenant);
+
+        assertThatThrownBy(() -> TenantContext.callAs(UUID.randomUUID(), () -> {
+            throw new IllegalStateException("falla dentro");
+        })).isInstanceOf(IllegalStateException.class);
+
+        assertThat(TenantContext.require()).isEqualTo(requestTenant);
+    }
 }

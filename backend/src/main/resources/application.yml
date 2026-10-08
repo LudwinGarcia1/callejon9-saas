@@ -44,13 +44,24 @@ app:
   jwt:
     secret: ${JWT_SECRET:dev-only-secret-change-me-min-32-bytes-long!!}
     access-token-minutes: 15
+    # Vida maxima de una sesion. Renovar rota el refresh token pero no la
+    # alarga: los tokens rotados heredan la expiracion del login.
     refresh-token-days: 7
 
   auth:
-    # Atributo Secure de la cookie access_token. Debe ser true detras de
-    # HTTPS; en local el backend corre sobre http y el navegador la
-    # descartaria.
-    secure-cookie: ${AUTH_SECURE_COOKIE:false}
+    # Atributo Secure de las cookies de sesion. Activo por defecto: fuera de
+    # desarrollo la API solo debe servirse detras de HTTPS. Para trabajar
+    # contra http://localhost, scripts/run-dev.ps1 lo desactiva.
+    # AUTH_SECURE_COOKIE es el nombre anterior de la variable y se sigue
+    # aceptando; si ambas existen, manda AUTH_COOKIE_SECURE.
+    cookie-secure: ${AUTH_COOKIE_SECURE:${AUTH_SECURE_COOKIE:true}}
+
+  realtime:
+    # Cada cuanto se revisan las conexiones WebSocket abiertas para cerrar las
+    # de sesiones revocadas (logout, reutilizacion, baja del usuario). Es la
+    # latencia maxima entre revocar y cortar; cada ciclo cuesta una consulta
+    # por restaurante con conexiones abiertas.
+    session-check-interval: PT30S
 
 server:
   port: 8080

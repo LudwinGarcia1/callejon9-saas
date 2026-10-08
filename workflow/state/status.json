@@ -2,7 +2,12 @@
   "schemaVersion": 1,
   "activeIssue": null,
   "activePhase": null,
-  "lastReview": null,
+  "lastReview": {
+    "date": "2026-10-08",
+    "issue": "CAL-96",
+    "branch": "feat/cal-96-close-revoked-websockets",
+    "verdict": "aprobable; B1-B3 corregidos, B4 riesgo residual; backend verify 415/415 en modo externo"
+  },
   "lastBacklogSync": {
     "date": "2026-09-11",
     "projectId": "29d324c8-6703-4eca-809b-6285f4f3cb72",

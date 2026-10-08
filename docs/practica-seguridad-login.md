@@ -44,7 +44,7 @@ El proyecto ya tenía autenticación con JWT en cookie `HttpOnly`, autorización
 | `backend/.../auth/web/dto/LoginRequest.java` | `@Pattern` para el slug, `@Email` y `@Size(max=180)` para el correo, `@Size(max=100)` para la contraseña, mensajes en español. Sin mínimo de contraseña para no revelar la política. |
 | `backend/.../shared/error/GlobalExceptionHandler.java` | Nuevo manejador de `HttpMessageNotReadableException` con detalle fijo; solo registra el tipo de la causa. |
 | `backend/.../auth/web/AuthController.java` | `Secure` configurable en login y logout; logout con los mismos atributos que login. |
-| `backend/src/main/resources/application.yml` | `app.auth.secure-cookie: ${AUTH_SECURE_COOKIE:false}`. |
+| `backend/src/main/resources/application.yml` | `app.auth.secure-cookie: ${AUTH_SECURE_COOKIE:false}`. Al integrar la rotación de tokens (CAL-6) se unificó en `app.auth.cookie-secure: ${AUTH_COOKIE_SECURE:${AUTH_SECURE_COOKIE:true}}`: activo por defecto, `AUTH_SECURE_COOKIE` se sigue aceptando y `scripts/run-dev.ps1` lo apaga en local. |
 | `frontend/src/lib/login-validation.ts` | `validateLogin()`: recorta y normaliza el slug, recorta el correo (sin cambiar mayúsculas, porque el backend lo compara tal cual), no toca la contraseña. |
 | `frontend/src/app/login/login-view.tsx` | Valida antes de enviar; si falla, la petición no sale. `noValidate` para que los mensajes sean los propios y no los del navegador. Borra la contraseña tras un error. |
 | `frontend/src/components/shared/field-error.tsx` | Acepta un mensaje local además del que manda el backend. |
