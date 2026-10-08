@@ -19,11 +19,6 @@ export const ROLE_LANDING_PATH: Record<UserRole, string> = {
 
 /**
  * Sesion del usuario autenticado, leida de GET /api/v1/auth/me.
- *
- * Ese endpoint todavia no existe en el backend — se esta agregando en
- * paralelo en otro workstream — asi que mientras tanto esta consulta
- * responde 404. El hook queda escrito contra el contrato esperado
- * (`SessionResponse`) para no bloquear el resto del frontend.
  */
 export function useSession() {
   const queryClient = useQueryClient();

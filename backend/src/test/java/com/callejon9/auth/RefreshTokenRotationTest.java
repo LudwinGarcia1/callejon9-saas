@@ -149,7 +149,9 @@ class RefreshTokenRotationTest {
     void logoutRevokesTheSession() throws Exception {
         Session session = login("refresh-test", "admin@refresh.com");
 
-        mockMvc.perform(post("/api/v1/auth/logout").cookie(new Cookie(REFRESH, session.refresh())))
+        // El logout exige sesion (CAL-5); el navegador envia ambas cookies.
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .cookie(new Cookie(ACCESS, session.access()), new Cookie(REFRESH, session.refresh())))
                 .andExpect(status().isNoContent())
                 .andExpect(cookie().maxAge(ACCESS, 0))
                 .andExpect(cookie().maxAge(REFRESH, 0))
@@ -241,8 +243,11 @@ class RefreshTokenRotationTest {
                         .cookie(new Cookie(ACCESS, sessionB.access())))
                 .andExpect(status().isUnauthorized());
 
-        // Un logout con el mismo token cruzado tampoco revoca nada en A.
-        mockMvc.perform(post("/api/v1/auth/logout").cookie(new Cookie(REFRESH, crossTenant)))
+        // Un logout con el mismo token cruzado tampoco revoca nada en A. El
+        // logout exige sesion (CAL-5), asi que va con la de B.
+        mockMvc.perform(post("/api/v1/auth/logout")
+                        .cookie(new Cookie(REFRESH, crossTenant))
+                        .cookie(new Cookie(ACCESS, sessionB.access())))
                 .andExpect(status().isNoContent());
 
         assertThat(tokensOf(tenantA.getId()))

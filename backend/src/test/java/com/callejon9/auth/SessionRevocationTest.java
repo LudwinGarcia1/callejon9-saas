@@ -93,13 +93,14 @@ class SessionRevocationTest {
     }
 
     @Test
-    @DisplayName("un logout con un access token ya revocado y sin refresh no falla")
-    void logoutWithARevokedAccessTokenStillSucceeds() throws Exception {
+    @DisplayName("un segundo logout con el access token ya revocado responde 401: no queda sesion que cerrar")
+    void logoutWithARevokedAccessTokenIsUnauthorized() throws Exception {
         Session session = login("revocacion-test", "admin@revocacion.com");
         logout(session);
 
+        // El logout exige sesion vigente (CAL-5); la revocada ya no autentica.
         mockMvc.perform(post("/api/v1/auth/logout").cookie(new Cookie(ACCESS, session.access())))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

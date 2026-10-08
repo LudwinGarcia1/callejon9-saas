@@ -18,8 +18,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -55,7 +59,9 @@ class AuthControllerTest {
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(cookie().exists("access_token"))
-                .andExpect(cookie().httpOnly("access_token", true));
+                .andExpect(cookie().httpOnly("access_token", true))
+                .andExpect(content().string(not(containsString("Secreto123!"))))
+                .andExpect(content().string(not(containsString("access_token"))));
     }
 
     @Test
@@ -106,5 +112,68 @@ class AuthControllerTest {
                                 {"slug":"no-existe","email":"admin@login.com","password":"Secreto123!"}
                                 """))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("P01: campos vacios se rechazan con 400 y un mensaje por campo")
+    void blankFieldsAreRejectedBeforeAuthenticating() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"slug":"","email":"   ","password":""}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(cookie().doesNotExist("access_token"))
+                .andExpect(jsonPath("$.title").value("Validacion fallida"))
+                .andExpect(jsonPath("$.errors.slug").exists())
+                .andExpect(jsonPath("$.errors.email").exists())
+                .andExpect(jsonPath("$.errors.password").value("Ingresa tu contrasena."));
+    }
+
+    @Test
+    @DisplayName("P02: datos invalidos devuelven un mensaje controlado sin repetir la entrada")
+    void invalidFormatsReturnAControlledMessage() throws Exception {
+        String longPassword = "x".repeat(101);
+
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"slug":"Login Test' OR '1'='1","email":"no-es-correo","password":"%s"}
+                                """.formatted(longPassword)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.slug")
+                        .value("Solo minusculas, numeros y guiones, entre 3 y 80 caracteres."))
+                .andExpect(jsonPath("$.errors.email").value("Ingresa un correo valido."))
+                .andExpect(jsonPath("$.errors.password")
+                        .value("La contrasena no puede exceder 100 caracteres."))
+                .andExpect(content().string(not(containsString(longPassword))))
+                .andExpect(content().string(not(containsString("OR '1'='1"))));
+    }
+
+    @Test
+    @DisplayName("P02: un cuerpo malformado no expone detalles internos ni la contrasena")
+    void malformedBodyDoesNotLeakInternals() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"slug\":\"login-test\",\"password\":\"Secreto123!\""))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail")
+                        .value("El cuerpo de la solicitud no tiene un formato valido."))
+                .andExpect(content().string(not(containsString("Secreto123!"))))
+                .andExpect(content().string(not(containsString("Jackson"))))
+                .andExpect(content().string(not(containsString("LoginRequest"))));
+    }
+
+    @Test
+    @DisplayName("un 401 no revela cual de los tres datos fallo")
+    void unauthorizedResponseHasNoBody() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"slug":"login-test","email":"nadie@login.com","password":"Secreto123!"}
+                                """))
+                .andExpect(status().isUnauthorized())
+                .andExpect(cookie().doesNotExist("access_token"))
+                .andExpect(content().string(""));
     }
 }

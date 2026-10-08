@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { COMMON_SECURITY_HEADERS, HSTS_POLICY } from "./src/lib/security-headers";
 
 /**
  * Origen del backend. Es server-only (sin prefijo NEXT_PUBLIC_) porque este
@@ -8,6 +9,18 @@ import type { NextConfig } from "next";
 const BACKEND_ORIGIN = process.env.BACKEND_ORIGIN ?? "http://localhost:8080";
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  async headers() {
+    return [{
+      source: "/:path*",
+      headers: [
+        ...COMMON_SECURITY_HEADERS,
+        ...(process.env.NODE_ENV === "production" && process.env.SECURITY_HSTS_ENABLED !== "false"
+          ? [{ key: "Strict-Transport-Security", value: HSTS_POLICY }]
+          : []),
+      ],
+    }];
+  },
   /**
    * El backend no tiene configuracion de CORS y a proposito no se le agrega
    * ninguna. En vez de eso, Next reenvia /api/v1/* al backend del lado del

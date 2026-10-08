@@ -32,6 +32,7 @@ public class ProductController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','WAITER','KITCHEN','CASHIER')")
     public List<ProductResponse> list(
             @RequestParam(required = false) UUID categoryId,
             @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {

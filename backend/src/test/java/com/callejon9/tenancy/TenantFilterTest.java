@@ -11,9 +11,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.MediaType;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -66,13 +68,13 @@ class TenantFilterTest {
     }
 
     @Test
-    void loginEndpointIsPublic() throws Exception {
-        // Un GET contra una ruta mapeada solo a POST da 405 Method Not
-        // Allowed. Eso prueba que la peticion atraveso la cadena de seguridad
-        // sin autenticacion y llego al DispatcherServlet: un 401 aqui
-        // significaria que "/api/v1/auth/**" dejo de ser publico.
+    void postLoginIsPublicAndGetRequiresAuthentication() throws Exception {
+        // POST llega a la validacion del controller sin cookie; GET exige sesion.
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest());
         mockMvc.perform(get("/api/v1/auth/login"))
-                .andExpect(status().isMethodNotAllowed());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

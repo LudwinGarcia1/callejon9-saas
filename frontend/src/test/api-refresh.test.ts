@@ -124,7 +124,7 @@ describe("renovacion transparente de la sesion", () => {
     ]);
   });
 
-  it.each(["/api/v1/auth/login", "/api/v1/auth/logout", "/api/v1/auth/refresh"])(
+  it.each(["/api/v1/auth/login", "/api/v1/auth/refresh"])(
     "un 401 de %s no dispara renovacion",
     async (path) => {
       fetchMock.mockResolvedValueOnce(jsonResponse(401));
@@ -134,4 +134,20 @@ describe("renovacion transparente de la sesion", () => {
       expect(fetchMock).toHaveBeenCalledTimes(1);
     },
   );
+
+  it("un logout con el access token vencido renueva y repite el logout para revocar la sesion", async () => {
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse(401))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }))
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+    const { api } = await loadApi();
+
+    await api.post("/api/v1/auth/logout");
+
+    expect(calledPaths(fetchMock)).toEqual([
+      "/api/v1/auth/logout",
+      "/api/v1/auth/refresh",
+      "/api/v1/auth/logout",
+    ]);
+  });
 });

@@ -63,6 +63,7 @@ class AnalyticsControllerTest {
     private Tenant tenant;
     private User waiter;
     private User cashier;
+    private User admin;
     private RestaurantTable table;
 
     @BeforeEach
@@ -78,6 +79,9 @@ class AnalyticsControllerTest {
             cashier = transactionTemplate.execute(status -> userRepository.save(User.builder()
                     .email("cajero@analitica.com").passwordHash("x").fullName("Cajero")
                     .role(UserRole.CASHIER).active(true).build()));
+            admin = transactionTemplate.execute(status -> userRepository.save(User.builder()
+                    .email("gerente@analitica.com").passwordHash("x").fullName("Gerente")
+                    .role(UserRole.ADMIN).active(true).build()));
             table = transactionTemplate.execute(status -> tableRepository.save(RestaurantTable.builder()
                     .number(9).capacity(4).status(TableStatus.FREE).active(true).build()));
         } finally {
@@ -173,7 +177,7 @@ class AnalyticsControllerTest {
         String body = mockMvc.perform(get("/api/v1/analytics")
                         .param("from", day.toString())
                         .param("to", day.toString())
-                        .cookie(cookieFor(cashier)))
+                        .cookie(cookieFor(admin)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.pareto.length()").value(3))
                 .andReturn().getResponse().getContentAsString();
@@ -207,7 +211,7 @@ class AnalyticsControllerTest {
         String body = mockMvc.perform(get("/api/v1/analytics")
                         .param("from", day.toString())
                         .param("to", day.toString())
-                        .cookie(cookieFor(cashier)))
+                        .cookie(cookieFor(admin)))
                 .andExpect(status().isOk())
                 // 12 productos + la fila "Otros".
                 .andExpect(jsonPath("$.pareto.length()").value(13))
@@ -236,7 +240,7 @@ class AnalyticsControllerTest {
         String body = mockMvc.perform(get("/api/v1/analytics")
                         .param("from", firstDay.toString())
                         .param("to", lastDay.toString())
-                        .cookie(cookieFor(cashier)))
+                        .cookie(cookieFor(admin)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.salesByDay.length()").value(3))
                 .andExpect(jsonPath("$.salesByDay[0].day").value(firstDay.toString()))
@@ -264,7 +268,7 @@ class AnalyticsControllerTest {
         mockMvc.perform(get("/api/v1/analytics")
                         .param("from", day.toString())
                         .param("to", day.toString())
-                        .cookie(cookieFor(cashier)))
+                        .cookie(cookieFor(admin)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.paymentMix.length()").value(2))
                 .andExpect(jsonPath("$.paymentMix[0].method").value("CASH"))
@@ -288,7 +292,7 @@ class AnalyticsControllerTest {
         UUID outsideRange = checkout(waiter, cashier, table, taco, 1, "CASH");
         backdateSale(tenant, outsideRange, LocalDate.now(BUSINESS_ZONE).minusDays(7));
 
-        mockMvc.perform(get("/api/v1/analytics").cookie(cookieFor(cashier)))
+        mockMvc.perform(get("/api/v1/analytics").cookie(cookieFor(admin)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.salesByDay.length()").value(7))
                 .andExpect(jsonPath("$.pareto[0].revenue").value(10.00))
@@ -307,6 +311,7 @@ class AnalyticsControllerTest {
         TenantContext.set(tenantB.getId());
         User waiterB;
         User cashierB;
+        User adminB;
         RestaurantTable tableB;
         try {
             waiterB = transactionTemplate.execute(status -> userRepository.save(User.builder()
@@ -315,6 +320,9 @@ class AnalyticsControllerTest {
             cashierB = transactionTemplate.execute(status -> userRepository.save(User.builder()
                     .email("cajero@analiticab.com").passwordHash("x").fullName("Cajero B")
                     .role(UserRole.CASHIER).active(true).build()));
+            adminB = transactionTemplate.execute(status -> userRepository.save(User.builder()
+                    .email("gerente@analiticab.com").passwordHash("x").fullName("Gerente B")
+                    .role(UserRole.ADMIN).active(true).build()));
             tableB = transactionTemplate.execute(status -> tableRepository.save(RestaurantTable.builder()
                     .number(1).capacity(2).status(TableStatus.FREE).active(true).build()));
         } finally {
@@ -327,7 +335,7 @@ class AnalyticsControllerTest {
         mockMvc.perform(get("/api/v1/analytics")
                         .param("from", day.toString())
                         .param("to", day.toString())
-                        .cookie(cookieFor(cashier)))
+                        .cookie(cookieFor(admin)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.pareto.length()").value(1))
                 .andExpect(jsonPath("$.pareto[0].productName").value("Taco"))
@@ -340,7 +348,7 @@ class AnalyticsControllerTest {
         mockMvc.perform(get("/api/v1/analytics")
                         .param("from", day.toString())
                         .param("to", day.toString())
-                        .cookie(cookieFor(cashierB)))
+                        .cookie(cookieFor(adminB)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.pareto.length()").value(1))
                 .andExpect(jsonPath("$.pareto[0].productName").value("Torta Ahogada"))

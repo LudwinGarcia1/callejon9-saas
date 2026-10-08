@@ -59,11 +59,14 @@ function buildQueryString(params?: QueryParams): string {
 
 /**
  * Rutas de sesion cuyo 401 es la respuesta definitiva: renovar ahi no tiene
- * sentido (login con credenciales malas, logout) o seria recursivo (refresh).
+ * sentido (login con credenciales malas) o seria recursivo (refresh).
+ *
+ * El logout NO esta aqui: el backend exige una sesion vigente para cerrarla
+ * (CAL-5). Si el access token ya vencio, se renueva y se repite el logout;
+ * sin eso la sesion seguiria viva en el servidor con la cookie de refresh.
  */
 const SESSION_PATHS = new Set([
   endpoints.auth.login(),
-  endpoints.auth.logout(),
   endpoints.auth.refresh(),
 ]);
 

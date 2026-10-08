@@ -5,13 +5,15 @@ import com.callejon9.ticket.web.dto.TicketResponse;
 import java.util.UUID;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Cualquier usuario autenticado puede consultar un ticket (ver SecurityConfig: anyRequest().authenticated()). */
+/** Los tickets los consulta quien cobra y quien administra: caja al reimprimir y el historial de ventas. */
+@PreAuthorize("hasAnyRole('CASHIER','ADMIN')")
 @RestController
 @RequestMapping("/api/v1/tickets")
 public class TicketController {

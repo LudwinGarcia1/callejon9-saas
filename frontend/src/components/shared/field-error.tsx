@@ -3,6 +3,8 @@ import type { ApiError } from "@/lib/api";
 interface FieldErrorProps {
   error?: ApiError | null;
   field: string;
+  /** Mensaje de validacion local; tiene prioridad sobre el del backend. */
+  message?: string;
 }
 
 /**
@@ -10,12 +12,12 @@ interface FieldErrorProps {
  * trae uno para ese nombre de campo (el backend los envia en `errors` como
  * mapa de campo a mensaje). No renderiza nada si no hay mensaje.
  */
-export function FieldError({ error, field }: FieldErrorProps) {
-  const message = error?.errors?.[field];
+export function FieldError({ error, field, message }: FieldErrorProps) {
+  const text = message ?? error?.errors?.[field];
 
-  if (!message) {
+  if (!text) {
     return null;
   }
 
-  return <p className="text-sm text-destructive">{message}</p>;
+  return <p className="text-sm text-destructive">{text}</p>;
 }

@@ -1,5 +1,6 @@
 package com.callejon9.tenancy;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
@@ -126,16 +127,17 @@ class TenantIsolationTest {
     void aTenantCannotInsertRowsForAnotherTenant() {
         TenantContext.set(tenantA);
 
-        // Spring Framework 6 ya no propaga el mensaje de la causa dentro de
-        // getMessage() del wrapper (NestedRuntimeException dejo de anexar
-        // "nested exception is ..."). El mensaje de Postgres si aparece en el
-        // stack trace completo, vía la cadena "Caused by".
+        // El seed ya demuestra que el rol puede insertar en su propio tenant.
+        // El INSERT cruzado debe fallar por privilegios (42501), independientemente
+        // del idioma del servidor PostgreSQL o del wrapper de Spring.
         assertThatThrownBy(() -> transactionTemplate.executeWithoutResult(status ->
                 jdbcTemplate.update("""
                         INSERT INTO users (tenant_id, email, password_hash, full_name, role)
                         VALUES (?, 'intruso@demo.com', 'x', 'Intruso', 'ADMIN')
                         """, tenantB)))
-                .hasStackTraceContaining("row-level security");
+                .rootCause()
+                .isInstanceOfSatisfying(SQLException.class,
+                        cause -> assertThat(cause.getSQLState()).isEqualTo("42501"));
 
         TenantContext.clear();
         assertThat(readEmailsAs(tenantB)).containsExactly("b@demo.com");

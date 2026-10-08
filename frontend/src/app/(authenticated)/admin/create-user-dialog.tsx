@@ -25,8 +25,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FieldError } from "@/components/shared/field-error";
+import { PasswordRequirements } from "@/components/shared/password-requirements";
 import { ApiError, api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
+import { validateNewPassword } from "@/lib/password-policy";
 import { queryKeys } from "@/lib/query-keys";
 import { USER_ROLE_LABELS, type CreateUserRequest, type UserResponse, type UserRole } from "@/lib/types";
 
@@ -41,6 +43,9 @@ const ASSIGNABLE_ROLES: UserRole[] = ["ADMIN", "WAITER", "KITCHEN", "CASHIER"];
 export function CreateUserDialog() {
   const [open, setOpen] = useState(false);
   const [role, setRole] = useState<UserRole>("WAITER");
+  const [password, setPassword] = useState("");
+  const [personalData, setPersonalData] = useState<string[]>([]);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const createMutation = useMutation({
@@ -50,13 +55,43 @@ export function CreateUserDialog() {
       queryClient.invalidateQueries({ queryKey: queryKeys.users.all() });
       toast.success(`Usuario "${user.fullName}" creado.`);
       setOpen(false);
-      setRole("WAITER");
+      resetForm();
     },
   });
+
+  function resetForm() {
+    setRole("WAITER");
+    setPassword("");
+    setPersonalData([]);
+    setPasswordError(null);
+  }
+
+  /** Datos de la cuenta que la contrasena no debe contener. */
+  function readPersonalData(formData: FormData): string[] {
+    return [String(formData.get("email") ?? ""), String(formData.get("fullName") ?? "")];
+  }
+
+  function handleChange(event: React.FormEvent<HTMLFormElement>) {
+    const formData = new FormData(event.currentTarget);
+    setPassword(String(formData.get("password") ?? ""));
+    setPersonalData(readPersonalData(formData));
+    setPasswordError(null);
+  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+
+    // El servidor vuelve a aplicar la politica; esto solo evita una peticion
+    // que de antemano se sabe rechazada.
+    const localPasswordError = validateNewPassword(
+      String(formData.get("password") ?? ""),
+      readPersonalData(formData),
+    );
+    if (localPasswordError) {
+      setPasswordError(localPasswordError);
+      return;
+    }
 
     createMutation.mutate({
       email: String(formData.get("email") ?? ""),
@@ -76,7 +111,7 @@ export function CreateUserDialog() {
         setOpen(nextOpen);
         if (!nextOpen) {
           createMutation.reset();
-          setRole("WAITER");
+          resetForm();
         }
       }}
     >
@@ -88,7 +123,7 @@ export function CreateUserDialog() {
           <DialogTitle>Nuevo usuario</DialogTitle>
           <DialogDescription>Da de alta a un miembro del equipo del restaurante.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} onChange={handleChange} className="flex flex-col gap-4">
           {apiError && !hasFieldErrors && (
             <Alert variant="destructive">
               <AlertTitle>No se pudo crear el usuario</AlertTitle>
@@ -128,11 +163,18 @@ export function CreateUserDialog() {
               name="password"
               type="password"
               required
-              minLength={8}
-              maxLength={100}
+              autoComplete="new-password"
+              maxLength={72}
+              aria-describedby="password-requirements"
+              aria-invalid={Boolean(passwordError ?? apiError?.errors?.password)}
               disabled={createMutation.isPending}
             />
-            <FieldError error={apiError} field="password" />
+            <PasswordRequirements
+              id="password-requirements"
+              password={password}
+              personalData={personalData}
+            />
+            <FieldError error={apiError} field="password" message={passwordError ?? undefined} />
           </div>
 
           <div className="flex flex-col gap-1.5">

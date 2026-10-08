@@ -52,7 +52,9 @@ app:
     # Atributo Secure de las cookies de sesion. Activo por defecto: fuera de
     # desarrollo la API solo debe servirse detras de HTTPS. Para trabajar
     # contra http://localhost, scripts/run-dev.ps1 lo desactiva.
-    cookie-secure: ${AUTH_COOKIE_SECURE:true}
+    # AUTH_SECURE_COOKIE es el nombre anterior de la variable y se sigue
+    # aceptando; si ambas existen, manda AUTH_COOKIE_SECURE.
+    cookie-secure: ${AUTH_COOKIE_SECURE:${AUTH_SECURE_COOKIE:true}}
 
 server:
   port: 8080
