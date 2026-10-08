@@ -38,7 +38,7 @@ Requiere la base de CAL-48 y, en la consola de Tailscale, MagicDNS y certificado
 ```powershell
 cd infra/terraform/azure-ci
 # 1. Base sin VM, para poder cargar los secretos antes del primer arranque.
-terraform apply -target="azurerm_role_assignment.key_vault_admin" -target="azurerm_role_assignment.jenkins_secrets_reader"
+terraform apply "-target=azurerm_role_assignment.key_vault_admin" "-target=azurerm_role_assignment.jenkins_secrets_reader"
 # 2. Secretos (tabla anterior).
 # 3. Todo lo demás, incluida la VM.
 terraform apply
@@ -74,7 +74,7 @@ Los parches del sistema operativo los aplica `unattended-upgrades` de Ubuntu; re
 
 | Incidente | Procedimiento | Qué se conserva |
 |---|---|---|
-| VM perdida o corrupta | `terraform apply -replace="azurerm_linux_virtual_machine.jenkins"` | Todo: configuración, historial, credenciales y nodo de Tailscale |
+| VM perdida o corrupta | `terraform apply "-replace=azurerm_linux_virtual_machine.jenkins"` | Todo: configuración, historial, credenciales y nodo de Tailscale |
 | Disco de `JENKINS_HOME` perdido | `terraform apply` crea un disco vacío; se carga una clave nueva de Tailscale | Configuración y credenciales (vienen del código y de Key Vault); **se pierde el historial de builds** |
 
 ## Evidencia de los criterios de CAL-86
@@ -82,7 +82,7 @@ Los parches del sistema operativo los aplica `unattended-upgrades` de Ubuntu; re
 | Criterio | Cómo se demuestra |
 |---|---|
 | 1. Solo por acceso privado | Desde fuera de la tailnet, la IP pública no responde en ningún puerto; `az network nsg rule list` muestra `deny-internet-inbound`; dentro de la tailnet, el panel pide login |
-| 2. Recreación conserva estado | `terraform apply -replace=...vm-jenkins`: el mismo usuario entra, el nodo `local-agent` vuelve en línea y el historial sigue ahí |
+| 2. Recreación conserva estado | `terraform apply "-replace=azurerm_linux_virtual_machine.jenkins"`: el mismo usuario entra, el nodo `local-agent` vuelve en línea y el historial sigue ahí |
 | 3. Agente sin instalación manual | Por Tailscale SSH, como `jenkins-agent`: `java -version`, `node --version`, `pnpm --version` dentro de `frontend/`, `docker run --rm hello-world`. La corrida de Testcontainers llega con CAL-88 y CAL-87 |
 | 4. Identidad administrada con alcance mínimo | Desde la VM, con un token de IMDS: leer un secreto del vault responde 200; `GET https://management.azure.com/subscriptions/<id>/resourcegroups?api-version=2021-04-01` responde 403 `AuthorizationFailed` |
 | 5. Restauración ensayada con duración | Cronometrar el criterio 2 desde el `apply` hasta que el panel responde y el agente está en línea; registrar el tiempo en el issue |
