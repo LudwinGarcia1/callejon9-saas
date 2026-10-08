@@ -2,6 +2,8 @@ package com.callejon9.auth.repository;
 
 import com.callejon9.auth.domain.RefreshToken;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -87,6 +89,22 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
                  WHERE family_id = :familyId AND revoked_at IS NULL AND expires_at > :now)
             """)
     boolean isSessionActive(@Param("familyId") UUID familyId, @Param("now") Instant now);
+
+    /**
+     * Version por lotes de {@link #isSessionActive}: de las sesiones dadas,
+     * devuelve las que siguen vigentes. La usa el canal en tiempo real para
+     * revalidar de una vez todas las conexiones abiertas de un restaurante.
+     * Como solo mira tokens sin revocar, aprovecha el mismo indice parcial de
+     * V9: su costo depende de cuantas sesiones vivas tiene el restaurante (a
+     * lo sumo un token vivo por sesion), no de cuantas veces rotaron ni de la
+     * antiguedad de las sesiones.
+     */
+    @Query("""
+            SELECT DISTINCT t.familyId FROM RefreshToken t
+             WHERE t.familyId IN :familyIds AND t.revokedAt IS NULL AND t.expiresAt > :now
+            """)
+    List<UUID> findActiveSessions(@Param("familyIds") Collection<UUID> familyIds,
+                                  @Param("now") Instant now);
 
     /**
      * Limpieza oportunista: se invoca en cada login y solo toca las filas del

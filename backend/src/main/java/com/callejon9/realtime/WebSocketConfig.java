@@ -1,11 +1,15 @@
 package com.callejon9.realtime;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 
 /**
  * Canal en tiempo real STOMP sobre WebSocket, expuesto en {@code /ws}.
@@ -14,22 +18,51 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
  * {@code .withSockJS()}): el cliente objetivo de este canal (tablero de
  * cocina, apps de meseros) soporta WebSocket nativo, y anadir el fallback
  * solo agregaria superficie sin necesidad real en este dominio.
+ *
+ * {@code @EnableScheduling} activa {@link RevokedSessionSweeper}, que cierra
+ * las conexiones de sesiones revocadas despues del handshake.
  */
 @Configuration
+@EnableScheduling
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final JwtHandshakeInterceptor jwtHandshakeInterceptor;
     private final PrincipalHandshakeHandler principalHandshakeHandler;
     private final TenantSubscriptionInterceptor tenantSubscriptionInterceptor;
+    private final OpenConnectionRegistry openConnectionRegistry;
 
     public WebSocketConfig(
             JwtHandshakeInterceptor jwtHandshakeInterceptor,
             PrincipalHandshakeHandler principalHandshakeHandler,
-            TenantSubscriptionInterceptor tenantSubscriptionInterceptor) {
+            TenantSubscriptionInterceptor tenantSubscriptionInterceptor,
+            OpenConnectionRegistry openConnectionRegistry) {
         this.jwtHandshakeInterceptor = jwtHandshakeInterceptor;
         this.principalHandshakeHandler = principalHandshakeHandler;
         this.tenantSubscriptionInterceptor = tenantSubscriptionInterceptor;
+        this.openConnectionRegistry = openConnectionRegistry;
+    }
+
+    /** Nombre del scheduler propio de {@link RevokedSessionSweeper}. */
+    public static final String SESSION_SWEEP_SCHEDULER = "realtimeSessionSweepScheduler";
+
+    /**
+     * Un hilo dedicado para el barrido de sesiones revocadas. Sin el, la tarea
+     * correria en el scheduler del broker STOMP y una consulta lenta
+     * retrasaria sus heartbeats.
+     */
+    @Bean(name = SESSION_SWEEP_SCHEDULER)
+    public ThreadPoolTaskScheduler realtimeSessionSweepScheduler() {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setPoolSize(1);
+        scheduler.setThreadNamePrefix("ws-session-sweep-");
+        return scheduler;
+    }
+
+    /** Registra cada conexion para que {@link RevokedSessionSweeper} pueda cerrarla. */
+    @Override
+    public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
+        registration.addDecoratorFactory(openConnectionRegistry);
     }
 
     @Override
