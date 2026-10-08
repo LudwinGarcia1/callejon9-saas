@@ -24,7 +24,9 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
  * momentaneamente, en HTTP.
  *
  * La regla es la misma de HTTP ({@link AccessTokenVerifier}): un token de una
- * sesion revocada por logout no abre el canal aunque su JWT siga vigente.
+ * sesion revocada por logout no abre el canal aunque su JWT siga vigente. Una
+ * conexion ya abierta cuya sesion se revoca despues la cierra
+ * {@link RevokedSessionSweeper}.
  */
 @Component
 public class JwtHandshakeInterceptor implements HandshakeInterceptor {
@@ -57,7 +59,8 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
         }
 
         attributes.put(ATTR_PRINCIPAL, new AuthenticatedPrincipal(
-                claims.get().userId(), claims.get().tenantId(), claims.get().role()));
+                claims.get().userId(), claims.get().tenantId(), claims.get().role(),
+                claims.get().sessionId()));
         return true;
     }
 

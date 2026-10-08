@@ -3,10 +3,10 @@
   "activeIssue": null,
   "activePhase": null,
   "lastReview": {
-    "date": "2026-10-03",
-    "issue": "CAL-95",
-    "branch": "feat/cal-95-revoke-sessions-on-deactivation",
-    "verdict": "hallazgos corregidos; puerta backend bloqueada por entorno"
+    "date": "2026-10-08",
+    "issue": "CAL-96",
+    "branch": "feat/cal-96-close-revoked-websockets",
+    "verdict": "aprobable; B1-B3 corregidos, B4 riesgo residual; backend verify 415/415 en modo externo"
   },
   "lastBacklogSync": {
     "date": "2026-09-11",
