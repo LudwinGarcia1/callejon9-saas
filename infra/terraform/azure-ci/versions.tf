@@ -20,4 +20,12 @@ provider "azurerm" {
       purge_soft_delete_on_destroy = true
     }
   }
+
+  # azurerm 5.x registers no resource providers by default; a new subscription needs these.
+  resource_providers_to_register = [
+    "Microsoft.Compute",
+    "Microsoft.KeyVault",
+    "Microsoft.ManagedIdentity",
+    "Microsoft.Network",
+  ]
 }
