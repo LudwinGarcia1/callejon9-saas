@@ -35,7 +35,7 @@ El sufijo de los nombres globales se deriva de un hash del id de la suscripción
 
 - Terraform 1.9 o superior y Azure CLI.
 - Una cuenta con permiso para crear asignaciones de rol en la suscripción (Owner, o Contributor más User Access Administrator).
-- Suscripción objetivo: Azure for Students, región Mexico Central (`mexicocentral`). Que la suscripción admita todos los recursos declarados en esa región se confirma con el primer `plan`.
+- Suscripción objetivo: Azure for Students, región East US (`eastus`). La suscripción tiene asignada la política «Allowed resource deployment regions», que solo permite `westus`, `eastus`, `centralus`, `westus2` y `canadacentral` (verificado con `az policy assignment list` el 2026-10-08). Cualquier otra región se rechaza en el `apply`.
 
 ## Procedimiento
 

@@ -1,7 +1,7 @@
 variable "location" {
   description = "Azure region for the Terraform state account."
   type        = string
-  default     = "mexicocentral"
+  default     = "eastus"
 }
 
 variable "state_admin_object_id" {

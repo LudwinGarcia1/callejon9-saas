@@ -1,7 +1,7 @@
 variable "location" {
   description = "Azure region for the CI infrastructure."
   type        = string
-  default     = "mexicocentral"
+  default     = "eastus"
 }
 
 variable "environment" {

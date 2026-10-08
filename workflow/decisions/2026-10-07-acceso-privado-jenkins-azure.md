@@ -14,7 +14,7 @@ Hechos que condicionan la decisión:
 - Para la API de Azure publicada después del 31 de marzo de 2026, las subredes de VNets nuevas son privadas por defecto y una VM necesita un método explícito de salida (NAT Gateway, IP pública en la NIC, load balancer con reglas de salida o firewall). Fuente: [Default outbound access in Azure](https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/default-outbound-access), actualizado el 2026-09-10.
 - Jenkins necesita salida a GitHub, Maven Central, el registro de npm y Docker Hub para construir y para Testcontainers.
 - Bastion Developer no tiene cobro por hora, pero no admite conexiones desde Azure CLI (native client); solo SSH desde el portal y una VM a la vez. El túnel al puerto web de Jenkins requiere Standard o Premium, que tienen cobro por hora. Fuente: [Choose the right Azure Bastion SKU](https://learn.microsoft.com/en-us/azure/bastion/bastion-sku-comparison), actualizado el 2026-07-01.
-- La suscripción es Azure for Students, región Mexico Central.
+- La suscripción es Azure for Students. La región es East US (`eastus`); ver «Corrección del 2026-10-08».
 
 ## Opciones consideradas
 
@@ -38,9 +38,18 @@ Tailscale para el acceso administrativo e IP pública estándar asociada a la NI
 - CAL-86 instala Tailscale y Jenkins en la VM y adjunta la IP y el disco.
 - El acceso depende de la disponibilidad de Tailscale; si falla, la vía de emergencia es `az vm run-command`, que no requiere red entrante.
 
+## Corrección del 2026-10-08: región
+
+Esta decisión decía Mexico Central. Con la sesión de Azure ya disponible se verificó que la suscripción no lo permite:
+
+- La política asignada «Allowed resource deployment regions» solo admite `westus`, `eastus`, `centralus`, `westus2` y `canadacentral` (`az policy assignment list`).
+- En `mexicocentral` la serie B aparece como `NotAvailableForSubscription` (`az vm list-skus`).
+
+Ludwin Garcia eligió `eastus` con `Standard_D2as_v4` (2 vCPU, 8 GB). Es la región permitida con más tamaños x64 disponibles, y ese tamaño usa disco SCSI, que es lo que asume `infra/jenkins/provision.sh`. Los tamaños v6 y v7 disponibles exigen NVMe. El mecanismo de acceso decidido no cambia.
+
 ## Pendiente de verificar
 
-- Que Azure for Students permita en Mexico Central el tamaño de VM y los recursos declarados. No se pudo comprobar sin una sesión `az login`; se confirma con el primer `terraform plan`.
+- La cuota de vCPU de la suscripción en `eastus`. No se pudo leer porque los resource providers aún no están registrados; se confirma en el primer `apply`.
 - El costo mensual real. Se registra con la evidencia de CAL-86, no se estima aquí.
 
 ## Señales para revisar la decisión
