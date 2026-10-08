@@ -66,6 +66,8 @@ public class KitchenService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "El producto de la orden " + itemId + " no existe."));
 
+        orderRepository.findForCheckout(item.getOrderId())
+                .orElseThrow(() -> new ResourceNotFoundException("La orden " + item.getOrderId() + " no existe."));
         validateForwardTransition(item.getKitchenStatus(), newStatus);
 
         item.setKitchenStatus(newStatus);

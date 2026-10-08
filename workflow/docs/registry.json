@@ -1,6 +1,7 @@
 {
   "schemaVersion": 1,
   "documents": [
+    {"path": "docs/cal-97-pagos-divididos.md", "kind": "api-contract", "authority": "medium"},
     {"path": "docs/cal-35-pruebas-frontend.md", "kind": "testing", "authority": "medium"},
     {"path": "docs/cal-88-testcontainers.md", "kind": "testing", "authority": "medium"},
     {"path": "docs/cabeceras-seguridad.md", "kind": "security", "authority": "high"},

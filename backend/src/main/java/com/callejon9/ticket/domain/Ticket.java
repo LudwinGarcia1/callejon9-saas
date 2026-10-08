@@ -46,6 +46,15 @@ public class Ticket extends TenantScopedEntity {
     @Column(name = "items_snapshot", nullable = false, columnDefinition = "jsonb")
     private List<TicketItemSnapshot> itemsSnapshot;
 
+    @Builder.Default
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "payments_snapshot", nullable = false, columnDefinition = "jsonb")
+    private List<TicketPaymentSnapshot> paymentsSnapshot = List.of();
+
+    @Builder.Default
+    @Column(nullable = false)
+    private BigDecimal change = BigDecimal.ZERO;
+
     @Column(nullable = false)
     private BigDecimal subtotal;
 

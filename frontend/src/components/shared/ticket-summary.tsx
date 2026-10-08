@@ -10,6 +10,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { endpoints } from "@/lib/endpoints";
 import { formatShortTime } from "@/lib/format";
 import type { TicketResponse } from "@/lib/types";
+import { PAYMENT_METHOD_LABELS } from "@/lib/types";
 
 interface TicketSummaryProps {
   ticket: TicketResponse;
@@ -85,6 +86,15 @@ export function TicketSummary({ ticket }: TicketSummaryProps) {
         <Money amount={ticket.total} className="block font-display text-[34px] leading-none" />
       </div>
 
+      <div className="flex flex-col gap-2 text-sm">
+        {ticket.payments?.map((payment, index) => (
+          <div key={index} className="flex justify-between gap-3">
+            <span>{PAYMENT_METHOD_LABELS[payment.method]} · recibido <Money amount={payment.receivedAmount} /></span>
+            <Money amount={payment.amount} />
+          </div>
+        ))}
+        <div className="flex justify-between"><span>Cambio</span><Money amount={ticket.change ?? 0} /></div>
+      </div>
       <Button variant="outline" disabled={isDownloading} onClick={handleDownloadPdf}>
         {isDownloading ? "Descargando…" : "Descargar ticket en PDF"}
       </Button>

@@ -49,6 +49,11 @@ public class TicketPdfGenerator {
             document.add(new Paragraph("Total: $" + ticket.getTotal().toPlainString(), boldFont));
             document.add(new Paragraph(
                     "Metodo de pago: " + paymentMethodLabel(ticket), normalFont));
+            for (var payment : ticket.getPaymentsSnapshot()) {
+                document.add(new Paragraph(paymentMethodLabel(payment.method()) + ": $" + payment.amount().toPlainString()
+                        + " | Recibido: $" + payment.receivedAmount().toPlainString(), normalFont));
+            }
+            document.add(new Paragraph("Cambio: $" + ticket.getChange().toPlainString(), normalFont));
 
             document.close();
             return out.toByteArray();
@@ -83,7 +88,11 @@ public class TicketPdfGenerator {
     }
 
     private String paymentMethodLabel(Ticket ticket) {
-        return switch (ticket.getPaymentMethod()) {
+        return paymentMethodLabel(ticket.getPaymentMethod());
+    }
+
+    private String paymentMethodLabel(com.callejon9.sale.domain.PaymentMethod method) {
+        return switch (method) {
             case CASH -> "Efectivo";
             case CARD -> "Tarjeta";
             case TRANSFER -> "Transferencia";

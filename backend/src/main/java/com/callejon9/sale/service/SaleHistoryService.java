@@ -30,10 +30,13 @@ public class SaleHistoryService {
 
     private final SaleRepository saleRepository;
     private final BusinessCalendar businessCalendar;
+    private final com.callejon9.analytics.repository.AnalyticsRepository analyticsRepository;
 
-    public SaleHistoryService(SaleRepository saleRepository, BusinessCalendar businessCalendar) {
+    public SaleHistoryService(SaleRepository saleRepository, BusinessCalendar businessCalendar,
+            com.callejon9.analytics.repository.AnalyticsRepository analyticsRepository) {
         this.saleRepository = saleRepository;
         this.businessCalendar = businessCalendar;
+        this.analyticsRepository = analyticsRepository;
     }
 
     @Transactional(readOnly = true)
@@ -46,6 +49,7 @@ public class SaleHistoryService {
 
         return new SalesHistoryResponse(
                 saleRepository.findHistory(range.start(), range.endExclusive()),
-                saleRepository.summarize(range.start(), range.endExclusive()));
+                saleRepository.summarize(range.start(), range.endExclusive()),
+                analyticsRepository.paymentMix(range.start(), range.endExclusive()));
     }
 }

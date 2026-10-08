@@ -44,10 +44,12 @@ export const queryKeys = {
     detail: (ticketId: string) => ["tickets", ticketId] as const,
   },
   sales: {
+    all: () => ["sales"] as const,
     /** El rango entra en la clave: cambiar `from`/`to` debe disparar una nueva consulta. */
     history: (from: string, to: string) => ["sales", { from, to }] as const,
   },
   analytics: {
+    all: () => ["analytics"] as const,
     /** Igual criterio que `sales.history`: el rango es parte de la clave. */
     summary: (from: string, to: string) => ["analytics", { from, to }] as const,
   },
