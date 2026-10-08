@@ -56,3 +56,13 @@ build/
 # en silencio. Lo unico que se comparte es la configuracion de permisos.
 .claude/*
 !.claude/settings.json
+
+### Terraform ###
+# El estado y las variables locales pueden contener identificadores y secretos.
+# El lock de providers (.terraform.lock.hcl) si se versiona.
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+backend.hcl
+tfplan
