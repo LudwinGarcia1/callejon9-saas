@@ -1,22 +1,25 @@
 package com.callejon9.auth.web;
 
 import com.callejon9.auth.service.AuthService;
+import com.callejon9.auth.service.RefreshTokenService;
 import com.callejon9.auth.web.dto.LoginRequest;
 import com.callejon9.auth.web.dto.LoginResponse;
 import com.callejon9.auth.web.dto.MeResponse;
 import com.callejon9.tenancy.TenantFilter;
 import jakarta.validation.Valid;
-import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,21 +29,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
-    private final long accessTokenMinutes;
-    private final boolean secureCookie;
+    private final RefreshTokenService refreshTokenService;
+    private final AuthCookies authCookies;
 
     /**
-     * {@code secureCookie} decide si la cookie del token lleva el atributo
-     * Secure, que impide al navegador enviarla por HTTP plano. Se activa con
-     * AUTH_SECURE_COOKIE=true en cualquier entorno servido por HTTPS; en local
-     * queda apagado porque el backend corre sobre http://localhost.
+     * Los atributos de las cookies (httpOnly, Secure, SameSite, path y
+     * duracion) viven en {@link AuthCookies}, compartidos por login, refresh
+     * y logout.
      */
     public AuthController(AuthService authService,
-                          @Value("${app.jwt.access-token-minutes}") long accessTokenMinutes,
-                          @Value("${app.auth.secure-cookie}") boolean secureCookie) {
+                          RefreshTokenService refreshTokenService,
+                          AuthCookies authCookies) {
         this.authService = authService;
-        this.accessTokenMinutes = accessTokenMinutes;
-        this.secureCookie = secureCookie;
+        this.refreshTokenService = refreshTokenService;
+        this.authCookies = authCookies;
     }
 
     @PostMapping("/login")
@@ -48,20 +50,41 @@ public class AuthController {
         var authenticated = authService.authenticate(
                 request.slug(), request.email(), request.password());
 
-        ResponseCookie cookie = ResponseCookie.from(
-                        TenantFilter.ACCESS_TOKEN_COOKIE, authenticated.accessToken())
-                .httpOnly(true)
-                .secure(secureCookie)
-                .sameSite("Strict")
-                .path("/")
-                .maxAge(Duration.ofMinutes(accessTokenMinutes))
-                .build();
-
         var user = authenticated.user();
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .headers(setCookies(authCookies.issue(authenticated.accessToken(),
+                        authenticated.refreshToken(), authenticated.sessionExpiresAt())))
                 .body(new LoginResponse(user.getId(), user.getFullName(),
                         user.getRole().name(), false));
+    }
+
+    /**
+     * Rota el refresh token: el presentado queda consumido y se emite un par
+     * nuevo en cookies. No requiere un access token vigente, que es justo el
+     * caso para el que existe. Cualquier rechazo responde 401 sin cuerpo y
+     * borra ambas cookies, para que el cliente no vuelva a intentarlo.
+     *
+     * <p>El rechazo se atrapa aqui y no en {@link #onBadCredentials}: ese
+     * manejador tambien atiende a /login, y un login fallido no debe cerrar
+     * la sesion que el navegador ya tenia abierta.
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<Void> refresh(
+            @CookieValue(name = AuthCookies.REFRESH_TOKEN_COOKIE, required = false) String refreshToken) {
+        if (refreshToken == null || refreshToken.isBlank()) {
+            return unauthorizedClearingCookies();
+        }
+
+        RefreshTokenService.IssuedTokens issued;
+        try {
+            issued = refreshTokenService.rotate(refreshToken);
+        } catch (BadCredentialsException rejected) {
+            return unauthorizedClearingCookies();
+        }
+        return ResponseEntity.noContent()
+                .headers(setCookies(authCookies.issue(issued.accessToken(),
+                        issued.refreshToken(), issued.sessionExpiresAt())))
+                .build();
     }
 
     /**
@@ -83,25 +106,47 @@ public class AuthController {
                 current.tenant().getName()));
     }
 
+    /**
+     * Revoca la sesion en el servidor y borra las cookies.
+     *
+     * <p>Se revoca por las dos vias que el cliente pueda presentar: la familia
+     * del refresh token y la sesion ({@code sid}) del access token que
+     * {@link TenantFilter} ya verifico. Un cliente que solo envia
+     * {@code access_token} (Swagger UI, una app movil) tambien cierra su sesion
+     * de verdad, en vez de recibir un 204 con el token todavia valido.
+     */
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout() {
-        ResponseCookie cleared = ResponseCookie.from(TenantFilter.ACCESS_TOKEN_COOKIE, "")
-                .httpOnly(true)
-                .secure(secureCookie)
-                .sameSite("Strict")
-                .path("/")
-                .maxAge(Duration.ZERO)
-                .build();
+    public ResponseEntity<Void> logout(
+            @CookieValue(name = AuthCookies.REFRESH_TOKEN_COOKIE, required = false) String refreshToken,
+            @RequestAttribute(name = TenantFilter.SESSION_ID_ATTRIBUTE, required = false) UUID sessionId) {
+        if (refreshToken != null && !refreshToken.isBlank()) {
+            refreshTokenService.revokeSession(refreshToken);
+        }
+        if (sessionId != null) {
+            refreshTokenService.revokeSessionById(sessionId);
+        }
 
         return ResponseEntity.noContent()
-                .header(HttpHeaders.SET_COOKIE, cleared.toString())
+                .headers(setCookies(authCookies.clear()))
                 .build();
     }
 
     @ExceptionHandler(BadCredentialsException.class)
     ResponseEntity<Void> onBadCredentials() {
         // Mensaje deliberadamente vacio: no se revela si fallo el correo, la
-        // contrasena o el restaurante.
-        return ResponseEntity.status(401).build();
+        // contrasena o el restaurante. Tampoco toca las cookies.
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
+
+    private ResponseEntity<Void> unauthorizedClearingCookies() {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .headers(setCookies(authCookies.clear()))
+                .build();
+    }
+
+    private static HttpHeaders setCookies(List<ResponseCookie> cookies) {
+        HttpHeaders headers = new HttpHeaders();
+        cookies.forEach(cookie -> headers.add(HttpHeaders.SET_COOKIE, cookie.toString()));
+        return headers;
     }
 }

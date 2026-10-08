@@ -1,13 +1,12 @@
 package com.callejon9.config;
 
 import callejon9.contractfixtures.AuthorizationFixtures;
-import com.callejon9.auth.service.JwtService;
-import com.callejon9.user.domain.User;
+import com.callejon9.support.TestSessions;
 import com.callejon9.user.domain.UserRole;
 import jakarta.servlet.http.Cookie;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -43,7 +42,9 @@ class AuthorizationContractTest {
     @Autowired private WebApplicationContext context;
     @Autowired private FilterChainProxy springSecurityFilterChain;
     @Autowired private MockMvc mockMvc;
-    @Autowired private JwtService jwtService;
+    @Autowired private TestSessions testSessions;
+
+    private static final String SLUG_PREFIX = "contrato-autorizacion";
 
     private AuthorizationContractVerifier verifier;
     private List<AuthorizationContractVerifier.Endpoint> endpoints;
@@ -52,6 +53,11 @@ class AuthorizationContractTest {
     void discoverMappings() {
         verifier = new AuthorizationContractVerifier(context, springSecurityFilterChain);
         endpoints = verifier.discover();
+    }
+
+    @AfterEach
+    void deleteSessionTenants() {
+        testSessions.deleteTenants(SLUG_PREFIX);
     }
 
     @Test
@@ -155,12 +161,14 @@ class AuthorizationContractTest {
     @DisplayName("La lista pública distingue método HTTP y ruta exacta")
     void acceptsOnlyDocumentedPublicMethods() {
         verifier.requireValid(List.of(endpoint("POST", "/api/v1/auth/login"),
-                endpoint("POST", "/api/v1/signup")));
-        var login = endpoint("POST", "/api/v1/auth/login");
-        var wrongMethod = new AuthorizationContractVerifier.Endpoint(
-                new AuthorizationContractVerifier.Route("GET", login.route().path()),
-                login.mapping(), login.handler());
-        assertThat(verifier.inspect(wrongMethod).valid()).isFalse();
+                endpoint("POST", "/api/v1/auth/refresh"), endpoint("POST", "/api/v1/signup")));
+        for (String path : List.of("/api/v1/auth/login", "/api/v1/auth/refresh")) {
+            var publicEndpoint = endpoint("POST", path);
+            var wrongMethod = new AuthorizationContractVerifier.Endpoint(
+                    new AuthorizationContractVerifier.Route("GET", publicEndpoint.route().path()),
+                    publicEndpoint.mapping(), publicEndpoint.handler());
+            assertThat(verifier.inspect(wrongMethod).valid()).as("GET %s", path).isFalse();
+        }
     }
 
     @Test
@@ -244,9 +252,6 @@ class AuthorizationContractTest {
     }
 
     private Cookie cookie(UserRole role) {
-        User user = User.builder().role(role).build();
-        user.setId(UUID.randomUUID());
-        user.setTenantId(UUID.randomUUID());
-        return new Cookie("access_token", jwtService.generateAccessToken(user));
+        return new Cookie("access_token", testSessions.accessTokenForNewUser(SLUG_PREFIX, role));
     }
 }

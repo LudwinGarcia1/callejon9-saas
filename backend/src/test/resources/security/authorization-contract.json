@@ -57,6 +57,23 @@
     "reason": "Consultar o cerrar la sesion del usuario autenticado"
   },
   {
+    "method": "POST",
+    "path": "/api/v1/auth/refresh",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "ANONYMOUS",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Acceso publico exacto: /api/v1/auth/refresh; se autentica con la cookie refresh_token"
+  },
+  {
     "method": "GET",
     "path": "/api/v1/auth/me",
     "params": [],

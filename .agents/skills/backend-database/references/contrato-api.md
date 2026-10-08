@@ -1,7 +1,7 @@
 # Contrato API implementado
 
 - `/api/v1/signup`
-- `/api/v1/auth/login`, `/me`, `/logout`
+- `/api/v1/auth/login`, `/me`, `/refresh`, `/logout`
 - `/api/v1/platform/plans`
 - `/api/v1/tenants/current/branding`
 - `/api/v1/users`, `/tables`, `/categories`, `/products`
@@ -12,7 +12,7 @@
 
 ## Matriz de autorización
 
-Sin sesión solo responden `POST /auth/login`, `POST /signup`, `/actuator/health` y OpenAPI (`/v3/api-docs/**`, `/swagger-ui/**`); todo lo demás da 401. Con sesión, cada controller declara su regla con `@PreAuthorize` y un rol ausente recibe 403. `AuthorizationMatrixTest` fija las lecturas.
+Sin sesión solo responden `POST /auth/login`, `POST /auth/refresh` (se autentica con la cookie `refresh_token`), `POST /signup`, `/actuator/health` y OpenAPI (`/v3/api-docs/**`, `/swagger-ui/**`); todo lo demás da 401. `/auth/logout` exige sesión: si el access token ya venció, el cliente renueva y repite el logout. Con sesión, cada controller declara su regla con `@PreAuthorize` y un rol ausente recibe 403. `AuthorizationMatrixTest` fija las lecturas.
 
 | Ruta | Lectura | Escritura |
 |---|---|---|
