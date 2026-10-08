@@ -1,0 +1,24 @@
+[Unit]
+Description=Jenkins local agent (RestoHub CI)
+Wants=jenkins-controller.service
+After=jenkins-controller.service
+RequiresMountsFor=/srv/jenkins
+
+[Service]
+User=jenkins-agent
+Group=jenkins-agent
+WorkingDirectory=/var/lib/jenkins-agent
+Environment=COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+# Fails until the controller is up; Restart retries until it answers.
+ExecStartPre=/usr/bin/curl -fsS -o /var/lib/jenkins-agent/agent.jar http://127.0.0.1:8080/jnlpJars/agent.jar
+ExecStart=/usr/bin/java -jar /var/lib/jenkins-agent/agent.jar \
+  -url http://127.0.0.1:8080/ \
+  -name local-agent \
+  -secret @/srv/jenkins/agent-secret/secret \
+  -webSocket \
+  -workDir /var/lib/jenkins-agent
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

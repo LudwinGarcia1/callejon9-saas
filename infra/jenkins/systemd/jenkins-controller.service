@@ -1,0 +1,21 @@
+[Unit]
+Description=Jenkins controller (RestoHub CI)
+Requires=docker.service
+After=docker.service
+RequiresMountsFor=/srv/jenkins
+
+[Service]
+ExecStartPre=-/usr/bin/docker rm -f jenkins
+# Published on localhost only; tailscale serve is the single way in.
+ExecStart=/usr/bin/docker run --rm --name jenkins \
+  --publish 127.0.0.1:8080:8080 \
+  --env-file /etc/restohub/jenkins.env \
+  --volume /srv/jenkins/home:/var/jenkins_home \
+  --volume /srv/jenkins/agent-secret:/run/jenkins-agent \
+  restohub/jenkins-controller:local
+ExecStop=/usr/bin/docker stop jenkins
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

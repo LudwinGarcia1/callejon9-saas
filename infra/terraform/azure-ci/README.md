@@ -27,9 +27,11 @@ El estado remoto usa el backend `azurerm`, que bloquea el estado con un *lease* 
 
 El sufijo de los nombres globales se deriva de un hash del id de la suscripción: es estable y no requiere variables.
 
-### Salidas que consume CAL-86
+### Jenkins (CAL-86)
 
-`resource_group_name`, `location`, `jenkins_subnet_id`, `jenkins_egress_public_ip_id`, `jenkins_identity_id`, `jenkins_identity_client_id`, `key_vault_id`, `key_vault_uri` y `jenkins_home_disk_id`. El endpoint privado de Jenkins es la dirección de la VM en la tailnet, que existe hasta que CAL-86 registra la VM en Tailscale.
+`jenkins.tf` agrega a este mismo root la NIC `nic-jenkins` (con la IP de salida), la VM `vm-jenkins` y la conexión del disco `disk-jenkins-home`. La configuración del servidor y su operación están en `infra/jenkins/README.md`; la primera puesta en marcha se hace en dos pasos, porque la VM lee Key Vault en su primer arranque.
+
+El endpoint privado de Jenkins es la URL de la VM en la tailnet (`jenkins_url`).
 
 ## Requisitos
 
@@ -63,16 +65,17 @@ La asignación de rol sobre el storage account puede tardar unos minutos en prop
 
 ### 3. Base de CI
 
-Copia `backend.hcl.example` a `backend.hcl` con el nombre del storage account que imprimió el bootstrap, y `terraform.tfvars.example` a `terraform.tfvars` con el valor de `$operator`. Ambos archivos están ignorados por git.
+Copia `backend.hcl.example` a `backend.hcl` con el nombre del storage account que imprimió el bootstrap, y `terraform.tfvars.example` a `terraform.tfvars` con el valor de `$operator`, tu llave SSH pública y la URL de Jenkins en la tailnet. Ambos archivos están ignorados por git.
 
 ```powershell
 terraform init "-backend-config=backend.hcl"
 terraform plan -out tfplan
 terraform show -no-color tfplan > "$env:TEMP\plan-cal-48.txt"
-terraform apply tfplan
 ```
 
 El plan incluye identificadores de la suscripción: se guarda fuera del repositorio y se adjunta al issue.
+
+Para aplicar, sigue «Primera puesta en marcha» en `infra/jenkins/README.md`: primero la base sin la VM, luego los secretos y al final todo lo demás.
 
 ## Puerta de calidad
 
