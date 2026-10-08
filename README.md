@@ -86,13 +86,13 @@ Los paquetes del backend se organizan por funcionalidad, no por capa: `auth`, `u
 | Herramienta | Versión | Nota |
 |---|---|---|
 | JDK | 21 (Temurin) | `winget install EclipseAdoptium.Temurin.21.JDK` |
-| PostgreSQL | 16 | `winget install PostgreSQL.PostgreSQL.16` |
+| PostgreSQL | 16 | Para ejecutar la aplicación local; opcional para las pruebas |
 | Node.js | 24 | |
 | pnpm | 10 | `corepack enable` lo resuelve desde el campo `packageManager` |
 | Maven | — | No hace falta: el proyecto trae Maven Wrapper |
-| Docker | — | No se usa |
+| Docker | Motor compatible con Testcontainers | Necesario para las pruebas por defecto; no requiere PostgreSQL instalado |
 
-Esta máquina de desarrollo ya tenía un PostgreSQL 18 ocupando el puerto 5432, así que el 16 quedó en el **5433**. El puerto se resuelve con la variable `DB_PORT`, que en CI apunta al 5432 del contenedor de servicio.
+Esta máquina de desarrollo ya tenía un PostgreSQL 18 ocupando el puerto 5432, así que el 16 quedó en el **5433**. Para la aplicación local y las pruebas en modo externo, el puerto se resuelve con `DB_PORT`. Las pruebas con Testcontainers usan un puerto dinámico asignado por Docker.
 
 ### 1. Roles y bases
 
@@ -157,7 +157,29 @@ cd backend
 .\mvnw.cmd verify
 ```
 
-120 pruebas contra un PostgreSQL 16 real. **No se usa H2**, y la razón es de fondo: H2 no soporta Row Level Security, así que probar contra H2 invalidaría exactamente la garantía que el proyecto demuestra.
+Las pruebas levantan PostgreSQL 16 real con Testcontainers por defecto. Basta tener
+Docker disponible: no requieren instalar PostgreSQL ni preparar roles a mano.
+Un contenedor se comparte entre todas las clases dentro de la misma JVM y se
+elimina al terminar mediante el limpiador de Testcontainers. No se reutiliza entre
+ejecuciones. Flyway usa `callejon9_owner`; la aplicación usa `callejon9_app`, sin
+superusuario, BYPASSRLS ni propiedad de tablas. Las credenciales del contenedor
+son aleatorias y efímeras. **No se usa H2**, porque no demuestra RLS.
+
+Para usar una base externa preparada con `scripts/setup-db.sql`:
+
+```powershell
+cd backend
+.\mvnw.cmd -B "-Dtest.database.mode=external" -DDB_PORT=5433 verify
+```
+
+También se puede definir `TEST_DATABASE_MODE=external` y `TEST_DATABASE_URL`
+(URL JDBC de una base exclusiva de pruebas). `DB_APP_PASSWORD` y
+`DB_OWNER_PASSWORD` configuran las credenciales externas. `DB_PORT` por sí solo
+no desactiva Testcontainers. El modo por defecto falla si Docker no está
+disponible; no omite las pruebas ni cambia silenciosamente a la base local.
+
+CI y Jenkins pueden ejecutar `./mvnw -B verify` con acceso a Docker, sin servicio
+PostgreSQL adicional. La primera ejecución descarga la imagen y dependencias.
 
 Las que más importan:
 
