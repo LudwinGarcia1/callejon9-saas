@@ -47,9 +47,10 @@ Esta decisión decía Mexico Central. Con la sesión de Azure ya disponible se v
 
 Ludwin Garcia eligió `eastus` con `Standard_D2as_v4` (2 vCPU, 8 GB). Es la región permitida con más tamaños x64 disponibles, y ese tamaño usa disco SCSI, que es lo que asume `infra/jenkins/provision.sh`. Los tamaños v6 y v7 disponibles exigen NVMe. El mecanismo de acceso decidido no cambia.
 
+Cuota verificada con `az vm list-usage -l eastus` el 2026-10-08: 6 vCPU regionales y 4 de la familia DASv4, sin uso. `Standard_D2as_v4` ocupa 2.
+
 ## Pendiente de verificar
 
-- La cuota de vCPU de la suscripción en `eastus`. No se pudo leer porque los resource providers aún no están registrados; se confirma en el primer `apply`.
 - El costo mensual real. Se registra con la evidencia de CAL-86, no se estima aquí.
 
 ## Señales para revisar la decisión

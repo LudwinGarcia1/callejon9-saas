@@ -39,7 +39,7 @@ El sufijo de los nombres globales se deriva de un hash del id de la suscripción
 
 ## Procedimiento
 
-Todos los comandos son de PowerShell y se corren desde `infra/terraform/azure-ci`.
+Todos los comandos son de PowerShell y se corren desde `infra/terraform/azure-ci`. Los argumentos con forma `-opcion=valor.con.puntos` van entre comillas completas: Windows PowerShell 5.1 los parte en el punto si no.
 
 ### 1. Sesión
 
@@ -66,7 +66,7 @@ La asignación de rol sobre el storage account puede tardar unos minutos en prop
 Copia `backend.hcl.example` a `backend.hcl` con el nombre del storage account que imprimió el bootstrap, y `terraform.tfvars.example` a `terraform.tfvars` con el valor de `$operator`. Ambos archivos están ignorados por git.
 
 ```powershell
-terraform init -backend-config=backend.hcl
+terraform init "-backend-config=backend.hcl"
 terraform plan -out tfplan
 terraform show -no-color tfplan > "$env:TEMP\plan-cal-48.txt"
 terraform apply tfplan
