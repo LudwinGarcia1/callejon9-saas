@@ -56,13 +56,6 @@ app:
     # aceptando; si ambas existen, manda AUTH_COOKIE_SECURE.
     cookie-secure: ${AUTH_COOKIE_SECURE:${AUTH_SECURE_COOKIE:true}}
 
-  realtime:
-    # Cada cuanto se revisan las conexiones WebSocket abiertas para cerrar las
-    # de sesiones revocadas (logout, reutilizacion, baja del usuario). Es la
-    # latencia maxima entre revocar y cortar; cada ciclo cuesta una consulta
-    # por restaurante con conexiones abiertas.
-    session-check-interval: PT30S
-
     # Freno contra fuerza bruta en el login (LoginAttemptLimiter). Un fallo
     # cuenta para la cuenta (restaurante + correo) y para la IP; al llegar a
     # cualquiera de los dos limites dentro de la ventana, el login responde
@@ -72,6 +65,19 @@ app:
       max-failures-per-account: ${AUTH_LOGIN_MAX_FAILURES_ACCOUNT:5}
       max-failures-per-ip: ${AUTH_LOGIN_MAX_FAILURES_IP:20}
       window: ${AUTH_LOGIN_WINDOW:15m}
+
+  realtime:
+    # Cada cuanto se revisan las conexiones WebSocket abiertas para cerrar las
+    # de sesiones revocadas (logout, reutilizacion, baja del usuario). Es la
+    # latencia maxima entre revocar y cortar; cada ciclo cuesta una consulta
+    # por restaurante con conexiones abiertas.
+    session-check-interval: PT30S
+
+    # Origenes de navegador que pueden abrir el WebSocket /ws, separados por
+    # coma y sin comodines. En produccion debe ser el dominio publico del
+    # frontend. Los clientes que no envian Origin (no navegadores) no se
+    # ven afectados.
+    allowed-origins: ${APP_ALLOWED_ORIGINS:http://localhost:3000}
 
 server:
   port: 8080

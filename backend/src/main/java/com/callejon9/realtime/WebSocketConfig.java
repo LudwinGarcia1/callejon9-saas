@@ -1,5 +1,6 @@
 package com.callejon9.realtime;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -31,16 +32,20 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private final PrincipalHandshakeHandler principalHandshakeHandler;
     private final TenantSubscriptionInterceptor tenantSubscriptionInterceptor;
     private final OpenConnectionRegistry openConnectionRegistry;
+    private final String[] allowedOrigins;
 
     public WebSocketConfig(
             JwtHandshakeInterceptor jwtHandshakeInterceptor,
             PrincipalHandshakeHandler principalHandshakeHandler,
             TenantSubscriptionInterceptor tenantSubscriptionInterceptor,
             OpenConnectionRegistry openConnectionRegistry) {
+            OpenConnectionRegistry openConnectionRegistry,
+            @Value("${app.realtime.allowed-origins}") String[] allowedOrigins) {
         this.jwtHandshakeInterceptor = jwtHandshakeInterceptor;
         this.principalHandshakeHandler = principalHandshakeHandler;
         this.tenantSubscriptionInterceptor = tenantSubscriptionInterceptor;
         this.openConnectionRegistry = openConnectionRegistry;
+        this.allowedOrigins = requireExplicitOrigins(allowedOrigins);
     }
 
     /** Nombre del scheduler propio de {@link RevokedSessionSweeper}. */
@@ -65,12 +70,36 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registration.addDecoratorFactory(openConnectionRegistry);
     }
 
+    /**
+     * El handshake se autentica con la cookie, y el navegador la adjunta sin
+     * importar que pagina abre el socket. La lista de origenes es lo que
+     * impide que otro sitio abra el canal con la sesion del usuario (Cross-Site
+     * WebSocket Hijacking), sin depender solo de SameSite=Strict.
+     *
+     * <p>Un handshake sin cabecera Origin (cliente nativo, no navegador) no se
+     * ve afectado: Spring lo trata como mismo origen y sigue necesitando la
+     * cookie.
+     */
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
                 .setHandshakeHandler(principalHandshakeHandler)
                 .addInterceptors(jwtHandshakeInterceptor)
-                .setAllowedOriginPatterns("*");
+                .setAllowedOrigins(allowedOrigins);
+    }
+
+    /** Falla al arrancar antes que abrir el canal a cualquier origen por un error de configuracion. */
+    static String[] requireExplicitOrigins(String[] origins) {
+        if (origins == null || origins.length == 0) {
+            throw new IllegalStateException("app.realtime.allowed-origins no puede estar vacio");
+        }
+        for (String origin : origins) {
+            if (origin == null || origin.isBlank() || origin.contains("*")) {
+                throw new IllegalStateException(
+                        "app.realtime.allowed-origins solo acepta origenes explicitos, sin comodines: " + origin);
+            }
+        }
+        return origins;
     }
 
     @Override

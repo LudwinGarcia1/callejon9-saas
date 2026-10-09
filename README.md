@@ -132,6 +132,8 @@ El token de acceso dura 15 minutos en todos los perfiles, incluido `demo`. La re
 
 Las cookies llevan el atributo `Secure` salvo que `AUTH_COOKIE_SECURE=false`. `scripts/run-dev.ps1` y el perfil `demo` lo desactivan porque en local no hay HTTPS. En cualquier otro entorno la API debe servirse detrás de HTTPS.
 
+El WebSocket `/ws` solo acepta el handshake desde los orígenes de `APP_ALLOWED_ORIGINS` (separados por coma, sin comodines). Por omisión es `http://localhost:3000`; en cualquier otro entorno debe ser el dominio público del frontend. Con la lista vacía o con `*`, el backend no arranca.
+
 ### 3. Frontend
 
 ```powershell
