@@ -33,6 +33,7 @@ public class InventoryItemController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','KITCHEN')")
     public List<InventoryItemResponse> list(
             @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
         return itemService.listItems(includeInactive).stream()

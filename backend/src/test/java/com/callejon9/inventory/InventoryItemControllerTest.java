@@ -1,8 +1,8 @@
 package com.callejon9.inventory;
 
-import com.callejon9.auth.service.JwtService;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
+import com.callejon9.support.TestSessions;
 import com.callejon9.tenancy.TenantContext;
 import com.callejon9.user.domain.User;
 import com.callejon9.user.domain.UserRole;
@@ -37,7 +37,7 @@ class InventoryItemControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private TenantOnboardingService onboardingService;
-    @Autowired private JwtService jwtService;
+    @Autowired private TestSessions testSessions;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private TransactionTemplate transactionTemplate;
     @Autowired private UserRepository userRepository;
@@ -59,7 +59,7 @@ class InventoryItemControllerTest {
     }
 
     private Cookie cookieFor(User user) {
-        return new Cookie("access_token", jwtService.generateAccessToken(user));
+        return new Cookie("access_token", testSessions.accessTokenFor(user));
     }
 
     /**
@@ -162,29 +162,29 @@ class InventoryItemControllerTest {
     }
 
     @Test
-    @DisplayName("un WAITER puede consultar insumos pero no crearlos ni editarlos")
-    void waiterCanReadButNotWrite() throws Exception {
+    @DisplayName("KITCHEN puede consultar insumos pero no crearlos ni editarlos")
+    void kitchenCanReadButNotWrite() throws Exception {
         UUID itemId = createItem("Cebolla", "kg");
-        User waiter = persistedUser(UserRole.WAITER);
+        User kitchen = persistedUser(UserRole.KITCHEN);
 
-        mockMvc.perform(get("/api/v1/inventory/items").cookie(cookieFor(waiter)))
+        mockMvc.perform(get("/api/v1/inventory/items").cookie(cookieFor(kitchen)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
 
         mockMvc.perform(post("/api/v1/inventory/items")
-                        .cookie(cookieFor(waiter))
+                        .cookie(cookieFor(kitchen))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Tomate\",\"unit\":\"kg\"}"))
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(put("/api/v1/inventory/items/" + itemId)
-                        .cookie(cookieFor(waiter))
+                        .cookie(cookieFor(kitchen))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Cebolla morada\",\"unit\":\"kg\"}"))
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(patch("/api/v1/inventory/items/" + itemId)
-                        .cookie(cookieFor(waiter))
+                        .cookie(cookieFor(kitchen))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"active\":false}"))
                 .andExpect(status().isForbidden());

@@ -56,3 +56,8 @@ build/
 # en silencio. Lo unico que se comparte es la configuracion de permisos.
 .claude/*
 !.claude/settings.json
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*

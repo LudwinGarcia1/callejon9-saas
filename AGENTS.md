@@ -40,7 +40,7 @@ Ejecuta la comprobación más estrecha durante el desarrollo y cierra con las pu
 - Frontend producción: `cd frontend; pnpm build`
 - RLS manual: usa `scripts/verify-rls.sql` como `callejon9_app` contra una base local preparada.
 
-Las pruebas del backend requieren PostgreSQL real y las variables descritas en `README.md`; H2 no demuestra RLS. No afirmes que una puerta pasó si no se ejecutó. Registra bloqueos y evidencia verificable.
+Las pruebas del backend levantan PostgreSQL 16 real con Testcontainers y requieren Docker por defecto. Para una base externa preparada usa `-Dtest.database.mode=external` y las variables descritas en `README.md`; H2 no demuestra RLS. No afirmes que una puerta pasó si no se ejecutó. Registra bloqueos y evidencia verificable.
 
 ## Linear y coordinación
 

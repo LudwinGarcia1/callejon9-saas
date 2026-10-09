@@ -23,6 +23,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(com.callejon9.sale.service.InvalidPaymentException.class)
+    ProblemDetail onInvalidPayment(com.callejon9.sale.service.InvalidPaymentException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());
+    }
+
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     private static final String DATA_INTEGRITY_DETAIL =

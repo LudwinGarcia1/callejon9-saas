@@ -1,10 +1,9 @@
 package com.callejon9.tenancy;
 
-import com.callejon9.auth.service.JwtService;
-import com.callejon9.user.domain.User;
+import com.callejon9.support.TestSessions;
 import com.callejon9.user.domain.UserRole;
 import jakarta.servlet.http.Cookie;
-import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -12,9 +11,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.MediaType;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -25,16 +26,18 @@ class TenantFilterTest {
     @Autowired
     private MockMvc mockMvc;
 
+    private static final String SLUG_PREFIX = "filtro-test";
+
     @Autowired
-    private JwtService jwtService;
+    private TestSessions testSessions;
+
+    @AfterEach
+    void cleanUp() {
+        testSessions.deleteTenants(SLUG_PREFIX);
+    }
 
     private String tokenFor(UserRole role) {
-        User user = User.builder()
-                .email("demo@demo.com").passwordHash("x").fullName("Demo")
-                .role(role).active(true).build();
-        user.setId(UUID.randomUUID());
-        user.setTenantId(UUID.randomUUID());
-        return jwtService.generateAccessToken(user);
+        return testSessions.accessTokenForNewUser(SLUG_PREFIX, role);
     }
 
     @Test
@@ -65,13 +68,13 @@ class TenantFilterTest {
     }
 
     @Test
-    void loginEndpointIsPublic() throws Exception {
-        // Un GET contra una ruta mapeada solo a POST da 405 Method Not
-        // Allowed. Eso prueba que la peticion atraveso la cadena de seguridad
-        // sin autenticacion y llego al DispatcherServlet: un 401 aqui
-        // significaria que "/api/v1/auth/**" dejo de ser publico.
+    void postLoginIsPublicAndGetRequiresAuthentication() throws Exception {
+        // POST llega a la validacion del controller sin cookie; GET exige sesion.
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest());
         mockMvc.perform(get("/api/v1/auth/login"))
-                .andExpect(status().isMethodNotAllowed());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

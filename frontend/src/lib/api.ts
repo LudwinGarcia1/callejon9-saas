@@ -1,3 +1,4 @@
+import { endpoints } from "./endpoints";
 import type { ProblemDetail } from "./types";
 
 /**
@@ -57,14 +58,81 @@ function buildQueryString(params?: QueryParams): string {
 }
 
 /**
+ * Rutas de sesion cuyo 401 es la respuesta definitiva: renovar ahi no tiene
+ * sentido (login con credenciales malas) o seria recursivo (refresh).
+ *
+ * El logout NO esta aqui: el backend exige una sesion vigente para cerrarla
+ * (CAL-5). Si el access token ya vencio, se renueva y se repite el logout;
+ * sin eso la sesion seguiria viva en el servidor con la cookie de refresh.
+ */
+const SESSION_PATHS = new Set([
+  endpoints.auth.login(),
+  endpoints.auth.refresh(),
+]);
+
+/** Nombre del Web Lock que serializa la renovacion entre pestanas. */
+const REFRESH_LOCK = "callejon9:auth-refresh";
+
+let refreshInFlight: Promise<boolean> | null = null;
+
+/**
+ * Renueva la sesion con POST /auth/refresh. Las peticiones que reciben 401 a
+ * la vez comparten una sola renovacion: el backend trata un refresh token
+ * presentado dos veces como robado y revoca la sesion entera, asi que dos
+ * renovaciones paralelas con la misma cookie cerrarian la sesion del usuario.
+ *
+ * Por la misma razon, entre pestanas se serializa con Web Locks: la cookie es
+ * compartida, y la pestana que espera el candado ya envia la cookie nueva que
+ * dejo la primera.
+ */
+function refreshSession(): Promise<boolean> {
+  refreshInFlight ??= runRefresh().finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+}
+
+async function runRefresh(): Promise<boolean> {
+  const call = () =>
+    fetch(`${API_BASE_URL}${endpoints.auth.refresh()}`, {
+      method: "POST",
+      credentials: "include",
+    })
+      .then((response) => response.ok)
+      .catch(() => false);
+
+  if (typeof navigator !== "undefined" && navigator.locks) {
+    // `await` aplana el tipo: la definicion de lib.dom envuelve dos veces la
+    // promesa que devuelve el callback.
+    return await navigator.locks.request(REFRESH_LOCK, call);
+  }
+  return call();
+}
+
+/**
+ * Solo el navegador renueva: ahi viven las cookies que el backend reemplaza.
+ * Un fetch del lado del servidor no podria entregarle las cookies nuevas.
+ */
+function canRefresh(path: string): boolean {
+  return typeof window !== "undefined" && !SESSION_PATHS.has(path.split("?")[0]);
+}
+
+/**
  * Envoltorio delgado sobre fetch. Siempre envia `credentials: 'include'`
  * porque el backend autentica con una cookie httpOnly (`access_token`); el
  * token nunca se lee ni se guarda en JavaScript.
+ *
+ * Ante un 401 renueva la sesion una sola vez y repite la peticion original.
+ * Para quien llama es transparente: la mutation o query simplemente termina
+ * bien, sin desmontar el formulario. Si la renovacion falla, el 401 original
+ * sigue su curso hacia el manejador global de `providers.tsx`.
  */
-async function request<TResponse>(
+async function send(
   path: string,
-  { body, headers, ...rest }: RequestOptions = {},
-): Promise<TResponse> {
+  options: RequestOptions = {},
+  allowRefresh = true,
+): Promise<Response> {
+  const { body, headers, ...rest } = options;
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...rest,
     credentials: "include",
@@ -74,6 +142,24 @@ async function request<TResponse>(
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
+
+  if (
+    response.status === 401 &&
+    allowRefresh &&
+    canRefresh(path) &&
+    (await refreshSession())
+  ) {
+    return send(path, options, false);
+  }
+
+  return response;
+}
+
+async function request<TResponse>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<TResponse> {
+  const response = await send(path, options);
 
   if (!response.ok) {
     throw new ApiError(await parseProblemDetail(response), response.status);
@@ -108,4 +194,12 @@ export const api = {
     request<TResponse>(path, { ...options, method: "PATCH", body }),
   del: <TResponse>(path: string, options?: RequestOptions) =>
     request<TResponse>(path, { ...options, method: "DELETE" }),
+  /** Descarga binaria (PDF) con la misma cookie y la misma renovacion. */
+  blob: async (path: string, options?: RequestOptions): Promise<Blob> => {
+    const response = await send(path, { ...options, method: "GET" });
+    if (!response.ok) {
+      throw new ApiError(await parseProblemDetail(response), response.status);
+    }
+    return response.blob();
+  },
 };

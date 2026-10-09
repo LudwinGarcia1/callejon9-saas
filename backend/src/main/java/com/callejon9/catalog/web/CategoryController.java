@@ -29,6 +29,7 @@ public class CategoryController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN','WAITER','KITCHEN','CASHIER')")
     public List<CategoryResponse> list() {
         return categoryService.listCategories().stream()
                 .map(CategoryResponse::from)

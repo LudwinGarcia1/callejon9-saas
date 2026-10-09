@@ -71,7 +71,8 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public OrderWithItems getOrder(UUID orderId) {
-        Order order = requireOrder(orderId);
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("La orden no existe."));
         List<OrderItem> items = orderItemRepository.findByOrderIdOrderByOrderedAt(orderId);
         return new OrderWithItems(order, items);
     }
@@ -191,7 +192,7 @@ public class OrderService {
     }
 
     private Order requireOrder(UUID orderId) {
-        return orderRepository.findById(orderId)
+        return orderRepository.findForCheckout(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("La orden no existe."));
     }
 }

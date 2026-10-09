@@ -1,10 +1,10 @@
 package com.callejon9.ticket;
 
-import com.callejon9.auth.service.JwtService;
 import com.callejon9.catalog.domain.Product;
 import com.callejon9.catalog.repository.ProductRepository;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
+import com.callejon9.support.TestSessions;
 import com.callejon9.table.domain.RestaurantTable;
 import com.callejon9.table.domain.TableStatus;
 import com.callejon9.table.repository.RestaurantTableRepository;
@@ -41,7 +41,7 @@ class TicketControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private TenantOnboardingService onboardingService;
-    @Autowired private JwtService jwtService;
+    @Autowired private TestSessions testSessions;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private TransactionTemplate transactionTemplate;
     @Autowired private UserRepository userRepository;
@@ -83,7 +83,7 @@ class TicketControllerTest {
     }
 
     private Cookie cookieFor(User user) {
-        return new Cookie("access_token", jwtService.generateAccessToken(user));
+        return new Cookie("access_token", testSessions.accessTokenFor(user));
     }
 
     private UUID checkoutAndGetTicketId() throws Exception {
@@ -111,18 +111,18 @@ class TicketControllerTest {
     }
 
     @Test
-    @DisplayName("cualquier usuario autenticado puede consultar un ticket")
-    void anyAuthenticatedUserCanReadATicket() throws Exception {
+    @DisplayName("caja puede consultar un ticket de su restaurante")
+    void cashierCanReadATicket() throws Exception {
         UUID ticketId = checkoutAndGetTicketId();
 
-        mockMvc.perform(get("/api/v1/tickets/" + ticketId).cookie(cookieFor(waiter)))
+        mockMvc.perform(get("/api/v1/tickets/" + ticketId).cookie(cookieFor(cashier)))
                 .andExpect(status().isOk());
     }
 
     @Test
     @DisplayName("un ticket inexistente da 404")
     void unknownTicketIsNotFound() throws Exception {
-        mockMvc.perform(get("/api/v1/tickets/" + UUID.randomUUID()).cookie(cookieFor(waiter)))
+        mockMvc.perform(get("/api/v1/tickets/" + UUID.randomUUID()).cookie(cookieFor(cashier)))
                 .andExpect(status().isNotFound());
     }
 
@@ -131,7 +131,7 @@ class TicketControllerTest {
     void pdfEndpointReturnsAPdfDocument() throws Exception {
         UUID ticketId = checkoutAndGetTicketId();
 
-        var result = mockMvc.perform(get("/api/v1/tickets/" + ticketId + "/pdf").cookie(cookieFor(waiter)))
+        var result = mockMvc.perform(get("/api/v1/tickets/" + ticketId + "/pdf").cookie(cookieFor(cashier)))
                 .andExpect(status().isOk())
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
                         .content().contentType(MediaType.APPLICATION_PDF))

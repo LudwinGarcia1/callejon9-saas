@@ -57,12 +57,13 @@ public interface AnalyticsRepository extends JpaRepository<Sale, UUID> {
     /** Numero de ventas e ingreso por metodo de pago en el rango. */
     @Query("""
             select new com.callejon9.analytics.web.dto.PaymentMixAggregate(
-                s.paymentMethod, count(s), coalesce(sum(s.total), 0))
+                coalesce(p.method, s.paymentMethod), count(s), coalesce(sum(coalesce(p.amount, s.total)), 0))
             from Sale s
+            left join com.callejon9.sale.domain.Payment p on p.saleId = s.id and p.status = 'COMPLETED'
             where s.status = com.callejon9.sale.domain.SaleStatus.COMPLETED
               and s.createdAt >= :from and s.createdAt < :to
-            group by s.paymentMethod
-            order by sum(s.total) desc
+            group by coalesce(p.method, s.paymentMethod)
+            order by sum(coalesce(p.amount, s.total)) desc
             """)
     List<PaymentMixAggregate> paymentMix(@Param("from") Instant from, @Param("to") Instant to);
 

@@ -45,6 +45,7 @@ public class CheckoutService {
     private final TicketRepository ticketRepository;
     private final TableService tableService;
     private final FolioGenerator folioGenerator;
+    private final com.callejon9.sale.repository.PaymentRepository paymentRepository;
 
     public CheckoutService(
             OrderRepository orderRepository,
@@ -52,18 +53,21 @@ public class CheckoutService {
             SaleRepository saleRepository,
             TicketRepository ticketRepository,
             TableService tableService,
-            FolioGenerator folioGenerator) {
+            FolioGenerator folioGenerator,
+            com.callejon9.sale.repository.PaymentRepository paymentRepository) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.saleRepository = saleRepository;
         this.ticketRepository = ticketRepository;
         this.tableService = tableService;
         this.folioGenerator = folioGenerator;
+        this.paymentRepository = paymentRepository;
     }
 
     @Transactional
-    public Ticket checkout(UUID orderId, PaymentMethod paymentMethod, BigDecimal tipPercent, UUID cashierId) {
-        Order order = orderRepository.findById(orderId)
+    public Ticket checkout(UUID orderId, com.callejon9.sale.web.dto.CheckoutRequest request, UUID cashierId) {
+        BigDecimal tipPercent = request.tipPercent();
+        Order order = orderRepository.findForCheckout(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("La orden " + orderId + " no existe."));
 
         if (order.getStatus() == OrderStatus.PAID || order.getStatus() == OrderStatus.CANCELED) {
@@ -89,6 +93,14 @@ public class CheckoutService {
                 .setScale(2, RoundingMode.HALF_UP);
         BigDecimal total = subtotal.add(tip).setScale(2, RoundingMode.HALF_UP);
 
+        if (request.payments() != null && request.paymentMethod() != null) {
+            throw new InvalidPaymentException("Envía payments o paymentMethod, no ambos.");
+        }
+        var requestedPayments = request.payments() != null ? request.payments()
+                : List.of(new com.callejon9.sale.web.dto.PaymentRequest(request.paymentMethod(), total));
+        var payments = PaymentAllocation.allocate(requestedPayments, total);
+        PaymentMethod paymentMethod = payments.size() == 1 ? payments.getFirst().method() : PaymentMethod.MIXED;
+
         Instant now = Instant.now();
 
         Sale sale = saleRepository.save(Sale.builder()
@@ -102,11 +114,21 @@ public class CheckoutService {
                 .total(total)
                 .build());
 
+        for (var payment : payments) {
+            paymentRepository.save(com.callejon9.sale.domain.Payment.builder()
+                    .saleId(sale.getId()).provider("MANUAL").method(payment.method())
+                    .amount(payment.amount()).receivedAmount(payment.receivedAmount()).status("COMPLETED").build());
+        }
+        paymentRepository.flush();
+
         Ticket ticket = ticketRepository.save(Ticket.builder()
                 .saleId(sale.getId())
                 .orderId(order.getId())
                 .folio(folioGenerator.next(TICKET_FOLIO_PREFIX))
                 .itemsSnapshot(snapshot)
+                .paymentsSnapshot(payments)
+                .change(payments.stream().map(com.callejon9.ticket.domain.TicketPaymentSnapshot::change)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add))
                 .subtotal(subtotal)
                 .tip(tip)
                 .tipPercent(tipPercent.setScale(2, RoundingMode.HALF_UP))

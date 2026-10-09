@@ -5,8 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { ScreenShell, ScreenMetric } from "@/components/layout/screen-shell";
 import { Skeleton } from "@/components/ui/skeleton";
 import { QueryState } from "@/components/shared/query-state";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -121,20 +120,20 @@ export function KitchenView() {
   }
 
   return (
-    <div className="flex flex-col gap-6" data-density="spacious">
-      <div>
-        <h1 className="text-xl font-semibold">Cocina</h1>
-        <p className="text-sm text-muted-foreground">
-          Órdenes enviadas a cocina, de la más antigua a la más reciente.
-        </p>
-      </div>
-
-      <QueryState
-        isLoading={ordersQuery.isLoading}
-        error={ordersQuery.error}
-        isEmpty={ordersQuery.data?.length === 0}
-        emptyMessage="No hay órdenes en cocina en este momento."
+    <div className="flex flex-1 flex-col bg-background text-foreground" data-density="spacious">
+      <ScreenShell
+        title="Cocina"
+        subtitle="Órdenes enviadas a cocina, de la más antigua a la más reciente."
+        actions={
+          <ScreenMetric label="En preparación" value={ordersQuery.data?.length ?? "—"} />
+        }
       >
+        <QueryState
+          isLoading={ordersQuery.isLoading}
+          error={ordersQuery.error}
+          isEmpty={ordersQuery.data?.length === 0}
+          emptyMessage="No hay ordenes en cocina en este momento."
+        >
         {ordersQuery.isLoading ? (
           <BoardSkeleton />
         ) : (
@@ -142,70 +141,81 @@ export function KitchenView() {
             {ordersQuery.data?.map((order) => {
               const age = orderAge(order.sentToKitchenAt, now);
               return (
-                <Card key={order.id} className={AGE_CARD_STYLES[age]}>
-                  <CardHeader className="flex flex-row items-start justify-between gap-2">
-                    <div>
-                      <CardTitle className="text-[length:var(--density-text-lg)]">
-                        {tableLabel(order.tableId)}
-                      </CardTitle>
-                      <p className={cn("text-[length:var(--density-text-base)]", AGE_TEXT_STYLES[age])}>
-                        {elapsedLabel(order.sentToKitchenAt, now)}
-                      </p>
-                      <p className="text-[length:var(--density-text-sm)] text-muted-foreground">
-                        Orden {order.folio}
-                      </p>
-                    </div>
-                    <StatusBadge kind="order" status={order.status} />
-                  </CardHeader>
-                  <CardContent className="flex flex-col gap-3">
-                    {order.items.map((item, index) => {
-                      const next = nextKitchenStatus(item.kitchenStatus);
-                      const isPending =
-                        advanceItemMutation.isPending &&
-                        advanceItemMutation.variables?.itemId === item.id;
-                      return (
-                        <div key={item.id} className="flex flex-col gap-2">
-                          {index > 0 && <Separator />}
-                          <div
-                            className={cn(
-                              "flex items-center justify-between gap-2",
-                              isReadyOrBeyond(item.kitchenStatus) && "opacity-50",
-                            )}
-                          >
-                            <div>
-                              <p className="text-[length:var(--density-text-base)] font-medium">
-                                {item.quantity} × {item.productName}
+              <article
+                key={order.id}
+                className={cn("flex flex-col rounded-xl border bg-card p-[18px]", AGE_CARD_STYLES[age])}
+              >
+                <header className="flex items-start justify-between gap-3 border-b pb-3.5">
+                  <div>
+                    <p className="eyebrow">
+                      {order.folio}
+                    </p>
+                    <p className="mt-0.5 font-display text-[28px] leading-none">
+                      {tableLabel(order.tableId)}
+                    </p>
+                    <p className={cn("mt-1 text-sm", AGE_TEXT_STYLES[age])}>
+                      {elapsedLabel(order.sentToKitchenAt, now)}
+                    </p>
+                  </div>
+                  <StatusBadge kind="order" status={order.status} />
+                </header>
+
+                <div className="flex flex-col">
+                  {order.items.map((item) => {
+                    const next = nextKitchenStatus(item.kitchenStatus);
+                    const isPending =
+                      advanceItemMutation.isPending &&
+                      advanceItemMutation.variables?.itemId === item.id;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className={cn(
+                          "flex flex-col gap-2.5 border-b border-dotted border-border-strong py-3.5 last:border-b-0",
+                          isReadyOrBeyond(item.kitchenStatus) && "opacity-50",
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-[15px]">
+                              <span className="font-mono text-[13px] text-muted-foreground">
+                                {item.quantity}×
+                              </span>{" "}
+                              {item.productName}
+                            </p>
+                            {item.notes && (
+                              <p className="text-[length:var(--density-text-sm)] text-muted-foreground">
+                                {item.notes}
                               </p>
-                              {item.notes && (
-                                <p className="text-[length:var(--density-text-sm)] text-muted-foreground">
-                                  {item.notes}
-                                </p>
-                              )}
-                            </div>
-                            <StatusBadge kind="kitchen" status={item.kitchenStatus} />
+                            )}
                           </div>
-                          {next && (
-                            <Button
-                              variant="outline"
-                              disabled={isPending}
-                              className="h-[var(--control-height)] w-full text-[length:var(--density-text-base)]"
-                              onClick={() =>
-                                advanceItemMutation.mutate({ itemId: item.id, status: next })
-                              }
-                            >
-                              {isPending ? "Actualizando..." : `Marcar como ${KITCHEN_STATUS_LABELS[next]}`}
-                            </Button>
-                          )}
+                          <StatusBadge kind="kitchen" status={item.kitchenStatus} />
                         </div>
-                      );
-                    })}
-                  </CardContent>
-                </Card>
+                        {next && (
+                          <Button
+                            variant="outline"
+                            disabled={isPending}
+                            className="h-[var(--control-height)] w-full text-[length:var(--density-text-base)]"
+                            onClick={() =>
+                              advanceItemMutation.mutate({ itemId: item.id, status: next })
+                            }
+                          >
+                            {isPending
+                              ? "Actualizando…"
+                              : `Marcar como ${KITCHEN_STATUS_LABELS[next]}`}
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </article>
               );
             })}
           </div>
         )}
-      </QueryState>
+        </QueryState>
+      </ScreenShell>
     </div>
   );
 }

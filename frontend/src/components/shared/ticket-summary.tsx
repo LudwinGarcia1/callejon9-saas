@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Money } from "@/components/shared/money";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { formatShortTime } from "@/lib/format";
 import type { TicketResponse } from "@/lib/types";
+import { PAYMENT_METHOD_LABELS } from "@/lib/types";
 
 interface TicketSummaryProps {
   ticket: TicketResponse;
@@ -30,18 +32,11 @@ export function TicketSummary({ ticket }: TicketSummaryProps) {
   async function handleDownloadPdf() {
     setIsDownloading(true);
     try {
-      // fetch directo con credenciales: la ruta necesita la cookie httpOnly,
-      // y una descarga por window.open no la reenviaria de forma confiable a
-      // traves del proxy. El blob se convierte en un object URL efimero solo
-      // para disparar la descarga.
-      const response = await fetch(endpoints.tickets.pdf(ticket.id), {
-        credentials: "include",
-      });
-      if (!response.ok) {
-        throw new Error("El servidor no pudo generar el PDF del ticket.");
-      }
-
-      const blob = await response.blob();
+      // Descarga por fetch con credenciales: la ruta necesita la cookie
+      // httpOnly, y una descarga por window.open no la reenviaria de forma
+      // confiable a traves del proxy ni renovaria una sesion vencida. El blob
+      // se convierte en un object URL efimero solo para disparar la descarga.
+      const blob = await api.blob(endpoints.tickets.pdf(ticket.id));
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -85,6 +80,15 @@ export function TicketSummary({ ticket }: TicketSummaryProps) {
         <Money amount={ticket.total} className="block font-display text-[34px] leading-none" />
       </div>
 
+      <div className="flex flex-col gap-2 text-sm">
+        {ticket.payments?.map((payment, index) => (
+          <div key={index} className="flex justify-between gap-3">
+            <span>{PAYMENT_METHOD_LABELS[payment.method]} · recibido <Money amount={payment.receivedAmount} /></span>
+            <Money amount={payment.amount} />
+          </div>
+        ))}
+        <div className="flex justify-between"><span>Cambio</span><Money amount={ticket.change ?? 0} /></div>
+      </div>
       <Button variant="outline" disabled={isDownloading} onClick={handleDownloadPdf}>
         {isDownloading ? "Descargando…" : "Descargar ticket en PDF"}
       </Button>
