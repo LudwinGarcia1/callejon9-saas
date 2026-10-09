@@ -2,15 +2,20 @@ package com.callejon9.auth.web;
 
 import com.callejon9.auth.service.AuthService;
 import com.callejon9.auth.service.RefreshTokenService;
+import com.callejon9.auth.throttle.ClientIp;
+import com.callejon9.auth.throttle.LoginAttemptLimiter;
+import com.callejon9.auth.throttle.LoginThrottledException;
 import com.callejon9.auth.web.dto.LoginRequest;
 import com.callejon9.auth.web.dto.LoginResponse;
 import com.callejon9.auth.web.dto.MeResponse;
 import com.callejon9.tenancy.TenantFilter;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -29,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
+    private final LoginAttemptLimiter loginAttemptLimiter;
     private final RefreshTokenService refreshTokenService;
     private final AuthCookies authCookies;
 
@@ -38,17 +44,34 @@ public class AuthController {
      * y logout.
      */
     public AuthController(AuthService authService,
+                          LoginAttemptLimiter loginAttemptLimiter,
                           RefreshTokenService refreshTokenService,
                           AuthCookies authCookies) {
         this.authService = authService;
+        this.loginAttemptLimiter = loginAttemptLimiter;
         this.refreshTokenService = refreshTokenService;
         this.authCookies = authCookies;
     }
 
+    /**
+     * El limite de intentos se revisa antes de autenticar y solo cuentan los
+     * 401: un 400 por formato invalido nunca llega a probar una contrasena.
+     */
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
-        var authenticated = authService.authenticate(
-                request.slug(), request.email(), request.password());
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request,
+                                               HttpServletRequest httpRequest) {
+        String clientIp = ClientIp.of(httpRequest);
+        loginAttemptLimiter.checkAllowed(clientIp, request.slug(), request.email());
+
+        AuthService.AuthenticatedUser authenticated;
+        try {
+            authenticated = authService.authenticate(
+                    request.slug(), request.email(), request.password());
+        } catch (BadCredentialsException exception) {
+            loginAttemptLimiter.recordFailure(clientIp, request.slug(), request.email());
+            throw exception;
+        }
+        loginAttemptLimiter.recordSuccess(request.slug(), request.email());
 
         var user = authenticated.user();
         return ResponseEntity.ok()
@@ -148,5 +171,25 @@ public class AuthController {
         HttpHeaders headers = new HttpHeaders();
         cookies.forEach(cookie -> headers.add(HttpHeaders.SET_COOKIE, cookie.toString()));
         return headers;
+    }
+
+    /**
+     * 429 con {@code Retry-After} en segundos. El mensaje es el mismo para
+     * una cuenta que existe y para una que no, y no dice si el bloqueo es por
+     * cuenta o por IP.
+     */
+    @ExceptionHandler(LoginThrottledException.class)
+    ResponseEntity<ProblemDetail> onThrottled(LoginThrottledException exception) {
+        long seconds = Math.max(1, (exception.getRetryAfter().toMillis() + 999) / 1000);
+        long minutes = (seconds + 59) / 60;
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS,
+                "Demasiados intentos fallidos. Intenta de nuevo en "
+                        + (minutes == 1 ? "1 minuto." : minutes + " minutos."));
+        problem.setTitle("Demasiados intentos");
+
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, Long.toString(seconds))
+                .body(problem);
     }
 }

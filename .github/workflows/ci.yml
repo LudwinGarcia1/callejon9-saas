@@ -6,21 +6,34 @@ on:
   pull_request:
 
 jobs:
-  frontend-tests:
+  frontend:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.2
+
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Enable pnpm
-        run: corepack enable
-      - name: Install frontend dependencies
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
         working-directory: frontend
         run: pnpm install --frozen-lockfile
-      - name: Run frontend tests and focused coverage
+
+      - name: Run frontend checks
         working-directory: frontend
-        run: pnpm test:coverage
+        run: |
+          pnpm test:coverage
+          pnpm lint
+          pnpm exec tsc --noEmit
+          pnpm build
+
       - name: Upload coverage
         if: always()
         uses: actions/upload-artifact@v4

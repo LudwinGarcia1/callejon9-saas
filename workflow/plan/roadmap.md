@@ -1,98 +1,61 @@
-# Roadmap de profesionalización
+# Ruta a producción y entrega académica
 
-Sincronizado con el proyecto de Linear [Callejón 9 SaaS — Plan de profesionalización](https://linear.app/callejon19/project/callejon-9-saas-plan-de-profesionalizacion-d72584b2b157) el 2026-09-11.
+Sincronizado con el proyecto de Linear [Callejón 9 SaaS — Ruta a producción y entrega académica](https://linear.app/callejon19/project/callejon-9-saas-ruta-a-produccion-y-entrega-academica-d72584b2b157) el 2026-09-26.
 
-## Baseline revisada
+## Estructura de ejecución
 
-- Código: `feat/identidad-por-restaurante@b036e4d`.
-- El documento de entrada había sido generado contra `main@232555d`; cada issue se volvió a contrastar con controllers, services, migraciones, pruebas, frontend, CI y documentación del checkout actual.
-- Los puntos siguen siendo una estimación inicial para un equipo de tres personas. Deben calibrarse durante refinamiento.
-- Se mantienen seis fases de dos semanas como estructura de compromiso. Cada fase está representada por un project milestone y asignada al cycle equivalente de Linear.
+Las fases son hitos de resultado; los ciclos de Linear son sprints semanales y no equivalen necesariamente a una fase. Cada ticket conserva su ciclo para la planeación de corto plazo y su fase para mostrar el resultado al que contribuye.
 
-## Fase 1 — Cerrar la puerta · Cycle 1 · 14–28 sep 2026 · 31 SP
+## Fase 1 — Base segura y estable
 
-| Issue | Resultado |
-|---|---|
-| CAL-5 | Cerrar la matriz de autorización de la API |
-| CAL-6 | Rotación segura de refresh tokens |
-| CAL-7 | Contrato de autorización exigible en CI |
-| CAL-8 | Cabeceras y cookies en la frontera pública |
-| CAL-9 | Gobernanza y protección del repositorio |
-| CAL-10 | Rechazar productos inactivos en comandas |
-| CAL-45 | Proteger con pruebas las rutas autenticadas de Next.js |
-| CAL-46 | Validar el destino posterior al inicio de sesión |
+Objetivo: recuperar una base confiable para operar y desarrollar sobre `main`.
 
-## Fase 2 — Que corra en cualquier máquina · Cycle 2 · 28 sep–12 oct 2026 · 27 SP
+Alcance: CAL-5, CAL-7 a CAL-10, CAL-45, CAL-46 y CAL-85. Cierra autorización y rutas autenticadas, valida redirecciones, rechaza productos inactivos y deja el frontend compilable.
 
-| Issue | Resultado |
-|---|---|
-| CAL-11 | Entorno completo con Docker Compose |
-| CAL-12 | Puertas de frontend en CI |
-| CAL-13 | Folios únicos entre instancias |
-| CAL-14 | Escaneo de dependencias y código |
-| CAL-15 | Configuración productiva y secretos seguros |
-| CAL-17 | Imágenes productivas mínimas/no root |
+Salida: rutas y roles críticos protegidos por pruebas, reglas de negocio validadas en backend y `main` compilable.
 
-## Fase 3 — Escala y exactitud · Cycle 3 · 12–26 oct 2026 · 23 SP
+## Fase 2 — Plataforma reproducible y CI
 
-| Issue | Resultado |
-|---|---|
-| CAL-16 | Paginación/orden de listados crecientes |
-| CAL-18 | Cobertura útil con JaCoCo |
-| CAL-19 | Zona horaria por restaurante |
-| CAL-20 | Formato y análisis estático |
-| CAL-22 | Liveness/readiness y salud de esquema |
+Objetivo: construir, probar y ejecutar el sistema de forma segura, repetible y sin depender de una estación de trabajo.
 
-## Fase 4 — Saber qué pasó · Cycle 4 · 26 oct–9 nov 2026 · 24 SP
+Alcance: CAL-6, CAL-11 a CAL-15, CAL-17, CAL-33, CAL-47 a CAL-50 y CAL-86 a CAL-88. Incluye sesiones seguras, Docker, CI, configuración, correo, imágenes, Terraform para la infraestructura de CI en Azure, Jenkins privado y Testcontainers.
 
-| Issue | Resultado |
-|---|---|
-| CAL-23 | Logs estructurados y request context seguro |
-| CAL-21 | Bitácora de auditoría inmutable |
-| CAL-24 | Métricas y panel operable |
-| CAL-25 | Cambio de contraseña por autoservicio |
+Inicio y cierre destacados: CAL-48 inicia con el primer `terraform apply` revisado y termina al validar red, identidad, persistencia, estado remoto y destrucción de prueba. CAL-86 entrega Jenkins privado y recuperable; CAL-87 termina cuando el pipeline demuestra una ejecución verde y un fallo inducido.
 
-## Fase 5 — Confianza de extremo a extremo · Cycle 5 · 9–23 nov 2026 · 24 SP
+Salida: entorno y pipeline reproducibles, credenciales mínimas y PostgreSQL real que permite demostrar RLS.
 
-| Issue | Resultado |
-|---|---|
-| CAL-28 | Recorridos críticos con Playwright |
-| CAL-27 | Entorno remoto desplegado/verificado |
-| CAL-26 | Límite de intentos de login |
-| CAL-30 | Runbook de operación probado |
+## Fase 3 — Despliegue seguro y calidad exigible
 
-## Fase 6 — Que pueda cobrar · Cycle 6 · 23 nov–7 dic 2026 · 26 SP
+Objetivo: hacer obligatorias la calidad, la seguridad y la compatibilidad de datos antes de integrar o desplegar.
 
-| Issue | Resultado |
-|---|---|
-| CAL-29 | Cobro recurrente con Mercado Pago |
-| CAL-31 | Ciclo de vida de suscripción exigible |
-| CAL-32 | Verificación de correo antes de activar |
+Alcance: CAL-16, CAL-18 a CAL-20, CAL-22, CAL-35, CAL-51, CAL-52, CAL-55 y CAL-89 a CAL-91. Incluye paginación, zona horaria, cobertura, análisis estático, salud, RDS con RLS, OpenAPI, checks de Jenkins y SonarQube.
 
-## Backlog posterior · 81 SP
+Salida: cada pull request supera controles visibles, el quality gate de SonarQube protege el código nuevo, los datos preservan RLS y los contratos son verificables.
 
-- CAL-33 recuperación de contraseña.
-- CAL-38 TOTP.
-- CAL-34 optimización medida de consultas.
-- CAL-35 pruebas unitarias de frontend.
-- CAL-43 CHANGELOG y cifras reproducibles.
-- CAL-36 configuración operativa; la identidad visual ya está implementada en la rama revisada.
-- CAL-41 portal de facturación.
-- CAL-39 inventario/recetas al iniciar preparación.
-- CAL-42 analítica por hora/día; Pareto, ventas diarias y mezcla de pago ya existen.
-- CAL-37 notificaciones realtime/push.
-- CAL-44 impresión térmica con arquitectura/hardware por decidir.
-- CAL-40 ETL MongoDB reanudable.
+## Fase 4 — Entorno productivo observable
 
-## Dependencias críticas
+Objetivo: desplegar y operar el SaaS con trazabilidad, recuperación y señales accionables.
 
-- CAL-7 depende de CAL-5; CAL-25 depende de CAL-6.
-- CAL-46 depende de CAL-45; CAL-35 reutiliza la configuración frontend que entrega CAL-45.
-- CAL-17 depende de CAL-11 y CAL-13; CAL-27 depende de CAL-15 y CAL-17.
-- CAL-21 y CAL-24 dependen de CAL-23.
-- CAL-28 depende de CAL-11; CAL-29 y CAL-30 dependen de CAL-27.
-- CAL-31 depende de CAL-29; CAL-33 depende de CAL-32.
-- CAL-34 depende de CAL-16/CAL-19; CAL-36 y CAL-42 dependen de CAL-19.
-- CAL-39 depende de CAL-10; CAL-41 depende de CAL-29/CAL-31; CAL-43 depende de CAL-9.
+Alcance: CAL-21, CAL-23 a CAL-25, CAL-34, CAL-53, CAL-54, CAL-56 a CAL-58 y CAL-92. Incluye auditoría, logs, métricas, ECS/ALB/TLS, frontend same-origin, rollback, CloudWatch, restauración de RDS y pruebas de carga reproducibles con k6.
 
-Antes de iniciar una fase hay que revalidar los issues contra `main`, confirmar capacidad y resolver las decisiones marcadas como bloqueantes. Las fechas corresponden a los cycles habilitados en Linear al 2026-09-11.
+Salida: entorno remoto operable, observable y recuperable, con una línea base de rendimiento reproducible sin debilitar same-origin ni RLS.
+
+## Fase 5 — Beta funcional y evidencia académica
+
+Objetivo: demostrar una beta integrada con evidencia técnica y académica suficiente para evaluación.
+
+Alcance: CAL-26 a CAL-28, CAL-30, CAL-37 y CAL-64 a CAL-81. Incluye recorridos críticos automatizados con Selenium, despliegue verificado, runbook, notificaciones y entregables intermedios de las asignaturas.
+
+Salida: beta recorrible y comprobable, acompañada de documentos y evidencias intermedias.
+
+## Fase 6 — Cierre académico y preparación comercial
+
+Objetivo: completar las entregas finales y dejar listas las capacidades mínimas para operar comercialmente.
+
+Alcance: CAL-29, CAL-31, CAL-32, CAL-59 a CAL-63 y CAL-82 a CAL-84. Incluye cobro, suscripción, verificación de correo, costos AWS, accesibilidad, privacidad, semilla multiplataforma, errores de cliente y entregables finales.
+
+Salida: documentación final entregable, operación responsable y una base comercial verificable.
+
+## Backlog posterior
+
+CAL-36 y CAL-38 a CAL-44 permanecen sin fase ni ciclo hasta que exista capacidad, decisiones de producto o arquitectura suficientes. Incluyen configuración operativa, TOTP, inventario/recetas, ETL, facturación, analítica, CHANGELOG e impresión térmica.

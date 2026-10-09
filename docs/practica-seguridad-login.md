@@ -106,3 +106,41 @@ Los mensajes son fijos, dicen solo la primera regla que falla y nunca repiten la
 | P08 | Registrar con `Mantel-Azul-47` | Se acepta | `201` y el restaurante queda creado. |
 
 Respaldo automatizado: `PasswordPolicyTest` (reglas), `SignupPasswordPolicyTest` (P05, P06, P08), `UserControllerTest` (P07) y `frontend/src/test/password-policy.test.ts`.
+
+## 6. Mecanismo adicional: límite de intentos de login
+
+Sin límite, un atacante podía probar contraseñas sin freno contra una cuenta, o una contraseña común contra muchas cuentas (*password spraying*). `LoginAttemptLimiter` cuenta los intentos fallidos (los `401`) en una ventana deslizante de 15 minutos con dos llaves independientes:
+
+| Llave | Límite | Qué frena |
+|---|---|---|
+| Cuenta: restaurante + correo, sin distinguir mayúsculas | 5 fallos | Muchas contraseñas contra la misma persona, aunque el atacante cambie de IP. |
+| IP del cliente | 20 fallos | Una contraseña común contra muchas cuentas. Es más alto porque varias tablets de un restaurante comparten red. |
+
+Decisiones de diseño:
+
+- **Se revisa antes de bcrypt.** Mientras dure el bloqueo, ni la contraseña correcta entra, y no se gasta cómputo en un intento ya rechazado.
+- **`429 Too Many Requests` con `Retry-After`.** El mensaje es fijo («Demasiados intentos fallidos. Intenta de nuevo en N minutos.») y no dice si el bloqueo es por cuenta o por IP.
+- **Una cuenta inexistente se bloquea igual que una real.** La llave se arma con lo que se envió, así que el límite no sirve para descubrir correos válidos.
+- **Un acierto limpia el contador de la cuenta, no el de la IP.** Así un atacante con cuenta propia no puede reiniciarlo intercalando logins válidos.
+- **Un `400` por formato inválido no cuenta**, porque nunca llega a probar una contraseña.
+- **IP real detrás de Next.js.** Todas las peticiones llegan desde el servidor de Next, que agrega la IP del navegador al final de `X-Forwarded-For`. Esa cabecera solo se cree cuando la conexión viene de la red local (loopback o privada) y se toma la última entrada; si no, cualquiera podría inventarse una IP.
+- **Bloqueo temporal, no permanente.** Un atacante no puede dejar a un mesero sin acceso indefinidamente; como mucho lo retrasa 15 minutos.
+
+Configuración en `application.yml`: `AUTH_LOGIN_MAX_FAILURES_ACCOUNT` (5), `AUTH_LOGIN_MAX_FAILURES_IP` (20) y `AUTH_LOGIN_WINDOW` (15m).
+
+**Limitación conocida:** el contador vive en la memoria del proceso. Con una sola instancia del backend es suficiente. Con varias, cada una contaría por su lado y habría que llevarlo a un almacén compartido (Redis o una tabla).
+
+| Archivo | Cambio |
+|---|---|
+| `backend/.../auth/throttle/LoginAttemptLimiter.java` | Contadores por cuenta y por IP con ventana deslizante; purga periódica de llaves vencidas. |
+| `backend/.../auth/throttle/ClientIp.java` | Resuelve la IP real detrás del proxy de Next sin confiar en cabeceras de origen externo. |
+| `backend/.../auth/web/AuthController.java` | Revisa el límite antes de autenticar, registra fallos y aciertos y responde `429` con `Retry-After`. |
+| `frontend/src/app/login/login-view.tsx` | Título «Demasiados intentos» para el `429`; el detalle viene del backend. |
+
+| Prueba | Acción | Resultado esperado | Resultado obtenido |
+|---|---|---|---|
+| P09 | 5 contraseñas incorrectas y luego la correcta | Se bloquea | `429`, `Retry-After`, sin cookie; sigue bloqueada desde otra IP o variando mayúsculas en el correo. |
+| P10 | 5 fallos contra una cuenta inexistente | Mismo comportamiento que una real | `429` con el mismo título. |
+| P11 | 20 cuentas distintas desde una IP | Se bloquea esa IP | `429` desde esa IP incluso para una cuenta sin fallos; desde otra IP entra con `200`. |
+
+Respaldo automatizado: `LoginAttemptLimiterTest` (ventana y llaves con reloj controlado), `ClientIpTest` (cabecera de proxy) y `LoginRateLimitTest` (P09–P11, acierto que reinicia el contador y `400` que no cuenta), contra PostgreSQL real.

@@ -63,6 +63,16 @@ app:
     # por restaurante con conexiones abiertas.
     session-check-interval: PT30S
 
+    # Freno contra fuerza bruta en el login (LoginAttemptLimiter). Un fallo
+    # cuenta para la cuenta (restaurante + correo) y para la IP; al llegar a
+    # cualquiera de los dos limites dentro de la ventana, el login responde
+    # 429 hasta que el fallo mas antiguo sale de ella. El limite por IP es
+    # mas alto porque varias tablets de un mismo restaurante comparten red.
+    login-limit:
+      max-failures-per-account: ${AUTH_LOGIN_MAX_FAILURES_ACCOUNT:5}
+      max-failures-per-ip: ${AUTH_LOGIN_MAX_FAILURES_IP:20}
+      window: ${AUTH_LOGIN_WINDOW:15m}
+
 server:
   port: 8080
 
