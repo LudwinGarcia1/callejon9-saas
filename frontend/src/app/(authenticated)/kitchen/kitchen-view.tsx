@@ -132,7 +132,7 @@ export function KitchenView() {
           isLoading={ordersQuery.isLoading}
           error={ordersQuery.error}
           isEmpty={ordersQuery.data?.length === 0}
-          emptyMessage="No hay ordenes en cocina en este momento."
+           emptyMessage="No hay órdenes en cocina en este momento."
         >
         {ordersQuery.isLoading ? (
           <BoardSkeleton />

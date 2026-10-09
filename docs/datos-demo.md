@@ -33,3 +33,9 @@ El script rechaza destinos remotos y slugs existentes; no borra ni sobrescribe
 datos. Si falla una petición, se detiene con los registros ya creados conservados.
 No reintenta operaciones automáticamente: cada petición tiene su transacción.
 Para una nueva carga usa otro slug. `-Count` admite entre 3 y 60 registros.
+`-VerifyOnly` inicia sesión y comprueba los datos existentes sin volver a crearlos.
+
+Evidencia local del 24 de septiembre de 2026: carga ejecutada en `demo10` y
+verificación por API correcta para los nueve apartados de 10 registros y las
+21 comandas. Se consultaron individualmente los 10 tickets. No se modificaron
+backend, frontend ni migraciones; no se ejecutaron sus suites para este script.
