@@ -1,13 +1,16 @@
 package com.callejon9.shared.error;
 
+import com.callejon9.shared.throttle.RateLimitExceededException;
 import com.callejon9.tenancy.NoTenantContextException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -115,5 +118,25 @@ public class GlobalExceptionHandler {
                 HttpStatus.CONFLICT, DATA_INTEGRITY_DETAIL);
         problem.setTitle("Conflicto de datos");
         return problem;
+    }
+
+    /**
+     * 429 con {@code Retry-After} en segundos, redondeado hacia arriba para
+     * que un cliente que espere exactamente ese tiempo ya encuentre cupo. El
+     * mensaje lo fija quien lanza la excepcion y nunca repite la peticion.
+     */
+    @ExceptionHandler(RateLimitExceededException.class)
+    ResponseEntity<ProblemDetail> onRateLimitExceeded(RateLimitExceededException exception) {
+        long seconds = Math.max(1, (exception.getRetryAfter().toMillis() + 999) / 1000);
+        long minutes = (seconds + 59) / 60;
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS,
+                exception.getMessage() + " Intenta de nuevo en "
+                        + (minutes == 1 ? "1 minuto." : minutes + " minutos."));
+        problem.setTitle(exception.getTitle());
+
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, Long.toString(seconds))
+                .body(problem);
     }
 }

@@ -38,7 +38,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             JwtHandshakeInterceptor jwtHandshakeInterceptor,
             PrincipalHandshakeHandler principalHandshakeHandler,
             TenantSubscriptionInterceptor tenantSubscriptionInterceptor,
-            OpenConnectionRegistry openConnectionRegistry) {
             OpenConnectionRegistry openConnectionRegistry,
             @Value("${app.realtime.allowed-origins}") String[] allowedOrigins) {
         this.jwtHandshakeInterceptor = jwtHandshakeInterceptor;

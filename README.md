@@ -156,7 +156,7 @@ Para una demostración conviene usar `pnpm build` seguido de `pnpm start` en lug
 
 El inquilino `platform` no es un restaurante: es un registro técnico al que pertenece quien administra la plataforma. Existe porque `users.tenant_id` es `NOT NULL` y el login resuelve el inquilino por slug antes de buscar al usuario — precisamente para que un correo válido en un restaurante no sirva para entrar a otro. Hacer la columna nulable habría debilitado el aislamiento justo donde más importa.
 
-Los demás restaurantes se crean desde `/signup`.
+Los demás restaurantes se crean desde `/signup`. Cada IP puede intentar como máximo `SIGNUP_MAX_PER_IP` altas (5 por omisión) dentro de `SIGNUP_WINDOW` (1 hora); al pasarse, el alta responde `429` con `Retry-After` sin crear nada. Cuentan las altas creadas y las rechazadas por slug ocupado; un error de formato no. El contador vive en memoria de cada instancia. Detalle y pruebas en `docs/practica-seguridad-signup.md`.
 
 ---
 
