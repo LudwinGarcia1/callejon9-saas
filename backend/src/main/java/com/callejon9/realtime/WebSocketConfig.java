@@ -28,9 +28,13 @@ import org.springframework.web.socket.config.annotation.WebSocketTransportRegist
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    /** Unico prefijo al que un cliente puede enviar mensajes (ver {@link ClientSendInterceptor}). */
+    public static final String APPLICATION_DESTINATION_PREFIX = "/app";
+
     private final JwtHandshakeInterceptor jwtHandshakeInterceptor;
     private final PrincipalHandshakeHandler principalHandshakeHandler;
     private final TenantSubscriptionInterceptor tenantSubscriptionInterceptor;
+    private final ClientSendInterceptor clientSendInterceptor;
     private final OpenConnectionRegistry openConnectionRegistry;
     private final String[] allowedOrigins;
 
@@ -38,11 +42,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
             JwtHandshakeInterceptor jwtHandshakeInterceptor,
             PrincipalHandshakeHandler principalHandshakeHandler,
             TenantSubscriptionInterceptor tenantSubscriptionInterceptor,
+            ClientSendInterceptor clientSendInterceptor,
             OpenConnectionRegistry openConnectionRegistry,
             @Value("${app.realtime.allowed-origins}") String[] allowedOrigins) {
         this.jwtHandshakeInterceptor = jwtHandshakeInterceptor;
         this.principalHandshakeHandler = principalHandshakeHandler;
         this.tenantSubscriptionInterceptor = tenantSubscriptionInterceptor;
+        this.clientSendInterceptor = clientSendInterceptor;
         this.openConnectionRegistry = openConnectionRegistry;
         this.allowedOrigins = requireExplicitOrigins(allowedOrigins);
     }
@@ -104,11 +110,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.enableSimpleBroker("/topic");
-        registry.setApplicationDestinationPrefixes("/app");
+        registry.setApplicationDestinationPrefixes(APPLICATION_DESTINATION_PREFIX);
     }
 
+    /**
+     * Cada trama de cliente pasa por los dos guardias: uno valida a que
+     * topico se suscribe y el otro impide que publique en el broker.
+     */
     @Override
     public void configureClientInboundChannel(ChannelRegistration registration) {
-        registration.interceptors(tenantSubscriptionInterceptor);
+        registration.interceptors(tenantSubscriptionInterceptor, clientSendInterceptor);
     }
 }

@@ -22,6 +22,9 @@ import org.springframework.stereotype.Component;
  * tenantId — el mismo UUID que ya viaja, por ejemplo, en las respuestas de
  * la API. RLS protege las filas en la base de datos; esto protege los
  * mensajes en el canal.
+ *
+ * <p>Solo cubre la suscripcion. Que un cliente no publique en el topico lo
+ * impide {@link ClientSendInterceptor}.
  */
 @Component
 public class TenantSubscriptionInterceptor implements ChannelInterceptor {
