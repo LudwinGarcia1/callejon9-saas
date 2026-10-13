@@ -92,12 +92,6 @@ Elimina la necesidad de instalar previamente Java 21, Maven, PostgreSQL o Node.j
    - Backend API Docs (Swagger): `http://localhost:8080/swagger-ui.html`
    - Healthcheck: `http://localhost:8080/actuator/health`
 
-### Sembrado de datos demo
-Para poblar datos de prueba iniciales:
-```powershell
-.\scripts\seed-demo.ps1
-```
-
 ### Detención y limpieza
 - Detener los contenedores:
   ```bash
@@ -107,3 +101,21 @@ Para poblar datos de prueba iniciales:
   ```bash
   docker compose down -v
   ```
+
+## Verificación de extremo a extremo (2026-10-13)
+
+- **Sintaxis y configuración:** `docker compose config` validado exitosamente.
+- **Construcción de imágenes:**
+  - `callejon9-backend`: Multi-stage build con `eclipse-temurin:21` generando `app.jar` sin errores.
+  - `callejon9-frontend`: Multi-stage build con `node:24-slim` y `pnpm`, compilando Next.js con Turbopack exitosamente.
+- **Ciclo de vida y healthchecks:**
+  - `callejon9-db` (PostgreSQL 16 Alpine): estado `healthy` verificado mediante `pg_isready -U postgres -d callejon9`.
+  - `callejon9-backend`: estado `healthy` verificado con `http://localhost:8080/actuator/health` respondiendo `{"status":"UP"}`.
+  - `callejon9-frontend`: estado `healthy` verificado con `http://localhost:3000/login` respondiendo HTTP 200.
+- **Principio de menor privilegio (no-root):**
+  - Contenedor backend ejecuta como usuario `appuser` (UID 10001).
+  - Contenedor frontend ejecuta como usuario `nextjs` (UID 10001).
+- **Conectividad y rewrites same-origin:**
+  - Petición `/api/v1/*` al frontend enrutada exitosamente hacia el backend en la red interna de Docker.
+- **Limpieza:** `docker compose down -v` elimina contenedores y volúmenes sin recursos huérfanos.
+
