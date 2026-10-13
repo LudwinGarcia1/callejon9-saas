@@ -62,7 +62,7 @@ class SplitPaymentMigrationTest {
                         }
                         try (var rows = statement.executeQuery("SELECT count(*) FROM pg_class WHERE relrowsecurity AND relforcerowsecurity AND relnamespace='public'::regnamespace")) {
                             rows.next();
-                            assertThat(rows.getInt(1)).isEqualTo(14);
+                            assertThat(rows.getInt(1)).isEqualTo(15);
                         }
                     }
                 }
