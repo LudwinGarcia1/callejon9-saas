@@ -66,6 +66,15 @@ app:
       max-failures-per-ip: ${AUTH_LOGIN_MAX_FAILURES_IP:20}
       window: ${AUTH_LOGIN_WINDOW:15m}
 
+  signup:
+    # Freno contra altas masivas (SignupRateLimiter). Cada alta que pasa la
+    # validacion cuenta para la IP del cliente, termine creada (201) o con el
+    # slug ocupado (409); al llegar al limite dentro de la ventana, el alta
+    # responde 429 antes de crear nada. Un 400 por formato no cuenta.
+    rate-limit:
+      max-per-ip: ${SIGNUP_MAX_PER_IP:5}
+      window: ${SIGNUP_WINDOW:1h}
+
   realtime:
     # Cada cuanto se revisan las conexiones WebSocket abiertas para cerrar las
     # de sesiones revocadas (logout, reutilizacion, baja del usuario). Es la
