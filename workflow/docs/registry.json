@@ -6,6 +6,7 @@
     {"path": "docs/cal-88-testcontainers.md", "kind": "testing", "authority": "medium"},
     {"path": "docs/cabeceras-seguridad.md", "kind": "security", "authority": "high"},
     {"path": "docs/practica-seguridad-signup.md", "kind": "security", "authority": "medium"},
+    {"path": "docs/practica-seguridad-realtime.md", "kind": "security", "authority": "medium"},
     {"path": "README.md", "kind": "project-overview", "authority": "high"},
     {"path": "AGENTS.md", "kind": "agent-instructions", "authority": "highest"},
     {"path": "workflow/product/product-brief.md", "kind": "product", "authority": "high"},

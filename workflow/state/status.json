@@ -4,9 +4,9 @@
   "activePhase": null,
   "lastReview": {
     "date": "2026-10-10",
-    "issue": "CAL-103",
-    "branch": "fix/cal-103-signup-rate-limit",
-    "verdict": "aprobable; M1 y B1 corregidos; backend verify 470/471 en modo externo (1 requiere Docker)"
+    "issue": "CAL-104",
+    "branch": "fix/cal-104-stomp-client-send",
+    "verdict": "aprobable; A1 (trama MESSAGE) y B1 corregidos; backend verify 485/486 en modo externo (1 requiere Docker)"
   },
   "lastBacklogSync": {
     "date": "2026-09-11",
