@@ -128,7 +128,7 @@ export function AnalyticsView() {
               }
             </ChartCard>
 
-            <ChartCard title="Métodos de pago" description="Ventas e ingreso por método de pago.">
+            <ChartCard title="Métodos de pago" description="Pagos e ingreso aplicado por método de pago.">
               {(view) =>
                 view === "chart" ? (
                   <PaymentMixChart data={analytics.paymentMix} />

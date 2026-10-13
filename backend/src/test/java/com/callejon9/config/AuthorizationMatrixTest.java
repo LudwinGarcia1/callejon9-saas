@@ -1,7 +1,6 @@
 package com.callejon9.config;
 
-import com.callejon9.auth.service.JwtService;
-import com.callejon9.user.domain.User;
+import com.callejon9.support.TestSessions;
 import com.callejon9.user.domain.UserRole;
 import jakarta.servlet.http.Cookie;
 import java.util.Arrays;
@@ -10,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -34,7 +34,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Matriz rol x endpoint de las lecturas de la API. Cada fila es la regla
  * aceptada en CAL-5; un rol fuera de la fila recibe 403 antes de tocar datos.
  *
- * <p>El token lleva un tenant aleatorio sin filas, asi que un acceso permitido
+ * <p>El token abre una sesion real (el servidor verifica el sid en cada
+ * peticion) de un usuario en un restaurante recien creado y sin mas datos que
+ * ese usuario, asi que un acceso permitido
  * responde 200 con listas vacias o 404 cuando la ruta pide un id: ambos
  * prueban que la peticion paso la autorizacion. El aislamiento entre
  * restaurantes es otra capa y se prueba aparte en TenantIsolationTest.
@@ -68,8 +70,10 @@ class AuthorizationMatrixTest {
             new Rule("/api/v1/users", 200, EnumSet.of(ADMIN)),
             new Rule("/api/v1/platform/plans", 200, EnumSet.of(SUPER_ADMIN)));
 
+    private static final String SLUG_PREFIX = "matriz-autorizacion";
+
     @Autowired private MockMvc mockMvc;
-    @Autowired private JwtService jwtService;
+    @Autowired private TestSessions testSessions;
 
     static Stream<Arguments> readMatrix() {
         return READ_RULES.stream().flatMap(rule -> Arrays.stream(UserRole.values())
@@ -99,6 +103,12 @@ class AuthorizationMatrixTest {
                 Arguments.of(HttpMethod.POST, "/api/v1/signup/extra", 401),
                 Arguments.of(HttpMethod.POST, "/api/v1/auth/login-other", 401),
                 Arguments.of(HttpMethod.POST, "/api/v1/signup-other", 401),
+                // /auth/refresh es publico solo por POST (sin cookie el propio
+                // controller responde 401; que llega se prueba en
+                // RefreshTokenRotationTest, que renueva sin access token).
+                Arguments.of(HttpMethod.GET, "/api/v1/auth/refresh", 401),
+                Arguments.of(HttpMethod.PUT, "/api/v1/auth/refresh", 401),
+                Arguments.of(HttpMethod.POST, "/api/v1/auth/refresh/extra", 401),
                 Arguments.of(HttpMethod.GET, "/actuator/health", 200),
                 Arguments.of(HttpMethod.GET, "/v3/api-docs", 200),
                 // Bajo /auth pero con sesion obligatoria.
@@ -109,12 +119,12 @@ class AuthorizationMatrixTest {
     }
 
     private String tokenFor(UserRole role) {
-        User user = User.builder()
-                .email("matriz@demo.com").passwordHash("x").fullName("Matriz")
-                .role(role).active(true).build();
-        user.setId(UUID.randomUUID());
-        user.setTenantId(UUID.randomUUID());
-        return jwtService.generateAccessToken(user);
+        return testSessions.accessTokenForNewUser(SLUG_PREFIX, role);
+    }
+
+    @AfterEach
+    void deleteSessionTenants() {
+        testSessions.deleteTenants(SLUG_PREFIX);
     }
 
     @ParameterizedTest(name = "{0} GET {1} -> {2}")

@@ -44,13 +44,49 @@ app:
   jwt:
     secret: ${JWT_SECRET:dev-only-secret-change-me-min-32-bytes-long!!}
     access-token-minutes: 15
+    # Vida maxima de una sesion. Renovar rota el refresh token pero no la
+    # alarga: los tokens rotados heredan la expiracion del login.
     refresh-token-days: 7
 
   auth:
-    # Atributo Secure de la cookie access_token. Debe ser true detras de
-    # HTTPS; en local el backend corre sobre http y el navegador la
-    # descartaria.
-    secure-cookie: ${AUTH_SECURE_COOKIE:false}
+    # Atributo Secure de las cookies de sesion. Activo por defecto: fuera de
+    # desarrollo la API solo debe servirse detras de HTTPS. Para trabajar
+    # contra http://localhost, scripts/run-dev.ps1 lo desactiva.
+    # AUTH_SECURE_COOKIE es el nombre anterior de la variable y se sigue
+    # aceptando; si ambas existen, manda AUTH_COOKIE_SECURE.
+    cookie-secure: ${AUTH_COOKIE_SECURE:${AUTH_SECURE_COOKIE:true}}
+
+    # Freno contra fuerza bruta en el login (LoginAttemptLimiter). Un fallo
+    # cuenta para la cuenta (restaurante + correo) y para la IP; al llegar a
+    # cualquiera de los dos limites dentro de la ventana, el login responde
+    # 429 hasta que el fallo mas antiguo sale de ella. El limite por IP es
+    # mas alto porque varias tablets de un mismo restaurante comparten red.
+    login-limit:
+      max-failures-per-account: ${AUTH_LOGIN_MAX_FAILURES_ACCOUNT:5}
+      max-failures-per-ip: ${AUTH_LOGIN_MAX_FAILURES_IP:20}
+      window: ${AUTH_LOGIN_WINDOW:15m}
+
+  signup:
+    # Freno contra altas masivas (SignupRateLimiter). Cada alta que pasa la
+    # validacion cuenta para la IP del cliente, termine creada (201) o con el
+    # slug ocupado (409); al llegar al limite dentro de la ventana, el alta
+    # responde 429 antes de crear nada. Un 400 por formato no cuenta.
+    rate-limit:
+      max-per-ip: ${SIGNUP_MAX_PER_IP:5}
+      window: ${SIGNUP_WINDOW:1h}
+
+  realtime:
+    # Cada cuanto se revisan las conexiones WebSocket abiertas para cerrar las
+    # de sesiones revocadas (logout, reutilizacion, baja del usuario). Es la
+    # latencia maxima entre revocar y cortar; cada ciclo cuesta una consulta
+    # por restaurante con conexiones abiertas.
+    session-check-interval: PT30S
+
+    # Origenes de navegador que pueden abrir el WebSocket /ws, separados por
+    # coma y sin comodines. En produccion debe ser el dominio publico del
+    # frontend. Los clientes que no envian Origin (no navegadores) no se
+    # ven afectados.
+    allowed-origins: ${APP_ALLOWED_ORIGINS:http://localhost:3000}
 
 server:
   port: 8080

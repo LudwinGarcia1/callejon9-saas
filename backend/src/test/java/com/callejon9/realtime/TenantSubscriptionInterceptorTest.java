@@ -1,12 +1,13 @@
 package com.callejon9.realtime;
 
-import com.callejon9.auth.service.JwtService;
+import com.callejon9.support.TestSessions;
 import com.callejon9.user.domain.User;
 import com.callejon9.user.domain.UserRole;
 import java.lang.reflect.Type;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,28 +50,29 @@ class TenantSubscriptionInterceptorTest {
     @LocalServerPort
     private int port;
 
-    @Autowired
-    private JwtService jwtService;
+    private static final String SLUG_PREFIX = "realtime-test";
 
-    private String tokenFor(UUID tenantId, UserRole role) {
-        User user = User.builder()
-                .email("realtime@test.com").passwordHash("x").fullName("Realtime")
-                .role(role).active(true).build();
-        user.setId(UUID.randomUUID());
-        user.setTenantId(tenantId);
-        return jwtService.generateAccessToken(user);
+    @Autowired
+    private TestSessions testSessions;
+
+    @AfterEach
+    void cleanUp() {
+        testSessions.deleteTenants(SLUG_PREFIX);
     }
 
     @Test
     @DisplayName("un usuario del tenant A no puede suscribirse al topico de cocina del tenant B")
     void userFromTenantACannotSubscribeToTenantBsKitchenTopic() throws Exception {
-        UUID tenantA = UUID.randomUUID();
+        // El usuario y su restaurante tienen que existir: el handshake exige
+        // una sesion vigente. El tenant B solo aparece en el nombre del topico.
+        User adminA = testSessions.newUser(SLUG_PREFIX, UserRole.ADMIN);
+        UUID tenantA = adminA.getTenantId();
         UUID tenantB = UUID.randomUUID();
 
         WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
 
         WebSocketHttpHeaders handshakeHeaders = new WebSocketHttpHeaders();
-        handshakeHeaders.add(HttpHeaders.COOKIE, "access_token=" + tokenFor(tenantA, UserRole.ADMIN));
+        handshakeHeaders.add(HttpHeaders.COOKIE, "access_token=" + testSessions.accessTokenFor(adminA));
 
         CompletableFuture<StompSession> connected = new CompletableFuture<>();
         CompletableFuture<String> errorReceived = new CompletableFuture<>();

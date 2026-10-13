@@ -102,6 +102,12 @@ export function HistoryView() {
       }
       contentClassName="flex flex-col gap-6"
     >
+      <section className="flex flex-wrap gap-4" aria-label="Desglose de pagos">
+        {salesQuery.data?.paymentMix?.map((payment) => <div key={payment.method} className="rounded-md border p-3">
+          <StatusBadge kind="payment" status={payment.method} />
+          <p className="mt-2 text-sm">{payment.count} pagos · <Money amount={payment.total} /></p>
+        </div>)}
+      </section>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>

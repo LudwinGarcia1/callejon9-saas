@@ -1,5 +1,6 @@
 package com.callejon9.user.service;
 
+import com.callejon9.auth.service.RefreshTokenService;
 import com.callejon9.platform.tenant.repository.TenantRepository;
 import com.callejon9.platform.tenant.service.PlanLimitService;
 import com.callejon9.shared.error.BusinessRuleException;
@@ -29,16 +30,19 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final PlanLimitService planLimitService;
     private final TenantRepository tenantRepository;
+    private final RefreshTokenService refreshTokenService;
 
     public UserService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             PlanLimitService planLimitService,
-            TenantRepository tenantRepository) {
+            TenantRepository tenantRepository,
+            RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.planLimitService = planLimitService;
         this.tenantRepository = tenantRepository;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @Transactional
@@ -82,6 +86,12 @@ public class UserService {
      * las dos la validacion y dejar el restaurante sin ningun administrador
      * activo. Con el lock, la segunda espera a que la primera confirme y
      * relee el conteo ya actualizado.
+     *
+     * <p>Desactivar revoca ademas todas las sesiones del usuario: sin esto,
+     * su access token seguiria autorizando hasta 15 minutos despues de la
+     * baja. La revocacion va despues de las reglas de negocio y en la misma
+     * transaccion, asi que una desactivacion rechazada no cierra ninguna
+     * sesion. Reactivar no las restaura: el usuario vuelve a iniciar sesion.
      */
     @Transactional
     public User setActive(UUID userId, boolean active, UUID callerId) {
@@ -105,6 +115,13 @@ public class UserService {
         }
 
         target.setActive(active);
-        return userRepository.save(target);
+        User saved = userRepository.save(target);
+
+        if (!active) {
+            // El UPDATE masivo vacia el contexto de persistencia tras volcar el
+            // cambio de estado; `saved` queda desconectado pero con ese valor.
+            refreshTokenService.revokeAllSessionsOf(saved.getId());
+        }
+        return saved;
     }
 }

@@ -1,8 +1,8 @@
 package com.callejon9.table;
 
-import com.callejon9.auth.service.JwtService;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
+import com.callejon9.support.TestSessions;
 import com.callejon9.tenancy.TenantContext;
 import com.callejon9.user.domain.User;
 import com.callejon9.user.domain.UserRole;
@@ -37,7 +37,7 @@ class TableControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private TenantOnboardingService onboardingService;
-    @Autowired private JwtService jwtService;
+    @Autowired private TestSessions testSessions;
     @Autowired private JdbcTemplate jdbcTemplate;
     @Autowired private UserRepository userRepository;
     @Autowired private TransactionTemplate transactionTemplate;
@@ -57,7 +57,7 @@ class TableControllerTest {
     void seed() {
         tenant = onboardingService.onboard("Mesas Test", "mesas-test",
                 "admin@mesas.com", "Admin", "Secreto123!", "FREE");
-        admin = fakeUser(tenant.getId(), UserRole.ADMIN);
+        admin = userWithRole(tenant.getId(), UserRole.ADMIN);
 
         TenantContext.set(tenant.getId());
         try {
@@ -74,17 +74,12 @@ class TableControllerTest {
         jdbcTemplate.update("DELETE FROM tenants WHERE slug = 'mesas-test'");
     }
 
-    private User fakeUser(UUID tenantId, UserRole role) {
-        User user = User.builder()
-                .email(role.name().toLowerCase() + "@mesas.com").passwordHash("x")
-                .fullName(role.name()).role(role).active(true).build();
-        user.setId(UUID.randomUUID());
-        user.setTenantId(tenantId);
-        return user;
+    private User userWithRole(UUID tenantId, UserRole role) {
+        return testSessions.newUserIn(tenantId, role);
     }
 
     private Cookie cookieFor(User user) {
-        return new Cookie("access_token", jwtService.generateAccessToken(user));
+        return new Cookie("access_token", testSessions.accessTokenFor(user));
     }
 
     private UUID createTable(int number, int capacity) throws Exception {
@@ -134,7 +129,7 @@ class TableControllerTest {
     @Test
     @DisplayName("WAITER no puede crear mesas")
     void waiterCannotCreateTables() throws Exception {
-        User waiter = fakeUser(tenant.getId(), UserRole.WAITER);
+        User waiter = userWithRole(tenant.getId(), UserRole.WAITER);
 
         mockMvc.perform(post("/api/v1/tables")
                         .cookie(cookieFor(waiter))
@@ -267,7 +262,7 @@ class TableControllerTest {
     @DisplayName("un WAITER no puede editar ni dar de baja mesas")
     void waiterCannotUpdateOrDeactivateTables() throws Exception {
         UUID tableId = createTable(4, 4);
-        User waiter = fakeUser(tenant.getId(), UserRole.WAITER);
+        User waiter = userWithRole(tenant.getId(), UserRole.WAITER);
 
         mockMvc.perform(put("/api/v1/tables/" + tableId)
                         .cookie(cookieFor(waiter))
@@ -355,7 +350,7 @@ class TableControllerTest {
     @DisplayName("un WAITER tambien puede cambiar el estado de una mesa")
     void waiterCanChangeTableStatus() throws Exception {
         UUID tableId = createTable(23, 4);
-        User waiter = fakeUser(tenant.getId(), UserRole.WAITER);
+        User waiter = userWithRole(tenant.getId(), UserRole.WAITER);
 
         setStatus(tableId, waiter, "CLEANING", 200);
     }
@@ -364,7 +359,7 @@ class TableControllerTest {
     @DisplayName("un CASHIER no puede cambiar el estado de una mesa")
     void cashierCannotChangeTableStatus() throws Exception {
         UUID tableId = createTable(24, 4);
-        User cashier = fakeUser(tenant.getId(), UserRole.CASHIER);
+        User cashier = userWithRole(tenant.getId(), UserRole.CASHIER);
 
         setStatus(tableId, cashier, "CLEANING", 403);
     }

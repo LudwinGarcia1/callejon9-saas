@@ -9,5 +9,6 @@ import java.util.List;
  * consumen juntos en la pantalla de historial -- separarlos solo obligaria al
  * cliente a correlacionar dos respuestas que ya nacen relacionadas.
  */
-public record SalesHistoryResponse(List<SaleHistoryRow> sales, SaleHistorySummary summary) {
+public record SalesHistoryResponse(List<SaleHistoryRow> sales, SaleHistorySummary summary,
+        List<com.callejon9.analytics.web.dto.PaymentMixAggregate> paymentMix) {
 }

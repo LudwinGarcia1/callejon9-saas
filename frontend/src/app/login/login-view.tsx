@@ -77,6 +77,9 @@ export function LoginView() {
 
   const apiError = loginMutation.error instanceof ApiError ? loginMutation.error : null;
   const isUnauthorized = apiError?.status === 401;
+  // 429: el backend frena el login tras varios intentos fallidos y su
+  // mensaje ya dice cuanto esperar (ver LoginAttemptLimiter).
+  const isThrottled = apiError?.status === 429;
   const hasFieldErrors = Boolean(apiError?.errors && Object.keys(apiError.errors).length > 0);
 
   return (
@@ -125,7 +128,9 @@ export function LoginView() {
 
             {apiError && (isUnauthorized || !hasFieldErrors) && (
               <Alert variant="destructive">
-                <AlertTitle>No se pudo iniciar sesión</AlertTitle>
+                <AlertTitle>
+                  {isThrottled ? "Demasiados intentos" : "No se pudo iniciar sesión"}
+                </AlertTitle>
                 <AlertDescription>
                   {isUnauthorized ? LOGIN_FAILED_MESSAGE : apiError.message}
                 </AlertDescription>
