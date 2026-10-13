@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "activeIssue": null,
-  "activePhase": null,
+  "activeIssue": "CAL-11",
+  "activePhase": "Fase 2",
   "lastReview": {
     "date": "2026-10-13",
     "issue": "CAL-13",
