@@ -34,9 +34,9 @@ pipeline {
                         -e POSTGRES_PASSWORD=postgres \
                         postgres:16
 
-                    echo "[CI] Esperando a que PostgreSQL este listo..."
-                    for i in $(seq 1 30); do
-                        if docker exec ci-postgres pg_isready -U postgres >/dev/null 2>&1; then
+                    echo "[CI] Esperando a que PostgreSQL este listo para consultas..."
+                    for i in $(seq 1 45); do
+                        if docker exec ci-postgres psql -U postgres -c "SELECT 1" >/dev/null 2>&1; then
                             echo "[CI] PostgreSQL listo en el intento $i"
                             break
                         fi
