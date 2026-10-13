@@ -2,9 +2,9 @@
 
 Plano de control (`V1__control_plane.sql`): `plans`, `tenants`, `subscriptions`.
 
-Plano por restaurante (`V2__data_plane.sql`): `users`, `refresh_tokens`, `restaurant_tables`, `categories`, `products`, `customers`, `orders`, `order_items`, `sales`, `payments`, `tickets`, `inventory_items`, `inventory_movements`, `notifications`.
+Plano por restaurante (`V2__data_plane.sql`, `V12__tenant_folio_sequences.sql`): `users`, `refresh_tokens`, `restaurant_tables`, `categories`, `products`, `customers`, `orders`, `order_items`, `sales`, `payments`, `tickets`, `inventory_items`, `inventory_movements`, `notifications`, `tenant_folio_sequences`.
 
-RLS aplica a 14 tablas tenant-scoped mediante `V3`, `V4` y la corrección null-safe de `V5`. `V6` crea el superadministrador de plataforma y `V7` agrega la baja lógica de insumos. Antes de agregar una tabla, decide explícitamente si pertenece al control plane o al data plane. Si es tenant-scoped debe incluir `tenant_id NOT NULL`, FKs/índices apropiados, RLS forzada, políticas de lectura/escritura y pruebas cruzadas.
+RLS aplica a 15 tablas tenant-scoped mediante `V3`, `V4`, `V5` y `V12`. `V6` crea el superadministrador de plataforma y `V7` agrega la baja lógica de insumos. Antes de agregar una tabla, decide explícitamente si pertenece al control plane o al data plane. Si es tenant-scoped debe incluir `tenant_id NOT NULL`, FKs/índices apropiados, RLS forzada, políticas de lectura/escritura y pruebas cruzadas.
 
 ## Privilegios de `callejon9_app`
 
@@ -12,7 +12,7 @@ RLS aplica a 14 tablas tenant-scoped mediante `V3`, `V4` y la corrección null-s
 
 | Tabla | Privilegios | Motivo |
 |---|---|---|
-| 14 tablas por restaurante | `SELECT`, `INSERT`, `UPDATE`, `DELETE` | El aislamiento lo impone la política RLS |
+| 15 tablas por restaurante | `SELECT`, `INSERT`, `UPDATE`, `DELETE` | El aislamiento lo impone la política RLS |
 | `tenants` | `SELECT`, `INSERT`, `UPDATE`, `DELETE` | Login, signup, bloqueo `SELECT … FOR UPDATE` (exige `UPDATE`) y compensación del onboarding |
 | `subscriptions` | `SELECT`, `INSERT` | Límites del plan y signup; el borrado en cascada lo ejecuta PostgreSQL como dueño |
 | `plans` | `SELECT` | Catálogo de solo lectura para la aplicación |

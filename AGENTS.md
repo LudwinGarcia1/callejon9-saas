@@ -14,7 +14,7 @@ Lee solo el contexto necesario. Empieza por `workflow/README.md`, consulta `work
 ## Invariantes no negociables
 
 - RLS es la frontera de seguridad. `callejon9_app` no debe ser propietario de tablas ni tener `BYPASSRLS` o privilegios de superusuario.
-- Las 14 tablas de datos por restaurante conservan `ENABLE ROW LEVEL SECURITY`, `FORCE ROW LEVEL SECURITY`, `USING` y `WITH CHECK`.
+- Las 15 tablas de datos por restaurante conservan `ENABLE ROW LEVEL SECURITY`, `FORCE ROW LEVEL SECURITY`, `USING` y `WITH CHECK`.
 - El tenant proviene de la cookie JWT firmada y se publica con `set_config('app.tenant_id', ..., true)` dentro de cada transacción. Nunca aceptes `tenant_id` del cliente como autoridad.
 - El navegador llama rutas relativas `/api/v1/*`; `frontend/next.config.ts` las reescribe al backend. No introduzcas llamadas directas a `:8080`, CORS innecesario ni almacenamiento del token en JavaScript.
 - Las migraciones son append-only. No reescribas una migración aplicada: agrega una nueva `V{n}__descripcion.sql`.

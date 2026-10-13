@@ -36,7 +36,7 @@ El cuarto resultado es un error a propósito: PostgreSQL rechaza que un inquilin
 
 1. **`TenantFilter`** traduce la cookie JWT al `TenantContext` y limpia el `ThreadLocal` en un `finally`, para que un hilo reutilizado del pool no herede el inquilino anterior.
 2. **`TenantAwareTransactionManager`** publica el inquilino a PostgreSQL al abrir cada transacción con `set_config('app.tenant_id', …, true)`. El tercer argumento hace la variable local a la transacción, así que no puede filtrarse a otra petición cuando HikariCP devuelve la conexión.
-3. **Las políticas RLS** de las 14 tablas usan `USING` y `WITH CHECK`. La primera filtra lecturas, actualizaciones y borrados; la segunda impide escribir dentro de otro inquilino. Ambas leen `nullif(current_setting('app.tenant_id', true), '')::uuid`, porque una variable de sesión personalizada que ya se usó vuelve a cadena vacía y no a nula.
+3. **Las políticas RLS** de las 15 tablas usan `USING` y `WITH CHECK`. La primera filtra lecturas, actualizaciones y borrados; la segunda impide escribir dentro de otro inquilino. Ambas leen `nullif(current_setting('app.tenant_id', true), '')::uuid`, porque una variable de sesión personalizada que ya se usó vuelve a cadena vacía y no a nula.
 4. **Dos roles de base de datos.** `callejon9_owner` solo ejecuta migraciones; `callejon9_app` corre la aplicación y **no es dueño de ninguna tabla**, por lo que las políticas sí le aplican. Además todas las tablas llevan `FORCE ROW LEVEL SECURITY`, que somete incluso al dueño.
 
 Ese cuarto punto no es teórico: la migración `V6` tuvo que publicar el inquilino con `set_config` antes de insertar el super-administrador, porque Flyway corre como el dueño y la política lo rechazaba. La política es lo bastante real como para obligar a la propia migración.
@@ -232,7 +232,7 @@ Delivery y rastreo en vivo; analítica y aprendizaje automático (K-means, Rando
 
 ### Deuda registrada
 
-`FolioGenerator` garantiza unicidad por JVM, no entre instancias: dos instancias podrían colisionar dentro del mismo segundo para el mismo restaurante. `addItems` no verifica que el producto siga activo, así que un platillo retirado puede agregarse a una comanda si se conoce su identificador. `GET /orders` y `GET /orders/{id}` no llevan `@PreAuthorize`: cualquier rol autenticado lee cualquier comanda de su propio inquilino. No hay cambio de contraseña por el propio usuario ni recuperación de contraseña.
+`addItems` no verifica que el producto siga activo, así que un platillo retirado puede agregarse a una comanda si se conoce su identificador. `GET /orders` y `GET /orders/{id}` no llevan `@PreAuthorize`: cualquier rol autenticado lee cualquier comanda de su propio inquilino. No hay cambio de contraseña por el propio usuario ni recuperación de contraseña. (La colisión de folios entre instancias de `FolioGenerator` fue resuelta en CAL-13 mediante secuencias atómicas en PostgreSQL con RLS).
 
 Tres carencias que sí se cerraron y vale la pena nombrar, porque marcaban la diferencia entre una demostración y un sistema: no existía forma de crear usuarios —los cinco roles eran teoría—, nada podía editarse ni darse de baja, y `PlanLimitService` estaba escrito sin que ningún endpoint lo llamara.
 
