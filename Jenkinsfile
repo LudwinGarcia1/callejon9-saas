@@ -34,9 +34,18 @@ pipeline {
                         -e POSTGRES_PASSWORD=postgres \
                         postgres:16
 
+                    echo "[CI] Esperando a que PostgreSQL complete el proceso de inicializacion..."
+                    for i in $(seq 1 45); do
+                        if docker logs ci-postgres 2>&1 | grep -q "PostgreSQL init process complete"; then
+                            echo "[CI] Inicializacion de PostgreSQL completada en el intento $i"
+                            break
+                        fi
+                        sleep 1
+                    done
+
                     echo "[CI] Esperando a que PostgreSQL este listo para consultas..."
                     for i in $(seq 1 45); do
-                        if docker exec ci-postgres psql -U postgres -c "SELECT 1" >/dev/null 2>&1; then
+                        if docker exec ci-postgres pg_isready -U postgres >/dev/null 2>&1; then
                             echo "[CI] PostgreSQL listo en el intento $i"
                             break
                         fi
@@ -44,7 +53,14 @@ pipeline {
                     done
 
                     echo "[CI] Inicializando roles y bases de datos con scripts/setup-db.sql..."
-                    docker exec -i ci-postgres psql -U postgres < scripts/setup-db.sql
+                    for attempt in $(seq 1 5); do
+                        if docker exec -i ci-postgres psql -U postgres < scripts/setup-db.sql; then
+                            echo "[CI] Base de datos inicializada exitosamente"
+                            break
+                        fi
+                        echo "[CI] Reintentando inicializacion ($attempt/5)..."
+                        sleep 2
+                    done
                 '''
             }
         }
