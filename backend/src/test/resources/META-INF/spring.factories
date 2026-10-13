@@ -1,0 +1,2 @@
+org.springframework.context.ApplicationContextInitializer=\
+com.callejon9.support.TestDatabaseInitializer

@@ -56,6 +56,7 @@ final class AuthorizationContractVerifier {
             .map(Enum::name).collect(java.util.stream.Collectors.toUnmodifiableSet());
     private static final Map<Route, String> PUBLIC_ROUTES = Map.of(
             new Route("POST", "/api/v1/auth/login"), "Iniciar sesión sin cookie previa",
+            new Route("POST", "/api/v1/auth/refresh"), "Renovar la sesión con la cookie refresh_token cuando el access token ya venció",
             new Route("POST", "/api/v1/signup"), "Registrar un restaurante sin sesión previa",
             new Route("GET", "/actuator/health"), "Comprobar disponibilidad",
             new Route("GET", "/v3/api-docs"), "Consultar OpenAPI JSON",

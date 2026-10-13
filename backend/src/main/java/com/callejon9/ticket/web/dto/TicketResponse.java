@@ -18,12 +18,14 @@ public record TicketResponse(
         BigDecimal tipPercent,
         BigDecimal total,
         String paymentMethod,
-        Instant closedAt) {
+        Instant closedAt,
+        List<com.callejon9.ticket.domain.TicketPaymentSnapshot> payments,
+        BigDecimal change) {
 
     public static TicketResponse from(Ticket ticket) {
         return new TicketResponse(ticket.getId(), ticket.getSaleId(), ticket.getOrderId(),
                 ticket.getFolio(), ticket.getItemsSnapshot(), ticket.getSubtotal(), ticket.getTip(),
                 ticket.getTipPercent(), ticket.getTotal(), ticket.getPaymentMethod().name(),
-                ticket.getClosedAt());
+                ticket.getClosedAt(), ticket.getPaymentsSnapshot(), ticket.getChange());
     }
 }

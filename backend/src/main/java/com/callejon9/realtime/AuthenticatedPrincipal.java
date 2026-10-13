@@ -10,8 +10,13 @@ import java.util.UUID;
  * TenantFilter fija el TenantContext por peticion, aqui el tenant viaja
  * pegado al Principal de la sesion para que {@link TenantSubscriptionInterceptor}
  * lo pueda validar en cada SUBSCRIBE sin volver a tocar la base de datos.
+ *
+ * <p>{@code sessionId} es el {@code sid} del access token con el que se abrio
+ * la conexion: {@link RevokedSessionSweeper} lo usa para cerrar la conexion
+ * cuando esa sesion se revoca.
  */
-public record AuthenticatedPrincipal(UUID userId, UUID tenantId, UserRole role) implements Principal {
+public record AuthenticatedPrincipal(UUID userId, UUID tenantId, UserRole role, UUID sessionId)
+        implements Principal {
 
     @Override
     public String getName() {

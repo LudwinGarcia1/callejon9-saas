@@ -34,7 +34,7 @@ public class CheckoutController {
             @Valid @RequestBody CheckoutRequest request,
             Authentication authentication) {
         var ticket = checkoutService.checkout(
-                id, request.paymentMethod(), request.tipPercent(), cashierIdOf(authentication));
+                id, request, cashierIdOf(authentication));
         return TicketResponse.from(ticket);
     }
 

@@ -16,3 +16,6 @@ approval_mode = "approve"
 
 [mcp_servers.linear_callejon9.tools.save_document]
 approval_mode = "approve"
+
+[mcp_servers.linear_callejon9.tools.save_comment]
+approval_mode = "approve"

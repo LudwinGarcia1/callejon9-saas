@@ -1,6 +1,7 @@
 package com.callejon9.tenancy;
 
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /**
  * Mantiene el tenant activo durante el ciclo de vida de una peticion.
@@ -34,5 +35,25 @@ public final class TenantContext {
 
     public static void clear() {
         CURRENT_TENANT.remove();
+    }
+
+    /**
+     * Ejecuta {@code action} con {@code tenantId} como tenant activo y deja el
+     * contexto exactamente como estaba, incluso si la accion falla. Sirve para
+     * operar con un tenant que viene firmado en un token mientras la peticion
+     * ya tenia otro publicado (o ninguno).
+     */
+    public static <T> T callAs(UUID tenantId, Supplier<T> action) {
+        UUID previous = CURRENT_TENANT.get();
+        CURRENT_TENANT.set(tenantId);
+        try {
+            return action.get();
+        } finally {
+            if (previous == null) {
+                CURRENT_TENANT.remove();
+            } else {
+                CURRENT_TENANT.set(previous);
+            }
+        }
     }
 }

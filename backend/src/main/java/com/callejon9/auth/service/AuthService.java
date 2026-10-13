@@ -6,6 +6,7 @@ import com.callejon9.shared.error.ResourceNotFoundException;
 import com.callejon9.tenancy.TenantContext;
 import com.callejon9.user.domain.User;
 import com.callejon9.user.repository.UserRepository;
+import java.time.Instant;
 import java.util.UUID;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,8 +17,12 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Service
 public class AuthService {
 
-    /** Resultado de una autenticacion exitosa. */
-    public record AuthenticatedUser(User user, String accessToken) {
+    /**
+     * Resultado de una autenticacion exitosa: el par de tokens y el instante
+     * en que la sesion deja de poder renovarse.
+     */
+    public record AuthenticatedUser(User user, String accessToken, String refreshToken,
+                                    Instant sessionExpiresAt) {
     }
 
     /** Identidad resuelta para GET /me: el usuario autenticado y su tenant. */
@@ -27,19 +32,19 @@ public class AuthService {
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
     private final TransactionTemplate transactionTemplate;
 
     public AuthService(
             TenantRepository tenantRepository,
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            JwtService jwtService,
+            RefreshTokenService refreshTokenService,
             TransactionTemplate transactionTemplate) {
         this.tenantRepository = tenantRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
         this.transactionTemplate = transactionTemplate;
     }
 
@@ -68,7 +73,11 @@ public class AuthService {
                 throw new BadCredentialsException("Credenciales invalidas.");
             }
 
-            return new AuthenticatedUser(user, jwtService.generateAccessToken(user));
+            // Mismo tenant ya fijado: la fila de refresh_tokens pasa el WITH
+            // CHECK de RLS y queda en el restaurante del usuario.
+            var issued = refreshTokenService.issueForLogin(user);
+            return new AuthenticatedUser(user, issued.accessToken(), issued.refreshToken(),
+                    issued.sessionExpiresAt());
         } finally {
             TenantContext.clear();
         }
