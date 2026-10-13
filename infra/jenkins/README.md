@@ -89,12 +89,20 @@ Los parches del sistema operativo los aplica `unattended-upgrades` de Ubuntu; re
 
 **Costo:** se registra con datos reales de Cost Management después de una semana de operación. No se estima aquí.
 
-## Verificación hecha sin Azure (2026-10-08)
+## Verificación en Azure (2026-10-13)
 
-- La imagen construye; con un `JENKINS_HOME` vacío arranca sin `SEVERE`. Anónimo recibe 403, una contraseña incorrecta 401 y `admin` 200. El nodo integrado tiene 0 ejecutores.
-- Un agente conectado por WebSocket con el secreto publicado queda en línea.
-- Al destruir y recrear el contenedor sobre el mismo `JENKINS_HOME`, el controller vuelve en 38 s con el mismo secreto de agente, y el agente se reconecta (54 s en total).
-- `install_packages` en `ubuntu:24.04` instala Temurin 21.0.12, Node v24.21.0, pnpm 10.28.2 (la versión de `frontend/package.json`), Docker 29.8.2 con buildx, Tailscale 1.104.1, git y jq.
-- `shellcheck` sin hallazgos en `provision.sh`.
+- Infraestructura base de CAL-48 provisionada con Terraform en `eastus` (VNet privada, NSG con `deny-internet-inbound`, IP de salida, Managed Disk de 32 GB, Key Vault con RBAC).
+- `vm-jenkins` (Ubuntu 24.04 LTS, `Standard_D2as_v4`) en ejecución con `custom_data` cloud-init.
+- Controller en contenedor Docker publicado exclusivamente en `127.0.0.1:8080` (HTTP 200 en `/login`).
+- `jenkins-agent.service` conectado vía WebSocket al controller. Temurin JDK 21, Node 24, pnpm y Docker verificados bajo el usuario `jenkins-agent`.
+- Acceso seguro por Tailscale con HTTPS (`https://jenkins-restohub.<tailnet>.ts.net/`) probado e inicio de sesión exitoso.
+- Mínimo privilegio confirmado: la identidad administrada lee secretos de Key Vault con HTTP 200 y es denegada en ARM con HTTP 403 `AuthorizationFailed`.
 
-Falta probar en Azure: el disco, la identidad, Key Vault, Tailscale, systemd y el `plan`/`apply`.
+## Pipeline de CI (CAL-87)
+
+El archivo `Jenkinsfile` en la raíz del repositorio orquesta las puertas de calidad obligatorias:
+
+1. **`Prepare PostgreSQL`**: Levanta un contenedor Docker efímero `postgres:16`, espera a que esté listo e inicializa los roles (`callejon9_owner`, `callejon9_app`) y bases de datos con `scripts/setup-db.sql`.
+2. **`Backend Quality Gates`**: Ejecuta `./mvnw -B verify` bajo Java 21, pasando las pruebas de RLS, contratos y concurrencia. Publica resultados con `junit`.
+3. **`Frontend Quality Gates`**: Ejecuta `pnpm install --frozen-lockfile`, `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm test` (pruebas unitarias Vitest) y `pnpm build`.
+4. **`Post Actions`**: Detiene y limpia el contenedor de PostgreSQL y purga el espacio de trabajo con `cleanWs()`.
