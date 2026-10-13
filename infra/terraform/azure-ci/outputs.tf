@@ -37,3 +37,11 @@ output "key_vault_uri" {
 output "jenkins_home_disk_id" {
   value = azurerm_managed_disk.jenkins_home.id
 }
+
+output "jenkins_vm_id" {
+  value = azurerm_linux_virtual_machine.jenkins.id
+}
+
+output "jenkins_url" {
+  value = var.jenkins_url
+}

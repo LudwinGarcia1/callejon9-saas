@@ -1,0 +1,4 @@
+# Files under infra/jenkins are shipped to a Linux VM through cloud-init;
+# CRLF line endings would break bash and systemd there.
+infra/jenkins/** text eol=lf
+*.sh text eol=lf
