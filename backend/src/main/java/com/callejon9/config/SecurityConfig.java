@@ -54,8 +54,11 @@ public class SecurityConfig {
                         new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 // Lista publica cerrada: todo lo demas exige sesion, y cada
                 // controller declara con @PreAuthorize que roles lo usan.
+                // /auth/refresh es publico porque existe para cuando el access
+                // token ya vencio; se autentica con la cookie refresh_token.
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/signup").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/refresh",
+                                "/api/v1/signup").permitAll()
                         .requestMatchers("/actuator/health", "/v3/api-docs/**",
                                 "/swagger-ui.html", "/swagger-ui/**")
                             .permitAll()

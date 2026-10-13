@@ -271,8 +271,20 @@ export interface UpdateKitchenItemStatusRequest {
 
 /** POST /api/v1/orders/{id}/checkout — verificado contra CheckoutRequest (sale). */
 export interface CheckoutRequest {
-  paymentMethod: PaymentMethod;
+  payments: PaymentRequest[];
   tipPercent: number;
+}
+
+export interface PaymentRequest {
+  method: Exclude<PaymentMethod, "MIXED">;
+  amount: number;
+}
+
+export interface TicketPaymentSnapshot {
+  method: PaymentMethod;
+  amount: number;
+  receivedAmount: number;
+  change: number;
 }
 
 /** Fotografia inmutable de una linea del ticket — verificado contra TicketItemSnapshot. */
@@ -297,6 +309,8 @@ export interface TicketResponse {
   total: number;
   paymentMethod: PaymentMethod;
   closedAt: string;
+  payments: TicketPaymentSnapshot[];
+  change: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -333,6 +347,7 @@ export interface SaleHistorySummary {
 export interface SalesHistoryResponse {
   sales: SaleHistoryRow[];
   summary: SaleHistorySummary;
+  paymentMix: { method: PaymentMethod; count: number; total: number }[];
 }
 
 // ---------------------------------------------------------------------------

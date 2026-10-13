@@ -2,7 +2,12 @@
   "schemaVersion": 1,
   "activeIssue": null,
   "activePhase": null,
-  "lastReview": null,
+  "lastReview": {
+    "date": "2026-10-12",
+    "issue": "CAL-105",
+    "branch": "fix/cal-105-order-checkout-concurrency",
+    "verdict": "aprobable; B1 (espera acotada con pg_blocking_pids) corregido; backend verify 475/476 en modo externo (1 requiere Docker)"
+  },
   "lastBacklogSync": {
     "date": "2026-09-11",
     "projectId": "29d324c8-6703-4eca-809b-6285f4f3cb72",

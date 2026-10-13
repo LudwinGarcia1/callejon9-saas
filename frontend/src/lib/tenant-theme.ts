@@ -70,12 +70,17 @@ export function resolveIdentity(slug: string | undefined): TenantIdentity {
  * `style` en vez de generar clases: el hue es un dato, no una variante.
  */
 export function identityStyle(identity: TenantIdentity): CSSProperties {
+  const bounded = (value: number, maximum: number, fallback: number) =>
+    typeof value === "number" && Number.isFinite(value)
+      ? Math.min(maximum, Math.max(0, value)) : fallback;
+  const font = Object.hasOwn(DISPLAY_FONT_STACK, identity.displayFont)
+    ? identity.displayFont : DEFAULT_IDENTITY.displayFont;
   return {
-    "--brand-hue": String(identity.hue),
-    "--brand-chroma": String(identity.chroma),
-    "--brand-hue-dark": String(identity.hueDark),
-    "--brand-chroma-dark": String(identity.chromaDark),
-    "--font-display-family": DISPLAY_FONT_STACK[identity.displayFont],
+    "--brand-hue": String(bounded(identity.hue, 360, DEFAULT_IDENTITY.hue)),
+    "--brand-chroma": String(bounded(identity.chroma, 0.4, DEFAULT_IDENTITY.chroma)),
+    "--brand-hue-dark": String(bounded(identity.hueDark, 360, DEFAULT_IDENTITY.hueDark)),
+    "--brand-chroma-dark": String(bounded(identity.chromaDark, 0.4, DEFAULT_IDENTITY.chromaDark)),
+    "--font-display-family": DISPLAY_FONT_STACK[font],
   } as CSSProperties;
 }
 

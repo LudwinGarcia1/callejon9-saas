@@ -1,8 +1,8 @@
 package com.callejon9.catalog;
 
-import com.callejon9.auth.service.JwtService;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
+import com.callejon9.support.TestSessions;
 import com.callejon9.tenancy.TenantContext;
 import com.callejon9.user.domain.User;
 import com.callejon9.user.domain.UserRole;
@@ -34,7 +34,7 @@ class CategoryControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private TenantOnboardingService onboardingService;
-    @Autowired private JwtService jwtService;
+    @Autowired private TestSessions testSessions;
     @Autowired private JdbcTemplate jdbcTemplate;
 
     private Tenant tenant;
@@ -44,12 +44,7 @@ class CategoryControllerTest {
     void seed() {
         tenant = onboardingService.onboard("Categorias Test", "categorias-test",
                 "admin@categorias.com", "Admin", "Secreto123!", "FREE");
-        User user = User.builder()
-                .email("admin@categorias.com").passwordHash("x")
-                .fullName("Admin").role(UserRole.ADMIN).active(true).build();
-        user.setId(UUID.randomUUID());
-        user.setTenantId(tenant.getId());
-        admin = user;
+        admin = testSessions.newUserIn(tenant.getId(), UserRole.ADMIN);
     }
 
     @AfterEach
@@ -59,7 +54,7 @@ class CategoryControllerTest {
     }
 
     private Cookie cookieFor(User user) {
-        return new Cookie("access_token", jwtService.generateAccessToken(user));
+        return new Cookie("access_token", testSessions.accessTokenFor(user));
     }
 
     private UUID createCategory(String name) throws Exception {
