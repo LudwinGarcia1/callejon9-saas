@@ -134,6 +134,28 @@ Las cookies llevan el atributo `Secure` salvo que `AUTH_COOKIE_SECURE=false`. `s
 
 El WebSocket `/ws` solo acepta el handshake desde los orígenes de `APP_ALLOWED_ORIGINS` (separados por coma, sin comodines). Por omisión es `http://localhost:3000`; en cualquier otro entorno debe ser el dominio público del frontend. Con la lista vacía o con `*`, el backend no arranca.
 
+#### Perfiles
+
+`application.yml` trae valores por defecto para que el proyecto corra en local sin preparar nada. Esos valores (secreto JWT, contraseñas de `callejon9_app` y `callejon9_owner`) están publicados en el repositorio, así que solo sirven en una máquina de desarrollo.
+
+| Perfil | Uso | Secretos | Cookies | Actuator y OpenAPI |
+|---|---|---|---|---|
+| ninguno | Desarrollo local, `scripts/run-dev.ps1`, Compose | Valores por defecto de desarrollo | `Secure` salvo `AUTH_COOKIE_SECURE=false` | `health` y Swagger UI públicos |
+| `demo` | Presentación en `http://localhost` | Valores por defecto de desarrollo | Sin `Secure` | `health` y Swagger UI públicos |
+| `prod` | Cualquier entorno real, detrás de HTTPS | Obligatorios, sin valor por defecto | Siempre `Secure`; `AUTH_COOKIE_SECURE` no aplica | Solo `/actuator/health`, sin detalles; OpenAPI y Swagger UI apagados |
+
+Sin `prod`, si el arranque usa el secreto JWT publicado o el perfil `demo`, el backend lo advierte en el log con una línea `WARN` que empieza por `Configuracion NO apta para produccion`.
+
+Con `SPRING_PROFILES_ACTIVE=prod`, el backend se niega a arrancar, antes de conectarse a la base y de abrir el puerto, si:
+
+- falta `JWT_SECRET`, tiene menos de 32 bytes o es uno de los valores publicados en el repositorio;
+- falta `DB_APP_PASSWORD` o `DB_OWNER_PASSWORD`, o es la contraseña de desarrollo de `scripts/setup-db.sql`;
+- falta `APP_ALLOWED_ORIGINS` o alguno de sus orígenes no es `https://`;
+- `app.auth.cookie-secure` se forzó a `false`;
+- se activa junto a `demo` o `dev`.
+
+El error enumera cada problema por el nombre de la variable, nunca por su valor. `prod` fija además `server.forward-headers-strategy=none`: la IP del cliente la resuelve `ClientIp` con su propio modelo de confianza, y así Spring Boot no lo cambia por su cuenta al detectar una plataforma en la nube. La validación vive en `ProductionConfigurationGuard`.
+
 ### 3. Frontend
 
 ```powershell
@@ -203,6 +225,7 @@ Las que más importan:
 | `TenantSubscriptionInterceptorTest` | Un inquilino no puede suscribirse al canal de tiempo real de otro |
 | `RevokedSessionSweeperTest` | Revocar una sesión, aun desde otra instancia, cierra sus conexiones WebSocket sin tocar las demás |
 | `TenantOnboardingServiceCompensationTest` | El alta revierte el inquilino si falla la creación del administrador |
+| `ProductionConfigurationGuardTest` | El perfil `prod` no arranca con secretos ausentes, cortos o de desarrollo, y el error no imprime el valor |
 
 `BcryptCompatibilityTest` merece una nota: confirma que los usuarios del sistema Flask conservan su contraseña tras la migración. Dejó de ser una suposición del diseño y pasó a ser una prueba automatizada.
 

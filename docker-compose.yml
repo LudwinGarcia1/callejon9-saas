@@ -24,6 +24,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # Entorno de desarrollo: sin perfil y con los valores por defecto de
+    # .env.example. No activar prod aqui sin reemplazar esos secretos.
     environment:
       DB_HOST: db
       DB_PORT: 5432
