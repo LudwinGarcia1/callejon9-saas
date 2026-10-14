@@ -24,6 +24,7 @@
     {"path": "infra/jenkins/README.md", "kind": "operations", "authority": "high"},
     {"path": "workflow/decisions/2026-10-07-acceso-privado-jenkins-azure.md", "kind": "decision", "authority": "high"},
     {"path": "docs/cal-11-entorno-docker-compose.md", "kind": "operations", "authority": "high"},
-    {"path": "docs/cal-14-escaneo-dependencias-codigo.md", "kind": "security", "authority": "high"}
+    {"path": "docs/cal-14-escaneo-dependencias-codigo.md", "kind": "security", "authority": "high"},
+    {"path": "docs/cal-17-imagenes-produccion.md", "kind": "operations", "authority": "high"}
   ]
 }
