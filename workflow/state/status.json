@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "activeIssue": "CAL-11",
-  "activePhase": "Fase 2",
+  "activeIssue": "CAL-22",
+  "activePhase": "Fase 3",
   "lastReview": {
-    "date": "2026-10-13",
-    "issue": "CAL-11",
-    "branch": "feat/cal-11-entorno-docker-compose",
-    "verdict": "aprobado; entorno completo con Docker Compose verificado de extremo a extremo (PostgreSQL 16, Spring Boot backend y Next.js frontend, contenedores no-root y healthchecks UP)"
+    "date": "2026-10-14",
+    "issue": "CAL-22",
+    "branch": "feat/cal-22-health-probes",
+    "verdict": "aprobable; B1 (control positivo en StartupFailureTest) y B2 (semantica real de liveness) corregidos; backend verify 511/511 en modo contenedor"
   },
   "lastBacklogSync": {
     "date": "2026-09-11",
