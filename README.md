@@ -242,6 +242,7 @@ Tres carencias que sí se cerraron y vale la pena nombrar, porque marcaban la di
 
 - [`docs/glosario-es-en.md`](docs/glosario-es-en.md) — correspondencia entre el modelado original en español y el código en inglés
 - [`docs/guion-demo.md`](docs/guion-demo.md) — recorrido paso a paso
+- [`docs/operacion-probes.md`](docs/operacion-probes.md) — probes de vida y disponibilidad para el orquestador
 - [`docs/superpowers/specs/`](docs/superpowers/specs/) — diseño y decisiones de arquitectura
 - [`docs/superpowers/plans/`](docs/superpowers/plans/) — plan de implementación
 

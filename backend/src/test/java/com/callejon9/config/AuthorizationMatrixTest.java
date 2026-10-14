@@ -110,6 +110,16 @@ class AuthorizationMatrixTest {
                 Arguments.of(HttpMethod.PUT, "/api/v1/auth/refresh", 401),
                 Arguments.of(HttpMethod.POST, "/api/v1/auth/refresh/extra", 401),
                 Arguments.of(HttpMethod.GET, "/actuator/health", 200),
+                // Probes del orquestador (CAL-22): publicos solo por GET y en
+                // su ruta exacta; el resto de /actuator/health/** pide sesion.
+                Arguments.of(HttpMethod.GET, "/actuator/health/liveness", 200),
+                Arguments.of(HttpMethod.GET, "/actuator/health/readiness", 200),
+                Arguments.of(HttpMethod.HEAD, "/actuator/health/liveness", 401),
+                Arguments.of(HttpMethod.POST, "/actuator/health/readiness", 401),
+                Arguments.of(HttpMethod.GET, "/actuator/health/db", 401),
+                Arguments.of(HttpMethod.GET, "/actuator/health/livenessState", 401),
+                Arguments.of(HttpMethod.GET, "/actuator/health/liveness/extra", 401),
+                Arguments.of(HttpMethod.GET, "/actuator/health/readiness-other", 401),
                 Arguments.of(HttpMethod.GET, "/v3/api-docs", 200),
                 // Bajo /auth pero con sesion obligatoria.
                 Arguments.of(HttpMethod.GET, "/api/v1/auth/me", 401),
@@ -138,7 +148,7 @@ class AuthorizationMatrixTest {
 
     @ParameterizedTest(name = "{0} {1} sin cookie -> {2}")
     @MethodSource("anonymousAccess")
-    @DisplayName("sin cookie solo responden login, signup, health y OpenAPI")
+    @DisplayName("sin cookie solo responden login, signup, health, probes y OpenAPI")
     void onlyTheDocumentedPublicRoutesAnswerWithoutSession(HttpMethod method, String path,
             int expectedStatus) throws Exception {
         mockMvc.perform(request(method, path)

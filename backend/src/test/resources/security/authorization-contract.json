@@ -702,6 +702,40 @@
   },
   {
     "method": "GET",
+    "path": "/actuator/health/liveness",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "ANONYMOUS",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Probe de vida del orquestador (CAL-22): ruta concreta bajo /actuator/health/**, publica solo por GET y sin componentes"
+  },
+  {
+    "method": "GET",
+    "path": "/actuator/health/readiness",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "ANONYMOUS",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Probe de disponibilidad del orquestador (CAL-22): ruta concreta bajo /actuator/health/**, publica solo por GET y sin componentes"
+  },
+  {
+    "method": "GET",
     "path": "/actuator/health/**",
     "params": [],
     "headers": [],

@@ -91,6 +91,30 @@ app:
 server:
   port: 8080
 
+# Probes para el orquestador (CAL-22). Semantica y configuracion recomendada
+# en docs/operacion-probes.md.
+management:
+  endpoint:
+    health:
+      # Las respuestas publicas solo dicen UP o DOWN: nada de componentes,
+      # versiones de la base ni mensajes de error.
+      show-details: never
+      show-components: never
+      probes:
+        # Sin esto Spring Boot solo crea los grupos al detectar Kubernetes o
+        # Cloud Foundry.
+        enabled: true
+      group:
+        # Vida: solo el estado interno del proceso. Si dependiera de
+        # PostgreSQL, una caida de la base reiniciaria todas las instancias
+        # en cadena sin arreglar nada.
+        liveness:
+          include: livenessState
+        # Disponibilidad: el proceso termino de arrancar y la base responde.
+        # Una instancia DOWN sale del balanceador sin reiniciarse.
+        readiness:
+          include: readinessState,db
+
 logging:
   level:
     org.flywaydb: INFO

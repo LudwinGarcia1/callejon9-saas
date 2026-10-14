@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import org.springframework.util.AntPathMatcher;
 
 /** Contrato versionado independiente del descubrimiento y de las anotaciones. */
 final class AuthorizationContractMatrix {
@@ -70,10 +71,42 @@ final class AuthorizationContractMatrix {
                 violations.add(endpoint.description() + "; esperados=" + rule.roles() + "; reales=" + actual);
             }
         }
+        for (var rule : List.copyOf(remaining.values())) {
+            if (!isConcrete(rule.path()) || !coveredByDiscoveredWildcard(rule, endpoints)) {
+                continue;
+            }
+            // Ruta concreta servida por un mapping comodin descubierto, como
+            // /actuator/health/liveness bajo /actuator/health/**: se contrasta
+            // con la decision real del filtro para esa ruta exacta.
+            remaining.remove(rule.key());
+            var route = new AuthorizationContractVerifier.Route(rule.method(), rule.path());
+            var actual = verifier.webDecisions(route).entrySet().stream().filter(java.util.Map.Entry::getValue)
+                    .map(java.util.Map.Entry::getKey).collect(java.util.stream.Collectors.toSet());
+            if (!actual.equals(rule.roles())) {
+                violations.add("Ruta concreta " + rule.method() + " " + rule.path()
+                        + "; esperados=" + rule.roles() + "; reales=" + actual);
+            }
+            if (actual.contains("ANONYMOUS") && !AuthorizationContractVerifier.isDocumentedPublic(route)) {
+                violations.add("Ruta concreta publica sin entrada exacta en la lista publica del verificador: "
+                        + rule.method() + " " + rule.path());
+            }
+        }
         remaining.values().forEach(rule -> violations.add("Decision sin endpoint descubierto: " + rule.key()));
         if (!violations.isEmpty()) {
             throw new AssertionError("Matriz de autorizacion incumplida:\n" + String.join("\n", violations));
         }
+    }
+
+    private static boolean isConcrete(String path) {
+        return !path.contains("*") && !path.contains("{");
+    }
+
+    private static boolean coveredByDiscoveredWildcard(Rule rule,
+                                                       List<AuthorizationContractVerifier.Endpoint> endpoints) {
+        var matcher = new AntPathMatcher();
+        return endpoints.stream().anyMatch(endpoint -> endpoint.route().method().equals(rule.method())
+                && endpoint.route().path().endsWith("/**")
+                && matcher.match(endpoint.route().path(), rule.path()));
     }
 
     private static List<String> sorted(Collection<?> values) {
