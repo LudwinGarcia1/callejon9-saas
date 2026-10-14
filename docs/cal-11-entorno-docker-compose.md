@@ -52,16 +52,17 @@ Elimina la necesidad de instalar previamente Java 21, Maven, PostgreSQL o Node.j
 - **Persistencia:** Volumen `pgdata` montado en `/var/lib/postgresql/data`.
 
 ### 2. `backend` (Spring Boot 3.4 / Java 21)
-- **Dockerfile:** Multi-stage build (`eclipse-temurin:21-jdk-jammy` para compilación con Maven Wrapper; `eclipse-temurin:21-jre-jammy` para runtime).
+- **Dockerfile:** Multi-stage build (`eclipse-temurin:21.0.12.1_1-jdk-noble` para compilación con Maven Wrapper; `eclipse-temurin:21.0.12.1_1-jre-noble` para runtime, ambas fijadas por digest). Detalle en `docs/cal-17-imagenes-produccion.md`.
+- **Perfil:** la imagen arranca en `prod`; Compose fija `SPRING_PROFILES_ACTIVE=default` para desarrollo.
 - **Seguridad:** Usuario no privilegiado `appuser` (UID 10001, GID 10001).
 - **Conectividad:** Configura `DB_HOST=db`, `DB_PORT=5432`, `DB_NAME=callejon9`.
 - **Dependencia:** `depends_on.db.condition: service_healthy`.
 - **Healthcheck:** Monitorea `http://localhost:8080/actuator/health` cada 10 s.
 
 ### 3. `frontend` (Next.js 15 / React 19)
-- **Dockerfile:** Multi-stage build (`node:24-slim` para resolución con `pnpm`, compilación con turbopack y runtime).
+- **Dockerfile:** Multi-stage build sobre `node:24.21.0-alpine3.24` fijada por digest; el runtime sirve solo la salida `standalone` de Next (CAL-17).
 - **Seguridad:** Usuario no privilegiado `nextjs` (UID 10001, GID 10001).
-- **Conectividad:** Configura `BACKEND_ORIGIN=http://backend:8080`.
+- **Conectividad:** `BACKEND_ORIGIN=http://backend:8080` se pasa como argumento de compilación: Next fija el destino del rewrite al compilar, así que cambiarlo requiere reconstruir la imagen.
 - **Healthcheck:** Monitorea `http://localhost:3000/login` cada 10 s.
 
 ## Uso operativo
@@ -118,4 +119,6 @@ Elimina la necesidad de instalar previamente Java 21, Maven, PostgreSQL o Node.j
 - **Conectividad y rewrites same-origin:**
   - Petición `/api/v1/*` al frontend enrutada exitosamente hacia el backend en la red interna de Docker.
 - **Limpieza:** `docker compose down -v` elimina contenedores y volúmenes sin recursos huérfanos.
+
+> **Corrección (CAL-17, 2026-10-14):** la afirmación sobre los rewrites de esta verificación no se sostenía. Next fija el destino del rewrite al compilar y la imagen se compilaba sin `BACKEND_ORIGIN`, así que `/api/v1/*` se reenviaba a `http://localhost:8080` dentro del contenedor y respondía 500; la variable que Compose pasaba al arrancar no lo cambiaba. CAL-17 lo corrige con un argumento de compilación y lo verifica con una prueba de humo de alta, login y `/auth/me` a través del frontend (`docs/cal-17-imagenes-produccion.md`).
 

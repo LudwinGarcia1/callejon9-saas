@@ -2,13 +2,22 @@ import type { NextConfig } from "next";
 import { COMMON_SECURITY_HEADERS, HSTS_POLICY } from "./src/lib/security-headers";
 
 /**
- * Origen del backend. Es server-only (sin prefijo NEXT_PUBLIC_) porque este
- * archivo corre en Node al iniciar el servidor de Next, nunca en el
- * navegador.
+ * Origen del backend. Es server-only (sin prefijo NEXT_PUBLIC_): este archivo
+ * corre en Node, nunca en el navegador.
+ *
+ * Se lee al compilar, no al arrancar: `next build` resuelve `rewrites()` y
+ * guarda el destino en la salida. Cambiar BACKEND_ORIGIN en un servidor ya
+ * compilado no mueve el rewrite; hay que recompilar. La imagen de Docker lo
+ * recibe como argumento de build (ver Dockerfile).
  */
 const BACKEND_ORIGIN = process.env.BACKEND_ORIGIN ?? "http://localhost:8080";
 
 const nextConfig: NextConfig = {
+  // Salida autocontenida para la imagen de produccion: server.js con solo
+  // las dependencias que usa, sin pnpm ni el node_modules completo. Solo la
+  // activa el Dockerfile: en Windows sin permiso para crear enlaces
+  // simbolicos, `next build` falla al copiar los enlaces de pnpm a esa salida.
+  output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
   poweredByHeader: false,
   async headers() {
     return [{

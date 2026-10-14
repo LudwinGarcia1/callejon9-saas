@@ -22,6 +22,11 @@
 		<jjwt.version>0.12.6</jjwt.version>
 		<totp.version>1.7.1</totp.version>
 		<openpdf.version>2.4.0</openpdf.version>
+		<!-- Parche de la misma linea 10.1 sobre el que trae Spring Boot 3.4.13
+		     (10.1.50), que tiene vulnerabilidades criticas conocidas (CAL-17).
+		     Quitar al migrar a Spring Boot 3.5 si este ya trae una version
+		     igual o mas nueva (CAL-107). -->
+		<tomcat.version>10.1.61</tomcat.version>
 	</properties>
 
 	<dependencies>
