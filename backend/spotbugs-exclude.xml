@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter
+    xmlns="https://github.com/spotbugs/filter/3.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0 https://raw.githubusercontent.com/spotbugs/spotbugs/master/spotbugs/etc/findbugsfilter.xsd">
+
+    <!-- Suprimir advertencias de copia defensiva en DTOs, Records, Entidades y Beans inyectados de Spring -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!-- Suprimir advertencia de excepcion lanzada en constructor para validacion de invariantes -->
+    <Match>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+
+    <!--
+      CSRF esta deshabilitado intencionalmente: RestoHub es una API REST stateless
+      que se autentica mediante JWT en cookies HttpOnly SameSite=Strict.
+      Las llamadas del navegador son a rutas relativas /api/v1/* reescritas por Next.js,
+      impidiendo solicitudes cross-site segun los invariantes de seguridad del proyecto.
+    -->
+    <Match>
+        <Class name="com.callejon9.config.SecurityConfig"/>
+        <Bug pattern="SPRING_CSRF_PROTECTION_DISABLED"/>
+    </Match>
+</FindBugsFilter>

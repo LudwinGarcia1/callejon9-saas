@@ -11,6 +11,8 @@ pipeline {
 
     environment {
         CI = 'true'
+        COREPACK_ENABLE_STRICT = '0'
+        NPM_CONFIG_PM_ON_FAIL = 'ignore'
         JAVA_HOME = '/usr/lib/jvm/temurin-21-jdk-amd64'
         PATH = "${JAVA_HOME}/bin:${env.PATH}"
         DB_PORT = '5432'
@@ -65,6 +67,17 @@ pipeline {
             }
         }
 
+        stage('Security Scan') {
+            steps {
+                sh '''#!/usr/bin/env bash
+                    set -euo pipefail
+                    echo "[CI] Ejecutando escaneo unificado de seguridad y secretos (CAL-14)..."
+                    chmod +x scripts/security-scan.sh
+                    ./scripts/security-scan.sh
+                '''
+            }
+        }
+
         stage('Backend Quality Gates') {
             steps {
                 dir('backend') {
@@ -101,13 +114,24 @@ pipeline {
                 }
             }
         }
+
+        stage('Production Images') {
+            steps {
+                sh '''#!/usr/bin/env bash
+                    set -euo pipefail
+                    echo "[CI] Construyendo y verificando imagenes minimas de produccion (CAL-17)..."
+                    bash scripts/verify-images.sh
+                '''
+            }
+        }
     }
 
     post {
         always {
             sh '''#!/usr/bin/env bash
-                echo "[CI] Limpiando contenedor de base de datos..."
+                echo "[CI] Limpiando contenedores e imagenes temporales..."
                 docker rm -f ci-postgres 2>/dev/null || true
+                docker rmi -f callejon9-backend:verify callejon9-frontend:verify 2>/dev/null || true
             '''
             cleanWs(cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, cleanWhenSuccess: true, cleanWhenUnstable: true)
         }

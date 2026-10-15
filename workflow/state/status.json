@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "activeIssue": "CAL-15",
+  "activeIssue": "CAL-17",
   "activePhase": "Fase 2",
   "lastReview": {
     "date": "2026-10-14",
-    "issue": "CAL-15",
-    "branch": "feat/cal-15-production-profile",
-    "verdict": "aprobable; B1 (valores publicados con espacios finales) y B2 (prueba prod+dev) corregidos; backend verify 510/510 en modo contenedor"
+    "issue": "CAL-17",
+    "branch": "feat/cal-17-production-images",
+    "verdict": "aprobable; B1 (job images en CI) y B2 (fecha de la base del escaneo) corregidos; backend verify 494/494, frontend 118/118, verify-images.sh en verde; 3 CRITICAL documentadas (CAL-107 y Spring 7)"
   },
   "lastBacklogSync": {
     "date": "2026-09-11",

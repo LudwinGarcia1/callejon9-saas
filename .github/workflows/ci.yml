@@ -29,6 +29,7 @@ jobs:
       - name: Run frontend checks
         working-directory: frontend
         run: |
+          pnpm audit --prod --audit-level=high
           pnpm test:coverage
           pnpm lint
           pnpm exec tsc --noEmit
@@ -41,6 +42,17 @@ jobs:
           name: frontend-coverage
           path: frontend/coverage
           if-no-files-found: ignore
+
+  security:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run secret leak scan
+        run: |
+          chmod +x scripts/security-scan.sh
+          ./scripts/security-scan.sh --skip-backend --skip-frontend
   backend:
     runs-on: ubuntu-latest
 
@@ -58,3 +70,16 @@ jobs:
         env:
           JWT_SECRET: ci-only-secret-at-least-32-bytes-long!!
         run: ./mvnw --batch-mode verify
+
+  # Unica puerta que ejercita los Dockerfiles y la salida standalone de Next:
+  # el pnpm build del job frontend no la activa (CAL-17).
+  images:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and verify production images
+        env:
+          VCS_REF: ${{ github.sha }}
+        run: bash scripts/verify-images.sh

@@ -1,6 +1,18 @@
+# Se compila dentro de la imagen; lo local no entra.
 target/
+
+# Las pruebas corren en CI, no al construir la imagen.
+src/test/
+
+# Nunca copiar variables locales ni metadatos de Git a la imagen.
+.env*
 .git/
 .gitignore
+
+# Archivos que no intervienen en la compilacion.
+Dockerfile
+.dockerignore
 *.iml
+*.log
 .idea/
 .vscode/
