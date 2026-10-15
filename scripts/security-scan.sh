@@ -95,7 +95,7 @@ if [ "$SKIP_FRONTEND" = false ]; then
     echo "[2/3] Ejecutando auditoria de dependencias en frontend (pnpm audit --prod)..."
     FRONTEND_DIR="${REPO_ROOT}/frontend"
 
-    if pnpm --dir "$FRONTEND_DIR" audit --prod --audit-level=high; then
+    if (cd "$FRONTEND_DIR" && COREPACK_ENABLE_STRICT=0 npm_config_pm_on_fail=ignore pnpm audit --prod --audit-level=high); then
         echo "  [OK] 0 vulnerabilidades de severidad alta/critica en dependencias de produccion."
         echo ""
     else
