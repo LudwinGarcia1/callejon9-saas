@@ -7,6 +7,7 @@ import com.callejon9.tenancy.TenantContext;
 import com.callejon9.user.domain.User;
 import com.callejon9.user.repository.UserRepository;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -68,6 +69,9 @@ public class AuthService {
         TenantContext.set(tenant.getId());
         try {
             User user = transactionTemplate.execute(status -> loadUser(email));
+            if (user == null) {
+                throw new BadCredentialsException("Credenciales invalidas.");
+            }
 
             if (!user.isActive() || !passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
                 throw new BadCredentialsException("Credenciales invalidas.");
