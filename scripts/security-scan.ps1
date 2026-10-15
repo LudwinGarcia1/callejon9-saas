@@ -91,8 +91,11 @@ if (-not $SkipFrontend) {
     Write-Host "[2/3] Ejecutando auditoria de dependencias en frontend (pnpm audit --prod)..." -ForegroundColor Yellow
     $frontendDir = Join-Path $repoRoot "frontend"
 
+    Push-Location $frontendDir
     try {
-        $auditOutput = & pnpm --dir $frontendDir audit --prod --audit-level=high 2>&1
+        $env:COREPACK_ENABLE_STRICT = "0"
+        $env:npm_config_pm_on_fail = "ignore"
+        $auditOutput = & pnpm audit --prod --audit-level=high 2>&1
         $auditExit = $LASTEXITCODE
 
         if ($auditExit -eq 0) {
@@ -105,6 +108,8 @@ if (-not $SkipFrontend) {
     } catch {
         Write-Host "  [FALLO] Error al ejecutar pnpm audit: $_`n" -ForegroundColor Red
         $failedStages += "Frontend SCA"
+    } finally {
+        Pop-Location
     }
 } else {
     Write-Host "[2/3] Auditoria de dependencias frontend omitida por parametro.`n" -ForegroundColor DarkGray

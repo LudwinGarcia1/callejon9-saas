@@ -11,6 +11,8 @@ pipeline {
 
     environment {
         CI = 'true'
+        COREPACK_ENABLE_STRICT = '0'
+        NPM_CONFIG_PM_ON_FAIL = 'ignore'
         JAVA_HOME = '/usr/lib/jvm/temurin-21-jdk-amd64'
         PATH = "${JAVA_HOME}/bin:${env.PATH}"
         DB_PORT = '5432'
