@@ -151,6 +151,41 @@ class AuthorizationContractTest {
         assertThat(verifier.inspect(endpoint("HEAD", "/v3/api-docs")).allowed()).contains("ANONYMOUS");
     }
 
+    @Test
+    @DisplayName("Una ruta concreta bajo un comodín se contrasta con la decisión real y con la lista pública")
+    void concreteRulesBeneathWildcardsAreVerified() {
+        var wildcard = endpoint("GET", "/actuator/health/**");
+        var sessionRoles = Set.of("ADMIN", "CASHIER", "KITCHEN", "SUPER_ADMIN", "WAITER");
+        var everyone = Set.of("ANONYMOUS", "ADMIN", "CASHIER", "KITCHEN", "SUPER_ADMIN", "WAITER");
+        var wildcardRule = ruleFor(wildcard, sessionRoles);
+
+        AuthorizationContractMatrix.requireMatches(List.of(wildcard),
+                List.of(wildcardRule, concreteRule("/actuator/health/liveness", everyone)), verifier);
+
+        // Declarar publica una ruta que la seguridad real protege.
+        assertThatThrownBy(() -> AuthorizationContractMatrix.requireMatches(List.of(wildcard),
+                List.of(wildcardRule, concreteRule("/actuator/health/db", everyone)), verifier))
+                .hasMessageContaining("Ruta concreta GET /actuator/health/db").hasMessageContaining("reales=");
+        // Una ruta concreta que ningun comodin descubierto sirve.
+        assertThatThrownBy(() -> AuthorizationContractMatrix.requireMatches(List.of(wildcard),
+                List.of(wildcardRule, concreteRule("/api/v1/sin-comodin", everyone)), verifier))
+                .hasMessageContaining("sin endpoint descubierto");
+
+        // Si la seguridad abre una ruta concreta que no esta en la lista
+        // publica del verificador, la matriz sola no basta para aceptarla.
+        var publicFilter = new AuthorizationFilter((authentication, request) -> new AuthorizationDecision(true));
+        var publicVerifier = new AuthorizationContractVerifier(context,
+                new FilterChainProxy(new DefaultSecurityFilterChain(AnyRequestMatcher.INSTANCE, publicFilter)));
+        assertThatThrownBy(() -> AuthorizationContractMatrix.requireMatches(List.of(wildcard),
+                List.of(ruleFor(wildcard, everyone), concreteRule("/actuator/health/db", everyone)), publicVerifier))
+                .hasMessageContaining("sin entrada exacta en la lista publica");
+    }
+
+    private static AuthorizationContractMatrix.Rule concreteRule(String path, Set<String> roles) {
+        return new AuthorizationContractMatrix.Rule("GET", path, List.of(), List.of(), List.of(), List.of(),
+                roles, "Contrato deliberado de prueba");
+    }
+
     private AuthorizationContractMatrix.Rule ruleFor(AuthorizationContractVerifier.Endpoint endpoint, Set<String> roles) {
         var key = AuthorizationContractMatrix.key(endpoint);
         return new AuthorizationContractMatrix.Rule(key.method(), key.path(), key.params(), key.headers(),
