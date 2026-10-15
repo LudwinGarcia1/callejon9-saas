@@ -1,12 +1,12 @@
 {
   "schemaVersion": 1,
-  "activeIssue": "CAL-11",
+  "activeIssue": "CAL-14",
   "activePhase": "Fase 2",
   "lastReview": {
-    "date": "2026-10-13",
-    "issue": "CAL-11",
-    "branch": "feat/cal-11-entorno-docker-compose",
-    "verdict": "aprobado; entorno completo con Docker Compose verificado de extremo a extremo (PostgreSQL 16, Spring Boot backend y Next.js frontend, contenedores no-root y healthchecks UP)"
+    "date": "2026-10-14",
+    "issue": "CAL-14",
+    "branch": "feat/cal-14-escaneo-dependencias-codigo",
+    "verdict": "aprobado; escaneo automatizado de dependencias (pnpm audit), SAST (SpotBugs + FindSecBugs) y secretos con 0 vulnerabilidades, integrado en CI/CD"
   },
   "lastBacklogSync": {
     "date": "2026-09-11",

@@ -65,6 +65,17 @@ pipeline {
             }
         }
 
+        stage('Security Scan') {
+            steps {
+                sh '''#!/usr/bin/env bash
+                    set -euo pipefail
+                    echo "[CI] Ejecutando escaneo unificado de seguridad y secretos (CAL-14)..."
+                    chmod +x scripts/security-scan.sh
+                    ./scripts/security-scan.sh
+                '''
+            }
+        }
+
         stage('Backend Quality Gates') {
             steps {
                 dir('backend') {
