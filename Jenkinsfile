@@ -7,6 +7,7 @@ pipeline {
         timeout(time: 30, unit: 'MINUTES')
         timestamps()
         disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '30'))
     }
 
     environment {
@@ -134,6 +135,12 @@ pipeline {
                 docker rmi -f callejon9-backend:verify callejon9-frontend:verify 2>/dev/null || true
             '''
             cleanWs(cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, cleanWhenSuccess: true, cleanWhenUnstable: true)
+        }
+        success {
+            echo "[CI] Todas las puertas de calidad pasaron exitosamente (CAL-89: status check SUCCESS)."
+        }
+        failure {
+            echo "[CI] Fallo en la ejecucion del pipeline de CI (CAL-89: status check FAILURE)."
         }
     }
 }
