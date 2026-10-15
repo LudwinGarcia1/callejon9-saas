@@ -114,13 +114,24 @@ pipeline {
                 }
             }
         }
+
+        stage('Production Images') {
+            steps {
+                sh '''#!/usr/bin/env bash
+                    set -euo pipefail
+                    echo "[CI] Construyendo y verificando imagenes minimas de produccion (CAL-17)..."
+                    bash scripts/verify-images.sh
+                '''
+            }
+        }
     }
 
     post {
         always {
             sh '''#!/usr/bin/env bash
-                echo "[CI] Limpiando contenedor de base de datos..."
+                echo "[CI] Limpiando contenedores e imagenes temporales..."
                 docker rm -f ci-postgres 2>/dev/null || true
+                docker rmi -f callejon9-backend:verify callejon9-frontend:verify 2>/dev/null || true
             '''
             cleanWs(cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, cleanWhenSuccess: true, cleanWhenUnstable: true)
         }
