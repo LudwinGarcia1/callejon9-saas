@@ -25,6 +25,8 @@ services:
       db:
         condition: service_healthy
     environment:
+      # La imagen arranca en prod por defecto; este entorno es de desarrollo.
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-default}
       DB_HOST: db
       DB_PORT: 5432
       DB_NAME: callejon9
@@ -35,21 +37,35 @@ services:
       APP_ALLOWED_ORIGINS: ${APP_ALLOWED_ORIGINS:-http://localhost:3000}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
+    # Sistema de archivos de solo lectura: Tomcat solo escribe en /tmp.
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
     restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        # Next fija el destino del rewrite /api/v1 al compilar. Cambiarlo
+        # requiere reconstruir la imagen: no se lee al arrancar.
+        BACKEND_ORIGIN: http://backend:8080
     container_name: callejon9-frontend
     depends_on:
       backend:
-        condition: service_started
-    environment:
-      BACKEND_ORIGIN: http://backend:8080
-      NODE_ENV: production
+        condition: service_healthy
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
+    # Sistema de archivos de solo lectura: Next solo escribe su cache.
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/.next/cache:uid=10001,gid=10001,mode=0700
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
     restart: unless-stopped
 
 volumes:

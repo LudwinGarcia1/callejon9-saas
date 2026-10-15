@@ -14,6 +14,7 @@ import com.callejon9.user.domain.UserRole;
 import com.callejon9.user.repository.UserRepository;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -105,6 +106,9 @@ public class TenantOnboardingService {
         // Transaccion 1: control plane, sin tenant en contexto.
         Tenant tenant = transactionTemplate.execute(status ->
                 createTenantAndSubscription(restaurantName, slug, plan));
+        if (tenant == null) {
+            throw new BusinessRuleException("El tenant no pudo crearse.");
+        }
 
         // Transaccion 2: escribe en `users`, gobernada por RLS. El tenant debe
         // quedar fijado ANTES de abrir esta transaccion.

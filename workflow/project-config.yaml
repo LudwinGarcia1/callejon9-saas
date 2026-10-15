@@ -36,12 +36,15 @@ commands:
   frontend_typecheck: "cd frontend; pnpm exec tsc --noEmit"
   frontend_build: "cd frontend; pnpm build"
   infra_check: ".\\scripts\\terraform-check.ps1"
+  # Requiere Docker. En Git Bash de Windows, anteponer MSYS_NO_PATHCONV=1.
+  images_verify: "bash scripts/verify-images.sh"
   dev_all: ".\\scripts\\run-dev.ps1"
 
 quality_gates:
   backend_changes: ["backend_verify"]
   frontend_changes: ["frontend_lint", "frontend_typecheck", "frontend_build"]
   infra_changes: ["infra_check"]
+  image_changes: ["images_verify"]
   docs_only: []
   security_or_tenancy: ["backend_verify", "rls_evidence"]
 
