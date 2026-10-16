@@ -13,9 +13,13 @@
 -- Se ejecuta una sola vez, como el administrador del servidor, desde la IP
 -- permitida por `operator_ip_address` (ver infra/terraform/azure-backend/README.md):
 --
---   psql "host=<fqdn> port=5432 dbname=postgres user=<admin> sslmode=require" `
---        -v owner_password=<db-owner-password> -v app_password=<db-app-password> `
---        -f scripts/setup-db-azure.sql
+--   psql -v owner_password=<db-owner-password> -v app_password=<db-app-password> `
+--        -f scripts/setup-db-azure.sql `
+--        "host=<fqdn> port=5432 dbname=postgres user=<admin> sslmode=require"
+--
+-- Las opciones van ANTES de la cadena de conexion: en Windows, psql deja de
+-- leer opciones despues del primer argumento posicional y trata el resto como
+-- texto, asi que -v y -f se ignorarian y los valores podrian acabar en la salida.
 -- ============================================================
 
 \set ON_ERROR_STOP on
@@ -31,11 +35,16 @@ CREATE ROLE callejon9_app   LOGIN PASSWORD :'app_password';
 -- haya permitido la extension (azure.extensions = PGCRYPTO).
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- PostgreSQL 16 exige pertenecer al rol para cederle una base. Desde la
--- version 15 el esquema public pertenece a pg_database_owner, asi que el nuevo
--- dueno puede crear tablas en el sin otro GRANT.
+-- PostgreSQL 16 exige pertenecer al rol para cederle una base o un esquema.
+--
+-- En un PostgreSQL local el esquema public pertenece a pg_database_owner, es
+-- decir, al dueno de la base. En Azure pertenece a azure_pg_admin, asi que
+-- ceder la base no basta: sin el ALTER SCHEMA, Flyway falla al crear su tabla
+-- con "permission denied for schema public". Con el, Azure queda igual que el
+-- entorno local y V4 puede conceder USAGE sobre public a callejon9_app.
 GRANT callejon9_owner TO CURRENT_USER;
 ALTER DATABASE callejon9 OWNER TO callejon9_owner;
+ALTER SCHEMA public OWNER TO callejon9_owner;
 REVOKE callejon9_owner FROM CURRENT_USER;
 
 GRANT USAGE ON SCHEMA public TO callejon9_app;
@@ -45,3 +54,8 @@ SELECT rolname, rolsuper, rolbypassrls
   FROM pg_roles
  WHERE rolname LIKE 'callejon9%'
  ORDER BY rolname;
+
+-- Comprobacion: el dueno de public debe ser callejon9_owner.
+SELECT nspname, pg_get_userbyid(nspowner) AS schema_owner
+  FROM pg_namespace
+ WHERE nspname = 'public';

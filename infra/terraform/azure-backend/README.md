@@ -105,14 +105,17 @@ $env:PGPASSWORD = az keyvault secret show --vault-name $kv -n postgres-admin-pas
 $owner = az keyvault secret show --vault-name $kv -n db-owner-password --query value -o tsv
 $app   = az keyvault secret show --vault-name $kv -n db-app-password --query value -o tsv
 
-psql "host=$fqdn port=5432 dbname=postgres user=$admin sslmode=require" `
-     -v "owner_password=$owner" -v "app_password=$app" -f ..\..\..\scripts\setup-db-azure.sql
+psql -v "owner_password=$owner" -v "app_password=$app" -f ..\..\..\scripts\setup-db-azure.sql `
+     "host=$fqdn port=5432 dbname=postgres user=$admin sslmode=require"
 
 Remove-Item Env:PGPASSWORD
+Remove-Variable owner, app
 terraform apply
 ```
 
-La última consulta del script debe mostrar `f` en `rolsuper` y `rolbypassrls` para los dos roles. Si `callejon9_app` pudiera evadir RLS, el aislamiento entre restaurantes sería decorativo.
+Las opciones `-v` y `-f` van antes de la cadena de conexión. En Windows, `psql` deja de leer opciones después del primer argumento posicional: con el orden inverso ignora el script y puede imprimir las contraseñas en la salida.
+
+El script muestra dos comprobaciones. La primera debe dar `f` en `rolsuper` y `rolbypassrls` para los dos roles: si `callejon9_app` pudiera evadir RLS, el aislamiento entre restaurantes sería decorativo. La segunda debe mostrar a `callejon9_owner` como dueño del esquema `public`. En Azure ese esquema pertenece a `azure_pg_admin`, y sin cambiar el dueño Flyway no puede crear tablas.
 
 ### 6. Desplegar el backend
 
@@ -134,7 +137,9 @@ curl.exe -i "$api/actuator/health/readiness"
 curl.exe -i -X POST "$api/api/v1/auth/login" -H "Content-Type: application/json" -d '{\"slug\":\"no-existe\",\"email\":\"nadie@example.com\",\"password\":\"x\"}'
 ```
 
-Los tres primeros deben responder `200` con `{"status":"UP"}`, y el login, `401` sin cuerpo. La vida es la que consulta el health check de App Service; la disponibilidad confirma que la Web App llega a PostgreSQL. Después, `scripts/verify-rls.sql` como `callejon9_app` (con la regla temporal de firewall) confirma el aislamiento contra la base real.
+Los tres primeros deben responder `200` con `{"status":"UP"}`, y el login, `401` sin cuerpo. La vida es la que consulta el health check de App Service; la disponibilidad confirma que la Web App llega a PostgreSQL. Un `200` con HTML ("Your app service is up and running") es la página de bienvenida de App Service, no la API: el JAR todavía no arranca o falló, y la causa está en el log (`az webapp log tail`).
+
+Después, `scripts/verify-rls.sql` como `callejon9_app` confirma el aislamiento contra la base real. Necesita la regla temporal de firewall del paso 5: ábrela de nuevo con `operator_ip_address` y ciérrala al terminar.
 
 ### 8. Entregar el origen al frontend
 
@@ -147,6 +152,35 @@ BACKEND_ORIGIN=<api_url>
 El navegador sigue llamando rutas relativas `/api/v1/*` y Next las reenvía a esta API desde su servidor. Por eso el backend no necesita CORS y las cookies `SameSite=Strict` siguen siendo de primera parte. Si el navegador llamara directo a `azurewebsites.net`, el login dejaría de funcionar.
 
 `frontend_origin` (y con él `APP_ALLOWED_ORIGINS`) debe ser exactamente el dominio público del frontend.
+
+## Mantenimiento
+
+### Cambiar una contraseña de la base
+
+`terraform apply -replace=random_password.db_app` (o `db_owner`) genera un valor nuevo y crea una versión nueva del secreto en Key Vault. Si el rol ya existe, aplica el mismo valor con `ALTER ROLE ... PASSWORD`, igual que en el paso 5.
+
+La Web App guarda en caché los valores de las referencias `@Microsoft.KeyVault(...)` y los vuelve a leer cada 24 horas. Que el portal las marque como resueltas no significa que tenga la versión nueva. Para que la tome sin esperar:
+
+```powershell
+$app = terraform output -raw web_app_name
+$id  = az webapp show -g (terraform output -raw resource_group_name) -n $app --query id -o tsv
+az rest --method post --url "https://management.azure.com$id/config/configreferences/appsettings/refresh?api-version=2022-03-01"
+az webapp restart --ids $id
+```
+
+Sin este paso, Flyway falla al arrancar con `password authentication failed for user "callejon9_owner"`.
+
+### Si un apply se interrumpe
+
+Si un `terraform apply` se corta a la mitad, el estado puede quedar bloqueado. Puede pasar porque se cerró la terminal o porque el proceso se quedó sin memoria.
+
+Si `terraform force-unlock` responde `blob metadata "terraformlockid" was empty`, el bloqueo no se puede liberar por esa vía. Antes de romperlo, confirma que no hay otro `terraform` corriendo y rompe la renta del blob:
+
+```powershell
+az storage blob lease break --account-name <storage_account> -c tfstate -b azure-backend.tfstate --auth-mode login
+```
+
+Si el corte dejó en Azure algo que el estado no registra, el siguiente `apply` falla con "already exists". Ese recurso se adopta con `terraform import`. Desde Git Bash, el ID debe pasarse con `MSYS_NO_PATHCONV=1`: si no, Git Bash convierte `/subscriptions/...` en una ruta de Windows y el import falla.
 
 ## Configuración de la aplicación
 
@@ -170,10 +204,10 @@ Corre `terraform fmt -check` y `terraform validate` en todos los roots, incluido
 
 ## Pendientes antes de exponer la API
 
-- **Referencias de Key Vault resueltas.** Si App Service no logra resolver una referencia `@Microsoft.KeyVault(...)`, entrega como valor el texto de la referencia. El guard de `prod` no lo detecta: ese texto no está vacío, supera los 32 bytes y no es un valor publicado. Tras el primer despliegue, comprueba en el portal (Web App → Variables de entorno) que `JWT_SECRET`, `DB_APP_PASSWORD` y `DB_OWNER_PASSWORD` aparecen como resueltas.
+- **Referencias de Key Vault resueltas.** Si App Service no logra resolver una referencia `@Microsoft.KeyVault(...)`, entrega como valor el texto de la referencia. El guard de `prod` no lo detecta: ese texto no está vacío, supera los 32 bytes y no es un valor publicado. Tras el primer despliegue, comprueba en el portal (Web App → Variables de entorno) que `JWT_SECRET`, `DB_APP_PASSWORD` y `DB_OWNER_PASSWORD` aparecen como resueltas. En el despliegue del 2026-10-16 las tres aparecieron como `Resolved`. Después de cambiar un secreto, sigue [Cambiar una contraseña de la base](#cambiar-una-contraseña-de-la-base).
 - **`ClientIp` detrás de dos proxies.** El servidor del frontend reenvía todas las peticiones, así que el backend las verá llegar desde unas pocas IP de esa plataforma. Los límites por IP pasarían a ser globales: 5 altas por hora y 20 logins fallidos cada 15 minutos para todos los usuarios juntos. Hay que verificarlo tras el primer despliegue y ajustar la confianza en `X-Forwarded-For`.
-- **Contraseña del super-administrador.** La de `V6__seed_platform_admin.sql` está publicada en el README; se cambia tras el primer despliegue, con una migración nueva o desde la aplicación, nunca reescribiendo `V6`.
-- **Valores por verificar en el primer despliegue:** el stack `JAVA|21-java21` que genera `application_stack` y el puerto 80 de Java SE.
+- **Contraseña del super-administrador.** La de `V6__seed_platform_admin.sql` está publicada en el README; se cambia tras el primer despliegue, con una migración nueva o desde la aplicación, nunca reescribiendo `V6`. En el despliegue del 2026-10-16 se cambió directamente en la base, y la contraseña nueva está en Key Vault como `platform-admin-password`, un secreto creado fuera de Terraform. `V6` la sigue sembrando en cualquier base nueva, así que el pendiente sigue abierto para los demás ambientes.
+- **Valores verificados en el primer despliegue (2026-10-16):** el stack `JAVA|21-java21` que genera `application_stack` y el puerto 80 de Java SE, que Tomcat abrió en el arranque.
 
 ## Riesgos aceptados
 
