@@ -44,7 +44,7 @@ Precios de lista en `mexicocentral` según la API pública de precios de Azure (
 
 Las 750 horas gratuitas alcanzan para **un** servidor B1ms encendido todo el mes. Un segundo servidor encendido en la misma suscripción consume el mismo beneficio.
 
-El plan B1 se cobra mientras exista, aunque la Web App esté detenida. Para dejar de pagar hay que destruirlo (`terraform destroy`) o bajarlo a `F1`. Un servidor PostgreSQL detenido deja de cobrar cómputo, pero Azure lo vuelve a encender solo a los 7 días.
+El plan B1 se cobra mientras exista, aunque la Web App esté detenida. Para dejar de pagar hay que destruirlo (`terraform destroy`) o bajarlo a `F1`. Un servidor PostgreSQL detenido deja de cobrar cómputo, pero Azure lo vuelve a encender solo a los 7 días. `scripts/azure-backend-power.ps1` hace ambas cosas sin borrar nada; ver [Apagar y encender el backend](#apagar-y-encender-el-backend).
 
 ## Requisitos
 
@@ -152,6 +152,63 @@ BACKEND_ORIGIN=<api_url>
 El navegador sigue llamando rutas relativas `/api/v1/*` y Next las reenvía a esta API desde su servidor. Por eso el backend no necesita CORS y las cookies `SameSite=Strict` siguen siendo de primera parte. Si el navegador llamara directo a `azurewebsites.net`, el login dejaría de funcionar.
 
 `frontend_origin` (y con él `APP_ALLOWED_ORIGINS`) debe ser exactamente el dominio público del frontend.
+
+## Apagar y encender el backend
+
+Para no gastar crédito cuando nadie usa la API:
+
+```powershell
+.\scripts\azure-backend-power.ps1 -Action Status   # muestra si está encendido o apagado
+.\scripts\azure-backend-power.ps1 -Action Stop     # apaga
+.\scripts\azure-backend-power.ps1 -Action Start    # vuelve a encender
+```
+
+Se corre desde la raíz del repositorio, con `az login` hecho y la suscripción Azure for Students activa (`az account show`). No necesita Terraform.
+
+| Recurso | `Stop` | `Start` |
+|---|---|---|
+| Web App | La detiene | La arranca y espera a que `/actuator/health` responda `UP`, unos 2 minutos |
+| Plan de App Service | Desactiva Always On, que F1 no admite, y lo baja a `F1` (gratuito) | Lo sube a `B1` (parámetro `-Sku`) y reactiva Always On |
+| PostgreSQL | Lo detiene | Lo enciende; tarda unos minutos |
+| Key Vault, Log Analytics, estado de Terraform | Sin cambios: cuestan centavos al mes | Sin cambios |
+
+- **No borra nada.** La base, los secretos y la configuración se conservan.
+- **Lo que se ahorra.** Casi todo el ahorro viene del plan: unos 0.45 USD por día. Mientras dure el beneficio de 12 meses, PostgreSQL B1ms no cuesta, así que detenerlo solo evita consumir las 750 horas gratuitas.
+- **PostgreSQL se enciende solo.** Azure lo vuelve a encender a los 7 días. El plan sigue en F1 y la Web App detenida, así que el costo sigue bajo; si pasa una semana, basta con correr `Stop` otra vez.
+- **Mientras está apagado, la API no responde.** Cualquier frontend apuntado a ella deja de funcionar.
+- **Terraform ve diferencias.** Un `terraform plan` muestra el plan en `F1` y Always On desactivado. Es esperado: corre `Start` antes de cualquier `terraform apply`. Si se aplica estando apagado, Terraform devuelve el plan a `B1` y reactiva Always On, pero la Web App y PostgreSQL siguen detenidos.
+
+## Trabajar contra el backend de Azure
+
+El desarrollo diario no necesita Azure. El arranque local de `README.md` (PostgreSQL 16 con `scripts/setup-db.sql`, backend en `localhost:8080` y `pnpm dev`) funciona igual, y los valores por defecto siguen apuntando a `localhost`. Esta carpeta y `scripts/setup-db-azure.sql` solo se usan para administrar el entorno de Azure.
+
+### Frontend local contra la API de Azure
+
+Con el backend encendido (`-Action Status`):
+
+```powershell
+cd frontend
+$env:BACKEND_ORIGIN = "<api_url>"   # la URL que muestra -Action Status
+pnpm dev
+```
+
+Abre `http://localhost:3000`. El navegador sigue llamando `/api/v1/*` en `localhost`, y Next reenvía las peticiones a Azure. Las cookies `Secure` funcionan porque los navegadores tratan `localhost` como contexto seguro. `BACKEND_ORIGIN` se lee al iniciar `pnpm dev` (o al compilar con `pnpm build`): si cambias su valor, reinicia el servidor.
+
+- **Es la base de producción real.** Lo que se cree desde ahí queda guardado. Para desarrollar y probar, usa la base local.
+- **Cada quien crea su restaurante de prueba.** Se hace desde el alta (`POST /api/v1/signup`), que admite 5 altas por hora por IP. No se comparte la cuenta del super-administrador.
+
+### Contrato de la API
+
+Las rutas cuelgan de `/api/v1` y su catálogo, del lado del frontend, está en `frontend/src/lib/endpoints.ts`. En producción OpenAPI y Swagger UI están apagados a propósito. Los cuerpos y respuestas de cada ruta se consultan con el backend en local:
+
+- `http://localhost:8080/swagger-ui.html`
+- `http://localhost:8080/v3/api-docs`: el JSON, que se puede importar en Postman.
+
+Un frontend que consuma esta API debe tener en cuenta lo siguiente:
+
+- **La sesión viaja en cookies.** El login no devuelve un token: la sesión queda en cookies `httpOnly` con `SameSite=Strict`. No hay header `Authorization: Bearer`, y el token no se guarda en JavaScript.
+- **El navegador nunca llama a `azurewebsites.net`.** Llama rutas relativas `/api/v1/*`, y su propio servidor las reenvía al backend, como hacen los rewrites de `frontend/next.config.ts`. Si llamara directo a Azure, las cookies no viajarían y el login dejaría de funcionar.
+- **Los errores siguen el formato RFC 7807** (`application/problem+json`).
 
 ## Mantenimiento
 
