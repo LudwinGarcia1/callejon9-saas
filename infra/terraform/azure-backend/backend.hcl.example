@@ -1,0 +1,6 @@
+# Copy to backend.hcl (ignored by git) with the values printed by bootstrap/.
+resource_group_name  = "rg-callejon9-tfstate"
+storage_account_name = "stc9tfstateXXXXXX"
+container_name       = "tfstate"
+key                  = "azure-backend.tfstate"
+use_azuread_auth     = true

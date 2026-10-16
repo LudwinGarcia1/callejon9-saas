@@ -1,0 +1,12 @@
+# Copy to terraform.tfvars (ignored by git) and replace the placeholders.
+location                  = "mexicocentral"
+environment               = "prod"
+frontend_origin           = "https://callejon9.example.com"
+key_vault_admin_object_id = "00000000-0000-0000-0000-000000000000"
+
+# Only while running scripts/setup-db-azure.sql; remove afterwards.
+# operator_ip_address = "203.0.113.10"
+
+# Budget alerts for the whole subscription; empty list disables them.
+# budget_contact_emails = ["equipo@example.com"]
+# monthly_budget_usd    = 20

@@ -20,7 +20,9 @@ $repoRoot  = Split-Path -Parent $PSScriptRoot
 $infraRoot = Join-Path $repoRoot 'infra\terraform'
 $roots     = @(
     'azure-ci\bootstrap',
-    'azure-ci'
+    'azure-ci',
+    'azure-backend\bootstrap',
+    'azure-backend'
 )
 
 function Invoke-Terraform {

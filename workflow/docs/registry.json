@@ -22,6 +22,7 @@
     {"path": "docs/propuesta-matriz-autorizacion-cal-5.md", "kind": "proposal", "authority": "low"},
     {"path": "docs/cal-7-pruebas-autorizacion.md", "kind": "testing", "authority": "medium"},
     {"path": "infra/terraform/azure-ci/README.md", "kind": "operations", "authority": "high"},
+    {"path": "infra/terraform/azure-backend/README.md", "kind": "operations", "authority": "high"},
     {"path": "infra/jenkins/README.md", "kind": "operations", "authority": "high"},
     {"path": "workflow/decisions/2026-10-07-acceso-privado-jenkins-azure.md", "kind": "decision", "authority": "high"},
     {"path": "docs/cal-11-entorno-docker-compose.md", "kind": "operations", "authority": "high"},
