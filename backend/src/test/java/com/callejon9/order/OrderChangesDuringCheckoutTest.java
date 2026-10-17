@@ -3,6 +3,7 @@ package com.callejon9.order;
 import com.callejon9.auth.service.AuthService;
 import com.callejon9.catalog.service.ProductService;
 import com.callejon9.order.service.NewOrderItem;
+import com.callejon9.order.service.OrderActor;
 import com.callejon9.order.service.OrderService;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
 import com.callejon9.sale.domain.PaymentMethod;
@@ -77,6 +78,7 @@ class OrderChangesDuringCheckoutTest {
 
     private UUID tenantId;
     private UUID userId;
+    private OrderActor actor;
     private UUID tableId;
     private UUID tacosId;
     private UUID sodaId;
@@ -88,6 +90,7 @@ class OrderChangesDuringCheckoutTest {
         // waiter_id y cashier_id referencian users(id): tiene que ser un usuario real.
         userId = authService.authenticate(SLUG, "admin@cobro-concurrente.com", "Secreto123!")
                 .user().getId();
+        actor = new OrderActor(userId, true);
 
         inTenant(() -> {
             tableId = tableService.createTable(1, 4).getId();
@@ -111,7 +114,7 @@ class OrderChangesDuringCheckoutTest {
 
         Race<Ticket> race = secondWaitsForFirst(
                 () -> checkout(orderId),
-                () -> orderService.addItems(orderId, List.of(new NewOrderItem(sodaId, 1, null))));
+                () -> orderService.addItems(orderId, List.of(new NewOrderItem(sodaId, 1, null)), actor));
         Throwable addItemsError = catchThrowable(() -> race.second().get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
 
         assertTicketMatchesOrderLines(race.first(), orderId);
@@ -126,7 +129,7 @@ class OrderChangesDuringCheckoutTest {
 
         Race<Ticket> race = secondWaitsForFirst(
                 () -> checkout(orderId),
-                () -> orderService.cancelOrder(orderId));
+                () -> orderService.cancelOrder(orderId, actor));
         Throwable cancelError = catchThrowable(() -> race.second().get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
 
         assertThat(orderStatus(orderId))
@@ -142,7 +145,7 @@ class OrderChangesDuringCheckoutTest {
         UUID orderId = openOrderWithTacos();
 
         Race<Object> race = secondWaitsForFirst(
-                () -> orderService.addItems(orderId, List.of(new NewOrderItem(sodaId, 1, null))),
+                () -> orderService.addItems(orderId, List.of(new NewOrderItem(sodaId, 1, null)), actor),
                 () -> checkout(orderId));
         Ticket ticket = (Ticket) race.second().get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
@@ -160,7 +163,7 @@ class OrderChangesDuringCheckoutTest {
 
         Race<Ticket> race = secondWaitsForFirst(
                 () -> checkout(orderId),
-                () -> orderService.sendToKitchen(orderId));
+                () -> orderService.sendToKitchen(orderId, actor));
         Throwable sendError = catchThrowable(() -> race.second().get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
 
         assertThat(orderStatus(orderId))
@@ -188,7 +191,7 @@ class OrderChangesDuringCheckoutTest {
             Future<?> addItems = executor.submit(() -> {
                 start.await();
                 return inTenant(() -> orderService.addItems(
-                        orderId, List.of(new NewOrderItem(sodaId, 1, null))));
+                        orderId, List.of(new NewOrderItem(sodaId, 1, null)), actor));
             });
             start.countDown();
 
@@ -267,7 +270,7 @@ class OrderChangesDuringCheckoutTest {
     private UUID openOrderWithTacos() {
         return inTenant(() -> {
             UUID orderId = orderService.openOrder(tableId, 2, userId).getId();
-            orderService.addItems(orderId, List.of(new NewOrderItem(tacosId, 2, null)));
+            orderService.addItems(orderId, List.of(new NewOrderItem(tacosId, 2, null)), actor);
             return orderId;
         });
     }

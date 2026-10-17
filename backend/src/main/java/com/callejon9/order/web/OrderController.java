@@ -2,6 +2,7 @@ package com.callejon9.order.web;
 
 import com.callejon9.order.domain.OrderStatus;
 import com.callejon9.order.service.NewOrderItem;
+import com.callejon9.order.service.OrderActor;
 import com.callejon9.order.service.OrderService;
 import com.callejon9.order.web.dto.AddOrderItemsRequest;
 import com.callejon9.order.web.dto.OpenOrderRequest;
@@ -60,26 +61,33 @@ public class OrderController {
     @PostMapping("/{id}/items")
     @PreAuthorize("hasAnyRole('WAITER','ADMIN')")
     public OrderResponse addItems(@PathVariable UUID id,
-                                   @Valid @RequestBody AddOrderItemsRequest request) {
+                                   @Valid @RequestBody AddOrderItemsRequest request,
+                                   Authentication authentication) {
         List<NewOrderItem> items = request.items().stream()
                 .map(item -> new NewOrderItem(item.productId(), item.quantity(), item.notes()))
                 .toList();
-        return OrderResponse.from(orderService.addItems(id, items));
+        return OrderResponse.from(orderService.addItems(id, items, actorOf(authentication)));
     }
 
     @PostMapping("/{id}/send-to-kitchen")
     @PreAuthorize("hasAnyRole('WAITER','ADMIN')")
-    public OrderResponse sendToKitchen(@PathVariable UUID id) {
-        return OrderResponse.from(orderService.sendToKitchen(id));
+    public OrderResponse sendToKitchen(@PathVariable UUID id, Authentication authentication) {
+        return OrderResponse.from(orderService.sendToKitchen(id, actorOf(authentication)));
     }
 
     @PostMapping("/{id}/cancel")
     @PreAuthorize("hasAnyRole('WAITER','ADMIN')")
-    public OrderResponse cancel(@PathVariable UUID id) {
-        return OrderResponse.from(orderService.cancelOrder(id));
+    public OrderResponse cancel(@PathVariable UUID id, Authentication authentication) {
+        return OrderResponse.from(orderService.cancelOrder(id, actorOf(authentication)));
     }
 
     private UUID waiterIdOf(Authentication authentication) {
         return (UUID) authentication.getPrincipal();
+    }
+
+    private OrderActor actorOf(Authentication authentication) {
+        boolean admin = authentication.getAuthorities().stream()
+                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+        return new OrderActor(waiterIdOf(authentication), admin);
     }
 }
