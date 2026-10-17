@@ -51,6 +51,14 @@ export function ProductFormScreen({ onCancel, onCreated }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  /** Al corregir un campo, su aviso desaparece sin esperar al siguiente envío. */
+  function edit(field: Field, setter: (value: string) => void) {
+    return (value: string) => {
+      setter(value);
+      setFieldErrors((current) => ({ ...current, [field]: undefined }));
+    };
+  }
+
   useEffect(() => {
     fetchCategories()
       .then((data) => setCategories([...data].sort((a, b) => a.sortOrder - b.sortOrder)))
@@ -106,7 +114,7 @@ export function ProductFormScreen({ onCancel, onCreated }: Props) {
             <TextInput
               style={[styles.input, fieldErrors.name && styles.inputError]}
               value={name}
-              onChangeText={setName}
+              onChangeText={edit('name', setName)}
               placeholder="Taco de bistec"
               placeholderTextColor={colors.mutedForeground}
               maxLength={NAME_MAX + 20}
@@ -119,7 +127,7 @@ export function ProductFormScreen({ onCancel, onCreated }: Props) {
             <TextInput
               style={[styles.input, fieldErrors.price && styles.inputError]}
               value={price}
-              onChangeText={setPrice}
+              onChangeText={edit('price', setPrice)}
               placeholder="45.00"
               placeholderTextColor={colors.mutedForeground}
               keyboardType="decimal-pad"
@@ -157,7 +165,7 @@ export function ProductFormScreen({ onCancel, onCreated }: Props) {
             <TextInput
               style={[styles.input, styles.multiline, fieldErrors.description && styles.inputError]}
               value={description}
-              onChangeText={setDescription}
+              onChangeText={edit('description', setDescription)}
               placeholder="Opcional"
               placeholderTextColor={colors.mutedForeground}
               multiline
