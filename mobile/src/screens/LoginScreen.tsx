@@ -129,7 +129,7 @@ export function LoginScreen({ notice, onAuthenticated }: Props) {
               style={[styles.input, fieldErrors.password && styles.inputError]}
               value={password}
               onChangeText={setPassword}
-              placeholder="••••••••"
+              placeholder="Tu contraseña"
               placeholderTextColor={colors.mutedForeground}
               secureTextEntry
               autoCapitalize="none"
