@@ -41,7 +41,7 @@ class WebSocketOriginTest {
                 .role(UserRole.ADMIN).active(true).build();
         user.setId(UUID.randomUUID());
         user.setTenantId(UUID.randomUUID());
-        return jwtService.generateAccessToken(user);
+        return jwtService.generateAccessToken(user, UUID.randomUUID());
     }
 
     /** Devuelve el codigo de estado de la respuesta al handshake; {@code origin} nulo omite la cabecera. */
