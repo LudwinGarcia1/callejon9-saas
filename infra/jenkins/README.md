@@ -28,8 +28,9 @@ El agente pertenece al grupo `docker`, lo que en la práctica equivale a root en
 |---|---|---|
 | `jenkins-admin-password` | JCasC, vía el plugin Azure Key Vault con la identidad administrada | `az keyvault secret set --vault-name <vault> --name jenkins-admin-password --value <contraseña>` |
 | `tailscale-auth-key` | `provision.sh`, solo cuando el disco aún no tiene identidad de Tailscale | Clave de Tailscale *pre-approved*, de preferencia con tag; `az keyvault secret set ... --name tailscale-auth-key` |
+| `github-token` | JCasC y `github-branch-source` para consultar PRs y reportar checks de estado a GitHub (CAL-89) | Token de GitHub (PAT) con alcance `repo:status` o `repo`; `az keyvault secret set --vault-name <vault> --name github-token --value <token> --tags type=secret-text` |
 
-El plugin se activa con las variables `AZURE_KEYVAULT_URL` y `AZURE_KEYVAULT_UAMI_ENABLED=true` ([documentación del plugin](https://plugins.jenkins.io/azure-keyvault/)). Los secretos con tag `type=username` (más el tag `username`) aparecen como credenciales de Jenkins; ahí va el token del repositorio que use CAL-87.
+El plugin se activa con las variables `AZURE_KEYVAULT_URL` y `AZURE_KEYVAULT_UAMI_ENABLED=true` ([documentación del plugin](https://plugins.jenkins.io/azure-keyvault/)). Los secretos con tag `type=username` (más el tag `username`) aparecen como credenciales de usuario/contraseña, y con `type=secret-text` como Secret Text.
 
 ## Primera puesta en marcha
 
@@ -103,6 +104,36 @@ Los parches del sistema operativo los aplica `unattended-upgrades` de Ubuntu; re
 El archivo `Jenkinsfile` en la raíz del repositorio orquesta las puertas de calidad obligatorias:
 
 1. **`Prepare PostgreSQL`**: Levanta un contenedor Docker efímero `postgres:16`, espera a que esté listo e inicializa los roles (`callejon9_owner`, `callejon9_app`) y bases de datos con `scripts/setup-db.sql`.
-2. **`Backend Quality Gates`**: Ejecuta `./mvnw -B verify` bajo Java 21, pasando las pruebas de RLS, contratos y concurrencia. Publica resultados con `junit`.
-3. **`Frontend Quality Gates`**: Ejecuta `pnpm install --frozen-lockfile`, `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm test` (pruebas unitarias Vitest) y `pnpm build`.
-4. **`Post Actions`**: Detiene y limpia el contenedor de PostgreSQL y purga el espacio de trabajo con `cleanWs()`.
+2. **`Security Scan`**: Ejecuta `scripts/security-scan.sh` para auditoría SCA (`pnpm audit`), SAST (`SpotBugs`) y detección de secretos (CAL-14).
+3. **`Backend Quality Gates`**: Ejecuta `./mvnw -B verify` bajo Java 21, pasando las pruebas de RLS, contratos y concurrencia. Publica resultados con `junit`.
+4. **`Frontend Quality Gates`**: Ejecuta `pnpm install --frozen-lockfile`, `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm test` (pruebas unitarias Vitest) y `pnpm build`.
+5. **`Production Images`**: Construye y verifica imágenes mínimas y no-root con `scripts/verify-images.sh` (CAL-17).
+6. **`Post Actions`**: Detiene y limpia el contenedor de PostgreSQL y purga el espacio de trabajo con `cleanWs()`.
+
+## Checks de Jenkins en Pull Requests (CAL-89)
+
+Para que Jenkins en Azure gobierne la integración y bloquee o apruebe PRs antes del merge a `main`:
+
+### 1. Modelo de disparo por SCM Polling
+Conforme a `workflow/decisions/2026-10-07-acceso-privado-jenkins-azure.md`, el NSG niega tráfico entrante desde Internet. GitHub no puede invocar webhooks entrantes directamente en Jenkins.
+* **Mecanismo**: El job Multibranch Pipeline de Jenkins consulta periódicamente la API de GitHub mediante **SCM Polling / Periodic Folder Indexing** (cada 2 minutos: `H/2 * * * *`).
+* **Descubrimiento de PRs**: El plugin `github-branch-source` indexa automáticamente:
+  * Pull requests originados en ramas del repositorio (`origin`).
+  * Pull requests de forks confiables con permisos de colaboradores.
+* **Egress HTTPS**: La salida a `api.github.com` viaja por la IP pública de egress asignada a la NIC de `vm-jenkins`.
+
+### 2. Publicación de estados en GitHub
+El plugin `github-branch-source` y la configuración JCasC (`githubpluginconfig`) autentican con el token de Key Vault (`github-token`) y reportan el estado del commit a la API de GitHub:
+* **Contexto del check**: `continuous-integration/jenkins/pr-merge` (o `continuous-integration/jenkins/branch`).
+* **Estados**:
+  * `PENDING`: Al iniciar la compilación.
+  * `SUCCESS`: Tras pasar satisfactoriamente todas las etapas del pipeline.
+  * `FAILURE`: Ante cualquier falla en backend, frontend, seguridad o imágenes.
+* **URL de destino**: Apunta a la URL segura en Tailscale (`https://jenkins-restohub.../job/...`) para auditoría de logs.
+
+### 3. Protección de ramas en GitHub
+Una vez validado el primer check reportado en un PR:
+1. En GitHub: `Settings` > `Branches` > Regla de protección para `main`.
+2. Habilitar **«Require status checks to pass before merging»**.
+3. Buscar y marcar **`continuous-integration/jenkins/pr-merge`**.
+4. Con esto, ningún PR puede integrarse a `main` sin el veredicto en verde de Jenkins en Azure, habilitando el retiro posterior de GitHub Actions en CAL-90.
