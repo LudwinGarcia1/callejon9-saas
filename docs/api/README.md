@@ -2,14 +2,21 @@
 
 Guía para quien construye o despliega un frontend contra el backend. El contrato completo, con cada cuerpo y respuesta, está en [`openapi.json`](openapi.json) (OpenAPI 3). Se puede abrir en <https://editor.swagger.io> o importar en Postman o Insomnia.
 
-`openapi.json` se exportó de `/v3/api-docs` con el backend en local el 2026-10-16. Si cambia un controller, hay que volver a exportarlo: en producción OpenAPI y Swagger UI están apagados a propósito.
+`openapi.json` se exportó de `/v3/api-docs` con el backend en local el 2026-10-16. Si cambia un controller, hay que volver a exportarlo.
+
+Para explorar y probar la API en el navegador, usa Swagger UI:
+
+- **Local:** `http://localhost:8080/swagger-ui.html`
+- **Azure:** `https://app-callejon9-api-prod-3878c6.azurewebsites.net/swagger-ui.html`. Solo responde con el backend encendido y la variable de Terraform `swagger_enabled = true` (ver `infra/terraform/azure-backend/README.md`).
+
+Ahí "Try it out" funciona sin pegar tokens: ejecuta `POST /api/v1/auth/login` y las demás rutas usan las cookies que deja.
 
 ## Dónde está el backend
 
 | Entorno | Origen | Nota |
 |---|---|---|
 | Local | `http://localhost:8080` | Arranque en el `README.md` raíz. Swagger UI en `http://localhost:8080/swagger-ui.html` |
-| Azure (producción) | `https://app-callejon9-api-prod-3878c6.azurewebsites.net` | Base de datos real. Puede estar apagado para ahorrar crédito: ver `infra/terraform/azure-backend/README.md`, que llega a `main` con el PR #46 |
+| Azure (producción) | `https://app-callejon9-api-prod-3878c6.azurewebsites.net` | Base de datos real. Puede estar apagado para ahorrar crédito: ver `infra/terraform/azure-backend/README.md` |
 
 ## Cómo se conecta el frontend
 

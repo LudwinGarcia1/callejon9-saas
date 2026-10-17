@@ -25,8 +25,8 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.NestedExceptionUtils;
-import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.StandardEnvironment;
+import org.springframework.core.env.SystemEnvironmentPropertySource;
 import org.springframework.http.ResponseCookie;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -65,9 +65,12 @@ class ProductionConfigurationGuardTest {
 
     private static ConfigurableApplicationContext start(Map<String, Object> variables, String... profiles) {
         StandardEnvironment environment = new StandardEnvironment();
-        environment.getPropertySources().remove(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME);
         environment.getPropertySources().remove(StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME);
-        environment.getPropertySources().addFirst(new MapPropertySource("variables", variables));
+        // Reemplaza las variables reales con el mismo tipo de fuente, para que
+        // nombres como SPRINGDOC_SWAGGERUI_ENABLED se resuelvan igual que en
+        // App Service.
+        environment.getPropertySources().replace(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
+                new SystemEnvironmentPropertySource(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME, variables));
         return new SpringApplicationBuilder(SessionBeans.class)
                 .environment(environment)
                 .web(WebApplicationType.NONE)
@@ -182,6 +185,19 @@ class ProductionConfigurationGuardTest {
             assertThat(environment.getProperty("server.forward-headers-strategy")).isEqualTo("none");
         }
         assertThat(output.getAll()).doesNotContain("NO apta para produccion").doesNotContain(STRONG_SECRET);
+    }
+
+    @Test
+    @DisplayName("Terraform puede encender OpenAPI y Swagger UI en prod con variables de entorno")
+    void swaggerCanBeEnabledThroughEnvironmentVariables() {
+        Map<String, Object> variables = productionVariables();
+        variables.put("SPRINGDOC_APIDOCS_ENABLED", "true");
+        variables.put("SPRINGDOC_SWAGGERUI_ENABLED", "true");
+        try (ConfigurableApplicationContext context = start(variables, "prod")) {
+            var environment = context.getEnvironment();
+            assertThat(environment.getProperty("springdoc.api-docs.enabled", Boolean.class)).isTrue();
+            assertThat(environment.getProperty("springdoc.swagger-ui.enabled", Boolean.class)).isTrue();
+        }
     }
 
     @Test

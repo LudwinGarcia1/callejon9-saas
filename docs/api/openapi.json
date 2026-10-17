@@ -8,7 +8,7 @@
   "servers": [
     {
       "url": "/",
-      "description": "Rutas relativas: el navegador llama /api/v1/* en el mismo origen del frontend"
+      "description": "Mismo origen que la pagina: Swagger UI del backend o el servidor del frontend"
     }
   ],
   "security": [
