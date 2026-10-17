@@ -199,10 +199,18 @@ Abre `http://localhost:3000`. El navegador sigue llamando `/api/v1/*` en `localh
 
 ### Contrato de la API
 
-Las rutas cuelgan de `/api/v1` y su catálogo, del lado del frontend, está en `frontend/src/lib/endpoints.ts`. En producción OpenAPI y Swagger UI están apagados a propósito. Los cuerpos y respuestas de cada ruta se consultan con el backend en local:
+Las rutas cuelgan de `/api/v1` y su catálogo, del lado del frontend, está en `frontend/src/lib/endpoints.ts`. El perfil `prod` apaga OpenAPI y Swagger UI; la variable `swagger_enabled` los vuelve a encender en Azure:
 
-- `http://localhost:8080/swagger-ui.html`
-- `http://localhost:8080/v3/api-docs`: el JSON, que se puede importar en Postman.
+| Dónde | Swagger UI | JSON de OpenAPI |
+|---|---|---|
+| Local | `http://localhost:8080/swagger-ui.html` | `http://localhost:8080/v3/api-docs` |
+| Azure, con `swagger_enabled = true` | `<api_url>/swagger-ui.html` (`terraform output swagger_url`) | `<api_url>/v3/api-docs` |
+
+Para encenderlo, pon `swagger_enabled = true` en `terraform.tfvars` y corre `terraform apply` con el backend encendido (ver [Apagar y encender el backend](#apagar-y-encender-el-backend)). El apply agrega `SPRINGDOC_APIDOCS_ENABLED` y `SPRINGDOC_SWAGGERUI_ENABLED`, que tienen prioridad sobre `application-prod.yml`, y App Service reinicia la Web App. Para apagarlo, vuelve a `false` y aplica de nuevo.
+
+En el Swagger de Azure, "Try it out" funciona: Swagger UI vive en el mismo origen que la API, así que el login deja las cookies ahí y las demás rutas las envían solas. Esa sesión es independiente de la del frontend. Lo que se cree desde ahí también queda en la base de producción. Necesita un JAR en el que `OpenApiConfig` declare el servidor relativo `/`. Con uno anterior, Swagger UI apunta a `http://` y el navegador bloquea las peticiones: vuelve a desplegar con el [paso 6](#6-desplegar-el-backend).
+
+Encenderlo publica el catálogo de rutas y esquemas. No abre ninguna ruta: cada una sigue exigiendo sesión y rol, y el mismo contrato ya es público en `docs/api/openapi.json`.
 
 Un frontend que consuma esta API debe tener en cuenta lo siguiente:
 
@@ -243,13 +251,14 @@ Si el corte dejó en Azure algo que el estado no registra, el siguiente `apply` 
 
 | Variable | Valor | Origen |
 |---|---|---|
-| `SPRING_PROFILES_ACTIVE` | `prod` | Perfil de CAL-15 (`application-prod.yml`). Detiene el arranque si falta `JWT_SECRET`, `DB_APP_PASSWORD`, `DB_OWNER_PASSWORD` o `APP_ALLOWED_ORIGINS`, o si alguna trae un valor de desarrollo. También fija las cookies `Secure`, expone solo `/actuator/health` y apaga OpenAPI y Swagger UI |
+| `SPRING_PROFILES_ACTIVE` | `prod` | Perfil de CAL-15 (`application-prod.yml`). Detiene el arranque si falta `JWT_SECRET`, `DB_APP_PASSWORD`, `DB_OWNER_PASSWORD` o `APP_ALLOWED_ORIGINS`, o si alguna trae un valor de desarrollo. También fija las cookies `Secure`, expone solo `/actuator/health` y apaga OpenAPI y Swagger UI salvo con `swagger_enabled` |
 | `SPRING_DATASOURCE_URL` | `jdbc:postgresql://<fqdn>:5432/callejon9?sslmode=require` | Sustituye la URL local de `application.yml`; Flyway la reutiliza |
 | `DB_APP_PASSWORD`, `DB_OWNER_PASSWORD`, `JWT_SECRET` | Referencias `@Microsoft.KeyVault(...)` | Key Vault, leídas con la identidad de la Web App |
 | `AUTH_COOKIE_SECURE` | `true` | Sin efecto mientras `prod` esté activo, porque el perfil fija `cookie-secure: true`. Se conserva para que las cookies sigan siendo `Secure` si alguien cambia el perfil |
 | `APP_ALLOWED_ORIGINS` | `frontend_origin` | Orígenes del WebSocket `/ws` |
 | `SERVER_PORT` | `80` | Puerto en el que App Service enruta a Java SE |
 | `JAVA_OPTS` | `-XX:+UseG1GC -XX:MaxRAMPercentage=75.0` | Mismas opciones que `JAVA_TOOL_OPTIONS` en `backend/Dockerfile` |
+| `SPRINGDOC_APIDOCS_ENABLED`, `SPRINGDOC_SWAGGERUI_ENABLED` | `true` | Solo con `swagger_enabled = true`. Encienden OpenAPI y Swagger UI, que `prod` apaga |
 
 ## Puerta de calidad
 

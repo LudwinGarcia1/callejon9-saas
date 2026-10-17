@@ -22,6 +22,12 @@ locals {
     APPLICATIONINSIGHTS_CONNECTION_STRING      = azurerm_application_insights.backend[0].connection_string
     ApplicationInsightsAgent_EXTENSION_VERSION = "~3"
   } : {}
+
+  # Environment variables take precedence over application-prod.yml.
+  swagger_settings = var.swagger_enabled ? {
+    SPRINGDOC_APIDOCS_ENABLED   = "true"
+    SPRINGDOC_SWAGGERUI_ENABLED = "true"
+  } : {}
 }
 
 resource "azurerm_linux_web_app" "api" {
@@ -80,7 +86,7 @@ resource "azurerm_linux_web_app" "api" {
     # the cookies stay secure if the profile is ever changed.
     AUTH_COOKIE_SECURE  = "true"
     APP_ALLOWED_ORIGINS = var.frontend_origin
-  }, local.monitoring_settings)
+  }, local.monitoring_settings, local.swagger_settings)
 
   logs {
     detailed_error_messages = false

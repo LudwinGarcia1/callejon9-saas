@@ -3,6 +3,11 @@ output "api_url" {
   value       = "https://${azurerm_linux_web_app.api.default_hostname}"
 }
 
+output "swagger_url" {
+  description = "Swagger UI of the API, or null while swagger_enabled is false."
+  value       = var.swagger_enabled ? "https://${azurerm_linux_web_app.api.default_hostname}/swagger-ui.html" : null
+}
+
 output "resource_group_name" {
   value = azurerm_resource_group.backend.name
 }
