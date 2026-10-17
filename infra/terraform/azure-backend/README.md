@@ -1,11 +1,11 @@
 # Backend de Callejón 9 en Azure
 
-Infraestructura para publicar la API de Spring Boot en Azure. El frontend se aloja en otra plataforma y consume esta API a través de su propio servidor Next.js. Se aprovisiona solo con Terraform, en la suscripción Azure for Students del equipo, y es independiente de `infra/terraform/azure-ci` (otra suscripción y otro estado).
+Infraestructura para publicar la API de Spring Boot en Azure. El frontend se aloja en Azure App Service, en otra suscripción (`infra/terraform/azure-frontend`), y consume esta API a través de su propio servidor Next.js. Se aprovisiona solo con Terraform, en la suscripción Azure for Students del equipo, y es independiente de `infra/terraform/azure-ci` (otra suscripción y otro estado).
 
 ## Arquitectura
 
 ```
-Navegador ──HTTPS──► Frontend Next.js (otra plataforma)
+Navegador ──HTTPS──► Frontend Next.js (App Service, otra suscripción)
                        │  rewrites /api/v1/* del lado del servidor
                        ▼ HTTPS
               App Service B1 Linux · Java 21 SE · 1 instancia
@@ -143,7 +143,7 @@ Después, `scripts/verify-rls.sql` como `callejon9_app` confirma el aislamiento 
 
 ### 8. Entregar el origen al frontend
 
-La plataforma del frontend debe ejecutar el servidor de Next.js (Vercel, Netlify o Render; no sirve un hosting estático) con:
+El frontend de `infra/terraform/azure-frontend` recibe este valor como `backend_origin`. Cualquier otra plataforma debe ejecutar el servidor de Next.js (no sirve un hosting estático) con:
 
 ```
 BACKEND_ORIGIN=<api_url>

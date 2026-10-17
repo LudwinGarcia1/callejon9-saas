@@ -22,7 +22,8 @@ $roots     = @(
     'azure-ci\bootstrap',
     'azure-ci',
     'azure-backend\bootstrap',
-    'azure-backend'
+    'azure-backend',
+    'azure-frontend'
 )
 
 function Invoke-Terraform {
