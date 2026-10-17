@@ -14,7 +14,7 @@ El backend expone dos probes para el orquestador. Sirven para que una caída de 
 * **La vida no depende de PostgreSQL, a propósito.** Si dependiera, una caída de la base pondría todas las instancias en `DOWN` a la vez y el orquestador las reiniciaría en cadena sin arreglar nada.
 * **Las respuestas solo traen el estado:** sin componentes, detalles, versiones ni mensajes de error (`show-details` y `show-components` en `never`). Con la base caída, la disponibilidad responde `{"status":"DOWN"}`, sin la URL ni el error de conexión.
 * **Solo son públicas `GET /actuator/health/liveness` y `GET /actuator/health/readiness`, en su ruta exacta.** Cualquier otra ruta bajo `/actuator/health/**` y cualquier otro método (incluido `HEAD`) piden sesión y responden 401. El contrato de autorización de CAL-7 lo exige: las dos rutas están en `authorization-contract.json` y en la lista pública de `AuthorizationContractVerifier`.
-* **Al empezar el apagado, Spring Boot pasa la disponibilidad a `REFUSING_TRAFFIC`.** El probe responde 503 mientras terminan las peticiones en curso. En ECS, el desregistro del target también saca la instancia del balanceador.
+* **Al empezar el apagado, Spring Boot pasa la disponibilidad a `REFUSING_TRAFFIC`.** El probe responde 503 mientras terminan las peticiones en curso. En Azure App Service, el health check en `/actuator/health/liveness` saca de la rotación del balanceador a una instancia que deja de responder (requiere más de una instancia).
 
 ## Migraciones y esquema
 
