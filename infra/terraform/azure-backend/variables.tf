@@ -82,6 +82,12 @@ variable "monitoring_enabled" {
   default     = true
 }
 
+variable "swagger_enabled" {
+  description = "Serves OpenAPI (/v3/api-docs) and Swagger UI (/swagger-ui.html) from the API. The prod profile turns them off; this overrides it for the team's frontend work."
+  type        = bool
+  default     = false
+}
+
 variable "monthly_budget_usd" {
   description = "Monthly subscription budget that triggers e-mail alerts."
   type        = number
