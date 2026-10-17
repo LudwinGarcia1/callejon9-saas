@@ -4,9 +4,11 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { fetchCurrentUser, logout } from './src/api/auth';
 import { setSessionExpiredHandler } from './src/api/client';
-import type { Order, RestaurantTable, Role } from './src/api/types';
+import type { Order, Product, RestaurantTable, Role } from './src/api/types';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { OrderScreen } from './src/screens/OrderScreen';
+import { ProductFormScreen } from './src/screens/ProductFormScreen';
+import { ProductsScreen } from './src/screens/ProductsScreen';
 import { ResultScreen } from './src/screens/ResultScreen';
 import { TablesScreen } from './src/screens/TablesScreen';
 import { colors } from './src/ui/theme';
@@ -18,6 +20,7 @@ const WRONG_ROLE_MESSAGE = 'Esta app es para meseros. Tu cuenta no tiene ese rol
 interface Session {
   userName: string;
   restaurantName: string | null;
+  role: Role;
 }
 
 type Screen =
@@ -25,7 +28,9 @@ type Screen =
   | { name: 'login'; notice: string | null }
   | { name: 'tables'; welcome: boolean }
   | { name: 'order'; table: RestaurantTable }
-  | { name: 'result'; order: Order };
+  | { name: 'result'; order: Order }
+  | { name: 'products'; created: Product | null }
+  | { name: 'productForm' };
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'checking' });
@@ -45,7 +50,7 @@ export default function App() {
           setScreen({ name: 'login', notice: null });
           return;
         }
-        setSession({ userName: me.fullName, restaurantName: me.restaurantName });
+        setSession({ userName: me.fullName, restaurantName: me.restaurantName, role: me.role });
         setScreen({ name: 'tables', welcome: false });
       })
       .catch(() => setScreen({ name: 'login', notice: null }));
@@ -78,7 +83,7 @@ export default function App() {
                 return;
               }
               const me = await fetchCurrentUser().catch(() => null);
-              setSession({ userName: user.fullName, restaurantName: me?.restaurantName ?? null });
+              setSession({ userName: user.fullName, restaurantName: me?.restaurantName ?? null, role: user.role });
               setScreen({ name: 'tables', welcome: true });
             }}
           />
@@ -90,6 +95,7 @@ export default function App() {
             restaurantName={session?.restaurantName ?? null}
             welcome={screen.welcome}
             onSelectTable={(table) => setScreen({ name: 'order', table })}
+            onOpenMenu={() => setScreen({ name: 'products', created: null })}
             onLogout={handleLogout}
           />
         );
@@ -103,6 +109,23 @@ export default function App() {
         );
       case 'result':
         return <ResultScreen order={screen.order} onDone={() => setScreen({ name: 'tables', welcome: false })} />;
+      case 'products':
+        return (
+          <ProductsScreen
+            created={screen.created}
+            // Solo ADMIN registra productos; el backend lo vuelve a exigir con @PreAuthorize.
+            canCreate={session?.role === 'ADMIN'}
+            onBack={() => setScreen({ name: 'tables', welcome: false })}
+            onNewProduct={() => setScreen({ name: 'productForm' })}
+          />
+        );
+      case 'productForm':
+        return (
+          <ProductFormScreen
+            onCancel={() => setScreen({ name: 'products', created: null })}
+            onCreated={(product) => setScreen({ name: 'products', created: product })}
+          />
+        );
     }
   }
 
