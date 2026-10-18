@@ -15,21 +15,9 @@ import { ApiError, api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { formatCurrency } from "@/lib/format";
 import { validateNewPassword } from "@/lib/password-policy";
+import { PLANS } from "@/lib/plans";
 import type { SignupRequest, SignupResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
-
-/**
- * Los tres planes sembrados en el backend. GET /api/v1/platform/plans exige
- * rol SUPER_ADMIN y el alta de restaurante es anonima, asi que esta lista no
- * se puede obtener del servidor: queda fija aqui. El plan PRO es el
- * predeterminado porque el limite de 5 mesas del plan gratuito estorba en una
- * demo.
- */
-const PLANS = [
-  { code: "FREE", name: "Gratis", priceMonthly: 0, maxUsers: 3, maxTables: 5 },
-  { code: "PRO", name: "Profesional", priceMonthly: 499, maxUsers: 15, maxTables: 30 },
-  { code: "PREMIUM", name: "Premium", priceMonthly: 999, maxUsers: 60, maxTables: 120 },
-] as const;
 
 export function SignupView() {
   const router = useRouter();
