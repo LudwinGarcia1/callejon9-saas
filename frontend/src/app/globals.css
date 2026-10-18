@@ -86,6 +86,13 @@
   --color-mk-orange-2: var(--mk-orange-2);
   --color-mk-orange-ink: var(--mk-orange-ink);
   --color-mk-orange-tint: var(--mk-orange-tint);
+  --color-mk-gold: var(--mk-gold);
+  --color-mk-gold-ink: var(--mk-gold-ink);
+  --color-mk-gold-soft: var(--mk-gold-soft);
+  --color-mk-night: var(--mk-night);
+  --color-mk-night-raised: var(--mk-night-raised);
+  --color-mk-night-border: var(--mk-night-border);
+  --color-mk-night-muted: var(--mk-night-muted);
 
   /* Marca del restaurante. `brand` es el acento del modo activo; `brand-strong`
    * es la version mas luminosa que solo usa el total a cobrar en caja. */
@@ -497,6 +504,16 @@
   --mk-orange-2: #f2a339;
   --mk-orange-ink: #a85a14;
   --mk-orange-tint: #fdf1e6;
+  /* Dorado del emblema. `--mk-gold` es solo decorativo (2.3:1 sobre claro);
+   * como texto se usa `--mk-gold-ink` en claro y `--mk-gold-soft` en oscuro. */
+  --mk-gold: #c9a063;
+  --mk-gold-ink: #8a6424;
+  --mk-gold-soft: #d9b77a;
+  /* Banda oscura (cocina). */
+  --mk-night: #0d0d0d;
+  --mk-night-raised: #161514;
+  --mk-night-border: #2a2725;
+  --mk-night-muted: #a8a29e;
 
   background: var(--mk-bg);
   color: var(--mk-text);
@@ -599,5 +616,43 @@
   .marketing [data-reveal][data-visible] .mk-line {
     animation: mk-grow-x 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
     animation-delay: calc(var(--i, 0) * 70ms + 250ms);
+  }
+}
+
+/* Acento serif para una palabra o frase clave de los titulos. */
+.marketing .mk-serif {
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Trama del hero: cuadricula fina que se desvanece hacia los bordes. */
+.marketing .mk-grid-bg {
+  background-image:
+    linear-gradient(to right, rgb(13 13 13 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(13 13 13 / 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 40%, transparent 100%);
+}
+
+/* Encabezados sobre la banda oscura. */
+.marketing .mk-on-dark .mk-title {
+  color: #ffffff;
+}
+.marketing .mk-on-dark .mk-lead {
+  color: var(--mk-night-muted);
+}
+.marketing .mk-on-dark .mk-eyebrow {
+  color: var(--mk-orange);
+}
+.marketing .mk-on-dark .mk-em {
+  color: var(--mk-gold-soft);
+}
+
+/* Cambio de pestaña en la vitrina. */
+@media (prefers-reduced-motion: no-preference) {
+  .marketing .mk-panel {
+    animation: mk-fade-up 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   }
 }

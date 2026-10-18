@@ -4,6 +4,7 @@ import { ArrowRightIcon } from "lucide-react";
 
 import { delay } from "@/components/marketing/motion";
 
+import { PhonePreview } from "@/components/marketing/phone-preview";
 import { ProductPreview } from "@/components/marketing/product-preview";
 import {
   BenefitsSection,
@@ -12,6 +13,7 @@ import {
   FeaturesSection,
   FinalCtaSection,
   InventorySalesSection,
+  KitchenSection,
   OrderFlowSection,
   PricingSection,
   ProblemsSection,
@@ -43,7 +45,8 @@ export default function Home() {
       <SiteHeader />
 
       <main id="contenido">
-        <section aria-labelledby="hero-titulo" className="overflow-hidden pt-16 pb-20 sm:pt-24">
+        <section aria-labelledby="hero-titulo" className="relative isolate overflow-hidden pt-16 pb-24 sm:pt-24 lg:pb-44">
+          <div className="mk-grid-bg pointer-events-none absolute inset-0 -z-10" aria-hidden="true" />
           <Container>
             <div className="mx-auto max-w-[820px] text-center">
               <p style={delay(0)} className="mk-enter inline-flex items-center gap-2 rounded-full border border-mk-border bg-mk-surface px-3 py-1 text-[13px] text-mk-muted">
@@ -53,9 +56,10 @@ export default function Home() {
               <h1
                 id="hero-titulo"
                 style={delay(80)}
-                className="mk-enter mt-6 text-[40px] leading-[1.04] font-semibold tracking-[-0.035em] text-balance text-mk-ink sm:text-[58px]"
+                className="mk-enter mt-6 text-[42px] leading-[1.02] font-semibold tracking-[-0.04em] text-balance text-mk-ink sm:text-[66px]"
               >
-                Tu restaurante. Toda la operación. En un solo lugar.
+                Tu restaurante. Toda la operación.{" "}
+                <em className="mk-serif tracking-[-0.02em] text-mk-gold-ink">En un solo lugar.</em>
               </h1>
               <p style={delay(160)} className="mk-enter mx-auto mt-6 max-w-[640px] text-[18px] leading-relaxed text-pretty text-mk-muted">
                 Administra mesas, pedidos, cocina, inventario y ventas en tiempo real con una plataforma diseñada
@@ -85,6 +89,10 @@ export default function Home() {
                 aria-hidden="true"
               />
               <ProductPreview />
+              {/* La app de meseros, encimada: web y móvil sobre los mismos datos. */}
+              <div style={delay(950)} className="mk-toast absolute top-[18%] -right-4 hidden lg:block xl:-right-12">
+                <PhonePreview />
+              </div>
               {/* Aviso de cocina: muestra que lo que pasa en una pantalla llega a las demás. */}
               <div
                 aria-hidden="true"
@@ -106,6 +114,7 @@ export default function Home() {
         <ProblemsSection />
         <FeaturesSection />
         <OrderFlowSection />
+        <KitchenSection />
         <InventorySalesSection />
         <ReportsSection />
         <BenefitsSection />

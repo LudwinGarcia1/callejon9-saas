@@ -20,8 +20,10 @@ import { formatCurrency } from "@/lib/format";
 import { PLANS } from "@/lib/plans";
 import { cn } from "@/lib/utils";
 
+import { KitchenLive } from "./kitchen-live";
 import { stagger } from "./motion";
 import { Reveal } from "./reveal";
+import { Showcase } from "./showcase";
 
 /*
  * Secciones del sitio público. Todo lo que se afirma aquí existe en el
@@ -33,6 +35,11 @@ export function Container({ children, className }: { children: ReactNode; classN
   return <div className={cn("mx-auto max-w-[1160px] px-4 sm:px-6", className)}>{children}</div>;
 }
 
+/** Palabra o frase clave de un título, en serif itálica dorada. */
+export function Em({ children }: { children: ReactNode }) {
+  return <em className="mk-serif mk-em text-mk-gold-ink">{children}</em>;
+}
+
 function SectionHeading({
   eyebrow,
   title,
@@ -41,25 +48,41 @@ function SectionHeading({
   align = "left",
 }: {
   eyebrow: string;
-  title: string;
+  title: ReactNode;
   lead?: string;
   id: string;
   align?: "left" | "center";
 }) {
   return (
-    <div className={cn("max-w-[640px]", align === "center" && "mx-auto text-center")}>
-      <p data-reveal-item style={stagger(0)} className="font-mono text-[12px] font-medium tracking-[0.14em] text-mk-orange-ink uppercase">
+    <div className={cn("max-w-[680px]", align === "center" && "mx-auto text-center")}>
+      <p
+        data-reveal-item
+        style={stagger(0)}
+        className={cn(
+          "mk-eyebrow flex items-center gap-3 font-mono text-[12px] font-medium tracking-[0.14em] text-mk-orange-ink uppercase",
+          align === "center" && "justify-center",
+        )}
+      >
+        <span className="h-px w-6 bg-mk-gold" aria-hidden="true" />
         {eyebrow}
       </p>
       <h2
         id={id}
         data-reveal-item
         style={stagger(1)}
-        className="mt-3 text-[30px] leading-[1.1] font-semibold tracking-[-0.025em] text-balance text-mk-ink sm:text-[38px]"
+        className="mk-title mt-4 text-[32px] leading-[1.06] font-semibold tracking-[-0.03em] text-balance text-mk-ink sm:text-[46px]"
       >
         {title}
       </h2>
-      {lead ? <p data-reveal-item style={stagger(2)} className="mt-4 text-[17px] leading-relaxed text-pretty text-mk-muted">{lead}</p> : null}
+      {lead ? (
+        <p
+          data-reveal-item
+          style={stagger(2)}
+          className="mk-lead mt-5 text-[17px] leading-relaxed text-pretty text-mk-muted sm:text-[18px]"
+        >
+          {lead}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -70,7 +93,7 @@ const PROBLEMS = [
   {
     problem: "Comandas en papel que se pierden o no se entienden",
     answer:
-      "El mesero captura el pedido en la tableta, el teléfono o la app móvil, y la cocina lo recibe al instante con la mesa y el folio.",
+      "El mesero captura el pedido en la tableta, el teléfono o la app móvil, y la cocina lo recibe en segundos con la mesa y el folio.",
   },
   {
     problem: "La cocina no sabe qué va primero ni qué ya salió",
@@ -91,13 +114,14 @@ export function ProblemsSection() {
         <SectionHeading
           id="problemas-titulo"
           eyebrow="El problema"
-          title="La operación de un restaurante no cabe en una libreta"
+          title={<>La operación de un restaurante no cabe en una <Em>libreta</Em></>}
           lead="Cuando el servicio se llena, los errores salen caros: platillos olvidados, cuentas mal cobradas y existencias que nadie sabe."
         />
         <div className="mt-12 grid gap-px overflow-hidden rounded-xl border border-mk-border bg-mk-border md:grid-cols-3">
           {PROBLEMS.map((item, index) => (
             <div key={item.problem} data-reveal-item style={stagger(3 + index)} className="bg-mk-surface p-6 sm:p-7">
-              <p className="text-[17px] leading-snug font-semibold text-mk-ink">{item.problem}</p>
+              <p className="mk-serif text-[40px] leading-none text-mk-gold">0{index + 1}</p>
+              <p className="mt-5 text-[17px] leading-snug font-semibold text-mk-ink">{item.problem}</p>
               <p className="mt-3 text-[15px] leading-relaxed text-mk-muted">{item.answer}</p>
             </div>
           ))}
@@ -163,19 +187,27 @@ export function FeaturesSection() {
         <SectionHeading
           id="funcionalidades-titulo"
           eyebrow="Funcionalidades"
-          title="Todo el servicio, conectado de la mesa a la caja"
+          title={<>Todo el servicio, conectado <Em>de la mesa a la caja</Em></>}
           lead="Cada módulo trabaja sobre los mismos datos: lo que captura el mesero lo ve la cocina, y lo que cobra la caja alimenta los reportes."
         />
-        <div className="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-          {FEATURES.map(({ icon: Icon, title, text }, index) => (
-            <div key={title} data-reveal-item style={stagger(3 + index)} className="group">
-              <span className="flex size-10 items-center justify-center rounded-lg border border-mk-border bg-mk-bg text-mk-ink transition-colors group-hover:border-mk-orange group-hover:bg-mk-orange-tint">
-                <Icon className="size-5" aria-hidden="true" />
-              </span>
-              <h3 className="mt-4 text-[16px] font-semibold text-mk-ink">{title}</h3>
-              <p className="mt-1.5 text-[15px] leading-relaxed text-mk-muted">{text}</p>
-            </div>
-          ))}
+        <Showcase />
+        <div className="mt-16 border-t border-mk-border pt-10">
+          <p data-reveal-item style={stagger(3)} className="text-[14px] font-semibold text-mk-ink">
+            Todo lo que incluye cada plan
+          </p>
+          <div className="mt-6 grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
+            {FEATURES.map(({ icon: Icon, title, text }, index) => (
+              <div key={title} data-reveal-item style={stagger(4 + index)} className="group flex gap-3">
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-mk-border bg-mk-bg text-mk-ink transition-colors group-hover:border-mk-orange group-hover:bg-mk-orange-tint">
+                  <Icon className="size-4" aria-hidden="true" />
+                </span>
+                <div>
+                  <h3 className="text-[15px] font-semibold text-mk-ink">{title}</h3>
+                  <p className="mt-1 text-[14px] leading-relaxed text-mk-muted">{text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </Container></Reveal>
     </section>
@@ -218,7 +250,7 @@ export function OrderFlowSection() {
         <SectionHeading
           id="flujo-titulo"
           eyebrow="Flujo de pedidos"
-          title="De la mesa a la cocina, sin intermediarios"
+          title={<>De la mesa a la cocina, <Em>sin intermediarios</Em></>}
           lead="Una orden recorre cuatro pasos y cada persona del equipo ve el mismo estado en su pantalla."
         />
         <ol className="mt-12 grid gap-8 md:grid-cols-4 md:gap-6">
@@ -252,6 +284,48 @@ export function OrderFlowSection() {
           ))}
         </ol>
       </Container></Reveal>
+    </section>
+  );
+}
+
+/* --- Cocina en vivo ----------------------------------------------------- */
+
+export function KitchenSection() {
+  return (
+    <section aria-labelledby="cocina-titulo" className="mk-on-dark relative overflow-hidden bg-mk-night py-20 sm:py-28">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-mk-gold/60 to-transparent"
+        aria-hidden="true"
+      />
+      <Reveal>
+        <Container>
+          <div className="grid items-end gap-6 lg:grid-cols-[1fr_auto]">
+            <SectionHeading
+              id="cocina-titulo"
+              eyebrow="Cocina en tiempo real"
+              title={<>La cocina ve cada comanda <Em>en segundos</Em></>}
+              lead="El tablero muestra las órdenes enviadas, la más antigua primero. Cada platillo avanza de estado con un toque y el mesero sabe qué ya puede servir."
+            />
+            <p
+              data-reveal-item
+              style={stagger(3)}
+              className="flex items-center gap-2 font-mono text-[11px] tracking-[0.08em] text-mk-night-muted uppercase"
+            >
+              <span className="relative flex size-2">
+                <span className="absolute inline-flex size-full rounded-full bg-emerald-400 opacity-60 motion-safe:animate-ping" />
+                <span className="relative size-2 rounded-full bg-emerald-400" />
+              </span>
+              Simulación del tablero
+            </p>
+          </div>
+          <div data-reveal-item style={stagger(4)} className="mt-12">
+            <KitchenLive />
+          </div>
+          <p data-reveal-item style={stagger(5)} className="mt-6 text-[14px] text-mk-night-muted">
+            En el restaurante, el tablero va en modo oscuro para leerse bien durante turnos largos.
+          </p>
+        </Container>
+      </Reveal>
     </section>
   );
 }
@@ -292,7 +366,7 @@ export function InventorySalesSection() {
           <SectionHeading
             id="inventario-titulo"
             eyebrow="Inventario y ventas"
-            title="Sabe qué tienes y qué vendiste"
+            title={<>Sabe qué tienes y <Em>qué vendiste</Em></>}
             lead="El inventario y la caja dejan de ser hojas sueltas: cada movimiento y cada cobro quedan registrados con fecha y responsable."
           />
           <CheckList
@@ -409,7 +483,7 @@ export function ReportsSection() {
           <SectionHeading
             id="reportes-titulo"
             eyebrow="Reportes y análisis"
-            title="Decide con lo que realmente pasó en tu servicio"
+            title={<>Decide con lo que <Em>realmente pasó</Em> en tu servicio</>}
             lead="La analítica se calcula a partir de los cobros registrados, sin capturas extra ni hojas de cálculo."
           />
           <CheckList
@@ -460,7 +534,7 @@ export function BenefitsSection() {
         <SectionHeading
           id="beneficios-titulo"
           eyebrow="Beneficios"
-          title="Menos fricción para quien dirige y para quien atiende"
+          title={<>Menos fricción para quien dirige <Em>y para quien atiende</Em></>}
         />
         <div className="mt-12 grid gap-6 md:grid-cols-2">
           {BENEFITS.map((group, index) => (
@@ -490,6 +564,12 @@ export function BenefitsSection() {
 
 /* --- Precios ------------------------------------------------------------- */
 
+const PLAN_BLURB: Record<string, string> = {
+  FREE: "Para conocer el sistema con un salón pequeño.",
+  PRO: "Para un restaurante con el servicio completo en marcha.",
+  PREMIUM: "Para salones grandes y equipos numerosos.",
+};
+
 export function PricingSection() {
   return (
     <section id="precios" aria-labelledby="precios-titulo" className="scroll-mt-20 border-t border-mk-border py-20 sm:py-24">
@@ -497,7 +577,7 @@ export function PricingSection() {
         <SectionHeading
           id="precios-titulo"
           eyebrow="Precios"
-          title="Un plan para cada tamaño de restaurante"
+          title={<>Un plan para cada <Em>tamaño de restaurante</Em></>}
           lead="Todos los planes incluyen todos los módulos. Cambia el número de usuarios y de mesas que puedes dar de alta."
           align="center"
         />
@@ -510,35 +590,50 @@ export function PricingSection() {
                 data-reveal-item
                 style={stagger(3 + index)}
                 className={cn(
-                  "flex flex-col rounded-xl border bg-mk-surface p-6 transition-[translate,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-20px_rgba(13,13,13,0.35)] motion-reduce:hover:translate-y-0",
-                  featured ? "border-mk-ink shadow-[0_0_0_1px_var(--mk-ink)]" : "border-mk-border",
+                  "flex flex-col rounded-2xl border p-7 transition-[translate,box-shadow] duration-200 hover:-translate-y-0.5 motion-reduce:hover:translate-y-0",
+                  featured
+                    ? "border-mk-ink bg-mk-ink text-white shadow-[0_28px_56px_-28px_rgba(13,13,13,0.6)]"
+                    : "border-mk-border bg-mk-surface hover:shadow-[0_16px_32px_-20px_rgba(13,13,13,0.35)]",
                 )}
               >
                 <div className="flex items-center justify-between">
-                  <h3 className="text-[17px] font-semibold text-mk-ink">{plan.name}</h3>
+                  <h3 className={cn("text-[17px] font-semibold", featured ? "text-white" : "text-mk-ink")}>{plan.name}</h3>
                   {featured ? (
                     <span className="rounded-full bg-mk-orange px-2.5 py-0.5 text-[11px] font-medium text-mk-ink">
                       Recomendado
                     </span>
                   ) : null}
                 </div>
-                <p className="mt-5 flex items-baseline gap-1.5">
-                  <span className="font-mono text-[34px] font-semibold tracking-[-0.02em] text-mk-ink">
+                <p className={cn("mt-2 text-[14px]", featured ? "text-white/65" : "text-mk-muted")}>
+                  {PLAN_BLURB[plan.code]}
+                </p>
+                <p className="mt-6 flex items-baseline gap-1.5">
+                  <span
+                    className={cn(
+                      "font-mono text-[38px] font-semibold tracking-[-0.03em]",
+                      featured ? "text-white" : "text-mk-ink",
+                    )}
+                  >
                     {formatCurrency(plan.priceMonthly)}
                   </span>
-                  <span className="text-[14px] text-mk-muted">MXN / mes</span>
+                  <span className={cn("text-[14px]", featured ? "text-white/65" : "text-mk-muted")}>MXN / mes</span>
                 </p>
-                <ul className="mt-6 space-y-2.5 border-t border-mk-border pt-6 text-[15px] text-mk-text">
+                <ul
+                  className={cn(
+                    "mt-6 space-y-2.5 border-t pt-6 text-[15px]",
+                    featured ? "border-white/15 text-white/90" : "border-mk-border text-mk-text",
+                  )}
+                >
                   <li className="flex gap-2.5">
-                    <CheckIcon className="mt-1 size-4 text-mk-orange-ink" aria-hidden="true" />
+                    <CheckIcon className={cn("mt-1 size-4", featured ? "text-mk-orange" : "text-mk-orange-ink")} aria-hidden="true" />
                     Hasta {plan.maxUsers} usuarios
                   </li>
                   <li className="flex gap-2.5">
-                    <CheckIcon className="mt-1 size-4 text-mk-orange-ink" aria-hidden="true" />
+                    <CheckIcon className={cn("mt-1 size-4", featured ? "text-mk-orange" : "text-mk-orange-ink")} aria-hidden="true" />
                     Hasta {plan.maxTables} mesas
                   </li>
                   <li className="flex gap-2.5">
-                    <CheckIcon className="mt-1 size-4 text-mk-orange-ink" aria-hidden="true" />
+                    <CheckIcon className={cn("mt-1 size-4", featured ? "text-mk-orange" : "text-mk-orange-ink")} aria-hidden="true" />
                     Todos los módulos
                   </li>
                 </ul>
@@ -547,7 +642,7 @@ export function PricingSection() {
                   className={cn(
                     "mt-8 rounded-md px-4 py-2.5 text-center text-sm font-medium transition-colors",
                     featured
-                      ? "bg-mk-ink text-white hover:bg-mk-ink/85"
+                      ? "bg-mk-orange text-mk-ink hover:bg-mk-orange-2"
                       : "border border-mk-border-strong text-mk-ink hover:bg-mk-bg",
                   )}
                 >
@@ -599,7 +694,7 @@ export function FaqSection() {
       className="scroll-mt-20 border-t border-mk-border bg-mk-surface py-20 sm:py-24"
     >
       <Reveal><Container className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
-        <SectionHeading id="preguntas-titulo" eyebrow="Preguntas frecuentes" title="Lo que suelen preguntarnos" />
+        <SectionHeading id="preguntas-titulo" eyebrow="Preguntas frecuentes" title={<>Lo que suelen <Em>preguntarnos</Em></>} />
         <div className="divide-y divide-mk-border border-y border-mk-border">
           {FAQ.map((item, index) => (
             <details key={item.q} data-reveal-item style={stagger(1 + index)} className="group py-1">
@@ -631,7 +726,7 @@ export function FinalCtaSection() {
             id="cta-titulo"
             className="mx-auto max-w-[620px] text-[30px] leading-[1.1] font-semibold tracking-[-0.025em] text-balance text-white sm:text-[40px]"
           >
-            Pon tu restaurante en orden desde el próximo servicio
+            Pon tu restaurante en orden <em className="mk-serif text-mk-gold-soft">desde el próximo servicio</em>
           </h2>
           <p className="mx-auto mt-4 max-w-[520px] text-[17px] leading-relaxed text-white/70">
             Crea tu cuenta, da de alta tus mesas y tu menú, e invita a tu equipo.
