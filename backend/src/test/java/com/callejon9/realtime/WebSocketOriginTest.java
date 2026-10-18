@@ -1,8 +1,7 @@
 package com.callejon9.realtime;
 
-import com.callejon9.auth.service.JwtService;
+import com.callejon9.support.TestSessions;
 import com.callejon9.tenancy.TenantFilter;
-import com.callejon9.user.domain.User;
 import com.callejon9.user.domain.UserRole;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,7 +9,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,15 +32,18 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class WebSocketOriginTest {
 
     @LocalServerPort private int port;
-    @Autowired private JwtService jwtService;
+    @Autowired private TestSessions testSessions;
 
+    private static final String SLUG_PREFIX = "ws-origin";
+
+    /** El handshake valida la sesion contra la base, asi que el token debe venir de una sesion real. */
     private String validToken() {
-        User user = User.builder()
-                .email("ws-origin@demo.com").passwordHash("x").fullName("Ws Origin")
-                .role(UserRole.ADMIN).active(true).build();
-        user.setId(UUID.randomUUID());
-        user.setTenantId(UUID.randomUUID());
-        return jwtService.generateAccessToken(user, UUID.randomUUID());
+        return testSessions.accessTokenForNewUser(SLUG_PREFIX, UserRole.ADMIN);
+    }
+
+    @AfterEach
+    void cleanUp() {
+        testSessions.deleteTenants(SLUG_PREFIX);
     }
 
     /** Devuelve el codigo de estado de la respuesta al handshake; {@code origin} nulo omite la cabecera. */
