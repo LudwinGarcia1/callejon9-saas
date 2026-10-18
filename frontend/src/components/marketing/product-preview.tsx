@@ -153,7 +153,10 @@ export function ProductPreview({ className }: { className?: string }) {
           <p className="font-mono text-[10px] tracking-[0.12em] text-mk-muted uppercase">Mesa 4 · 6 comensales</p>
           <p className="mt-1 text-[15px] font-semibold text-mk-ink">Orden ORD-0412</p>
           <span className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-mk-orange/60 bg-mk-orange-tint px-2 py-0.5 text-[11px] text-mk-orange-ink">
-            <span className="size-1.5 rounded-full bg-mk-orange" />
+            <span className="relative flex size-1.5">
+              <span className="absolute inline-flex size-full rounded-full bg-mk-orange opacity-60 motion-safe:animate-ping" />
+              <span className="relative size-1.5 rounded-full bg-mk-orange" />
+            </span>
             Enviada a cocina
           </span>
 

@@ -20,6 +20,9 @@ import { formatCurrency } from "@/lib/format";
 import { PLANS } from "@/lib/plans";
 import { cn } from "@/lib/utils";
 
+import { stagger } from "./motion";
+import { Reveal } from "./reveal";
+
 /*
  * Secciones del sitio público. Todo lo que se afirma aquí existe en el
  * sistema (módulos, estados, roles y límites de plan); no hay métricas,
@@ -45,14 +48,18 @@ function SectionHeading({
 }) {
   return (
     <div className={cn("max-w-[640px]", align === "center" && "mx-auto text-center")}>
-      <p className="font-mono text-[12px] font-medium tracking-[0.14em] text-mk-orange-ink uppercase">{eyebrow}</p>
+      <p data-reveal-item style={stagger(0)} className="font-mono text-[12px] font-medium tracking-[0.14em] text-mk-orange-ink uppercase">
+        {eyebrow}
+      </p>
       <h2
         id={id}
+        data-reveal-item
+        style={stagger(1)}
         className="mt-3 text-[30px] leading-[1.1] font-semibold tracking-[-0.025em] text-balance text-mk-ink sm:text-[38px]"
       >
         {title}
       </h2>
-      {lead ? <p className="mt-4 text-[17px] leading-relaxed text-pretty text-mk-muted">{lead}</p> : null}
+      {lead ? <p data-reveal-item style={stagger(2)} className="mt-4 text-[17px] leading-relaxed text-pretty text-mk-muted">{lead}</p> : null}
     </div>
   );
 }
@@ -80,7 +87,7 @@ const PROBLEMS = [
 export function ProblemsSection() {
   return (
     <section aria-labelledby="problemas-titulo" className="border-t border-mk-border py-20 sm:py-24">
-      <Container>
+      <Reveal><Container>
         <SectionHeading
           id="problemas-titulo"
           eyebrow="El problema"
@@ -88,14 +95,14 @@ export function ProblemsSection() {
           lead="Cuando el servicio se llena, los errores salen caros: platillos olvidados, cuentas mal cobradas y existencias que nadie sabe."
         />
         <div className="mt-12 grid gap-px overflow-hidden rounded-xl border border-mk-border bg-mk-border md:grid-cols-3">
-          {PROBLEMS.map((item) => (
-            <div key={item.problem} className="bg-mk-surface p-6 sm:p-7">
+          {PROBLEMS.map((item, index) => (
+            <div key={item.problem} data-reveal-item style={stagger(3 + index)} className="bg-mk-surface p-6 sm:p-7">
               <p className="text-[17px] leading-snug font-semibold text-mk-ink">{item.problem}</p>
               <p className="mt-3 text-[15px] leading-relaxed text-mk-muted">{item.answer}</p>
             </div>
           ))}
         </div>
-      </Container>
+      </Container></Reveal>
     </section>
   );
 }
@@ -152,7 +159,7 @@ export function FeaturesSection() {
       aria-labelledby="funcionalidades-titulo"
       className="scroll-mt-20 border-t border-mk-border bg-mk-surface py-20 sm:py-24"
     >
-      <Container>
+      <Reveal><Container>
         <SectionHeading
           id="funcionalidades-titulo"
           eyebrow="Funcionalidades"
@@ -160,9 +167,9 @@ export function FeaturesSection() {
           lead="Cada módulo trabaja sobre los mismos datos: lo que captura el mesero lo ve la cocina, y lo que cobra la caja alimenta los reportes."
         />
         <div className="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-          {FEATURES.map(({ icon: Icon, title, text }) => (
-            <div key={title}>
-              <span className="flex size-10 items-center justify-center rounded-lg border border-mk-border bg-mk-bg text-mk-ink">
+          {FEATURES.map(({ icon: Icon, title, text }, index) => (
+            <div key={title} data-reveal-item style={stagger(3 + index)} className="group">
+              <span className="flex size-10 items-center justify-center rounded-lg border border-mk-border bg-mk-bg text-mk-ink transition-colors group-hover:border-mk-orange group-hover:bg-mk-orange-tint">
                 <Icon className="size-5" aria-hidden="true" />
               </span>
               <h3 className="mt-4 text-[16px] font-semibold text-mk-ink">{title}</h3>
@@ -170,7 +177,7 @@ export function FeaturesSection() {
             </div>
           ))}
         </div>
-      </Container>
+      </Container></Reveal>
     </section>
   );
 }
@@ -207,7 +214,7 @@ const FLOW = [
 export function OrderFlowSection() {
   return (
     <section id="flujo" aria-labelledby="flujo-titulo" className="scroll-mt-20 border-t border-mk-border py-20 sm:py-24">
-      <Container>
+      <Reveal><Container>
         <SectionHeading
           id="flujo-titulo"
           eyebrow="Flujo de pedidos"
@@ -216,13 +223,17 @@ export function OrderFlowSection() {
         />
         <ol className="mt-12 grid gap-8 md:grid-cols-4 md:gap-6">
           {FLOW.map((item, index) => (
-            <li key={item.step} className="relative">
+            <li key={item.step} data-reveal-item style={stagger(3 + index)} className="relative">
               <div className="flex items-center gap-3">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-mk-ink font-mono text-[13px] font-medium text-white">
                   {item.step}
                 </span>
                 {index < FLOW.length - 1 ? (
-                  <span className="hidden h-px flex-1 bg-mk-border-strong md:block" aria-hidden="true" />
+                  <span
+                    className="mk-line hidden h-px flex-1 bg-mk-border-strong md:block"
+                    style={stagger(index)}
+                    aria-hidden="true"
+                  />
                 ) : null}
               </div>
               <h3 className="mt-5 text-[17px] font-semibold text-mk-ink">{item.title}</h3>
@@ -240,7 +251,7 @@ export function OrderFlowSection() {
             </li>
           ))}
         </ol>
-      </Container>
+      </Container></Reveal>
     </section>
   );
 }
@@ -263,8 +274,8 @@ const MOVEMENTS = [
 function CheckList({ items }: { items: string[] }) {
   return (
     <ul className="mt-6 space-y-3">
-      {items.map((item) => (
-        <li key={item} className="flex gap-3 text-[15px] leading-relaxed text-mk-text">
+      {items.map((item, index) => (
+        <li key={item} data-reveal-item style={stagger(3 + index)} className="flex gap-3 text-[15px] leading-relaxed text-mk-text">
           <CheckIcon className="mt-1 size-4 shrink-0 text-mk-orange-ink" aria-hidden="true" />
           {item}
         </li>
@@ -276,7 +287,7 @@ function CheckList({ items }: { items: string[] }) {
 export function InventorySalesSection() {
   return (
     <section aria-labelledby="inventario-titulo" className="border-t border-mk-border bg-mk-surface py-20 sm:py-24">
-      <Container className="grid items-center gap-12 lg:grid-cols-[1fr_1.1fr]">
+      <Reveal><Container className="grid items-center gap-12 lg:grid-cols-[1fr_1.1fr]">
         <div>
           <SectionHeading
             id="inventario-titulo"
@@ -294,7 +305,7 @@ export function InventorySalesSection() {
           />
         </div>
 
-        <div aria-hidden="true" className="overflow-hidden rounded-xl border border-mk-border-strong bg-mk-bg">
+        <div aria-hidden="true" data-reveal-item style={stagger(2)} className="overflow-hidden rounded-xl border border-mk-border-strong bg-mk-bg">
           <div className="flex items-center justify-between border-b border-mk-border bg-mk-surface px-5 py-3">
             <p className="text-[14px] font-semibold text-mk-ink">Insumos</p>
             <p className="font-mono text-[11px] text-mk-muted">2 bajo mínimo</p>
@@ -330,7 +341,7 @@ export function InventorySalesSection() {
             </div>
           </div>
         </div>
-      </Container>
+      </Container></Reveal>
     </section>
   );
 }
@@ -348,8 +359,8 @@ const MIX = [
 export function ReportsSection() {
   return (
     <section aria-labelledby="reportes-titulo" className="border-t border-mk-border py-20 sm:py-24">
-      <Container className="grid items-center gap-12 lg:grid-cols-[1.1fr_1fr]">
-        <div aria-hidden="true" className="order-last rounded-xl border border-mk-border-strong bg-mk-surface p-5 sm:p-6 lg:order-first">
+      <Reveal><Container className="grid items-center gap-12 lg:grid-cols-[1.1fr_1fr]">
+        <div aria-hidden="true" data-reveal-item style={stagger(1)} className="order-last rounded-xl border border-mk-border-strong bg-mk-surface p-5 sm:p-6 lg:order-first">
           <div className="flex items-baseline justify-between">
             <p className="text-[14px] font-semibold text-mk-ink">Ventas por día</p>
             <p className="font-mono text-[11px] text-mk-muted">Últimos 7 días · ejemplo</p>
@@ -361,10 +372,10 @@ export function ReportsSection() {
                 <div className="relative w-full flex-1">
                   <div
                     className={cn(
-                      "absolute inset-x-0 bottom-0 rounded-t-[4px]",
+                      "mk-bar absolute inset-x-0 bottom-0 rounded-t-[4px]",
                       index === 5 ? "bg-mk-orange" : "bg-mk-ink/85",
                     )}
-                    style={{ height: `${value}%` }}
+                    style={{ height: `${value}%`, ...stagger(index) }}
                   />
                 </div>
                 <span className="font-mono text-[10px] text-mk-muted">{DAYS[index]}</span>
@@ -410,7 +421,7 @@ export function ReportsSection() {
             ]}
           />
         </div>
-      </Container>
+      </Container></Reveal>
     </section>
   );
 }
@@ -445,21 +456,21 @@ export function BenefitsSection() {
       aria-labelledby="beneficios-titulo"
       className="scroll-mt-20 border-t border-mk-border bg-mk-surface py-20 sm:py-24"
     >
-      <Container>
+      <Reveal><Container>
         <SectionHeading
           id="beneficios-titulo"
           eyebrow="Beneficios"
           title="Menos fricción para quien dirige y para quien atiende"
         />
         <div className="mt-12 grid gap-6 md:grid-cols-2">
-          {BENEFITS.map((group) => (
-            <div key={group.audience} className="rounded-xl border border-mk-border bg-mk-bg p-6 sm:p-8">
+          {BENEFITS.map((group, index) => (
+            <div key={group.audience} data-reveal-item style={stagger(3 + index)} className="rounded-xl border border-mk-border bg-mk-bg p-6 sm:p-8">
               <h3 className="text-[19px] font-semibold text-mk-ink">{group.audience}</h3>
               <CheckList items={group.items} />
             </div>
           ))}
         </div>
-        <div className="mt-6 flex flex-col gap-4 rounded-xl border border-mk-border p-6 sm:flex-row sm:items-center sm:gap-6 sm:p-8">
+        <div data-reveal-item style={stagger(5)} className="mt-6 flex flex-col gap-4 rounded-xl border border-mk-border p-6 sm:flex-row sm:items-center sm:gap-6 sm:p-8">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-mk-ink text-white">
             <ShieldCheckIcon className="size-5" aria-hidden="true" />
           </span>
@@ -472,7 +483,7 @@ export function BenefitsSection() {
           </div>
           <KeyRoundIcon className="hidden size-5 text-mk-muted sm:block" aria-hidden="true" />
         </div>
-      </Container>
+      </Container></Reveal>
     </section>
   );
 }
@@ -482,7 +493,7 @@ export function BenefitsSection() {
 export function PricingSection() {
   return (
     <section id="precios" aria-labelledby="precios-titulo" className="scroll-mt-20 border-t border-mk-border py-20 sm:py-24">
-      <Container>
+      <Reveal><Container>
         <SectionHeading
           id="precios-titulo"
           eyebrow="Precios"
@@ -491,13 +502,15 @@ export function PricingSection() {
           align="center"
         />
         <div className="mx-auto mt-12 grid max-w-[980px] gap-4 md:grid-cols-3">
-          {PLANS.map((plan) => {
+          {PLANS.map((plan, index) => {
             const featured = plan.code === "PRO";
             return (
               <div
                 key={plan.code}
+                data-reveal-item
+                style={stagger(3 + index)}
                 className={cn(
-                  "flex flex-col rounded-xl border bg-mk-surface p-6",
+                  "flex flex-col rounded-xl border bg-mk-surface p-6 transition-[translate,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-20px_rgba(13,13,13,0.35)] motion-reduce:hover:translate-y-0",
                   featured ? "border-mk-ink shadow-[0_0_0_1px_var(--mk-ink)]" : "border-mk-border",
                 )}
               >
@@ -544,7 +557,7 @@ export function PricingSection() {
             );
           })}
         </div>
-      </Container>
+      </Container></Reveal>
     </section>
   );
 }
@@ -585,11 +598,11 @@ export function FaqSection() {
       aria-labelledby="preguntas-titulo"
       className="scroll-mt-20 border-t border-mk-border bg-mk-surface py-20 sm:py-24"
     >
-      <Container className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
+      <Reveal><Container className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
         <SectionHeading id="preguntas-titulo" eyebrow="Preguntas frecuentes" title="Lo que suelen preguntarnos" />
         <div className="divide-y divide-mk-border border-y border-mk-border">
-          {FAQ.map((item) => (
-            <details key={item.q} className="group py-1">
+          {FAQ.map((item, index) => (
+            <details key={item.q} data-reveal-item style={stagger(1 + index)} className="group py-1">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-4 text-[16px] font-medium text-mk-ink [&::-webkit-details-marker]:hidden">
                 {item.q}
                 <ChevronDownIcon
@@ -601,7 +614,7 @@ export function FaqSection() {
             </details>
           ))}
         </div>
-      </Container>
+      </Container></Reveal>
     </section>
   );
 }
@@ -611,8 +624,8 @@ export function FaqSection() {
 export function FinalCtaSection() {
   return (
     <section aria-labelledby="cta-titulo" className="py-20 sm:py-24">
-      <Container>
-        <div className="relative overflow-hidden rounded-2xl bg-mk-ink px-6 py-14 text-center sm:px-12 sm:py-16">
+      <Reveal><Container>
+        <div data-reveal-item className="relative overflow-hidden rounded-2xl bg-mk-ink px-6 py-14 text-center sm:px-12 sm:py-16">
           <span className="absolute inset-x-0 top-0 h-1 bg-mk-orange" aria-hidden="true" />
           <h2
             id="cta-titulo"
@@ -626,10 +639,10 @@ export function FinalCtaSection() {
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Link
               href="/signup"
-              className="inline-flex items-center justify-center gap-2 rounded-md bg-mk-orange px-5 py-3 text-[15px] font-medium text-mk-ink transition-colors hover:bg-mk-orange-2"
+              className="group inline-flex items-center justify-center gap-2 rounded-md bg-mk-orange px-5 py-3 text-[15px] font-medium text-mk-ink transition-colors hover:bg-mk-orange-2"
             >
               Crear mi restaurante
-              <ArrowRightIcon className="size-4" aria-hidden="true" />
+              <ArrowRightIcon className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
             </Link>
             <Link
               href="/login"
@@ -639,7 +652,7 @@ export function FinalCtaSection() {
             </Link>
           </div>
         </div>
-      </Container>
+      </Container></Reveal>
     </section>
   );
 }
