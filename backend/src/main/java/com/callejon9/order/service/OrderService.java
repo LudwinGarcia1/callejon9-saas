@@ -107,11 +107,25 @@ public class OrderService {
                 .toList();
         orderItemRepository.saveAll(toSave);
 
+        // Lo que se pide despues del envio tambien hay que prepararlo: una
+        // orden READY vuelve a SENT para reaparecer en el tablero de cocina
+        // (que solo lista SENT) y se anuncia de nuevo con sus items PENDING.
+        boolean alreadyInKitchen = order.getStatus() == OrderStatus.SENT
+                || order.getStatus() == OrderStatus.READY;
+        if (alreadyInKitchen) {
+            order.setStatus(OrderStatus.SENT);
+        }
+
         List<OrderItem> allItems = orderItemRepository.findByOrderIdOrderByOrderedAt(orderId);
         order.setTotal(sumOf(allItems));
         orderRepository.save(order);
 
-        return new OrderWithItems(order, allItems);
+        OrderWithItems result = new OrderWithItems(order, allItems);
+        if (alreadyInKitchen) {
+            eventPublisher.publishEvent(
+                    new OrderSentToKitchenEvent(order.getTenantId(), OrderResponse.from(result)));
+        }
+        return result;
     }
 
     /**

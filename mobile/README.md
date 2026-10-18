@@ -9,6 +9,9 @@ Cliente móvil del SaaS Callejón 9. Toma el flujo del mesero —ver mesas, capt
 | Autenticación remota | `LoginScreen` | `POST /api/v1/auth/login` (restaurante, correo, contraseña) |
 | Consumo de datos | `TablesScreen`, `OrderScreen` | `GET /api/v1/tables`, `GET /api/v1/products` |
 | Envío de datos | `OrderScreen`, `ResultScreen` | `POST /api/v1/orders`, `POST /api/v1/orders/{id}/items`, `POST /api/v1/orders/{id}/send-to-kitchen` |
+| Agregar a una mesa ocupada | `OrderScreen`, `ResultScreen` | `GET /api/v1/orders`, `GET /api/v1/orders/{id}`, `POST /api/v1/orders/{id}/items` |
+| Consulta del catálogo | `ProductsScreen` | `GET /api/v1/products`, `GET /api/v1/categories` |
+| Registro de productos (solo ADMIN) | `ProductFormScreen` | `POST /api/v1/products` (nombre y precio obligatorios) |
 
 ## Dónde está cada cosa
 
@@ -16,7 +19,8 @@ Cliente móvil del SaaS Callejón 9. Toma el flujo del mesero —ver mesas, capt
 - `src/api/client.ts`: transporte único con tiempo límite, renovación de sesión y traducción de errores HTTP a mensajes.
 - `src/api/auth.ts`: login, sesión actual y logout.
 - `src/api/waiter.ts`: mesas, menú y pedidos.
-- `src/screens/`: las cuatro pantallas.
+- `src/api/catalog.ts`: categorías y registro de productos.
+- `src/screens/`: las seis pantallas.
 
 ## Seguridad
 

@@ -253,6 +253,47 @@ class KitchenControllerTest {
                 .andExpect(jsonPath("$.status").value("READY"));
     }
 
+    @Test
+    @DisplayName("agregar un producto a una orden READY la regresa a SENT y reaparece en cocina")
+    void itemAddedToReadyOrderGoesBackToTheKitchen() throws Exception {
+        Product taco = createProduct("Taco", "25.00");
+        Product agua = createProduct("Agua", "20.00");
+
+        UUID orderId = openOrderOn(createTable(1));
+        addItem(orderId, taco);
+        sendToKitchen(orderId);
+        String tacoId = firstItemIdOf(orderId).toString();
+        advance(tacoId, "IN_PREPARATION");
+        advance(tacoId, "READY");
+
+        mockMvc.perform(get("/api/v1/kitchen/orders").cookie(cookieFor(kitchenUser)))
+                .andExpect(jsonPath("$.length()").value(0));
+
+        addItem(orderId, agua);
+
+        mockMvc.perform(get("/api/v1/kitchen/orders").cookie(cookieFor(kitchenUser)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(orderId.toString()))
+                .andExpect(jsonPath("$[0].status").value("SENT"))
+                .andExpect(jsonPath("$[0].items.length()").value(2))
+                .andExpect(jsonPath("$[0].items[1].kitchenStatus").value("PENDING"));
+    }
+
+    @Test
+    @DisplayName("agregar un producto a una orden NEW no la manda a cocina")
+    void itemAddedToNewOrderStaysOutOfTheKitchen() throws Exception {
+        Product taco = createProduct("Taco", "25.00");
+        UUID orderId = openOrderOn(createTable(1));
+        addItem(orderId, taco);
+        addItem(orderId, taco);
+
+        mockMvc.perform(get("/api/v1/orders/" + orderId).cookie(cookieFor(waiter)))
+                .andExpect(jsonPath("$.status").value("NEW"));
+        mockMvc.perform(get("/api/v1/kitchen/orders").cookie(cookieFor(kitchenUser)))
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
     private void advance(String itemId, String newStatus) throws Exception {
         mockMvc.perform(post("/api/v1/kitchen/items/" + itemId + "/status")
                         .cookie(cookieFor(kitchenUser))

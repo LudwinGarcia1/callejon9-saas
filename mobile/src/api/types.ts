@@ -44,6 +44,19 @@ export interface Product {
   active: boolean;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  sortOrder: number;
+}
+
+export interface CreateProductRequest {
+  name: string;
+  description?: string;
+  price: number;
+  categoryId?: string;
+}
+
 export interface OpenOrderRequest {
   tableId: string;
   guestCount: number;
@@ -66,6 +79,18 @@ export interface OrderItem {
 }
 
 export type OrderStatus = 'NEW' | 'SENT' | 'READY' | 'PAID' | 'CANCELED';
+
+/** GET /api/v1/orders — resumen sin partidas (OrderSummaryResponse). */
+export interface OrderSummary {
+  id: string;
+  folio: string;
+  tableId: string | null;
+  waiterId: string;
+  guestCount: number;
+  status: OrderStatus;
+  total: number;
+  openedAt: string;
+}
 
 export interface Order {
   id: string;

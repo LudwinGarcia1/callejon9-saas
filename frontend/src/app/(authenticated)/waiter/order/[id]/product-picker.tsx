@@ -108,8 +108,7 @@ export function ProductPicker({
           <Alert className="mt-3">
             <AlertTitle>Esta orden ya está en cocina</AlertTitle>
             <AlertDescription>
-              Lo que agregues ahora se sumará a la cuenta, pero no se reenviará solo: avisa a
-              cocina si hace falta prepararlo de inmediato.
+              Lo que agregues ahora se sumará a la cuenta y aparecerá en cocina como pendiente.
             </AlertDescription>
           </Alert>
         )}
