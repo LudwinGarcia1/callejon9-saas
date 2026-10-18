@@ -9,7 +9,9 @@
 # Uso:
 #   .\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=demo"
 #
-# Nunca activar este perfil en un entorno real.
+# Nunca activar este perfil en un entorno real. No es productivo: al arrancar
+# deja una advertencia en el log, y ProductionConfigurationGuard impide
+# activarlo junto a prod.
 
 app:
   # La demostracion corre sobre http://localhost, sin HTTPS.

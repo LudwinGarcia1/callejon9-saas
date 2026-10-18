@@ -1,0 +1,6 @@
+# Copy to backend.hcl (ignored by git) with the values printed by bootstrap/.
+resource_group_name  = "rg-restohub-tfstate"
+storage_account_name = "strhtfstateXXXXXX"
+container_name       = "tfstate"
+key                  = "azure-ci.tfstate"
+use_azuread_auth     = true

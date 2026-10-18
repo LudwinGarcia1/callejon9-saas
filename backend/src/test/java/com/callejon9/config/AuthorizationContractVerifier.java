@@ -59,6 +59,10 @@ final class AuthorizationContractVerifier {
             new Route("POST", "/api/v1/auth/refresh"), "Renovar la sesión con la cookie refresh_token cuando el access token ya venció",
             new Route("POST", "/api/v1/signup"), "Registrar un restaurante sin sesión previa",
             new Route("GET", "/actuator/health"), "Comprobar disponibilidad",
+            // Rutas concretas bajo /actuator/health/**: el mapping descubierto
+            // es el comodin, asi que la matriz las declara aparte (CAL-22).
+            new Route("GET", "/actuator/health/liveness"), "Probe de vida del orquestador",
+            new Route("GET", "/actuator/health/readiness"), "Probe de disponibilidad del orquestador",
             new Route("GET", "/v3/api-docs"), "Consultar OpenAPI JSON",
             new Route("GET", "/v3/api-docs/swagger-config"), "Configurar Swagger UI",
             new Route("GET", "/swagger-ui.html"), "Abrir Swagger UI");
@@ -227,6 +231,10 @@ final class AuthorizationContractVerifier {
                     List.of(new SimpleGrantedAuthority("ROLE_" + role.name()))));
         }
         return subjects;
+    }
+
+    static boolean isDocumentedPublic(Route route) {
+        return publicReason(route) != null;
     }
 
     private static String publicReason(Route route) {

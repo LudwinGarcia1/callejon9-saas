@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Money } from "@/components/shared/money";
 import { QueryState } from "@/components/shared/query-state";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { useSession } from "@/hooks/use-session";
 import { ApiError, api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { formatShortTime } from "@/lib/format";
@@ -37,10 +38,14 @@ interface OrderViewProps {
   orderId: string;
 }
 
-/** Estados en los que la orden todavia se puede cancelar: coincide con la
- * guarda de {@code OrderService.cancelOrder}, que solo rechaza PAID y
- * CANCELED. */
-const CANCELABLE_ORDER_STATUSES = new Set<OrderStatus>(["NEW", "SENT", "READY"]);
+/** Estados en los que la orden todavia se puede cancelar: coinciden con la
+ * guarda de {@code OrderService.cancelOrder}. El mesero solo cancela antes de
+ * enviar a cocina; despues, la cancelacion queda reservada al administrador. */
+const WAITER_CANCELABLE_ORDER_STATUSES = new Set<OrderStatus>(["NEW"]);
+const ADMIN_CANCELABLE_ORDER_STATUSES = new Set<OrderStatus>(["NEW", "SENT", "READY"]);
+
+/** Mismo tope que {@code AddOrderItemRequest.quantity} en el backend. */
+const MAX_LINE_QUANTITY = 99;
 
 /**
  * Pantalla de una orden. La orden manda y ocupa la columna ancha; el catalogo
@@ -50,6 +55,7 @@ const CANCELABLE_ORDER_STATUSES = new Set<OrderStatus>(["NEW", "SENT", "READY"])
  */
 export function OrderView({ orderId }: OrderViewProps) {
   const router = useRouter();
+  const { user } = useSession();
   const queryClient = useQueryClient();
   const [cart, setCart] = useState<CartLine[]>([]);
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
@@ -134,7 +140,9 @@ export function OrderView({ orderId }: OrderViewProps) {
       const existing = previous.find((line) => line.product.id === product.id);
       if (existing) {
         return previous.map((line) =>
-          line.product.id === product.id ? { ...line, quantity: line.quantity + 1 } : line,
+          line.product.id === product.id
+            ? { ...line, quantity: Math.min(line.quantity + 1, MAX_LINE_QUANTITY) }
+            : line,
         );
       }
       return [...previous, { product, quantity: 1 }];
@@ -144,7 +152,9 @@ export function OrderView({ orderId }: OrderViewProps) {
   function incrementLine(productId: string) {
     setCart((previous) =>
       previous.map((line) =>
-        line.product.id === productId ? { ...line, quantity: line.quantity + 1 } : line,
+        line.product.id === productId
+          ? { ...line, quantity: Math.min(line.quantity + 1, MAX_LINE_QUANTITY) }
+          : line,
       ),
     );
   }
@@ -169,7 +179,9 @@ export function OrderView({ orderId }: OrderViewProps) {
 
   const order = orderQuery.data;
   const table = tablesQuery.data?.find((candidate) => candidate.id === order?.tableId);
-  const isCancelable = order ? CANCELABLE_ORDER_STATUSES.has(order.status) : false;
+  const cancelableStatuses =
+    user?.role === "ADMIN" ? ADMIN_CANCELABLE_ORDER_STATUSES : WAITER_CANCELABLE_ORDER_STATUSES;
+  const isCancelable = order ? cancelableStatuses.has(order.status) : false;
 
   return (
     <QueryState

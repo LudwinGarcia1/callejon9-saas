@@ -36,7 +36,7 @@ El cuarto resultado es un error a propósito: PostgreSQL rechaza que un inquilin
 
 1. **`TenantFilter`** traduce la cookie JWT al `TenantContext` y limpia el `ThreadLocal` en un `finally`, para que un hilo reutilizado del pool no herede el inquilino anterior.
 2. **`TenantAwareTransactionManager`** publica el inquilino a PostgreSQL al abrir cada transacción con `set_config('app.tenant_id', …, true)`. El tercer argumento hace la variable local a la transacción, así que no puede filtrarse a otra petición cuando HikariCP devuelve la conexión.
-3. **Las políticas RLS** de las 14 tablas usan `USING` y `WITH CHECK`. La primera filtra lecturas, actualizaciones y borrados; la segunda impide escribir dentro de otro inquilino. Ambas leen `nullif(current_setting('app.tenant_id', true), '')::uuid`, porque una variable de sesión personalizada que ya se usó vuelve a cadena vacía y no a nula.
+3. **Las políticas RLS** de las 15 tablas usan `USING` y `WITH CHECK`. La primera filtra lecturas, actualizaciones y borrados; la segunda impide escribir dentro de otro inquilino. Ambas leen `nullif(current_setting('app.tenant_id', true), '')::uuid`, porque una variable de sesión personalizada que ya se usó vuelve a cadena vacía y no a nula.
 4. **Dos roles de base de datos.** `callejon9_owner` solo ejecuta migraciones; `callejon9_app` corre la aplicación y **no es dueño de ninguna tabla**, por lo que las políticas sí le aplican. Además todas las tablas llevan `FORCE ROW LEVEL SECURITY`, que somete incluso al dueño.
 
 Ese cuarto punto no es teórico: la migración `V6` tuvo que publicar el inquilino con `set_config` antes de insertar el super-administrador, porque Flyway corre como el dueño y la política lo rechazaba. La política es lo bastante real como para obligar a la propia migración.
@@ -134,6 +134,28 @@ Las cookies llevan el atributo `Secure` salvo que `AUTH_COOKIE_SECURE=false`. `s
 
 El WebSocket `/ws` solo acepta el handshake desde los orígenes de `APP_ALLOWED_ORIGINS` (separados por coma, sin comodines). Por omisión es `http://localhost:3000`; en cualquier otro entorno debe ser el dominio público del frontend. Con la lista vacía o con `*`, el backend no arranca.
 
+#### Perfiles
+
+`application.yml` trae valores por defecto para que el proyecto corra en local sin preparar nada. Esos valores (secreto JWT, contraseñas de `callejon9_app` y `callejon9_owner`) están publicados en el repositorio, así que solo sirven en una máquina de desarrollo.
+
+| Perfil | Uso | Secretos | Cookies | Actuator y OpenAPI |
+|---|---|---|---|---|
+| ninguno | Desarrollo local, `scripts/run-dev.ps1`, Compose | Valores por defecto de desarrollo | `Secure` salvo `AUTH_COOKIE_SECURE=false` | `health` y Swagger UI públicos |
+| `demo` | Presentación en `http://localhost` | Valores por defecto de desarrollo | Sin `Secure` | `health` y Swagger UI públicos |
+| `prod` | Cualquier entorno real, detrás de HTTPS | Obligatorios, sin valor por defecto | Siempre `Secure`; `AUTH_COOKIE_SECURE` no aplica | Solo `/actuator/health`, sin detalles; OpenAPI y Swagger UI apagados |
+
+Sin `prod`, si el arranque usa el secreto JWT publicado o el perfil `demo`, el backend lo advierte en el log con una línea `WARN` que empieza por `Configuracion NO apta para produccion`.
+
+Con `SPRING_PROFILES_ACTIVE=prod`, el backend se niega a arrancar, antes de conectarse a la base y de abrir el puerto, si:
+
+- falta `JWT_SECRET`, tiene menos de 32 bytes o es uno de los valores publicados en el repositorio;
+- falta `DB_APP_PASSWORD` o `DB_OWNER_PASSWORD`, o es la contraseña de desarrollo de `scripts/setup-db.sql`;
+- falta `APP_ALLOWED_ORIGINS` o alguno de sus orígenes no es `https://`;
+- `app.auth.cookie-secure` se forzó a `false`;
+- se activa junto a `demo` o `dev`.
+
+El error enumera cada problema por el nombre de la variable, nunca por su valor. `prod` fija además `server.forward-headers-strategy=none`: la IP del cliente la resuelve `ClientIp` con su propio modelo de confianza, y así Spring Boot no lo cambia por su cuenta al detectar una plataforma en la nube. La validación vive en `ProductionConfigurationGuard`.
+
 ### 3. Frontend
 
 ```powershell
@@ -156,7 +178,7 @@ Para una demostración conviene usar `pnpm build` seguido de `pnpm start` en lug
 
 El inquilino `platform` no es un restaurante: es un registro técnico al que pertenece quien administra la plataforma. Existe porque `users.tenant_id` es `NOT NULL` y el login resuelve el inquilino por slug antes de buscar al usuario — precisamente para que un correo válido en un restaurante no sirva para entrar a otro. Hacer la columna nulable habría debilitado el aislamiento justo donde más importa.
 
-Los demás restaurantes se crean desde `/signup`.
+Los demás restaurantes se crean desde `/signup`. Cada IP puede intentar como máximo `SIGNUP_MAX_PER_IP` altas (5 por omisión) dentro de `SIGNUP_WINDOW` (1 hora); al pasarse, el alta responde `429` con `Retry-After` sin crear nada. Cuentan las altas creadas y las rechazadas por slug ocupado; un error de formato no. El contador vive en memoria de cada instancia. Detalle y pruebas en `docs/practica-seguridad-signup.md`.
 
 ---
 
@@ -203,6 +225,7 @@ Las que más importan:
 | `TenantSubscriptionInterceptorTest` | Un inquilino no puede suscribirse al canal de tiempo real de otro |
 | `RevokedSessionSweeperTest` | Revocar una sesión, aun desde otra instancia, cierra sus conexiones WebSocket sin tocar las demás |
 | `TenantOnboardingServiceCompensationTest` | El alta revierte el inquilino si falla la creación del administrador |
+| `ProductionConfigurationGuardTest` | El perfil `prod` no arranca con secretos ausentes, cortos o de desarrollo, y el error no imprime el valor |
 
 `BcryptCompatibilityTest` merece una nota: confirma que los usuarios del sistema Flask conservan su contraseña tras la migración. Dejó de ser una suposición del diseño y pasó a ser una prueba automatizada.
 
@@ -232,7 +255,7 @@ Delivery y rastreo en vivo; analítica y aprendizaje automático (K-means, Rando
 
 ### Deuda registrada
 
-`FolioGenerator` garantiza unicidad por JVM, no entre instancias: dos instancias podrían colisionar dentro del mismo segundo para el mismo restaurante. `addItems` no verifica que el producto siga activo, así que un platillo retirado puede agregarse a una comanda si se conoce su identificador. `GET /orders` y `GET /orders/{id}` no llevan `@PreAuthorize`: cualquier rol autenticado lee cualquier comanda de su propio inquilino. No hay cambio de contraseña por el propio usuario ni recuperación de contraseña.
+`addItems` no verifica que el producto siga activo, así que un platillo retirado puede agregarse a una comanda si se conoce su identificador. `GET /orders` y `GET /orders/{id}` no llevan `@PreAuthorize`: cualquier rol autenticado lee cualquier comanda de su propio inquilino. No hay cambio de contraseña por el propio usuario ni recuperación de contraseña. (La colisión de folios entre instancias de `FolioGenerator` fue resuelta en CAL-13 mediante secuencias atómicas en PostgreSQL con RLS).
 
 Tres carencias que sí se cerraron y vale la pena nombrar, porque marcaban la diferencia entre una demostración y un sistema: no existía forma de crear usuarios —los cinco roles eran teoría—, nada podía editarse ni darse de baja, y `PlanLimitService` estaba escrito sin que ningún endpoint lo llamara.
 
@@ -242,6 +265,7 @@ Tres carencias que sí se cerraron y vale la pena nombrar, porque marcaban la di
 
 - [`docs/glosario-es-en.md`](docs/glosario-es-en.md) — correspondencia entre el modelado original en español y el código en inglés
 - [`docs/guion-demo.md`](docs/guion-demo.md) — recorrido paso a paso
+- [`docs/operacion-probes.md`](docs/operacion-probes.md) — probes de vida y disponibilidad para el orquestador
 - [`docs/superpowers/specs/`](docs/superpowers/specs/) — diseño y decisiones de arquitectura
 - [`docs/superpowers/plans/`](docs/superpowers/plans/) — plan de implementación
 

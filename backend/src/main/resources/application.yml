@@ -13,7 +13,7 @@ spring:
     # El nombre tambien es variable porque "callejon9" puede estar ocupado por
     # otro sistema en el mismo servidor. Apuntar ahi seria peor que fallar: son
     # dos esquemas distintos del mismo dominio.
-    url: jdbc:postgresql://localhost:${DB_PORT:5433}/${DB_NAME:callejon9}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:callejon9}
     username: callejon9_app
     password: ${DB_APP_PASSWORD:app_dev_pwd}
     hikari:
@@ -66,6 +66,15 @@ app:
       max-failures-per-ip: ${AUTH_LOGIN_MAX_FAILURES_IP:20}
       window: ${AUTH_LOGIN_WINDOW:15m}
 
+  signup:
+    # Freno contra altas masivas (SignupRateLimiter). Cada alta que pasa la
+    # validacion cuenta para la IP del cliente, termine creada (201) o con el
+    # slug ocupado (409); al llegar al limite dentro de la ventana, el alta
+    # responde 429 antes de crear nada. Un 400 por formato no cuenta.
+    rate-limit:
+      max-per-ip: ${SIGNUP_MAX_PER_IP:5}
+      window: ${SIGNUP_WINDOW:1h}
+
   realtime:
     # Cada cuanto se revisan las conexiones WebSocket abiertas para cerrar las
     # de sesiones revocadas (logout, reutilizacion, baja del usuario). Es la
@@ -81,6 +90,30 @@ app:
 
 server:
   port: 8080
+
+# Probes para el orquestador (CAL-22). Semantica y configuracion recomendada
+# en docs/operacion-probes.md.
+management:
+  endpoint:
+    health:
+      # Las respuestas publicas solo dicen UP o DOWN: nada de componentes,
+      # versiones de la base ni mensajes de error.
+      show-details: never
+      show-components: never
+      probes:
+        # Sin esto Spring Boot solo crea los grupos al detectar Kubernetes o
+        # Cloud Foundry.
+        enabled: true
+      group:
+        # Vida: solo el estado interno del proceso. Si dependiera de
+        # PostgreSQL, una caida de la base reiniciaria todas las instancias
+        # en cadena sin arreglar nada.
+        liveness:
+          include: livenessState
+        # Disponibilidad: el proceso termino de arrancar y la base responde.
+        # Una instancia DOWN sale del balanceador sin reiniciarse.
+        readiness:
+          include: readinessState,db
 
 logging:
   level:

@@ -1,0 +1,34 @@
+jenkins:
+  systemMessage: "RestoHub CI. Configuración como código en infra/jenkins (CAL-86)."
+  # Builds never run on the controller.
+  numExecutors: 0
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          # Resolved from Azure Key Vault on the VM.
+          password: "${jenkins-admin-password}"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+  nodes:
+    - permanent:
+        name: "local-agent"
+        labelString: "linux docker"
+        remoteFS: "/var/lib/jenkins-agent"
+        numExecutors: 2
+        launcher:
+          inbound:
+            webSocket: true
+        retentionStrategy: "always"
+
+unclassified:
+  location:
+    url: "${JENKINS_LOCATION_URL}"
+  githubpluginconfig:
+    configs:
+      - name: "GitHub"
+        apiUrl: "https://api.github.com"
+        credentialsId: "github-token"
+        manageHooks: false

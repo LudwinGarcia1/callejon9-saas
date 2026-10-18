@@ -1,5 +1,6 @@
 package com.callejon9.auth.service;
 
+import com.callejon9.config.JwtProperties;
 import com.callejon9.user.domain.User;
 import com.callejon9.user.domain.UserRole;
 import io.jsonwebtoken.Claims;
@@ -12,7 +13,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
 import javax.crypto.SecretKey;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -45,13 +45,10 @@ public class JwtService {
     private final Duration accessTokenTtl;
     private final Duration refreshTokenTtl;
 
-    public JwtService(
-            @Value("${app.jwt.secret}") String secret,
-            @Value("${app.jwt.access-token-minutes}") long accessTokenMinutes,
-            @Value("${app.jwt.refresh-token-days}") long refreshTokenDays) {
-        this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-        this.accessTokenTtl = Duration.ofMinutes(accessTokenMinutes);
-        this.refreshTokenTtl = Duration.ofDays(refreshTokenDays);
+    public JwtService(JwtProperties properties) {
+        this.signingKey = Keys.hmacShaKeyFor(properties.secret().getBytes(StandardCharsets.UTF_8));
+        this.accessTokenTtl = Duration.ofMinutes(properties.accessTokenMinutes());
+        this.refreshTokenTtl = Duration.ofDays(properties.refreshTokenDays());
     }
 
     public Duration refreshTokenTtl() {

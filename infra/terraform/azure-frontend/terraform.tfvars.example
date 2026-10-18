@@ -1,0 +1,7 @@
+# Copy to terraform.tfvars (ignored by git) and replace the placeholders.
+location       = "westus3"
+environment    = "prod"
+backend_origin = "https://app-callejon9-api-prod-xxxxxx.azurewebsites.net"
+
+# F1 is free; B1 keeps the app loaded (about 13 USD a month).
+# app_service_sku = "B1"

@@ -49,7 +49,10 @@ public class TenantAwareTransactionManager extends JpaTransactionManager {
         EntityManagerFactory emf = Objects.requireNonNull(getEntityManagerFactory());
         EntityManagerHolder holder =
                 (EntityManagerHolder) TransactionSynchronizationManager.getResource(emf);
-        EntityManager entityManager = Objects.requireNonNull(holder).getEntityManager();
+        if (holder == null) {
+            throw new IllegalStateException("No EntityManagerHolder bound to current transaction");
+        }
+        EntityManager entityManager = holder.getEntityManager();
 
         entityManager
                 .createNativeQuery("SELECT set_config('app.tenant_id', :tenantId, true)")

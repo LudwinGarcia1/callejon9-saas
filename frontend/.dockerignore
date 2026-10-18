@@ -1,0 +1,16 @@
+# Se instala y compila dentro de la imagen; lo local no entra.
+node_modules
+.next
+coverage
+
+# Nunca copiar variables locales ni metadatos de Git a la imagen.
+.env*
+.git
+.gitignore
+
+# Archivos que no intervienen en la compilacion.
+Dockerfile
+.dockerignore
+*.log
+.vscode
+.idea

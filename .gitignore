@@ -57,7 +57,12 @@ build/
 .claude/*
 !.claude/settings.json
 
-# Terraform
+### Terraform ###
+# El estado y las variables locales pueden contener identificadores y secretos.
+# El lock de providers (.terraform.lock.hcl) si se versiona.
 .terraform/
 *.tfstate
 *.tfstate.*
+*.tfvars
+backend.hcl
+tfplan

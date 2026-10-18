@@ -14,7 +14,7 @@ Lee solo el contexto necesario. Empieza por `workflow/README.md`, consulta `work
 ## Invariantes no negociables
 
 - RLS es la frontera de seguridad. `callejon9_app` no debe ser propietario de tablas ni tener `BYPASSRLS` o privilegios de superusuario.
-- Las 14 tablas de datos por restaurante conservan `ENABLE ROW LEVEL SECURITY`, `FORCE ROW LEVEL SECURITY`, `USING` y `WITH CHECK`.
+- Las 15 tablas de datos por restaurante conservan `ENABLE ROW LEVEL SECURITY`, `FORCE ROW LEVEL SECURITY`, `USING` y `WITH CHECK`.
 - El tenant proviene de la cookie JWT firmada y se publica con `set_config('app.tenant_id', ..., true)` dentro de cada transacción. Nunca aceptes `tenant_id` del cliente como autoridad.
 - El navegador llama rutas relativas `/api/v1/*`; `frontend/next.config.ts` las reescribe al backend. No introduzcas llamadas directas a `:8080`, CORS innecesario ni almacenamiento del token en JavaScript.
 - Las migraciones son append-only. No reescribas una migración aplicada: agrega una nueva `V{n}__descripcion.sql`.
@@ -38,6 +38,8 @@ Ejecuta la comprobación más estrecha durante el desarrollo y cierra con las pu
 - Frontend lint: `cd frontend; pnpm lint`
 - Frontend tipos: `cd frontend; pnpm exec tsc --noEmit`
 - Frontend producción: `cd frontend; pnpm build`
+- Infraestructura: `.\scripts\terraform-check.ps1` (formato y validación de Terraform, sin credenciales)
+- Imágenes Docker: `bash scripts/verify-images.sh` (construye las imágenes de producción y comprueba usuario, perfil y la salida `standalone`; requiere Docker)
 - RLS manual: usa `scripts/verify-rls.sql` como `callejon9_app` contra una base local preparada.
 
 Las pruebas del backend levantan PostgreSQL 16 real con Testcontainers y requieren Docker por defecto. Para una base externa preparada usa `-Dtest.database.mode=external` y las variables descritas en `README.md`; H2 no demuestra RLS. No afirmes que una puerta pasó si no se ejecutó. Registra bloqueos y evidencia verificable.

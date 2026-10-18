@@ -31,19 +31,22 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DisplayName("Origenes permitidos en el WebSocket")
 class WebSocketOriginTest {
 
+    private static final String SLUG_PREFIX = "ws-origin-test";
+
     @LocalServerPort private int port;
     @Autowired private TestSessions testSessions;
-
-    private static final String SLUG_PREFIX = "ws-origin";
-
-    /** El handshake valida la sesion contra la base, asi que el token debe venir de una sesion real. */
-    private String validToken() {
-        return testSessions.accessTokenForNewUser(SLUG_PREFIX, UserRole.ADMIN);
-    }
 
     @AfterEach
     void cleanUp() {
         testSessions.deleteTenants(SLUG_PREFIX);
+    }
+
+    /**
+     * El handshake verifica que la sesion siga vigente en el servidor, asi que
+     * un JWT firmado a mano no basta: se abre una sesion real.
+     */
+    private String validToken() {
+        return testSessions.accessTokenForNewUser(SLUG_PREFIX, UserRole.ADMIN);
     }
 
     /** Devuelve el codigo de estado de la respuesta al handshake; {@code origin} nulo omite la cabecera. */

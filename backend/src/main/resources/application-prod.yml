@@ -1,0 +1,61 @@
+# Perfil productivo.
+#
+# Uso: SPRING_PROFILES_ACTIVE=prod, detras de HTTPS.
+#
+# Los secretos no tienen valor por defecto. Si falta alguno, si es corto o si
+# es uno de los valores de desarrollo publicados en el repositorio,
+# ProductionConfigurationGuard detiene el arranque antes de conectarse a la
+# base y de abrir el puerto. El mensaje nombra la variable, nunca el valor.
+#
+# Variables obligatorias: JWT_SECRET (32 bytes o mas), DB_APP_PASSWORD,
+# DB_OWNER_PASSWORD y APP_ALLOWED_ORIGINS (solo https://). DB_HOST, DB_PORT
+# y DB_NAME se leen igual que en application.yml.
+#
+# No se combina con demo ni dev: el guard rechaza esa mezcla.
+
+spring:
+  datasource:
+    password: ${DB_APP_PASSWORD:}
+
+  flyway:
+    password: ${DB_OWNER_PASSWORD:}
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:}
+
+  auth:
+    # Fijo, sin variable: en produccion las cookies de sesion solo viajan por
+    # HTTPS. AUTH_COOKIE_SECURE no aplica en este perfil.
+    cookie-secure: true
+
+  realtime:
+    allowed-origins: ${APP_ALLOWED_ORIGINS:}
+
+server:
+  # Sin cabeceras X-Forwarded-* a nivel de Tomcat. ClientIp ya interpreta
+  # X-Forwarded-For con su propio modelo de confianza (solo desde la red
+  # interna, ultima entrada). Fijarlo evita que Spring Boot active el modo
+  # nativo por su cuenta al detectar una plataforma en la nube.
+  forward-headers-strategy: none
+
+# Politica de exposicion en produccion:
+#   - Actuator publica solo /actuator/health, sin detalles de componentes.
+#     Lo usa el HEALTHCHECK de la imagen.
+#   - OpenAPI y Swagger UI quedan apagados: el contrato vive en el
+#     repositorio, no en el servidor publico.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
