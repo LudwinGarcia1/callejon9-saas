@@ -75,7 +75,7 @@ export function ProductPreview({ className }: { className?: string }) {
       {/* Barra superior */}
       <div className="flex h-11 items-center justify-between border-b border-mk-border px-4">
         <div className="flex items-center gap-2">
-          <LogoMark className="size-5" />
+          <LogoMark className="h-6" />
           <span className="text-[13px] font-semibold text-mk-ink">Tu restaurante</span>
         </div>
         <div className="flex items-center gap-3 text-[12px] text-mk-muted">

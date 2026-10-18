@@ -30,7 +30,7 @@ export function SiteFooter() {
     <footer className="border-t border-mk-border bg-mk-surface">
       <div className="mx-auto grid max-w-[1160px] gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div>
-          <Logo />
+          <Logo size="lg" />
           <p className="mt-4 max-w-[300px] text-[14px] leading-relaxed text-mk-muted">
             Plataforma para operar restaurantes: mesas, pedidos, cocina, caja, inventario y reportes.
           </p>
@@ -58,7 +58,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-mk-border">
         <p className="mx-auto max-w-[1160px] px-4 py-6 text-[13px] text-mk-muted sm:px-6">
-          © {new Date().getFullYear()} Callejón 9. Precios en pesos mexicanos.
+          © {new Date().getFullYear()} RestoHub. Precios en pesos mexicanos.
         </p>
       </div>
     </footer>

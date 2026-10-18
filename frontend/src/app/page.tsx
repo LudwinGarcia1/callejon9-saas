@@ -19,7 +19,7 @@ import { SiteFooter } from "@/components/marketing/site-footer";
 import { SiteHeader } from "@/components/marketing/site-header";
 
 export const metadata: Metadata = {
-  title: "Callejón 9 · Operación de restaurantes",
+  title: "RestoHub · Operación de restaurantes",
   description:
     "Administra mesas, pedidos, cocina, inventario y ventas en tiempo real con una plataforma diseñada para simplificar la operación de tu restaurante.",
 };
