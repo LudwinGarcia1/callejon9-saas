@@ -96,7 +96,7 @@ export function TablesScreen({ userName, restaurantName, welcome, onSelectTable,
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load('refresh')} />}
           ListHeaderComponent={
             <Text style={styles.meta}>
-              {tables?.length ?? 0} mesas · {freeCount} libres · toca una mesa libre para tomar el pedido
+              {tables?.length ?? 0} mesas · {freeCount} libres · toca una mesa libre para tomar el pedido u ocupada para agregar más
             </Text>
           }
           ListEmptyComponent={<Text style={styles.meta}>El restaurante no tiene mesas activas.</Text>}
@@ -109,12 +109,14 @@ export function TablesScreen({ userName, restaurantName, welcome, onSelectTable,
 
 function TableCard({ table, onPress }: { table: RestaurantTable; onPress: () => void }) {
   const free = table.status === 'FREE';
+  // Una mesa ocupada se abre para agregar productos a su orden.
+  const actionable = free || table.status === 'OCCUPIED';
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityState={{ disabled: !free }}
+      accessibilityState={{ disabled: !actionable }}
       accessibilityLabel={`Mesa ${table.number}, ${STATUS_LABEL[table.status]}`}
-      disabled={!free}
+      disabled={!actionable}
       onPress={onPress}
       style={({ pressed }) => [styles.card, !free && styles.cardBusy, pressed && styles.cardPressed]}
     >

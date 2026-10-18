@@ -28,7 +28,7 @@ type Screen =
   | { name: 'login'; notice: string | null }
   | { name: 'tables'; welcome: boolean }
   | { name: 'order'; table: RestaurantTable }
-  | { name: 'result'; order: Order }
+  | { name: 'result'; order: Order; added: boolean }
   | { name: 'products'; created: Product | null }
   | { name: 'productForm' };
 
@@ -104,11 +104,17 @@ export default function App() {
           <OrderScreen
             table={screen.table}
             onBack={() => setScreen({ name: 'tables', welcome: false })}
-            onSubmitted={(order) => setScreen({ name: 'result', order })}
+            onSubmitted={(order, added) => setScreen({ name: 'result', order, added })}
           />
         );
       case 'result':
-        return <ResultScreen order={screen.order} onDone={() => setScreen({ name: 'tables', welcome: false })} />;
+        return (
+          <ResultScreen
+            order={screen.order}
+            added={screen.added}
+            onDone={() => setScreen({ name: 'tables', welcome: false })}
+          />
+        );
       case 'products':
         return (
           <ProductsScreen

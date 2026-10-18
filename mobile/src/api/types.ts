@@ -80,6 +80,18 @@ export interface OrderItem {
 
 export type OrderStatus = 'NEW' | 'SENT' | 'READY' | 'PAID' | 'CANCELED';
 
+/** GET /api/v1/orders — resumen sin partidas (OrderSummaryResponse). */
+export interface OrderSummary {
+  id: string;
+  folio: string;
+  tableId: string | null;
+  waiterId: string;
+  guestCount: number;
+  status: OrderStatus;
+  total: number;
+  openedAt: string;
+}
+
 export interface Order {
   id: string;
   folio: string;

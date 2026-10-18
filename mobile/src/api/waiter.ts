@@ -3,6 +3,7 @@ import type {
   AddOrderItemRequest,
   OpenOrderRequest,
   Order,
+  OrderSummary,
   Product,
   RestaurantTable,
 } from './types';
@@ -20,6 +21,16 @@ export function fetchTables(): Promise<RestaurantTable[]> {
 /** GET /api/v1/products — menú activo. */
 export function fetchProducts(): Promise<Product[]> {
   return request<Product[]>('GET', '/products');
+}
+
+/** GET /api/v1/orders — órdenes del restaurante, la más reciente primero. */
+export function fetchOrders(): Promise<OrderSummary[]> {
+  return request<OrderSummary[]>('GET', '/orders');
+}
+
+/** GET /api/v1/orders/{id} — una orden con sus partidas. */
+export function fetchOrder(orderId: string): Promise<Order> {
+  return request<Order>('GET', `/orders/${encodeURIComponent(orderId)}`);
 }
 
 /** POST /api/v1/orders — abre una orden sobre una mesa libre (201). */

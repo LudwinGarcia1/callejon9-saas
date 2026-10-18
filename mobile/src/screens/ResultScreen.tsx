@@ -15,7 +15,14 @@ const STATUS_LABEL: Record<OrderStatus, string> = {
 };
 
 /** Resultado de la operación: muestra lo que respondió el servidor. */
-export function ResultScreen({ order: initial, onDone }: { order: Order; onDone: () => void }) {
+interface Props {
+  order: Order;
+  /** true cuando se agregaron productos a una orden que ya existía. */
+  added: boolean;
+  onDone: () => void;
+}
+
+export function ResultScreen({ order: initial, added, onDone }: Props) {
   const [order, setOrder] = useState(initial);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,8 +41,10 @@ export function ResultScreen({ order: initial, onDone }: { order: Order; onDone:
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Banner tone="success" title={order.status === 'SENT' ? 'Pedido enviado a cocina' : 'Pedido registrado'}>
-        El servidor respondió con el folio {order.folio}.
+      <Banner tone="success" title={bannerTitle(order.status, added)}>
+        {added && order.status === 'SENT'
+          ? `Se agregaron a la orden ${order.folio} y ya aparecen en cocina como pendientes.`
+          : `El servidor respondió con el folio ${order.folio}.`}
       </Banner>
 
       <View style={styles.card}>
@@ -62,6 +71,11 @@ export function ResultScreen({ order: initial, onDone }: { order: Order; onDone:
       <Button label="Volver a mesas" variant="secondary" onPress={onDone} disabled={sending} />
     </ScrollView>
   );
+}
+
+function bannerTitle(status: OrderStatus, added: boolean): string {
+  if (added) return 'Productos agregados';
+  return status === 'SENT' ? 'Pedido enviado a cocina' : 'Pedido registrado';
 }
 
 function Row({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
