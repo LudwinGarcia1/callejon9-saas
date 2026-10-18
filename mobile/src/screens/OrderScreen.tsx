@@ -216,7 +216,15 @@ async function findOpenOrder(tableId: string): Promise<Order> {
   if (!summary) {
     throw new ApiError('notFound', 'La mesa está ocupada, pero no tiene una orden abierta.');
   }
-  return fetchOrder(summary.id);
+  try {
+    return await fetchOrder(summary.id);
+  } catch (cause) {
+    // El backend solo deja a cada mesero tocar sus propias órdenes.
+    if (cause instanceof ApiError && cause.kind === 'forbidden') {
+      throw new ApiError('forbidden', 'Esta mesa la atiende otro mesero. Solo él o un administrador pueden agregar productos.', 403);
+    }
+    throw cause;
+  }
 }
 
 function describe(cause: unknown, fallback: string): string {
