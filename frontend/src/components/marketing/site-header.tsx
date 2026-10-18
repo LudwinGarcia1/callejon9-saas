@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MenuIcon } from "lucide-react";
 
 import { Logo } from "./logo";
+import { MenuDetails } from "./menu-details";
 
 export const NAV_LINKS = [
   { href: "#funcionalidades", label: "Funcionalidades" },
@@ -11,8 +12,8 @@ export const NAV_LINKS = [
 ] as const;
 
 /**
- * Barra superior del sitio público. El menú móvil es un <details>: abre y
- * cierra sin JavaScript y conserva la semántica de botón para el teclado.
+ * Barra superior del sitio público. El menú móvil es un <details> (ver
+ * MenuDetails): abre y cierra sin JavaScript y se cierra solo al navegar.
  */
 export function SiteHeader() {
   return (
@@ -47,7 +48,7 @@ export function SiteHeader() {
           </Link>
         </div>
 
-        <details className="group relative lg:hidden">
+        <MenuDetails className="group relative lg:hidden">
           <summary
             aria-label="Abrir menú"
             className="flex size-10 cursor-pointer list-none items-center justify-center rounded-md border border-mk-border text-mk-ink [&::-webkit-details-marker]:hidden"
@@ -78,7 +79,7 @@ export function SiteHeader() {
               </Link>
             </div>
           </div>
-        </details>
+        </MenuDetails>
       </div>
     </header>
   );

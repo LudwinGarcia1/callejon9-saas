@@ -28,8 +28,8 @@ const COLUMNS = [
 export function SiteFooter() {
   return (
     <footer className="border-t border-mk-border bg-mk-surface">
-      <div className="mx-auto grid max-w-[1160px] gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_repeat(3,1fr)]">
-        <div>
+      <div className="mx-auto grid max-w-[1160px] grid-cols-2 gap-x-6 gap-y-10 px-4 py-12 sm:px-6 sm:py-14 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+        <div className="col-span-2 md:col-span-1">
           <Logo size="lg" />
           <p className="mt-4 max-w-[300px] text-[14px] leading-relaxed text-mk-muted">
             Plataforma para operar restaurantes: mesas, pedidos, cocina, caja, inventario y reportes.

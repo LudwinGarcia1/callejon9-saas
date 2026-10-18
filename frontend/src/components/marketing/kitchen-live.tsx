@@ -86,11 +86,18 @@ export function KitchenLive() {
   }, []);
 
   return (
-    <div ref={ref} aria-hidden="true" className="grid gap-4 md:grid-cols-3">
+    <div
+      ref={ref}
+      aria-hidden="true"
+      className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] sm:-mx-6 sm:px-6 md:mx-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 md:pb-0"
+    >
       {TICKETS.map((ticket, t) => {
         const ready = statuses[t].every((value) => value >= 2);
         return (
-          <div key={ticket.folio} className="rounded-xl border border-mk-night-border bg-mk-night-raised p-4">
+          <div
+            key={ticket.folio}
+            className="w-[84%] shrink-0 snap-start rounded-xl border border-mk-night-border bg-mk-night-raised p-4 sm:w-[60%] md:w-auto"
+          >
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-[17px] font-semibold text-white">Mesa {ticket.table}</p>

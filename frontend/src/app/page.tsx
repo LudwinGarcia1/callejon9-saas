@@ -45,7 +45,7 @@ export default function Home() {
       <SiteHeader />
 
       <main id="contenido">
-        <section aria-labelledby="hero-titulo" className="relative isolate overflow-hidden pt-16 pb-24 sm:pt-24 lg:pb-44">
+        <section aria-labelledby="hero-titulo" className="relative isolate overflow-hidden pt-12 pb-16 sm:pt-24 sm:pb-24 lg:pb-44">
           <div className="mk-grid-bg pointer-events-none absolute inset-0 -z-10" aria-hidden="true" />
           <Container>
             <div className="mx-auto max-w-[820px] text-center">
@@ -85,10 +85,14 @@ export default function Home() {
 
             <div style={delay(420)} className="mk-enter relative isolate mt-14 sm:mt-16">
               <div
-                className="absolute inset-x-10 -top-6 bottom-10 -z-10 rounded-[28px] bg-mk-orange-tint"
+                className="absolute inset-x-6 -top-6 bottom-10 -z-10 rounded-[28px] bg-mk-orange-tint md:inset-x-10"
                 aria-hidden="true"
               />
-              <ProductPreview />
+              <ProductPreview className="hidden md:block" />
+              {/* En teléfono se muestra la app móvil, que es la experiencia real en ese tamaño. */}
+              <div className="flex justify-center md:hidden">
+                <PhonePreview />
+              </div>
               {/* La app de meseros, encimada: web y móvil sobre los mismos datos. */}
               <div style={delay(950)} className="mk-toast absolute top-[18%] -right-4 hidden lg:block xl:-right-12">
                 <PhonePreview />

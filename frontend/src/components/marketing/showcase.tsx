@@ -257,7 +257,7 @@ export function Showcase() {
         role="tablist"
         aria-label="Pantallas del sistema"
         onKeyDown={onKeyDown}
-        className="inline-flex max-w-full gap-1 overflow-x-auto rounded-xl border border-mk-border bg-mk-surface p-1"
+        className="grid grid-cols-2 gap-1 rounded-xl border border-mk-border bg-mk-surface p-1 sm:inline-grid sm:grid-flow-col sm:grid-cols-none"
       >
         {TABS.map(({ id, label, icon: Icon }, index) => {
           const selected = index === active;
@@ -275,7 +275,7 @@ export function Showcase() {
               tabIndex={selected ? 0 : -1}
               onClick={() => setActive(index)}
               className={cn(
-                "flex shrink-0 cursor-pointer items-center gap-2 rounded-lg px-3.5 py-2 text-[14px] font-medium transition-colors",
+                "flex cursor-pointer items-center justify-center gap-2 rounded-lg px-3.5 py-2.5 text-[14px] font-medium transition-colors sm:py-2",
                 selected ? "bg-mk-ink text-white" : "text-mk-muted hover:bg-mk-bg hover:text-mk-ink",
               )}
             >
@@ -291,7 +291,7 @@ export function Showcase() {
         id={`panel-${tab.id}`}
         role="tabpanel"
         aria-labelledby={`tab-${tab.id}`}
-        className="mk-panel mt-8 grid items-center gap-10 lg:grid-cols-[0.8fr_1.2fr]"
+        className="mk-panel mt-8 grid items-center gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-10"
       >
         <div>
           <h3 className="text-[24px] leading-tight font-semibold tracking-[-0.02em] text-mk-ink sm:text-[28px]">

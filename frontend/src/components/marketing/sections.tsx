@@ -109,7 +109,7 @@ const PROBLEMS = [
 
 export function ProblemsSection() {
   return (
-    <section aria-labelledby="problemas-titulo" className="border-t border-mk-border py-20 sm:py-24">
+    <section aria-labelledby="problemas-titulo" className="border-t border-mk-border py-16 sm:py-24">
       <Reveal><Container>
         <SectionHeading
           id="problemas-titulo"
@@ -117,7 +117,7 @@ export function ProblemsSection() {
           title={<>La operación de un restaurante no cabe en una <Em>libreta</Em></>}
           lead="Cuando el servicio se llena, los errores salen caros: platillos olvidados, cuentas mal cobradas y existencias que nadie sabe."
         />
-        <div className="mt-12 grid gap-px overflow-hidden rounded-xl border border-mk-border bg-mk-border md:grid-cols-3">
+        <div className="mt-10 grid gap-px overflow-hidden rounded-xl border border-mk-border bg-mk-border sm:mt-12 md:grid-cols-3">
           {PROBLEMS.map((item, index) => (
             <div key={item.problem} data-reveal-item style={stagger(3 + index)} className="bg-mk-surface p-6 sm:p-7">
               <p className="mk-serif text-[40px] leading-none text-mk-gold">0{index + 1}</p>
@@ -181,7 +181,7 @@ export function FeaturesSection() {
     <section
       id="funcionalidades"
       aria-labelledby="funcionalidades-titulo"
-      className="scroll-mt-20 border-t border-mk-border bg-mk-surface py-20 sm:py-24"
+      className="scroll-mt-20 border-t border-mk-border bg-mk-surface py-16 sm:py-24"
     >
       <Reveal><Container>
         <SectionHeading
@@ -191,19 +191,19 @@ export function FeaturesSection() {
           lead="Cada módulo trabaja sobre los mismos datos: lo que captura el mesero lo ve la cocina, y lo que cobra la caja alimenta los reportes."
         />
         <Showcase />
-        <div className="mt-16 border-t border-mk-border pt-10">
+        <div className="mt-12 border-t border-mk-border pt-8 sm:mt-16 sm:pt-10">
           <p data-reveal-item style={stagger(3)} className="text-[14px] font-semibold text-mk-ink">
             Todo lo que incluye cada plan
           </p>
-          <div className="mt-6 grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-6 grid grid-cols-2 gap-x-4 gap-y-5 sm:gap-x-8 sm:gap-y-6 lg:grid-cols-4">
             {FEATURES.map(({ icon: Icon, title, text }, index) => (
-              <div key={title} data-reveal-item style={stagger(4 + index)} className="group flex gap-3">
+              <div key={title} data-reveal-item style={stagger(4 + index)} className="group flex items-start gap-3">
                 <span className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-mk-border bg-mk-bg text-mk-ink transition-colors group-hover:border-mk-orange group-hover:bg-mk-orange-tint">
                   <Icon className="size-4" aria-hidden="true" />
                 </span>
                 <div>
-                  <h3 className="text-[15px] font-semibold text-mk-ink">{title}</h3>
-                  <p className="mt-1 text-[14px] leading-relaxed text-mk-muted">{text}</p>
+                  <h3 className="pt-2 text-[14px] leading-tight font-semibold text-mk-ink sm:pt-0 sm:text-[15px]">{title}</h3>
+                  <p className="mt-1 hidden text-[14px] leading-relaxed text-mk-muted sm:block">{text}</p>
                 </div>
               </div>
             ))}
@@ -245,7 +245,7 @@ const FLOW = [
 
 export function OrderFlowSection() {
   return (
-    <section id="flujo" aria-labelledby="flujo-titulo" className="scroll-mt-20 border-t border-mk-border py-20 sm:py-24">
+    <section id="flujo" aria-labelledby="flujo-titulo" className="scroll-mt-20 border-t border-mk-border py-16 sm:py-24">
       <Reveal><Container>
         <SectionHeading
           id="flujo-titulo"
@@ -253,7 +253,7 @@ export function OrderFlowSection() {
           title={<>De la mesa a la cocina, <Em>sin intermediarios</Em></>}
           lead="Una orden recorre cuatro pasos y cada persona del equipo ve el mismo estado en su pantalla."
         />
-        <ol className="mt-12 grid gap-8 md:grid-cols-4 md:gap-6">
+        <ol className="mt-10 grid gap-8 sm:mt-12 sm:grid-cols-2 md:grid-cols-4 md:gap-6">
           {FLOW.map((item, index) => (
             <li key={item.step} data-reveal-item style={stagger(3 + index)} className="relative">
               <div className="flex items-center gap-3">
@@ -292,7 +292,7 @@ export function OrderFlowSection() {
 
 export function KitchenSection() {
   return (
-    <section aria-labelledby="cocina-titulo" className="mk-on-dark relative overflow-hidden bg-mk-night py-20 sm:py-28">
+    <section aria-labelledby="cocina-titulo" className="mk-on-dark relative overflow-hidden bg-mk-night py-16 sm:py-28">
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-mk-gold/60 to-transparent"
         aria-hidden="true"
@@ -318,7 +318,8 @@ export function KitchenSection() {
               Simulación del tablero
             </p>
           </div>
-          <div data-reveal-item style={stagger(4)} className="mt-12">
+          <div data-reveal-item style={stagger(4)} className="mt-10 sm:mt-12">
+            <p className="mb-3 text-[12px] text-mk-night-muted md:hidden">Desliza para ver las demás comandas →</p>
             <KitchenLive />
           </div>
           <p data-reveal-item style={stagger(5)} className="mt-6 text-[14px] text-mk-night-muted">
@@ -360,7 +361,7 @@ function CheckList({ items }: { items: string[] }) {
 
 export function InventorySalesSection() {
   return (
-    <section aria-labelledby="inventario-titulo" className="border-t border-mk-border bg-mk-surface py-20 sm:py-24">
+    <section aria-labelledby="inventario-titulo" className="border-t border-mk-border bg-mk-surface py-16 sm:py-24">
       <Reveal><Container className="grid items-center gap-12 lg:grid-cols-[1fr_1.1fr]">
         <div>
           <SectionHeading
@@ -432,7 +433,7 @@ const MIX = [
 
 export function ReportsSection() {
   return (
-    <section aria-labelledby="reportes-titulo" className="border-t border-mk-border py-20 sm:py-24">
+    <section aria-labelledby="reportes-titulo" className="border-t border-mk-border py-16 sm:py-24">
       <Reveal><Container className="grid items-center gap-12 lg:grid-cols-[1.1fr_1fr]">
         <div aria-hidden="true" data-reveal-item style={stagger(1)} className="order-last rounded-xl border border-mk-border-strong bg-mk-surface p-5 sm:p-6 lg:order-first">
           <div className="flex items-baseline justify-between">
@@ -528,7 +529,7 @@ export function BenefitsSection() {
     <section
       id="beneficios"
       aria-labelledby="beneficios-titulo"
-      className="scroll-mt-20 border-t border-mk-border bg-mk-surface py-20 sm:py-24"
+      className="scroll-mt-20 border-t border-mk-border bg-mk-surface py-16 sm:py-24"
     >
       <Reveal><Container>
         <SectionHeading
@@ -572,7 +573,7 @@ const PLAN_BLURB: Record<string, string> = {
 
 export function PricingSection() {
   return (
-    <section id="precios" aria-labelledby="precios-titulo" className="scroll-mt-20 border-t border-mk-border py-20 sm:py-24">
+    <section id="precios" aria-labelledby="precios-titulo" className="scroll-mt-20 border-t border-mk-border py-16 sm:py-24">
       <Reveal><Container>
         <SectionHeading
           id="precios-titulo"
@@ -581,7 +582,7 @@ export function PricingSection() {
           lead="Todos los planes incluyen todos los módulos. Cambia el número de usuarios y de mesas que puedes dar de alta."
           align="center"
         />
-        <div className="mx-auto mt-12 grid max-w-[980px] gap-4 md:grid-cols-3">
+        <div className="mx-auto mt-10 grid max-w-[980px] gap-4 sm:mt-12 md:grid-cols-3">
           {PLANS.map((plan, index) => {
             const featured = plan.code === "PRO";
             return (
@@ -691,7 +692,7 @@ export function FaqSection() {
     <section
       id="preguntas"
       aria-labelledby="preguntas-titulo"
-      className="scroll-mt-20 border-t border-mk-border bg-mk-surface py-20 sm:py-24"
+      className="scroll-mt-20 border-t border-mk-border bg-mk-surface py-16 sm:py-24"
     >
       <Reveal><Container className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
         <SectionHeading id="preguntas-titulo" eyebrow="Preguntas frecuentes" title={<>Lo que suelen <Em>preguntarnos</Em></>} />
@@ -718,9 +719,9 @@ export function FaqSection() {
 
 export function FinalCtaSection() {
   return (
-    <section aria-labelledby="cta-titulo" className="py-20 sm:py-24">
+    <section aria-labelledby="cta-titulo" className="py-16 sm:py-24">
       <Reveal><Container>
-        <div data-reveal-item className="relative overflow-hidden rounded-2xl bg-mk-ink px-6 py-14 text-center sm:px-12 sm:py-16">
+        <div data-reveal-item className="relative overflow-hidden rounded-2xl bg-mk-ink px-5 py-12 text-center sm:px-12 sm:py-16">
           <span className="absolute inset-x-0 top-0 h-1 bg-mk-orange" aria-hidden="true" />
           <h2
             id="cta-titulo"
