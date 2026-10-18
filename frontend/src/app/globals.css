@@ -73,6 +73,20 @@
   /* Superficie alterna: sidebar, catalogo, paneles de apoyo. */
   --color-surface-alt: var(--surface-alt);
 
+  /* Sitio publico. Solo existen dentro de `.marketing`; fuera de el las
+   * clases `mk-*` no resuelven y la app interna no las usa. */
+  --color-mk-bg: var(--mk-bg);
+  --color-mk-surface: var(--mk-surface);
+  --color-mk-ink: var(--mk-ink);
+  --color-mk-text: var(--mk-text);
+  --color-mk-muted: var(--mk-muted);
+  --color-mk-border: var(--mk-border);
+  --color-mk-border-strong: var(--mk-border-strong);
+  --color-mk-orange: var(--mk-orange);
+  --color-mk-orange-2: var(--mk-orange-2);
+  --color-mk-orange-ink: var(--mk-orange-ink);
+  --color-mk-orange-tint: var(--mk-orange-tint);
+
   /* Marca del restaurante. `brand` es el acento del modo activo; `brand-strong`
    * es la version mas luminosa que solo usa el total a cobrar en caja. */
   --color-brand: var(--brand);
@@ -462,4 +476,41 @@
   font-weight: 400;
   line-height: 0.95;
   font-variant-numeric: tabular-nums;
+}
+/*
+ * Sitio publico (landing). Paleta propia de la marca de la plataforma, no la
+ * del restaurante: fuera de la sesion no hay restaurante.
+ *
+ * Contraste: el naranja #F2913D sobre blanco da 2.4:1, insuficiente para
+ * texto. Se usa como relleno con tinta encima (8.2:1); cuando el naranja tiene
+ * que ser texto sobre fondo claro se usa `--mk-orange-ink` (5.1:1).
+ */
+.marketing {
+  --mk-bg: #fafaf9;
+  --mk-surface: #ffffff;
+  --mk-ink: #0d0d0d;
+  --mk-text: #292524;
+  --mk-muted: #57534e;
+  --mk-border: #e7e5e4;
+  --mk-border-strong: #d6d3d1;
+  --mk-orange: #f2913d;
+  --mk-orange-2: #f2a339;
+  --mk-orange-ink: #a85a14;
+  --mk-orange-tint: #fdf1e6;
+
+  background: var(--mk-bg);
+  color: var(--mk-text);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
+
+.marketing :where(a, button, summary):focus-visible {
+  outline: 2px solid var(--mk-ink);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .marketing {
+    scroll-behavior: smooth;
+  }
 }
