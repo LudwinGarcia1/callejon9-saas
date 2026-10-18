@@ -4,13 +4,14 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 /*
- * Logotipo de RestoHub: el emblema original convertido a PNG y recortado.
+ * Logotipo de RestoHub: el emblema original en PNG con fondo transparente,
+ * recortado a su contorno.
  * Hay dos tamaños en public/brand; se elige el más chico que se vea nítido en
- * pantallas 2x para no cargar la versión completa (562 KB) en el navbar.
+ * pantallas 2x para no cargar la versión completa (415 KB) en el navbar.
  */
 const SIZES = {
-  sm: { src: "/brand/restohub-logo-160.png", width: 160, height: 124 },
-  lg: { src: "/brand/restohub-logo-320.png", width: 320, height: 249 },
+  sm: { src: "/brand/restohub-logo-160.png", width: 160, height: 123 },
+  lg: { src: "/brand/restohub-logo-320.png", width: 320, height: 246 },
 } as const;
 
 export function LogoMark({ size = "sm", className }: { size?: keyof typeof SIZES; className?: string }) {
@@ -24,7 +25,7 @@ export function LogoMark({ size = "sm", className }: { size?: keyof typeof SIZES
       aria-hidden="true"
       // Ya vienen al tamaño de uso; se sirven tal cual desde public/.
       unoptimized
-      className={cn("h-10 w-auto shrink-0 rounded-md", className)}
+      className={cn("h-10 w-auto shrink-0", className)}
     />
   );
 }
