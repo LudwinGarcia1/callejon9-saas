@@ -4,7 +4,7 @@
 
 En la implementación inicial de RestoHub, `FolioGenerator` dependía de un `AtomicLong` en memoria de una única JVM para evitar colisiones entre órdenes o tickets creados dentro del mismo segundo UTC (`ORD-yyMMddHHmmss` / `TCK-yyMMddHHmmss`).
 
-Al desplegar múltiples réplicas de la aplicación (por ejemplo, múltiples tareas ECS en AWS conforme a CAL-53), cada contenedor mantenía su propio contador en memoria independiente. Dos instancias que procesaran órdenes para el mismo restaurante en el mismo segundo generaban el mismo folio, chocando contra la restricción de base de datos:
+Al desplegar múltiples réplicas de la aplicación (por ejemplo, varias instancias de Azure App Service), cada contenedor mantenía su propio contador en memoria independiente. Dos instancias que procesaran órdenes para el mismo restaurante en el mismo segundo generaban el mismo folio, chocando contra la restricción de base de datos:
 ```sql
 CONSTRAINT orders_folio_unique_per_tenant UNIQUE (tenant_id, folio)
 ```
