@@ -36,8 +36,8 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Callejon 9",
-  description: "Plataforma SaaS multi-restaurante Callejon 9",
+  title: "RestoHub",
+  description: "Plataforma para operar restaurantes: mesas, pedidos, cocina, caja, inventario y reportes.",
 };
 
 function isDarkRoute(pathname: string): boolean {

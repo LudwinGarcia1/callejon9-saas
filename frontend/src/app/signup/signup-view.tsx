@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PlatformBrand } from "@/components/layout/platform-brand";
 import { FieldError } from "@/components/shared/field-error";
 import { PasswordRequirements } from "@/components/shared/password-requirements";
 import { ApiError, api } from "@/lib/api";
@@ -77,7 +78,8 @@ export function SignupView() {
   const hasFieldErrors = Boolean(apiError?.errors && Object.keys(apiError.errors).length > 0);
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-10">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-8 px-4 py-10">
+      <PlatformBrand />
       <div className="w-full max-w-[520px] rounded-2xl border border-border-strong bg-card px-6 pt-10 pb-9 sm:px-10">
         <p className="eyebrow tracking-[0.14em]">Registro · paso 1 de 2</p>
         <h1 className="mt-1.5 font-display text-[30px] leading-[1.05] font-normal sm:text-[34px]">

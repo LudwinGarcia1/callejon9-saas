@@ -79,7 +79,7 @@ export function LoginScreen({ notice, onAuthenticated }: Props) {
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
         <View style={styles.header}>
-          <Text style={styles.brand}>Callejón 9</Text>
+          <Text style={styles.brand}>RestoHub</Text>
           <Text style={styles.subtitle}>App de meseros · Inicia sesión con tu cuenta del restaurante</Text>
         </View>
 

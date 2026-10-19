@@ -37,9 +37,9 @@ export function PlatformView() {
 
   return (
     <ScreenShell
-      eyebrow="Callejón 9"
+      eyebrow="RestoHub"
       title="Panel de plataforma"
-      subtitle="Planes disponibles para los restaurantes de Callejón 9."
+      subtitle="Planes disponibles para los restaurantes de RestoHub."
     >
       {isSessionLoading ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
