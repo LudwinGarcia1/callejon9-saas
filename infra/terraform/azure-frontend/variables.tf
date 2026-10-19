@@ -25,6 +25,17 @@ variable "backend_origin" {
   }
 }
 
+variable "web_app_name" {
+  description = "Web App name and therefore its public hostname, <name>.azurewebsites.net. It is global across Azure, so it must be free."
+  type        = string
+  default     = "restohub"
+
+  validation {
+    condition     = can(regex("^[a-z0-9][a-z0-9-]{0,58}[a-z0-9]$", var.web_app_name))
+    error_message = "The name must be 2-60 lowercase letters, digits or hyphens, without a leading or trailing hyphen."
+  }
+}
+
 variable "app_service_sku" {
   description = "App Service plan SKU. F1 is free but unloads the app when idle and caps CPU at 60 minutes a day; B1 keeps it loaded with Always On."
   type        = string

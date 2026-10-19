@@ -17,7 +17,9 @@ locals {
 }
 
 resource "azurerm_linux_web_app" "web" {
-  name                = "app-callejon9-web-${var.environment}-${local.unique}"
+  # The name is the public hostname (<name>.azurewebsites.net). Changing it
+  # replaces the Web App: the old hostname stops answering.
+  name                = var.web_app_name
   resource_group_name = azurerm_resource_group.frontend.name
   location            = azurerm_resource_group.frontend.location
   service_plan_id     = azurerm_service_plan.frontend.id

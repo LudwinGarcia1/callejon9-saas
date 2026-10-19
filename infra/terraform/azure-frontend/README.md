@@ -17,7 +17,7 @@ Navegador ──HTTPS──► App Service F1 Linux · Node 24 · Next.js standa
 |---|---|---|
 | Resource group | `rg-callejon9-web-<env>-<región>-001` | Contenedor del frontend |
 | App Service plan | `asp-callejon9-web-<env>-<región>-001` | `F1` por defecto (gratis). `B1` con `app_service_sku` |
-| Web App | `app-callejon9-web-<env>-<hash>` | Node 24 LTS, HTTPS obligatorio, TLS 1.2, FTP y publicación con contraseña desactivados. Arranca con `node server.js` |
+| Web App | `restohub` → `https://restohub.azurewebsites.net` (variable `web_app_name`) | Node 24 LTS, HTTPS obligatorio, TLS 1.2, FTP y publicación con contraseña desactivados. Arranca con `node server.js` |
 | Log Analytics y Application Insights | `log-…`, `appi-…` | Opcionales (`monitoring_enabled`, apagado por defecto), con tope de 0.1 GB diarios |
 
 **Regiones.** La política de la suscripción Azure for Students solo permite `westus`, `eastus`, `eastus2`, `centralus` y `westus3`; `mexicocentral` no está en la lista. Se usa `westus3`.
