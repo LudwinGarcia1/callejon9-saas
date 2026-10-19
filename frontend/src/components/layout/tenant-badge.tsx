@@ -55,7 +55,7 @@ export function TenantBadge({
             isSmall ? "text-[16px]" : "text-[17px]",
           )}
         >
-          {restaurantName ?? "Callejón 9"}
+          {restaurantName ?? "RestoHub"}
         </p>
         {slug && <p className="eyebrow truncate tracking-[0.08em]">{slug}</p>}
       </div>

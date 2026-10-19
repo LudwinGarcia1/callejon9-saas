@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { FieldError } from "@/components/shared/field-error";
 import { ROLE_LANDING_PATH } from "@/hooks/use-session";
 import { ApiError, api } from "@/lib/api";
+import { PlatformBrand } from "@/components/layout/platform-brand";
 import { postLoginPath } from "@/lib/auth-redirect";
 import { endpoints } from "@/lib/endpoints";
 import { type LoginFieldErrors, validateLogin } from "@/lib/login-validation";
@@ -88,8 +89,8 @@ export function LoginView() {
           pertenece al restaurante, asi que va en tinta y no en color de marca. */}
       <aside className="flex flex-col justify-between gap-10 bg-primary px-8 py-9 text-primary-foreground">
         <div>
-          <p className="font-display text-[26px] leading-none">Callejón 9</p>
-          <p className="eyebrow mt-1.5 tracking-[0.14em] text-primary-foreground/70">
+          <PlatformBrand />
+          <p className="eyebrow mt-3 tracking-[0.14em] text-primary-foreground/70">
             Operación de restaurantes
           </p>
         </div>
@@ -143,7 +144,7 @@ export function LoginView() {
                   "slug" sin tener que explicarlo con un hint debajo. */}
               <div className="flex h-12 items-center overflow-hidden rounded-md border border-input focus-within:border-brand focus-within:shadow-[0_0_0_3px_color-mix(in_oklch,var(--brand)_12%,transparent)]">
                 <span className="flex h-full shrink-0 items-center border-r border-border px-3 font-mono text-[13px] text-muted-foreground">
-                  c9.mx /
+                  restohub /
                 </span>
                 <input
                   id="slug"
