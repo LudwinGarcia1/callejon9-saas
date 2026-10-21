@@ -1,6 +1,6 @@
 # Evidencia de prueba · CAL-139 — SIT · App móvil de meseros
 
-> **Borrador v1.** Preparación lista; los casos se ejecutan cuando exista el registro de despliegue del backend (sección 1). Hasta entonces, ningún caso tiene resultado.
+> **Borrador v1.** Preparación completa (sección 5); ejecución de los casos en curso.
 
 ## 1. Identificación
 
@@ -13,9 +13,9 @@
 | Entorno | Azure |
 | URL del frontend | `https://restohub.azurewebsites.net` |
 | URL de la API | `https://app-callejon9-api-prod-3878c6.azurewebsites.net` |
-| Commit probado (API) | *Pendiente del registro de despliegue* |
+| Commit probado (API) | `7a250be` (`7a250bed4d00a190a82c194f93075d3d637e703c`) |
 | Commit de la app móvil | `7a250be` (`origin/main`), servido por Metro desde una copia fija del repositorio en `exp://192.168.68.112:8081` |
-| Registro de despliegue | *Pendiente: comentario «Despliegue» en CAL-118* |
+| Registro de despliegue | Comentarios «Despliegue» en [CAL-118](https://linear.app/callejon19/issue/CAL-118/sit-probar-la-integracion-de-sistemas-en-azure-antes-de-la-uat): 2026-10-20 23:32 (Braulio Hernández) y 23:42–23:46 (Octavio Duarte), ambos de `7a250be`. Corre el segundo |
 | Ejecución de CI | No aplica |
 | Navegador / dispositivo | Teléfono: Nothing Phone (3a), Nothing OS 4.1, Expo Go con SDK 57.0.0, Wi-Fi de la misma red que el servidor de Metro ([`PREP-01`](capturas/PREP-01-expo-go-conectado.png), [`PREP-02`](capturas/PREP-02-dispositivo.png)). Web: Google Chrome 155 con Playwright 1.56.1 en Windows 11 |
 | Restaurante de prueba | `pruebas` |
@@ -37,7 +37,7 @@ Todas las horas en `America/Mexico_City`, formato `AAAA-MM-DD HH:MM`.
 |---|---|---|---|---|---|
 | Historia / issue padre (CAL-118) | 2026-10-20 | 2026-10-21 | 2026-10-20 | | |
 | Esta tarea (CAL-139) | 2026-10-20 | 2026-10-21 | 2026-10-20 22:06 | | Reabierta en revisión: la evidencia anterior no correspondía a una ejecución real |
-| Preparación del entorno y datos | 2026-10-20 | 2026-10-20 | 2026-10-20 22:56 | 2026-10-20 23:03 | La API estaba detenida; se encendió y respondió `UP` a las 23:02 |
+| Preparación del entorno y datos | 2026-10-20 | 2026-10-20 | 2026-10-20 22:56 | 2026-10-20 23:47 | La API estaba detenida; se encendió (`UP` a las 23:02) y se redesplegó `7a250be` para tener un commit registrado (23:46) |
 | Ejecución de los casos | 2026-10-21 | 2026-10-21 | | | |
 | Re-prueba de defectos | | | | | |
 
@@ -60,7 +60,7 @@ Todas las horas en `America/Mexico_City`, formato `AAAA-MM-DD HH:MM`.
 
 - [x] Backend encendido y `/actuator/health` en `UP` — [`respuestas/health.txt`](respuestas/health.txt), 2026-10-20 23:03
 - [x] Frontend accesible en `https://restohub.azurewebsites.net`
-- [ ] Commit desplegado verificado con el registro de despliegue
+- [x] Commit desplegado verificado con el registro de despliegue: `7a250be`, el mismo que sirve Metro a la app; `/actuator/health` en `UP` tras el despliegue — [`respuestas/health-tras-despliegue.txt`](respuestas/health-tras-despliegue.txt), 2026-10-20 23:47
 - [x] Metro arrancado con `EXPO_PUBLIC_API_URL=https://app-callejon9-api-prod-3878c6.azurewebsites.net` y `EXPO_PUBLIC_ALLOW_INSECURE_HTTP=false` (los valores de `mobile/.env`), en modo CI para que el código no cambie durante la prueba: `npx expo start --lan --port 8081`
 - [x] Expo Go abierto en el teléfono y conectado a `exp://192.168.68.112:8081` — [`capturas/PREP-01-expo-go-conectado.png`](capturas/PREP-01-expo-go-conectado.png), 2026-10-20 23:26
 
