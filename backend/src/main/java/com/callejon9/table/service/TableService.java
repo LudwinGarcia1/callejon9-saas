@@ -162,6 +162,11 @@ public class TableService {
         RestaurantTable table = tableRepository.findById(tableId)
                 .orElseThrow(() -> new ResourceNotFoundException("La mesa no existe."));
 
+        if (!active && table.getStatus() == TableStatus.OCCUPIED) {
+            throw new BusinessRuleException(
+                    "No se puede dar de baja una mesa con comanda abierta.");
+        }
+
         table.setActive(active);
         return tableRepository.save(table);
     }
