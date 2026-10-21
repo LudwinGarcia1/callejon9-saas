@@ -1,6 +1,6 @@
 # Evidencia de prueba · CAL-139 — SIT · App móvil de meseros
 
-> **Borrador v1.** Preparación completa (sección 5); ejecución de los casos en curso.
+> **v1.** Ejecución completa; pendiente de revisión por otro integrante (sección 10).
 
 ## 1. Identificación
 
@@ -38,7 +38,7 @@ Todas las horas en `America/Mexico_City`, formato `AAAA-MM-DD HH:MM`.
 | Historia / issue padre (CAL-118) | 2026-10-20 | 2026-10-21 | 2026-10-20 | | |
 | Esta tarea (CAL-139) | 2026-10-20 | 2026-10-21 | 2026-10-20 22:06 | | Reabierta en revisión: la evidencia anterior no correspondía a una ejecución real |
 | Preparación del entorno y datos | 2026-10-20 | 2026-10-20 | 2026-10-20 22:56 | 2026-10-20 23:47 | La API estaba detenida; se encendió (`UP` a las 23:02) y se redesplegó `7a250be` para tener un commit registrado (23:46) |
-| Ejecución de los casos | 2026-10-21 | 2026-10-21 | | | |
+| Ejecución de los casos | 2026-10-21 | 2026-10-21 | 2026-10-20 23:49 | 2026-10-21 00:05 | Empezó la noche anterior a lo planeado |
 | Re-prueba de defectos | | | | | |
 
 ## 4. Alcance y criterios cubiertos
@@ -152,32 +152,37 @@ En Expo Go, el botón flotante de herramientas de desarrollo tapa el botón «Sa
 | Criterio cubierto | 4 |
 | Prioridad | Media |
 | Rol que ejecuta | WAITER |
-| Inicio / fin de ejecución | |
-| Estado | ⏭️ No ejecutado |
+| Inicio / fin de ejecución | 2026-10-21 00:05 / 2026-10-21 00:05 |
+| Estado | ✅ Aprobado |
 | Defecto vinculado | — |
 
 **Precondición.** Sesión de mesero en el teléfono, en la lista de mesas.
 
 | # | Acción | Dato usado | Resultado esperado | Resultado obtenido | Evidencia |
 |---|---|---|---|---|---|
-| 1 | Activar el modo avión y deslizar para recargar las mesas | — | Aviso «Error al consultar las mesas» con «No se pudo conectar con el servidor. Revisa tu conexión a internet.» y botón «Reintentar» | | `capturas/C04-P01-sin-conexion.png` |
-| 2 | Desactivar el modo avión y tocar «Reintentar» | — | La lista de mesas vuelve a cargar | | `capturas/C04-P02-reintento-ok.png` |
+| 1 | Activar el modo avión y deslizar para recargar las mesas | — | Aviso «Error al consultar las mesas» con «No se pudo conectar con el servidor. Revisa tu conexión a internet.» y botón «Reintentar» | 00:05:02 · Con el modo avión activo (ícono en la barra de estado), aparece exactamente ese aviso y el botón «Reintentar» | [`C04-P01`](capturas/C04-P01-sin-conexion.png) |
+| 2 | Desactivar el modo avión y tocar «Reintentar» | — | La lista de mesas vuelve a cargar | 00:05:11 · Con Wi-Fi de vuelta, «Reintentar» carga «12 mesas · 4 libres», con la mesa 2 ocupada como la dejó C03 | [`C04-P02`](capturas/C04-P02-reintento-ok.png) |
 
 ## 7. Defectos encontrados
 
 | ID | Caso | Severidad | Descripción breve | Estado | Re-probado el |
 |---|---|---|---|---|---|
-| — | | | | | |
+| — | — | — | Ninguno | — | — |
 
 ## 8. Resumen
 
 | Total | ✅ Aprobados | ❌ Fallidos | ⛔ Bloqueados | ⏭️ No ejecutados |
 |---|---|---|---|---|
-| 4 | 0 | 0 | 0 | 4 |
+| 4 | 4 | 0 | 0 | 0 |
 
-**Desviaciones y limitaciones.** El teléfono no se automatiza: sus capturas se toman a mano en Expo Go. Playwright solo captura el lado web (C02 paso 5, C03 pasos 1 y 4), con una banda que estampa la URL y la hora.
+**Desviaciones y limitaciones.**
 
-**Conclusión del ejecutor.** *Pendiente de ejecución.*
+- El teléfono no se automatiza: sus capturas se tomaron a mano en Expo Go. Playwright solo capturó el lado web (C02 paso 5, C03 pasos 1 y 4), con una banda que estampa la URL y la hora.
+- La app corrió en Expo Go, no compilada para tienda.
+- El resultado esperado de C03 paso 1 se corrigió antes de ejecutarlo: la cocina web no abre WebSocket, consulta cada 5 s.
+- La orden de prueba ORD-261021060215 (mesa 2) quedó abierta en el restaurante `pruebas`.
+
+**Conclusión del ejecutor.** Los cuatro criterios de CAL-139 se cumplen contra `7a250be` en Azure: la app inicia sesión por HTTPS y conserva la sesión en la cookie nativa tras cerrarse, muestra las mismas mesas y productos que la web, envía pedidos que llegan a la cocina web en segundos sin recargar, y avisa sin conexión con opción de reintentar. Para CAL-140 queda el hallazgo de que la cocina web no usa el WebSocket del backend.
 
 ## 9. Anexo SIT — integración de sistemas
 
@@ -206,4 +211,4 @@ En Expo Go, el botón flotante de herramientas de desarrollo tapa el botón «Sa
 
 Declaro que esta evidencia proviene de una ejecución real en el entorno y la fecha indicados, que las capturas y respuestas no fueron editadas salvo para ocultar secretos, y que los casos marcados como no ejecutados no se ejecutaron.
 
-**Ejecutor:** Octavio Duarte · **Fecha:** *al completar la ejecución*
+**Ejecutor:** Octavio Duarte · **Fecha:** 2026-10-21
