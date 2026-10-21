@@ -95,13 +95,25 @@ function autoWidths(header, rows) {
 const mono = (line) => new Paragraph({ spacing: { after: 0, line: 240 }, shading: { fill: "F6F4F0", type: ShadingType.CLEAR, color: "auto" },
   children: [t(line || " ", { font: "Consolas", size: 15 })] });
 
-function pngSize(buf) { return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) }; }
+const isPng = (buf) => buf.readUInt32BE(0) === 0x89504e47;
+
+/** Ancho y alto de un PNG o de un JPEG (una captura reenviada por mensajería puede ser JPEG aunque diga .png). */
+function pngSize(buf) {
+  if (isPng(buf)) return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
+  for (let i = 2; i < buf.length - 9;) {
+    if (buf[i] !== 0xff) { i += 1; continue; }
+    const marker = buf[i + 1];
+    if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) return { w: buf.readUInt16BE(i + 7), h: buf.readUInt16BE(i + 5) };
+    i += 2 + buf.readUInt16BE(i + 2);
+  }
+  throw new Error("Formato de imagen no reconocido");
+}
 function imageRun(buf, widthPx, name) {
   const { w, h } = pngSize(buf);
   const maxH = 820; // que una captura alta del teléfono quepa en la página
   let width = widthPx, height = Math.round((widthPx * h) / w);
   if (height > maxH) { height = maxH; width = Math.round((maxH * w) / h); }
-  return new ImageRun({ type: "png", data: buf, transformation: { width, height }, altText: { title: name, description: name, name } });
+  return new ImageRun({ type: isPng(buf) ? "png" : "jpg", data: buf, transformation: { width, height }, altText: { title: name, description: name, name } });
 }
 
 function numbering() {
