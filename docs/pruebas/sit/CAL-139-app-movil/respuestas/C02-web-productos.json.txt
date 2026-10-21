@@ -1,0 +1,101 @@
+# 2026-10-20 23:58:34 America/Mexico_City
+# GET https://restohub.azurewebsites.net/api/v1/products (sesión web de mesero@pruebas.com)
+# HTTP 200
+[
+  {
+    "id": "b66b9716-0a91-4d16-91c7-35756dcac0e8",
+    "name": "Agua de horchata",
+    "description": "Bebidas - Agua de horchata",
+    "price": 45,
+    "categoryId": "8194142e-8664-4ca9-b2b8-b3c4217093fc",
+    "active": true
+  },
+  {
+    "id": "3ee8f6ec-685f-4451-bea3-1c86300cb902",
+    "name": "Arrachera 300 g",
+    "description": "Platos fuertes - Arrachera 300 g",
+    "price": 320,
+    "categoryId": "0015865a-64f4-499c-a4a5-192ee9380685",
+    "active": true
+  },
+  {
+    "id": "fffb9361-3f8c-4782-acce-37f7d3da70f4",
+    "name": "Cerveza artesanal",
+    "description": "Bebidas - Cerveza artesanal",
+    "price": 85,
+    "categoryId": "8194142e-8664-4ca9-b2b8-b3c4217093fc",
+    "active": true
+  },
+  {
+    "id": "d54f4db2-c760-4a27-a856-153244ea8dfc",
+    "name": "Chiles en nogada",
+    "description": "Platos fuertes - Chiles en nogada",
+    "price": 265,
+    "categoryId": "0015865a-64f4-499c-a4a5-192ee9380685",
+    "active": true
+  },
+  {
+    "id": "bc885cf3-2467-462e-9ac4-eb1e48e0d5cf",
+    "name": "Enchiladas de mole",
+    "description": "Platos fuertes - Enchiladas de mole",
+    "price": 185,
+    "categoryId": "0015865a-64f4-499c-a4a5-192ee9380685",
+    "active": true
+  },
+  {
+    "id": "cf7c9c27-1bbd-4378-903c-50d29311be16",
+    "name": "Flan napolitano",
+    "description": "Postres - Flan napolitano",
+    "price": 75,
+    "categoryId": "b28a5499-d09e-4749-bafd-1fcde8042933",
+    "active": true
+  },
+  {
+    "id": "33dafe69-08e7-4c4d-b1b4-d99902472968",
+    "name": "Guacamole con totopos",
+    "description": "Entradas - Guacamole con totopos",
+    "price": 95,
+    "categoryId": "ba57a961-030c-4426-93a8-3473349a0574",
+    "active": true
+  },
+  {
+    "id": "620e77f4-cfb7-4aec-96d2-602da6ad398a",
+    "name": "Margarita",
+    "description": "Bebidas - Margarita",
+    "price": 135,
+    "categoryId": "8194142e-8664-4ca9-b2b8-b3c4217093fc",
+    "active": true
+  },
+  {
+    "id": "1d368b10-53d1-4dca-9157-cc48b5999a7b",
+    "name": "Pastel de tres leches",
+    "description": "Postres - Pastel de tres leches",
+    "price": 90,
+    "categoryId": "b28a5499-d09e-4749-bafd-1fcde8042933",
+    "active": true
+  },
+  {
+    "id": "be1ca00c-caa2-42de-ad22-846a86fc935b",
+    "name": "Pescado a la talla",
+    "description": "Platos fuertes - Pescado a la talla",
+    "price": 290,
+    "categoryId": "0015865a-64f4-499c-a4a5-192ee9380685",
+    "active": true
+  },
+  {
+    "id": "fca14107-3ac2-4ec4-a338-348b2b5d2b43",
+    "name": "Queso fundido",
+    "description": "Entradas - Queso fundido",
+    "price": 110,
+    "categoryId": "ba57a961-030c-4426-93a8-3473349a0574",
+    "active": true
+  },
+  {
+    "id": "056aa0a0-0a1f-4520-a534-a315284e1614",
+    "name": "Sopa de tortilla",
+    "description": "Entradas - Sopa de tortilla",
+    "price": 85,
+    "categoryId": "ba57a961-030c-4426-93a8-3473349a0574",
+    "active": true
+  }
+]

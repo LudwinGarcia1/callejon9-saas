@@ -81,8 +81,8 @@ Todas las horas en `America/Mexico_City`, formato `AAAA-MM-DD HH:MM`.
 | Criterio cubierto | 1 |
 | Prioridad | Alta |
 | Rol que ejecuta | WAITER |
-| Inicio / fin de ejecución | |
-| Estado | ⏭️ No ejecutado |
+| Inicio / fin de ejecución | 2026-10-20 23:49 / 2026-10-20 23:56 |
+| Estado | ✅ Aprobado |
 | Defecto vinculado | — |
 
 **Precondición.** App recién abierta en Expo Go, sin sesión.
@@ -91,11 +91,15 @@ Todas las horas en `America/Mexico_City`, formato `AAAA-MM-DD HH:MM`.
 
 | # | Acción | Dato usado | Resultado esperado | Resultado obtenido | Evidencia |
 |---|---|---|---|---|---|
-| 1 | Abrir la app en Expo Go | — | Pantalla de inicio de sesión | | `capturas/C01-P01-login-vacio.png` |
-| 2 | Escribir restaurante, correo y contraseña; tocar «Iniciar sesión» | `pruebas`, `mesero@pruebas.com` | Entra a «Mesas» con el aviso «Autenticación exitosa» | | `capturas/C01-P02-mesas-tras-login.png` |
-| 3 | Cerrar Expo Go por completo y volver a abrir la app | — | Entra directo a las mesas, sin pedir credenciales | | `capturas/C01-P03-sesion-persistente.png` |
+| 1 | Abrir la app en Expo Go | — | Pantalla de inicio de sesión | 23:49 · Pantalla «RestoHub · App de meseros» con restaurante, correo y contraseña vacíos, y el aviso «Conexión cifrada (HTTPS) app-callejon9-api-prod-3878c6.azurewebsites.net» | [`capturas/C01-P01-login-vacio.png`](capturas/C01-P01-login-vacio.png) |
+| 2 | Escribir restaurante, correo y contraseña; tocar «Iniciar sesión» | `pruebas`, `mesero@pruebas.com` | Entra a «Mesas» con el aviso «Autenticación exitosa» | 23:56 · «Mesas · Mesero de piso · Callejon 9 prue…» con el aviso «Autenticación exitosa · Sesión iniciada como Mesero de piso. La sesión se guarda en una cookie segura del sistema.» 12 mesas, 5 libres | [`capturas/C01-P02-mesas-tras-login.png`](capturas/C01-P02-mesas-tras-login.png) |
+| 3 | Cerrar Expo Go por completo y volver a abrir la app | — | Entra directo a las mesas, sin pedir credenciales | 23:56 · Tras cerrar Expo Go desde las apps recientes y reabrir la app, entra directo a «Mesas» (12 mesas, 5 libres) sin pedir credenciales y sin el aviso de bienvenida, que solo aparece tras un login nuevo: la sesión se reanudó desde la cookie nativa | [`capturas/C01-P03-sesion-persistente.png`](capturas/C01-P03-sesion-persistente.png) |
 
-**Respuesta HTTP literal.** La misma llamada de la app (`POST /api/v1/auth/login`), con `Set-Cookie` redactado: `respuestas/C01-login.txt`.
+**Respuesta HTTP literal.** La misma llamada de la app (`POST /api/v1/auth/login`), con `Set-Cookie` redactado: [`respuestas/C01-login.txt`](respuestas/C01-login.txt). 23:53 · `200 OK`, cookies `access_token` y `refresh_token` con `Secure; HttpOnly; SameSite=Strict`, usuario «Mesero de piso» con rol `WAITER`.
+
+**Observaciones.** Un primer intento en el paso 2 (23:52–23:53) falló por un error del ejecutor al teclear: la contraseña capturada tenía 21 caracteres y la real tiene 24. La app respondió «No se pudo iniciar sesión · Restaurante, correo o contraseña incorrectos.» sin revelar cuál dato falló ([`C01-OBS-credenciales-capturadas.png`](capturas/C01-OBS-credenciales-capturadas.png), [`C01-OBS-error-credenciales.png`](capturas/C01-OBS-error-credenciales.png)). No es un defecto del sistema.
+
+En Expo Go, el botón flotante de herramientas de desarrollo tapa el botón «Salir» de la app. Es un elemento de Expo Go que no existe en una app compilada; no se registra como defecto.
 
 ### C02 — El teléfono y la web muestran las mismas mesas y productos
 
@@ -104,18 +108,20 @@ Todas las horas en `America/Mexico_City`, formato `AAAA-MM-DD HH:MM`.
 | Criterio cubierto | 2 |
 | Prioridad | Media |
 | Rol que ejecuta | WAITER |
-| Inicio / fin de ejecución | |
-| Estado | ⏭️ No ejecutado |
+| Inicio / fin de ejecución | 2026-10-20 23:58 / 2026-10-20 23:59 |
+| Estado | ✅ Aprobado |
 | Defecto vinculado | — |
 
 **Precondición.** Sesión de mesero en el teléfono (C01).
 
 | # | Acción | Dato usado | Resultado esperado | Resultado obtenido | Evidencia |
 |---|---|---|---|---|---|
-| 1 | En el teléfono, abrir la lista de mesas | — | Mesas con número, estado y capacidad | | `capturas/C02-P01-telefono-mesas.png` |
-| 2 | En el teléfono, abrir el menú de productos | — | Productos activos con precio | | `capturas/C02-P02-telefono-menu.png` |
-| 3–4 | Ejecutar `node capturas-web.mjs paridad` | sesión web de `mesero@pruebas.com` | — | | `respuestas/C02-web-mesas.json.txt`, `respuestas/C02-web-productos.json.txt` |
-| 5 | Comparar con la vista web del mesero | — | Mismas mesas, estados y productos que en los pasos 1 y 2 | | `capturas/C02-P05-mesero-web-mesas.png` |
+| 1 | En el teléfono, abrir la lista de mesas | — | Mesas con número, estado y capacidad | 23:59 · «12 mesas · 5 libres». Libres: 2, 3, 4, 5 y 12. Ocupadas: 1, 6, 7, 8, 9, 10 y 11. Capacidad: 4 personas (1–6), 6 (7–10), 8 (11–12) | [`C02-P01a`](capturas/C02-P01a-telefono-mesas-1-10.png), [`C02-P01b`](capturas/C02-P01b-telefono-mesas-3-12.png) |
+| 2 | En el teléfono, abrir el menú de productos | — | Productos activos con precio | 23:59 · «12 productos activos», de Agua de horchata $45.00 a Sopa de tortilla $85.00 | [`C02-P02a`](capturas/C02-P02a-telefono-menu.png), [`C02-P02b`](capturas/C02-P02b-telefono-menu-fin.png) |
+| 3–4 | Ejecutar `node capturas-web.mjs paridad` | sesión web de `mesero@pruebas.com` | Respuestas `200` del proxy del frontend | 23:58 · `GET /api/v1/tables` → 200, 12 mesas; `GET /api/v1/products` → 200, 12 productos activos | [`C02-web-mesas`](respuestas/C02-web-mesas.json.txt), [`C02-web-productos`](respuestas/C02-web-productos.json.txt) |
+| 5 | Comparar con la vista web del mesero | — | Mismas mesas, estados y productos que en los pasos 1 y 2 | 23:58 · La web muestra «Ocupación 7/12» con las mismas mesas libres y ocupadas y las mismas capacidades. Los 12 productos y precios de la API coinciden uno a uno con el menú del teléfono | [`C02-P05`](capturas/C02-P05-mesero-web-mesas.png) |
+
+**Observaciones.** Cada producto muestra la categoría repetida («Bebidas · Bebidas - Agua de horchata») porque la descripción de los datos de prueba empieza con la categoría. Es un detalle de los datos, no de la integración.
 
 ### C03 — Un pedido enviado desde el teléfono llega a la cocina web sin recargar
 
