@@ -65,6 +65,16 @@ if ($BackendOrigin -notmatch '^https://[a-z0-9.-]+(:[0-9]+)?$') {
     throw "BackendOrigin debe ser un origen https:// sin ruta ni diagonal final. Recibido: '$BackendOrigin'."
 }
 
+# CAL-165: Advertencia preventiva sobre limites de cuota de Azure App Service Plan F1
+try {
+    $planSku = Invoke-Native 'az' @('appservice', 'plan', 'list', '-g', $ResourceGroup, '--query', "[0].sku.name", '-o', 'tsv') 2>$null
+    if ($planSku -eq 'F1') {
+        Write-Warning "El Frontend se encuentra en Azure App Service Plan F1 (Gratuito: 60 min CPU/dia, WPStopRequests). Si se alcanza la cuota diaria, escalar a B1 temporalmente."
+    }
+} catch {
+    # No bloquear si la consulta de cuota/plan falla
+}
+
 $work = Join-Path ([IO.Path]::GetTempPath()) "callejon9-frontend-$([guid]::NewGuid().ToString('N').Substring(0, 8))"
 $siteDir   = Join-Path $work 'site'
 $zipPath   = Join-Path $work 'package.zip'

@@ -24,13 +24,21 @@ Navegador ──HTTPS──► App Service F1 Linux · Node 24 · Next.js standa
 
 **Sin secretos.** El frontend no guarda ninguno: la sesión es la cookie que emite el backend, y `BACKEND_ORIGIN` es una URL pública. Por eso no hay Key Vault.
 
-## Costo
+## Costo y Límites de App Service F1 (Free)
 
-| Plan | USD al mes | Notas |
+| Plan | USD al mes | Notas y Límites Críticos |
 |---|---|---|
-| `F1` (por defecto) | 0 | Se descarga tras unos 20 minutos sin tráfico: la primera visita después tarda varios segundos. Tope de 60 minutos de CPU al día. Sin Always On ni health check |
-| `B1` | ≈ 13 | Always On y health check en `/login` |
+| `F1` (por defecto) | 0 | **Arranque en frío:** se descarga tras ~20 minutos sin tráfico (primera visita tarda 30-50s).<br>**WPStopRequests = 15/día:** cada deploy, restart o reciclado consume cupo; superarlo produce HTTP 403 QuotaExceeded hasta el reset diario (04:00 UTC).<br>**CPU y Tráfico:** 60 min de CPU/día y 165 MB de salida/día (BytesSent). Sin Always On ni health check. |
+| `B1` | ≈ 13 | Always On, sin límite de reinicios diarios, CPU dedicada y health check en `/login`. |
 
+### Mitigación y Procedimiento para Demos y Evaluaciones (UAT)
+Para evitar caídas de cuota (`QuotaExceeded`) o retrasos por arranque en frío durante evaluaciones con usuarios finales (UAT) o presentaciones:
+1. **Subir temporalmente a B1:**
+   En `infra/terraform/azure-frontend/terraform.tfvars`: `app_service_sku = "B1"` y ejecutar `terraform apply`.
+2. **Consultar el consumo de cuota actual en F1:**
+   `az rest --method get --uri /subscriptions/{subId}/resourceGroups/{rg}/providers/Microsoft.Web/serverfarms/{plan}/usages?api-version=2022-03-01 --query "value[].{name:name.localizedValue, current:currentValue, limit:limit}" -o table`
+3. **Regresar a F1 tras concluir la sesión:**
+   Revertir `app_service_sku = "F1"` y ejecutar `terraform apply`.
 El estado de Terraform cuesta centavos.
 
 ## Requisitos

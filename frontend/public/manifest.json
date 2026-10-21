@@ -1,0 +1,24 @@
+{
+  "name": "RestoHub - Sistema Punto de Venta y Gestión Gastronómica",
+  "short_name": "RestoHub",
+  "description": "Plataforma multi-inquilino de gestión de restaurantes, comandas, KDS, mesas e inventario.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/brand/restohub-logo-160.png",
+      "sizes": "160x160",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/restohub-logo-320.png",
+      "sizes": "320x320",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
