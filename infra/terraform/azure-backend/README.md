@@ -52,6 +52,8 @@ El plan B1 se cobra mientras exista, aunque la Web App esté detenida. Para deja
 - Una cuenta con permiso para crear asignaciones de rol en la suscripción (Owner).
 - JDK 21 para compilar el JAR.
 
+Para sumar a otra persona a un entorno que ya existe, ve a [Sumar a otro operador](#sumar-a-otro-operador).
+
 ## Procedimiento
 
 Todos los comandos son de PowerShell y se corren desde `infra/terraform/azure-backend`, salvo que se indique otra ruta.
@@ -152,6 +154,73 @@ BACKEND_ORIGIN=<api_url>
 El navegador sigue llamando rutas relativas `/api/v1/*` y Next las reenvía a esta API desde su servidor. Por eso el backend no necesita CORS y las cookies `SameSite=Strict` siguen siendo de primera parte. Si el navegador llamara directo a `azurewebsites.net`, el login dejaría de funcionar.
 
 `frontend_origin` (y con él `APP_ALLOWED_ORIGINS`) debe ser exactamente el dominio público del frontend.
+
+## Sumar a otro operador
+
+El entorno vive en la suscripción de quien lo creó. Otra persona puede administrarlo con su propia cuenta, sin tener crédito propio: todo lo que cree, cambie o encienda se cobra a esa suscripción.
+
+### Lo que hace el dueño de la suscripción
+
+La cuenta nueva debe estar en el mismo directorio de Entra ID. Una cuenta de otra organización se invita antes como invitado. Hacen falta tres roles: el de la suscripción no da acceso a los datos del vault ni del estado de Terraform.
+
+| Rol | Alcance | Sin él |
+|---|---|---|
+| Owner | Suscripción | No puede crear ni modificar recursos |
+| Key Vault Secrets Officer | Vault del backend | `terraform plan` falla con 403 al leer los secretos |
+| Storage Blob Data Contributor | Storage account del estado | `terraform init` falla con 403 al leer el estado |
+
+En lugar de Owner, Contributor alcanza para los cambios del día a día. Solo falla en los cambios que crean o borran asignaciones de rol, como recrear la Web App o destruir el entorno. Owner, en cambio, también le permite quitar el acceso a los demás, incluido el dueño.
+
+Desde esta carpeta, con el backend ya desplegado:
+
+```powershell
+$user = "<correo-del-operador>"
+$sub  = "/subscriptions/" + (az account show --query id -o tsv)
+$kv   = az keyvault show -n (terraform output -raw key_vault_name) --query id -o tsv
+$st   = az storage account show -g rg-callejon9-tfstate -n <storage_account> --query id -o tsv
+
+az role assignment create --assignee $user --role "Owner" --scope $sub
+az role assignment create --assignee $user --role "Key Vault Secrets Officer" --scope $kv
+az role assignment create --assignee $user --role "Storage Blob Data Contributor" --scope $st
+az role assignment list --assignee $user --all -o table
+```
+
+`<storage_account>` es el de `backend.hcl`. Después, entrega `backend.hcl` y `terraform.tfvars` por un canal privado: están ignorados por git y Terraform no funciona sin ellos.
+
+Para retirar el acceso:
+
+```powershell
+az role assignment list --assignee $user --all --query "[].id" -o tsv |
+    ForEach-Object { az role assignment delete --ids $_ }
+```
+
+### Lo que hace el operador nuevo
+
+1. Instala Terraform 1.9 o superior, Azure CLI y JDK 21. `psql` solo hace falta para el [paso 5](#5-roles-de-la-base-una-sola-vez).
+2. Inicia sesión y elige la suscripción **por ID**: cada cuenta de Azure for Students tiene su propia suscripción con el mismo nombre, y con la equivocada Terraform calcularía otros nombres de recursos.
+
+   ```powershell
+   az login
+   az account set --subscription <id-de-la-suscripcion-del-backend>
+   $env:ARM_SUBSCRIPTION_ID = az account show --query id -o tsv
+   ```
+
+3. Copia en esta carpeta el `backend.hcl` y el `terraform.tfvars` que recibió.
+4. Comprueba el acceso:
+
+   ```powershell
+   terraform init "-backend-config=backend.hcl"
+   terraform plan
+   ```
+
+   Con el backend encendido, el plan no debe mostrar cambios. Con el backend apagado muestra el plan en F1, como se explica en [Apagar y encender el backend](#apagar-y-encender-el-backend). Un 403 justo después de recibir los roles es la propagación: espera unos minutos y repite.
+
+### Reglas al compartir el entorno
+
+- **No cambies `key_vault_admin_object_id` en `terraform.tfvars`.** Admite una sola persona: si pones tu propio ID, el siguiente `apply` borra el rol del dueño sobre el vault y crea el tuyo. Lo mismo pasa con `state_admin_object_id` del bootstrap. El acceso de cada operador se da con los comandos de arriba, no con estas variables.
+- **Un `apply` a la vez.** El estado se bloquea durante cada `apply`, así que el segundo falla. Cada `apply` que cambia variables de la aplicación reinicia la API durante unos 2 minutos: avisa al equipo antes.
+- **El crédito es uno solo.** Si se agota, Azure deshabilita la suscripción y la API se cae para todos. Las alertas de presupuesto solo llegan a los correos de `budget_contact_emails`.
+- **`psql` solo entra desde la IP de `operator_ip_address`.** Para usarlo, aplica con tu IP como en el [paso 5](#5-roles-de-la-base-una-sola-vez) y vuelve a cerrar el firewall al terminar.
 
 ## Apagar y encender el backend
 
