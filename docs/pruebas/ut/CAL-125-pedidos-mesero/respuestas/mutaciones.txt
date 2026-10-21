@@ -1,0 +1,94 @@
+# CAL-125 · pruebas con reglas rotas a propósito (2026-10-21 16:41 America/Mexico_City)
+# Cada mutación cambia una línea sobre el commit 602ad2d, se corren las pruebas del modulo y se restaura con git checkout.
+
+
+## M1 · el precio de la línea sale de una constante, no del producto
+Cambio en backend/src/main/java/com/callejon9/order/service/OrderService.java:
+  antes:   .unitPrice(product.getPrice())
+  después: .unitPrice(java.math.BigDecimal.ONE)
+Tests run: 7, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 1.913 s <<< FAILURE! -- in UT · OrderService.addItems
+com.callejon9.order.service.OrderServiceItemsTest.totalUsesServerPricesAndQuantities -- Time elapsed: 0.034 s <<< FAILURE!
+com.callejon9.order.service.OrderServiceItemsTest.priceIsSnapshottedOnTheLine -- Time elapsed: 0.013 s <<< FAILURE!
+com.callejon9.order.service.OrderServiceItemsTest.secondBatchAddsToTheExistingTotal -- Time elapsed: 0.007 s <<< FAILURE!
+Tests run: 12, Failures: 3, Errors: 0, Skipped: 0
+
+## M2 · se acepta un producto inactivo
+Cambio en backend/src/main/java/com/callejon9/order/service/OrderService.java:
+  antes:   if (!product.isActive()) {
+  después: if (false) {
+Tests run: 7, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 1.886 s <<< FAILURE! -- in UT · OrderService.addItems
+com.callejon9.order.service.OrderServiceItemsTest.inactiveProductIsRejected -- Time elapsed: 0.022 s <<< FAILURE!
+Tests run: 12, Failures: 1, Errors: 0, Skipped: 0
+
+## M3 · el total ignora la cantidad
+Cambio en backend/src/main/java/com/callejon9/order/service/OrderService.java:
+  antes:   .map(item -> item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+  después: .map(item -> item.getUnitPrice())
+Tests run: 7, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 1.884 s <<< FAILURE! -- in UT · OrderService.addItems
+com.callejon9.order.service.OrderServiceItemsTest.totalUsesServerPricesAndQuantities -- Time elapsed: 0.078 s <<< FAILURE!
+com.callejon9.order.service.OrderServiceItemsTest.secondBatchAddsToTheExistingTotal -- Time elapsed: 0.007 s <<< FAILURE!
+Tests run: 12, Failures: 2, Errors: 0, Skipped: 0
+
+## M4 · la cantidad admite 100
+Cambio en backend/src/main/java/com/callejon9/order/web/dto/AddOrderItemRequest.java:
+  antes:   @Max(99)
+  después: @Max(100)
+Tests run: 5, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 0.634 s <<< FAILURE! -- in UT · topes de las peticiones de órdenes (CAL-112)
+com.callejon9.order.web.dto.OrderRequestLimitsTest.quantityLimits -- Time elapsed: 0.149 s <<< FAILURE!
+com.callejon9.order.web.dto.OrderRequestLimitsTest.batchValidatesEachLine -- Time elapsed: 0.058 s <<< FAILURE!
+Tests run: 12, Failures: 2, Errors: 0, Skipped: 0
+
+## M5 · el lote admite 51 líneas
+Cambio en backend/src/main/java/com/callejon9/order/web/dto/AddOrderItemsRequest.java:
+  antes:   @Size(max = 50)
+  después: @Size(max = 51)
+Tests run: 5, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.931 s <<< FAILURE! -- in UT · topes de las peticiones de órdenes (CAL-112)
+com.callejon9.order.web.dto.OrderRequestLimitsTest.batchSizeLimits -- Time elapsed: 0.075 s <<< FAILURE!
+Tests run: 12, Failures: 1, Errors: 0, Skipped: 0
+
+## M6 · las notas admiten 501 caracteres
+Cambio en backend/src/main/java/com/callejon9/order/web/dto/AddOrderItemRequest.java:
+  antes:   @Size(max = 500)
+  después: @Size(max = 501)
+Tests run: 5, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.712 s <<< FAILURE! -- in UT · topes de las peticiones de órdenes (CAL-112)
+com.callejon9.order.web.dto.OrderRequestLimitsTest.notesLimits -- Time elapsed: 0.028 s <<< FAILURE!
+Tests run: 12, Failures: 1, Errors: 0, Skipped: 0
+
+## M7 · los comensales admiten 51
+Cambio en backend/src/main/java/com/callejon9/order/web/dto/OpenOrderRequest.java:
+  antes:   @Max(50)
+  después: @Max(51)
+Tests run: 5, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 0.665 s <<< FAILURE! -- in UT · topes de las peticiones de órdenes (CAL-112)
+com.callejon9.order.web.dto.OrderRequestLimitsTest.guestCountLimits -- Time elapsed: 0.020 s <<< FAILURE!
+Tests run: 12, Failures: 1, Errors: 0, Skipped: 0
+
+## M8 · el carrito no tiene tope
+Cambio en frontend/src/app/(authenticated)/waiter/order/[id]/order-view.tsx:
+  antes:   const MAX_LINE_QUANTITY = 99;
+  después: const MAX_LINE_QUANTITY = 1000;
+   × carrito de la orden: tope de 99 por línea > agregar el mismo producto y subir la cantidad se detiene en 99 1298ms
+   × carrito de la orden: tope de 99 por línea > el lote enviado al servidor lleva la cantidad tope, no más 1692ms
+      Tests  2 failed | 8 passed (10)
+
+## M9 · el mesero puede cancelar órdenes enviadas
+Cambio en frontend/src/app/(authenticated)/waiter/order/[id]/order-view.tsx:
+  antes:   const WAITER_CANCELABLE_ORDER_STATUSES = new Set<OrderStatus>(["NEW"]);
+  después: const WAITER_CANCELABLE_ORDER_STATUSES = new Set<OrderStatus>(["NEW", "SENT", "READY"]);
+   × cancelación según el rol (CAL-113) > WAITER con orden SENT: botón «Cancelar orden» visible = false 36ms
+   × cancelación según el rol (CAL-113) > WAITER con orden READY: botón «Cancelar orden» visible = false 25ms
+      Tests  2 failed | 8 passed (10)
+
+## M8 · el carrito no tiene tope (repetida sobre c2fe3c6, con la prueba del carrito fusionada)
+Cambio en frontend/src/app/(authenticated)/waiter/order/[id]/order-view.tsx:
+  antes:   const MAX_LINE_QUANTITY = 99;
+  después: const MAX_LINE_QUANTITY = 1000;
+   × carrito de la orden: tope de 99 por línea > subir la cantidad se detiene en 99 y el lote enviado lleva 99, no más 971ms
+      Tests  1 failed | 8 passed (9)
+
+## M9 · el mesero puede cancelar órdenes enviadas (repetida sobre c2fe3c6, con la prueba del carrito fusionada)
+Cambio en frontend/src/app/(authenticated)/waiter/order/[id]/order-view.tsx:
+  antes:   const WAITER_CANCELABLE_ORDER_STATUSES = new Set<OrderStatus>(["NEW"]);
+  después: const WAITER_CANCELABLE_ORDER_STATUSES = new Set<OrderStatus>(["NEW", "SENT", "READY"]);
+   × cancelación según el rol (CAL-113) > WAITER con orden SENT: botón «Cancelar orden» visible = false 43ms
+   × cancelación según el rol (CAL-113) > WAITER con orden READY: botón «Cancelar orden» visible = false 18ms
+      Tests  2 failed | 7 passed (9)

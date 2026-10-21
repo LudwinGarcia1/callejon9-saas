@@ -1,0 +1,17 @@
+# CAL-125 · mvnw verify del backend (2026-10-21 16:46-16:50 America/Mexico_City, commit 602ad2d; el backend no cambia después)
+# JDK 25 local con --release 21; Testcontainers con PostgreSQL 16 en Docker 29.7.2
+$ .\mvnw.cmd -B verify
+
+## Pruebas nuevas
+Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.125 s -- in UT · OrderService.addItems
+Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.078 s -- in UT · topes de las peticiones de órdenes (CAL-112)
+
+## Total de la suite
+Tests run: 636, Failures: 0, Errors: 0, Skipped: 0
+
+## Resultado de la etapa SpotBugs (local)
+BUILD FAILURE
+java.lang.IllegalArgumentException: Unsupported class file major version 69
+
+Nota: la falla de SpotBugs es del entorno local. SpotBugs 4.8.6 no lee las clases del JDK 25 (versión 69).
+El proyecto compila y se analiza con Java 21 en CI, que es la puerta válida para esa etapa.
