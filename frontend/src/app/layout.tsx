@@ -38,6 +38,11 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: "RestoHub",
   description: "Plataforma para operar restaurantes: mesas, pedidos, cocina, caja, inventario y reportes.",
+  manifest: "/manifest.json",
+  icons: {
+    icon: "/brand/restohub-logo-160.png",
+    apple: "/brand/restohub-logo-320.png",
+  },
 };
 
 function isDarkRoute(pathname: string): boolean {
