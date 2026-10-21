@@ -974,6 +974,74 @@
   },
   {
     "method": "GET",
+    "path": "/api/v1/public/{slug}/catalog",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "ANONYMOUS",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Acceso publico exacto: /api/v1/public/{slug}/catalog; menu QR del comensal (#72), RLS acota al tenant del slug"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/v1/public/{slug}/catalog",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "ANONYMOUS",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Acceso publico exacto: /api/v1/public/{slug}/catalog; menu QR del comensal (#72), RLS acota al tenant del slug"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/public/{slug}/tables/{tableNumber}/orders",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "ANONYMOUS",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Acceso publico exacto: auto-pedido desde el QR de la mesa (#72); RLS acota al tenant del slug"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/public/{slug}/tables/{tableNumber}/call-waiter",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "ANONYMOUS",
+      "CASHIER",
+      "KITCHEN",
+      "SUPER_ADMIN",
+      "WAITER"
+    ],
+    "reason": "Acceso publico exacto: llamada al mesero desde el QR de la mesa (#72); RLS acota al tenant del slug"
+  },
+  {
+    "method": "GET",
     "path": "/api/v1/sales",
     "params": [],
     "headers": [],
