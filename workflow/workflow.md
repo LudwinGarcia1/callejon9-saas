@@ -27,6 +27,8 @@ Las issues de prueba (etiqueta `Testing`: UT, SIT y UAT) siguen el mismo flujo; 
 
 Quien revisa una issue de prueba no es quien la ejecutó. Una prueba que no se ejecutó no cuenta como evidencia, aunque el formato esté lleno.
 
+La revisión la hace alguien distinto del autor. La única excepción es la del Scrum Master en cambios que solo tocan proceso y documentación del harness; nunca cubre código, infraestructura, RLS ni evidencias de prueba, y cada autorrevisión se registra en `review-history.jsonl`. Alcance y registro en `workflow/decisions/2026-10-20-autorrevision-scrum-master.md`.
+
 ## `$wf-build`
 
 1. Identifica el issue o redacta un brief local; valida objetivo, criterios y fuera de alcance.
