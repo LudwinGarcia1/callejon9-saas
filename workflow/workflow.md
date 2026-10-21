@@ -2,6 +2,31 @@
 
 Las skills de `.agents/skills` exponen estos procedimientos. Los pasos externos —crear/modificar issues, push, PR o merge— requieren que el usuario los haya pedido y que la conexión correspondiente esté verificada.
 
+## Estados de Linear
+
+Un issue avanza en este orden; los nombres son los del team CAL y sus IDs están en `project-config.yaml §linear.states`.
+
+| Estado | Entra cuando |
+|---|---|
+| Backlog | Se registra la necesidad, aún sin priorizar |
+| Todo | El brief pasó `$pm-validate-issue` y está listo para construir |
+| In Progress | `$wf-build` empieza la implementación en su rama |
+| In review | La implementación está completa y hay PR abierto o diff listo para `$wf-review` |
+| For Test | `$wf-review` dio veredicto aprobable y falta la validación funcional |
+| Done | La revisión está aprobada, el PR está fusionado en `main` y la prueba funcional, si aplica, pasó |
+
+**Ningún issue pasa a Done sin revisión.** Antes de mover un issue a Done debe existir evidencia de una revisión aprobada del mismo cambio: una entrada de `workflow/state/review-history.jsonl` con ese `issue` y un veredicto aprobable (campo `review` aprobable o `verdict: approved`), o una revisión aprobada en el PR de GitHub. Si la revisión encontró bloqueantes, el issue vuelve a In Progress, y solo pasa a Done después de corregirlos y de que una nueva revisión los dé por cerrados. Un issue sin esa evidencia se queda en In review aunque el PR esté fusionado. Lo mismo aplica a los cambios hechos a mano: si alguien mueve un issue a Done sin revisión, `$wf-health` lo reporta y el issue se regresa a In review.
+
+Las issues de prueba (etiqueta `Testing`: UT, SIT y UAT) siguen el mismo flujo; la regla no tiene excepciones por tipo. Lo que cambia es qué se revisa:
+
+| Tipo | La revisión confirma |
+|---|---|
+| UT | Que las pruebas nuevas fallan sin el comportamiento que protegen, que cubren los criterios del issue y que la puerta del módulo (`mvnw -B verify`, `pnpm test`) pasa en CI |
+| SIT | Que la evidencia corresponde a una ejecución real contra el entorno indicado, con fecha, commit y resultado de cada caso, y que los fallos quedaron registrados como issues |
+| UAT | Que el registro de aceptación está completo por rol y caso, que cada caso tiene resultado y que las observaciones de los usuarios tienen seguimiento |
+
+Quien revisa una issue de prueba no es quien la ejecutó. Una prueba que no se ejecutó no cuenta como evidencia, aunque el formato esté lleno.
+
 ## `$wf-build`
 
 1. Identifica el issue o redacta un brief local; valida objetivo, criterios y fuera de alcance.
@@ -18,6 +43,7 @@ Las skills de `.agents/skills` exponen estos procedimientos. Los pasos externos 
 3. Aplica `$skill-code-review` y las especialidades afectadas.
 4. Ejecuta pruebas focalizadas sin alterar la implementación.
 5. Devuelve hallazgos por severidad; luego dudas, veredicto y pruebas no ejecutadas.
+6. Registra el veredicto en `workflow/state/review-history.jsonl` (campo `review`). Esa entrada es la evidencia que exige el paso a Done; sin ella el issue no sale de In review.
 
 ## `$wf-ship`
 
@@ -25,11 +51,11 @@ Las skills de `.agents/skills` exponen estos procedimientos. Los pasos externos 
 2. Repite puertas finales si el diff cambió después de la revisión.
 3. Actualiza documentación durable y evidencia.
 4. Propón commit/PR con resumen, pruebas y riesgos. Commit, push, PR y merge solo si fueron solicitados explícitamente.
-5. Si Linear está habilitado, actualiza el issue únicamente después de verificar workspace, team e identificador.
+5. Si Linear está habilitado, actualiza el issue únicamente después de verificar workspace, team e identificador. No lo muevas a Done sin la evidencia de revisión aprobada que exige la sección «Estados de Linear»; si falta, déjalo en In review y dilo en el reporte.
 
 ## `$wf-health`
 
-Audita sin implementar: estado Git, configuración, referencias rotas del harness, skills inválidas, puertas disponibles, divergencia entre API cliente/controllers, migraciones/RLS, documentación obsoleta y trabajo sin evidencia. Devuelve semáforo, hallazgos y siguientes acciones priorizadas.
+Audita sin implementar: estado Git, configuración, referencias rotas del harness, skills inválidas, puertas disponibles, divergencia entre API cliente/controllers, migraciones/RLS, documentación obsoleta y trabajo sin evidencia, incluidos issues de Linear en Done sin revisión aprobada. Devuelve semáforo, hallazgos y siguientes acciones priorizadas.
 
 ## `$wf-review-ships`
 

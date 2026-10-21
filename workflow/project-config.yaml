@@ -19,6 +19,16 @@ linear:
     key: "CAL"
     id: "ce3d455a-06ad-409b-a3ba-af256f90178e"
   issue_prefix: "CAL"
+  states:
+    backlog: "3582de98-59cf-40cb-b9be-e48e27f753cf"
+    todo: "a9927e71-c5c4-4e75-aae7-4cafec93aed7"
+    in_progress: "9ba3a306-271b-4f16-ac2e-eea86ffff47e"
+    in_review: "dbe66a7a-b622-4845-99c7-c5caaaf3c5cf"
+    for_test: "ca16d6bf-b75c-46c3-80c5-f98dc9ab7df2"
+    done: "f3f25c4c-50a3-4321-b592-4c4db214b7b7"
+    canceled: "28b0a5ed-38ac-4923-a0ff-9482226b00a1"
+    duplicate: "7c8d3afd-4867-4eb4-aefd-977a564a2bce"
+  done_requires_review: true
   note: "Workspace, team, ciclos y prefijo verificados mediante linear_callejon9 el 2026-09-11. Las mutaciones requieren petición explícita."
 
 paths:
