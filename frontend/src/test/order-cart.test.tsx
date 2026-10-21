@@ -54,30 +54,23 @@ afterEach(() => {
 });
 
 describe("carrito de la orden: tope de 99 por línea", () => {
-  it("agregar el mismo producto y subir la cantidad se detiene en 99", async () => {
-    mount("NEW");
-    const add = await screen.findByRole("button", { name: "Agregar flan" });
-    fireEvent.click(add);
-    for (let i = 0; i < 97; i += 1) fireEvent.click(screen.getByRole("button", { name: "Más flan" }));
-    expect(screen.getByText("Cantidad: 98")).toBeTruthy();
-
-    fireEvent.click(screen.getByRole("button", { name: "Más flan" }));
-    expect(screen.getByText("Cantidad: 99")).toBeTruthy();
-    for (let i = 0; i < 5; i += 1) {
-      fireEvent.click(screen.getByRole("button", { name: "Más flan" }));
-      fireEvent.click(add);
-    }
-    expect(screen.getByText("Cantidad: 99")).toBeTruthy();
-  }, 20_000);
-
-  it("el lote enviado al servidor lleva la cantidad tope, no más", async () => {
+  it("subir la cantidad se detiene en 99 y el lote enviado lleva 99, no más", async () => {
     vi.mocked(api.post).mockResolvedValue(orderWith("NEW"));
     mount("NEW");
-    fireEvent.click(await screen.findByRole("button", { name: "Agregar flan" }));
-    for (let i = 0; i < 105; i += 1) fireEvent.click(screen.getByRole("button", { name: "Más flan" }));
+    const add = await screen.findByRole("button", { name: "Agregar flan" });
+    const more = () => fireEvent.click(screen.getByRole("button", { name: "Más flan" }));
+    fireEvent.click(add);
+    for (let i = 0; i < 97; i += 1) more();
+    expect(screen.getByText("Cantidad: 98")).toBeTruthy();
+
+    more();
+    expect(screen.getByText("Cantidad: 99")).toBeTruthy();
+    // Ni el botón «+» de la línea ni volver a agregar el producto pasan del tope.
+    more();
+    fireEvent.click(add);
+    expect(screen.getByText("Cantidad: 99")).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: "Agregar a la orden" }));
-
     await waitFor(() => expect(api.post).toHaveBeenCalledWith("/api/v1/orders/o1/items",
       { items: [{ productId: "p-flan", quantity: 99 }] }));
   }, 20_000);
