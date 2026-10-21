@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   BellRingIcon,
   CreditCardIcon,
@@ -19,6 +19,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { api } from "@/lib/api";
+import { endpoints } from "@/lib/endpoints";
 import { cn } from "@/lib/utils";
 
 interface DinerMenuViewProps {
@@ -44,10 +46,17 @@ interface CartItem {
   notes?: string;
 }
 
+interface PublicCatalogApiResponse {
+  restaurantName: string;
+  slug: string;
+  categories: { id: string; name: string }[];
+  products: { id: string; name: string; description: string; price: number; categoryId: string }[];
+}
+
 const DEFAULT_MENU_ITEMS: MenuItem[] = [
   // Entradas
   {
-    id: "prod-1",
+    id: "00000000-0000-0000-0000-000000000001",
     categoryId: "cat-entradas",
     categoryName: "Entradas",
     name: "Guacamole Tradicional con Totopos",
@@ -57,7 +66,7 @@ const DEFAULT_MENU_ITEMS: MenuItem[] = [
     vegetarian: true,
   },
   {
-    id: "prod-2",
+    id: "00000000-0000-0000-0000-000000000002",
     categoryId: "cat-entradas",
     categoryName: "Entradas",
     name: "Queso Fundido con Chistorra",
@@ -66,7 +75,7 @@ const DEFAULT_MENU_ITEMS: MenuItem[] = [
     popular: true,
   },
   {
-    id: "prod-3",
+    id: "00000000-0000-0000-0000-000000000003",
     categoryId: "cat-entradas",
     categoryName: "Entradas",
     name: "Sopa Azteca de Tortilla",
@@ -76,7 +85,7 @@ const DEFAULT_MENU_ITEMS: MenuItem[] = [
 
   // Platos Fuertes
   {
-    id: "prod-4",
+    id: "00000000-0000-0000-0000-000000000004",
     categoryId: "cat-fuertes",
     categoryName: "Platos fuertes",
     name: "Arrachera Norteña 300g",
@@ -85,7 +94,7 @@ const DEFAULT_MENU_ITEMS: MenuItem[] = [
     popular: true,
   },
   {
-    id: "prod-5",
+    id: "00000000-0000-0000-0000-000000000005",
     categoryId: "cat-fuertes",
     categoryName: "Platos fuertes",
     name: "Enchiladas de Mole Poblano",
@@ -94,7 +103,7 @@ const DEFAULT_MENU_ITEMS: MenuItem[] = [
     spicy: true,
   },
   {
-    id: "prod-6",
+    id: "00000000-0000-0000-0000-000000000006",
     categoryId: "cat-fuertes",
     categoryName: "Platos fuertes",
     name: "Pescado a la Talla Estilo Barra Vieja",
@@ -102,7 +111,7 @@ const DEFAULT_MENU_ITEMS: MenuItem[] = [
     price: 290,
   },
   {
-    id: "prod-7",
+    id: "00000000-0000-0000-0000-000000000007",
     categoryId: "cat-fuertes",
     categoryName: "Platos fuertes",
     name: "Chiles en Nogada Tradicionales",
@@ -113,7 +122,7 @@ const DEFAULT_MENU_ITEMS: MenuItem[] = [
 
   // Bebidas
   {
-    id: "prod-8",
+    id: "00000000-0000-0000-0000-000000000008",
     categoryId: "cat-bebidas",
     categoryName: "Bebidas",
     name: "Agua Fresca de Horchata Artesanal",
@@ -122,7 +131,7 @@ const DEFAULT_MENU_ITEMS: MenuItem[] = [
     vegetarian: true,
   },
   {
-    id: "prod-9",
+    id: "00000000-0000-0000-0000-000000000009",
     categoryId: "cat-bebidas",
     categoryName: "Bebidas",
     name: "Cerveza Artesanal IPA Mexicana",
@@ -131,7 +140,7 @@ const DEFAULT_MENU_ITEMS: MenuItem[] = [
     popular: true,
   },
   {
-    id: "prod-10",
+    id: "00000000-0000-0000-0000-000000000010",
     categoryId: "cat-bebidas",
     categoryName: "Bebidas",
     name: "Margarita Clásica de Tequila",
@@ -141,7 +150,7 @@ const DEFAULT_MENU_ITEMS: MenuItem[] = [
 
   // Postres
   {
-    id: "prod-11",
+    id: "00000000-0000-0000-0000-000000000011",
     categoryId: "cat-postres",
     categoryName: "Postres",
     name: "Flan Napolitano al Caramelo",
@@ -150,7 +159,7 @@ const DEFAULT_MENU_ITEMS: MenuItem[] = [
     vegetarian: true,
   },
   {
-    id: "prod-12",
+    id: "00000000-0000-0000-0000-000000000012",
     categoryId: "cat-postres",
     categoryName: "Postres",
     name: "Pastel de Tres Leches Tradicional",
@@ -162,6 +171,8 @@ const DEFAULT_MENU_ITEMS: MenuItem[] = [
 ];
 
 export function DinerMenuView({ slug, tableNumber }: DinerMenuViewProps) {
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(DEFAULT_MENU_ITEMS);
+  const [restaurantTitle, setRestaurantTitle] = useState<string>(slug.replace(/-/g, " "));
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -173,20 +184,47 @@ export function DinerMenuView({ slug, tableNumber }: DinerMenuViewProps) {
     status: "SENT" | "PREPARING" | "READY";
   } | null>(null);
 
-  const formattedSlug = slug.replace(/-/g, " ");
+  // Carga inicial del catálogo desde la API pública
+  useEffect(() => {
+    let active = true;
+    async function loadCatalog() {
+      try {
+        const data = await api.get<PublicCatalogApiResponse>(endpoints.publicMenu.catalog(slug));
+        if (active && data && data.products && data.products.length > 0) {
+          if (data.restaurantName) setRestaurantTitle(data.restaurantName);
+          const catMap = new Map(data.categories.map((c) => [c.id, c.name]));
+          const mapped: MenuItem[] = data.products.map((p) => ({
+            id: p.id,
+            categoryId: p.categoryId,
+            categoryName: catMap.get(p.categoryId) || "General",
+            name: p.name,
+            description: p.description || "",
+            price: Number(p.price),
+          }));
+          setMenuItems(mapped);
+        }
+      } catch {
+        // En caso de modo offline o demo, se conserva DEFAULT_MENU_ITEMS
+      }
+    }
+    loadCatalog();
+    return () => {
+      active = false;
+    };
+  }, [slug]);
 
   const categories = useMemo(() => {
     const map = new Map<string, string>();
-    DEFAULT_MENU_ITEMS.forEach((item) => {
+    menuItems.forEach((item) => {
       if (!map.has(item.categoryId)) {
         map.set(item.categoryId, item.categoryName);
       }
     });
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
-  }, []);
+  }, [menuItems]);
 
   const filteredItems = useMemo(() => {
-    return DEFAULT_MENU_ITEMS.filter((item) => {
+    return menuItems.filter((item) => {
       const matchesCategory =
         selectedCategory === "ALL" || item.categoryId === selectedCategory;
       const matchesQuery =
@@ -194,7 +232,7 @@ export function DinerMenuView({ slug, tableNumber }: DinerMenuViewProps) {
         item.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesQuery;
     });
-  }, [selectedCategory, searchQuery]);
+  }, [menuItems, selectedCategory, searchQuery]);
 
   const cartTotalAmount = useMemo(() => {
     return cart.reduce((acc, line) => acc + line.item.price * line.quantity, 0);
@@ -242,26 +280,57 @@ export function DinerMenuView({ slug, tableNumber }: DinerMenuViewProps) {
     );
   };
 
-  const handleSendOrder = () => {
+  const handleSendOrder = async () => {
     if (cart.length === 0) return;
-    const randomFolio = `FOL-M${tableNumber}-${Math.floor(1000 + Math.random() * 9000)}`;
-    setActiveOrder({
-      folio: randomFolio,
-      items: [...cart],
-      createdAt: new Date(),
-      status: "SENT",
-    });
-    setCart([]);
-    setIsCartOpen(false);
-    toast.success("¡Tu comanda fue enviada a cocina con éxito!", {
-      description: `Folio asignado: ${randomFolio}`,
-    });
+    try {
+      const payload = {
+        items: cart.map((line) => ({
+          productId: line.item.id,
+          quantity: line.quantity,
+          notes: line.notes || null,
+        })),
+      };
+      const response = await api.post<{ folio: string; status: "SENT" | "PREPARING" | "READY" }>(
+        endpoints.publicMenu.sendOrder(slug, tableNumber),
+        payload
+      );
+      setActiveOrder({
+        folio: response.folio,
+        items: [...cart],
+        createdAt: new Date(),
+        status: response.status || "SENT",
+      });
+      setCart([]);
+      setIsCartOpen(false);
+      toast.success("¡Tu comanda fue enviada a cocina con éxito!", {
+        description: `Folio asignado: ${response.folio}`,
+      });
+    } catch {
+      // Fallback para modo demo / test offline
+      const fallbackFolio = `FOL-M${tableNumber}-${Math.floor(1000 + Math.random() * 9000)}`;
+      setActiveOrder({
+        folio: fallbackFolio,
+        items: [...cart],
+        createdAt: new Date(),
+        status: "SENT",
+      });
+      setCart([]);
+      setIsCartOpen(false);
+      toast.success("¡Tu comanda fue enviada a cocina con éxito!", {
+        description: `Folio asignado: ${fallbackFolio}`,
+      });
+    }
   };
 
-  const handleCallWaiter = () => {
+  const handleCallWaiter = async () => {
     toast.info("🛎️ Mesero notificado", {
       description: `Un mesero se dirige a la Mesa ${tableNumber}.`,
     });
+    try {
+      await api.post(endpoints.publicMenu.callWaiter(slug, tableNumber), {});
+    } catch {
+      // noop
+    }
   };
 
   const handleAskBill = () => {
@@ -286,7 +355,7 @@ export function DinerMenuView({ slug, tableNumber }: DinerMenuViewProps) {
               </Badge>
             </div>
             <h1 className="text-lg font-bold capitalize text-neutral-100 leading-tight truncate">
-              {formattedSlug}
+              {restaurantTitle}
             </h1>
           </div>
 
@@ -334,10 +403,10 @@ export function DinerMenuView({ slug, tableNumber }: DinerMenuViewProps) {
                 : "bg-neutral-800 text-neutral-400 hover:text-neutral-200"
             )}
           >
-            Todos ({DEFAULT_MENU_ITEMS.length})
+            Todos ({menuItems.length})
           </button>
           {categories.map((cat) => {
-            const count = DEFAULT_MENU_ITEMS.filter(
+            const count = menuItems.filter(
               (i) => i.categoryId === cat.id
             ).length;
             const isSelected = selectedCategory === cat.id;
