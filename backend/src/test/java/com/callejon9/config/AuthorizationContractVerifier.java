@@ -54,18 +54,23 @@ final class AuthorizationContractVerifier {
     private static final UUID SAMPLE_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
     private static final Set<String> ROLES = Arrays.stream(UserRole.values())
             .map(Enum::name).collect(java.util.stream.Collectors.toUnmodifiableSet());
-    private static final Map<Route, String> PUBLIC_ROUTES = Map.of(
-            new Route("POST", "/api/v1/auth/login"), "Iniciar sesión sin cookie previa",
-            new Route("POST", "/api/v1/auth/refresh"), "Renovar la sesión con la cookie refresh_token cuando el access token ya venció",
-            new Route("POST", "/api/v1/signup"), "Registrar un restaurante sin sesión previa",
-            new Route("GET", "/actuator/health"), "Comprobar disponibilidad",
+    private static final Map<Route, String> PUBLIC_ROUTES = Map.ofEntries(
+            Map.entry(new Route("POST", "/api/v1/auth/login"), "Iniciar sesión sin cookie previa"),
+            Map.entry(new Route("POST", "/api/v1/auth/refresh"), "Renovar la sesión con la cookie refresh_token cuando el access token ya venció"),
+            Map.entry(new Route("POST", "/api/v1/signup"), "Registrar un restaurante sin sesión previa"),
+            Map.entry(new Route("GET", "/actuator/health"), "Comprobar disponibilidad"),
             // Rutas concretas bajo /actuator/health/**: el mapping descubierto
             // es el comodin, asi que la matriz las declara aparte (CAL-22).
-            new Route("GET", "/actuator/health/liveness"), "Probe de vida del orquestador",
-            new Route("GET", "/actuator/health/readiness"), "Probe de disponibilidad del orquestador",
-            new Route("GET", "/v3/api-docs"), "Consultar OpenAPI JSON",
-            new Route("GET", "/v3/api-docs/swagger-config"), "Configurar Swagger UI",
-            new Route("GET", "/swagger-ui.html"), "Abrir Swagger UI");
+            Map.entry(new Route("GET", "/actuator/health/liveness"), "Probe de vida del orquestador"),
+            Map.entry(new Route("GET", "/actuator/health/readiness"), "Probe de disponibilidad del orquestador"),
+            Map.entry(new Route("GET", "/v3/api-docs"), "Consultar OpenAPI JSON"),
+            Map.entry(new Route("GET", "/v3/api-docs/swagger-config"), "Configurar Swagger UI"),
+            Map.entry(new Route("GET", "/swagger-ui.html"), "Abrir Swagger UI"),
+            // Menu QR del comensal (#72): el slug elige el restaurante y RLS
+            // acota cada consulta a ese tenant.
+            Map.entry(new Route("GET", "/api/v1/public/{slug}/catalog"), "Ver el menú del restaurante desde el QR de la mesa"),
+            Map.entry(new Route("POST", "/api/v1/public/{slug}/tables/{tableNumber}/orders"), "Enviar a cocina el pedido del comensal desde el QR de la mesa"),
+            Map.entry(new Route("POST", "/api/v1/public/{slug}/tables/{tableNumber}/call-waiter"), "Llamar al mesero desde el QR de la mesa"));
     private static final Set<Route> SESSION_ROUTES = Set.of(
             new Route("GET", "/api/v1/auth/me"), new Route("POST", "/api/v1/auth/logout"));
 
