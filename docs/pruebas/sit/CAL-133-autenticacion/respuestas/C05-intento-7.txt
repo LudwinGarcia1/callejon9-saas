@@ -1,0 +1,8 @@
+# C05 · intento 7, solo para capturar el aviso que ve el usuario bloqueado
+# 2026-10-21 13:33:00 America/Mexico_City
+POST /api/v1/auth/login
+
+HTTP 429
+retry-after: 870
+
+{"type":"about:blank","title":"Demasiados intentos","status":429,"detail":"Demasiados intentos fallidos. Intenta de nuevo en 15 minutos.","instance":"/api/v1/auth/login"}
