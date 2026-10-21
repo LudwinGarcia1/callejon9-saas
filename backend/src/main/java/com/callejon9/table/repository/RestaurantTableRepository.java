@@ -18,6 +18,8 @@ public interface RestaurantTableRepository extends JpaRepository<RestaurantTable
 
     boolean existsByNumber(int number);
 
+    Optional<RestaurantTable> findByNumber(int number);
+
     /** Para renumerar una mesa existente sin chocar contra si misma. */
     boolean existsByNumberAndIdNot(int number, UUID id);
 

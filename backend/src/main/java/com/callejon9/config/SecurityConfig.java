@@ -59,6 +59,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/refresh",
                                 "/api/v1/signup").permitAll()
+                        // Rutas publicas de menu digital y auto-pedido por QR
+                        .requestMatchers("/api/v1/public/**").permitAll()
                         // Probes del orquestador: dos rutas exactas y solo GET.
                         // El resto de /actuator/health/** conserva sesion.
                         .requestMatchers(HttpMethod.GET, "/actuator/health/liveness",
