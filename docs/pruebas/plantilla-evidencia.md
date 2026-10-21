@@ -2,7 +2,7 @@
 
 > Copia este archivo a `docs/pruebas/<tipo>/CAL-XXX-<modulo>/README.md` y llénalo **durante** la ejecución, no al final.
 > Borra estas notas en cita y las secciones marcadas con otro tipo de prueba.
-> Las reglas de captura, nombres y revisión están en [`docs/pruebas/README.md`](README.md).
+> Las reglas de captura, nombres y revisión están en [`docs/pruebas/README.md`](../../README.md).
 
 ## 1. Identificación
 
@@ -15,7 +15,8 @@
 | Entorno | Local · CI · Azure *(deja solo uno)* |
 | URL del frontend | <p. ej. `https://restohub.azurewebsites.net`> |
 | URL de la API | <host real del App Service, tal como responde> |
-| Commit probado | `<SHA de 7+ caracteres>` de `main` *(el que está desplegado o el que corrió CI)* |
+| Commit probado | `<SHA de 7+ caracteres>` *(UT: el head del PR que corrió CI; SIT y UAT: el desplegado, tomado del registro de despliegue)* |
+| Registro de despliegue | <enlace al comentario «Despliegue» en Linear con SHA, fecha y hora; solo SIT y UAT> |
 | Ejecución de CI | <enlace al build o al check del PR, si aplica> |
 | Navegador / dispositivo | <p. ej. Chrome 131 en Windows 11; Expo Go 52 en Android 14> |
 | Restaurante de prueba | `pruebas` *(nunca uno con datos reales)* |
@@ -28,7 +29,7 @@
 | Responsable del issue | <nombre> | Asignado en Linear |
 | Ejecutor de la prueba | <nombre> | Quien realizó los pasos y tomó las capturas |
 | Revisor | <nombre> | **Distinto del ejecutor.** Llena la sección 10 |
-| Participante (solo UAT) | P1 — <perfil, p. ej. «encargado de restaurante, externo al equipo»> | Sin nombre ni datos personales en el repositorio; la hoja firmada se guarda fuera |
+| Participante (solo UAT) | P1 — <perfil, p. ej. «encargado de restaurante, externo al equipo»> | Sin nombre ni datos personales en el repositorio; la hoja firmada se adjunta en Linear |
 
 ## 3. Fechas
 
@@ -63,7 +64,7 @@ Todas las horas en `America/Mexico_City`, formato `AAAA-MM-DD HH:MM`.
 
 - [ ] Backend encendido y `/actuator/health` en `UP` *(adjunta la respuesta en `respuestas/`)*
 - [ ] Frontend accesible en la URL indicada
-- [ ] Commit desplegado verificado: `<SHA>`
+- [ ] Commit desplegado: `<SHA>`, igual al del registro de despliegue *(SIT y UAT)*
 - [ ] <otras: plan B1 activo para la sesión, app móvil apuntando a la API, etc.>
 
 **Datos de prueba**
@@ -164,7 +165,7 @@ HTTP/1.1 ...
 | Ayuda brindada | <«Ninguna» o en qué paso y qué se dijo> |
 | Comentarios del participante | <palabras del participante, tomadas al momento> |
 | ¿Acepta el escenario? | Sí · No · Con observaciones |
-| Hoja de aceptación firmada | Guardada fuera del repositorio por <responsable> |
+| Hoja de aceptación firmada | Adjunta en Linear al issue de la UAT y al padre CAL-117; no se sube al repositorio. Responsable: <nombre> |
 
 ## 10. Revisión
 
@@ -173,7 +174,7 @@ HTTP/1.1 ...
 - [ ] Cada criterio del issue tiene al menos un caso con resultado
 - [ ] Las capturas muestran la URL, la fecha y hora del sistema y coinciden con los pasos
 - [ ] Las respuestas HTTP coinciden con el comportamiento real del código (rutas, códigos y mensajes)
-- [ ] El commit probado existe en `main` y corresponde al desplegado
+- [ ] El commit probado existe en el repositorio y corresponde al PR (UT) o al registro de despliegue (SIT y UAT)
 - [ ] Los defectos están registrados en Linear y enlazados
 - [ ] No hay contraseñas, tokens, cookies ni datos personales
 

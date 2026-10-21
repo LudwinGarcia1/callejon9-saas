@@ -31,10 +31,14 @@ docs/pruebas/
 
 ## Flujo
 
-1. **Antes de ejecutar.** Mueve el issue a In Progress, copia la plantilla a su carpeta y llena las secciones 1 a 5: identificación, responsables, fechas planeadas, criterios y preparación. Verifica el commit desplegado y que el entorno esté encendido.
+1. **Antes de ejecutar.** Mueve el issue a In Progress, copia la plantilla a su carpeta y llena las secciones 1 a 5: identificación, responsables, fechas planeadas, criterios y preparación. En SIT y UAT, confirma que el entorno esté encendido y toma el commit desplegado del registro de despliegue (ver abajo); en UT, el commit es el head del PR.
 2. **Durante la ejecución.** Sigue los pasos y llena cada caso **en el momento**: resultado obtenido, hora, captura y respuesta. Si algo falla, el caso queda ❌ Fallido; no se reintenta en silencio hasta que pase.
 3. **Al terminar.** Registra los defectos en Linear, llena el resumen y la declaración de autenticidad, y abre un PR con la carpeta. Mueve el issue a In review y adjunta en Linear el enlace al PR y las capturas principales.
 4. **Revisión.** Otro integrante revisa con la lista de la sección 10. Si aprueba, el issue puede pasar a Done una vez fusionado el PR; si pide cambios, vuelve a In Progress.
+
+## Registro de despliegue
+
+El backend y el frontend se despliegan a mano (`az webapp deploy`) y la aplicación no expone qué commit está corriendo. Por eso quien despliega deja un comentario «Despliegue» en el issue de prueba, o en su padre CAL-117 o CAL-118, con el SHA de `main`, qué se desplegó (API, frontend o ambos), la fecha y la hora. Ese comentario es la fuente del commit probado en SIT y UAT. Si no existe, el commit no es verificable: se registra el despliegue antes de ejecutar, o los casos quedan ⛔ Bloqueados.
 
 ## Capturas de pantalla
 
