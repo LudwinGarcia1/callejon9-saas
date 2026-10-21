@@ -1,0 +1,29 @@
+# C05 · fase A: logins fallidos por el proxy de Next.js con correos inexistentes distintos
+# Inicio 2026-10-21 13:40:53 America/Mexico_City. Antes de esta fase, 6 fallos contaban para la misma IP (C02 y C05 intentos 1-5).
+
+2026-10-21 13:40:54  intento  1 · ip-1@noexiste.test -> HTTP 401
+2026-10-21 13:40:54  intento  2 · ip-2@noexiste.test -> HTTP 401
+2026-10-21 13:40:54  intento  3 · ip-3@noexiste.test -> HTTP 401
+2026-10-21 13:40:55  intento  4 · ip-4@noexiste.test -> HTTP 401
+2026-10-21 13:40:55  intento  5 · ip-5@noexiste.test -> HTTP 401
+2026-10-21 13:40:55  intento  6 · ip-6@noexiste.test -> HTTP 401
+2026-10-21 13:40:55  intento  7 · ip-7@noexiste.test -> HTTP 401
+2026-10-21 13:40:56  intento  8 · ip-8@noexiste.test -> HTTP 401
+2026-10-21 13:40:56  intento  9 · ip-9@noexiste.test -> HTTP 401
+2026-10-21 13:40:56  intento 10 · ip-10@noexiste.test -> HTTP 401
+2026-10-21 13:40:56  intento 11 · ip-11@noexiste.test -> HTTP 401
+2026-10-21 13:40:57  intento 12 · ip-12@noexiste.test -> HTTP 401
+2026-10-21 13:40:57  intento 13 · ip-13@noexiste.test -> HTTP 401
+2026-10-21 13:40:57  intento 14 · ip-14@noexiste.test -> HTTP 401
+2026-10-21 13:40:58  intento 15 · ip-15@noexiste.test -> HTTP 429 (Retry-After 351)
+
+Primer 429 en el intento 15 de esta fase (fallo 21 contando los anteriores).
+
+Cuerpo del 429:
+{
+  "type": "about:blank",
+  "title": "Demasiados intentos",
+  "status": 429,
+  "detail": "Demasiados intentos fallidos. Intenta de nuevo en 6 minutos.",
+  "instance": "/api/v1/auth/login"
+}

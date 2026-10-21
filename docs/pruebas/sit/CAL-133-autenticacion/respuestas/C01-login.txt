@@ -1,0 +1,28 @@
+# C01 · login de mesero@pruebas.com desde la interfaz
+# 2026-10-21 13:31:41 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/auth/login
+Content-Type: application/json
+
+{
+  "slug": "pruebas",
+  "email": "mesero@pruebas.com",
+  "password": "<redactado>"
+}
+
+HTTP 200
+content-encoding: gzip
+content-security-policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+content-type: application/json
+referrer-policy: strict-origin-when-cross-origin
+set-cookie: access_token=<redactado>; Path=/; Max-Age=604799; Expires=Wed, 28 Oct 2026 19:31:41 GMT; Secure; HttpOnly; SameSite=Strict
+set-cookie: refresh_token=<redactado>; Path=/api/v1/auth; Max-Age=604799; Expires=Wed, 28 Oct 2026 19:31:41 GMT; Secure; HttpOnly; SameSite=Strict
+x-content-type-options: nosniff
+x-frame-options: DENY
+x-xss-protection: 0
+
+{
+  "userId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+  "fullName": "Mesero de piso",
+  "role": "WAITER",
+  "twoFactorRequired": false
+}
