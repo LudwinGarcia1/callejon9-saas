@@ -5,4 +5,4 @@ description: Revisa una implementación o diff de Callejón 9 contra main, sus c
 
 # Review
 
-Sigue `workflow/workflow.md`, sección `$wf-review`, y aplica `$skill-code-review`. Mantén la revisión no mutante. Un check verde no sustituye inspección y una prueba no ejecutada nunca cuenta como evidencia.
+Sigue `workflow/workflow.md`, sección `$wf-review`, y aplica `$skill-code-review`. Mantén la revisión no mutante. Un check verde no sustituye inspección y una prueba no ejecutada nunca cuenta como evidencia. Al cerrar, registra el veredicto en `workflow/state/review-history.jsonl`: es la condición para que el issue pase a Done. Las issues de prueba (UT, SIT, UAT) también se revisan, con los criterios de la sección «Estados de Linear».
