@@ -48,6 +48,7 @@ import { CreateUserDialog } from "./create-user-dialog";
 import { EditCategoryDialog } from "./edit-category-dialog";
 import { EditProductDialog } from "./edit-product-dialog";
 import { EditTableDialog } from "./edit-table-dialog";
+import { PrintTablesQrDialog } from "./print-tables-qr-dialog";
 
 /** Considera "de hoy" cualquier orden abierta en el dia local del navegador. */
 function isToday(iso: string): boolean {
@@ -222,7 +223,8 @@ export function AdminView() {
         </TabsList>
 
         <TabsContent value="tables" className="flex flex-col gap-4">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <PrintTablesQrDialog tables={tablesQuery.data ?? []} />
             <CreateTableDialog />
           </div>
           <Card>
