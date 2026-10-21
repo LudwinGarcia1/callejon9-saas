@@ -27,6 +27,8 @@ Las issues de prueba (etiqueta `Testing`: UT, SIT y UAT) siguen el mismo flujo; 
 
 Quien revisa una issue de prueba no es quien la ejecutó. Una prueba que no se ejecutó no cuenta como evidencia, aunque el formato esté lleno.
 
+La evidencia de cada issue de prueba se documenta con `docs/pruebas/plantilla-evidencia.md`, en la carpeta y con las reglas de captura que define `docs/pruebas/README.md`. Una evidencia que no sigue la plantilla no se revisa.
+
 ## `$wf-build`
 
 1. Identifica el issue o redacta un brief local; valida objetivo, criterios y fuera de alcance.

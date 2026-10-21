@@ -5,6 +5,8 @@
     {"path": "docs/api/README.md", "kind": "api-contract", "authority": "medium"},
     {"path": "docs/cal-35-pruebas-frontend.md", "kind": "testing", "authority": "medium"},
     {"path": "docs/cal-88-testcontainers.md", "kind": "testing", "authority": "medium"},
+    {"path": "docs/pruebas/README.md", "kind": "testing", "authority": "high"},
+    {"path": "docs/pruebas/plantilla-evidencia.md", "kind": "testing", "authority": "high"},
     {"path": "docs/cabeceras-seguridad.md", "kind": "security", "authority": "high"},
     {"path": "docs/practica-seguridad-signup.md", "kind": "security", "authority": "medium"},
     {"path": "docs/practica-seguridad-cobro.md", "kind": "security", "authority": "medium"},
