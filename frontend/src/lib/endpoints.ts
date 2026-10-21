@@ -79,4 +79,11 @@ export const endpoints = {
     movements: () => "/api/v1/inventory/movements",
     registerMovement: () => "/api/v1/inventory/movements",
   },
+  publicMenu: {
+    catalog: (slug: string) => `/api/v1/public/${slug}/catalog`,
+    sendOrder: (slug: string, tableNumber: string | number) =>
+      `/api/v1/public/${slug}/tables/${tableNumber}/orders`,
+    callWaiter: (slug: string, tableNumber: string | number) =>
+      `/api/v1/public/${slug}/tables/${tableNumber}/call-waiter`,
+  },
 };
