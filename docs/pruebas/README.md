@@ -49,6 +49,7 @@ Una captura es evidencia solo si demuestra **dónde** y **cuándo** se tomó.
 - Una captura por paso significativo: el estado antes, la acción y el resultado.
 - Para el tiempo real o la red, captura también DevTools → Network (pestaña WS o la petición), con el código de estado visible.
 - **Tapa** contraseñas, valores de cookies, tokens y cualquier dato personal antes de guardarla. Nada más se edita.
+- **Capturas automatizadas** (Playwright u otra herramienta): no muestran la barra de direcciones ni el reloj, así que el script estampa en la parte superior una banda con la URL, la fecha y la hora reales al momento de la captura. El script se versiona dentro de la carpeta de la evidencia (por ejemplo `playwright/`) para que cualquiera pueda volver a ejecutarlo, y lee las credenciales de variables de entorno.
 
 ## Respuestas HTTP
 
