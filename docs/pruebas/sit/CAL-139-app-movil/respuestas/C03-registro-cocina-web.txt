@@ -1,0 +1,4 @@
+# Registro de la sesión de cocina web (https://restohub.azurewebsites.net/kitchen), tomado del protocolo de DevTools
+2026-10-21 00:01:18  tablero listo con 5 orden(es): ORD-261017020620, ORD-261017020621, ORD-261017020622, ORD-261017020623, ORD-261017032537
+2026-10-21 00:01:18  esperando un pedido nuevo hasta 15 min; envíalo ahora desde el teléfono
+2026-10-21 00:02:30  pedido nuevo en el tablero sin recargar: ORD-261021060215

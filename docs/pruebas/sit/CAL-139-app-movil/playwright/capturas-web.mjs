@@ -134,7 +134,7 @@ async function cocina(browser) {
     await capture(page, "C03-P04-cocina-web-sin-pedido");
   }
 
-  await writeFile(join(respuestas, "C03-websocket-cocina.txt"),
+  await writeFile(join(respuestas, "C03-registro-cocina-web.txt"),
     `# Registro de la sesión de cocina web (${BASE_URL}/kitchen), tomado del protocolo de DevTools\n${log.join("\n")}\n`);
   await context.close();
 }

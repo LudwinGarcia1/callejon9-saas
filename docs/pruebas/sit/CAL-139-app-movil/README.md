@@ -130,18 +130,20 @@ En Expo Go, el botón flotante de herramientas de desarrollo tapa el botón «Sa
 | Criterio cubierto | 3 |
 | Prioridad | Alta |
 | Rol que ejecuta | WAITER (teléfono) y KITCHEN (web) |
-| Inicio / fin de ejecución | |
-| Estado | ⏭️ No ejecutado |
+| Inicio / fin de ejecución | 2026-10-21 00:01 / 2026-10-21 00:02 |
+| Estado | ✅ Aprobado |
 | Defecto vinculado | — |
 
-**Precondición.** Una mesa libre; `node capturas-web.mjs cocina` corriendo con la cocina web abierta.
+**Precondición.** Mesa 2 libre (C02); `node capturas-web.mjs cocina` corriendo con la cocina web abierta.
 
 | # | Acción | Dato usado | Resultado esperado | Resultado obtenido | Evidencia |
 |---|---|---|---|---|---|
-| 1 | Abrir la cocina web (script) | `cocina@pruebas.com` | Tablero cargado y WebSocket con handshake `101` | | `capturas/C03-P01-cocina-web-antes.png`, `respuestas/C03-websocket-cocina.txt` |
-| 2 | En el teléfono, abrir la mesa libre y agregar dos productos | <mesa y productos> | La orden muestra los productos y el total | | `capturas/C03-P02-telefono-orden.png` |
-| 3 | Tocar «Enviar a cocina» | — | Confirmación con folio y total | | `capturas/C03-P03-telefono-confirmacion.png` |
-| 4 | Observar la cocina web sin recargar (script) | — | Aparece la tarjeta con el mismo folio | | `capturas/C03-P04-cocina-web-recibe-pedido.png` |
+| 1 | Abrir la cocina web (script) | `cocina@pruebas.com` | Tablero cargado con las órdenes en cocina *(corregido antes de ejecutar: decía «y WebSocket con handshake 101», pero la cocina web consulta cada 5 s y no abre WebSocket)* | 00:01:18 · Tablero con 5 órdenes: ORD-261017020620, …0621, …0622, …0623 y ORD-261017032537. El registro de DevTools no muestra ningún WebSocket | [`C03-P01`](capturas/C03-P01-cocina-web-antes.png), [`C03-registro-cocina-web.txt`](respuestas/C03-registro-cocina-web.txt) |
+| 2 | En el teléfono, abrir la mesa libre y agregar dos productos | Mesa 2, 4 comensales, 3× Agua de horchata, 3× Arrachera 300 g | La orden muestra los productos y el total | 00:02:19 · «6 productos · $1095.00» (3 × $45 + 3 × $320) | [`C03-P02`](capturas/C03-P02-telefono-orden.png) |
+| 3 | Tocar «Enviar a cocina» | — | Confirmación con folio y total | 00:02:21 · «Pedido registrado · El servidor respondió con el folio ORD-261021060215», estado «Nueva (sin enviar a cocina)», abierta 21/10/2026 12:02:15 a.m. 00:02:25 · «Pedido enviado a cocina», estado «Enviada a cocina», total $1095.00 | [`C03-P03a`](capturas/C03-P03a-telefono-pedido-registrado.png), [`C03-P03b`](capturas/C03-P03b-telefono-enviado-a-cocina.png) |
+| 4 | Observar la cocina web sin recargar (script) | — | Aparece la tarjeta con el mismo folio | 00:02:30 · Tarjeta ORD-261021060215, Mesa 2, «recién enviada», «Enviada a cocina», 3× Agua de horchata y 3× Arrachera 300 g en «Pendiente»; el contador «En preparación» pasa de 5 a 6. Llegó a lo más 9 s después del envío, sin recargar | [`C03-P04`](capturas/C03-P04-cocina-web-recibe-pedido.png) |
+
+**Observaciones.** Al volver a «Mesas», la mesa 2 aparece «Ocupada» y el resumen pasa a «12 mesas · 4 libres» (00:02:29, [`C03-OBS`](capturas/C03-OBS-mesa-2-ocupada.png)). La cocina web no usa el WebSocket `/ws` del backend: consulta las órdenes cada 5 s (`KITCHEN_POLL_INTERVAL_MS` en `kitchen-view.tsx`). Para este criterio basta; para CAL-140, cuyo caso 3 verifica la conexión en tiempo real desde el frontend, es un hallazgo relevante.
 
 ### C04 — Sin conexión, la app avisa y permite reintentar
 
@@ -183,7 +185,7 @@ En Expo Go, el botón flotante de herramientas de desarrollo tapa el botón «Sa
 |---|---|---|
 | App móvil ↔ API (HTTPS, cookie nativa) | C01, C02, C04 | Capturas del teléfono y `respuestas/C01-login.txt` |
 | Frontend ↔ API (proxy `/api/v1/*`) | C02 | `respuestas/C02-web-*.json.txt` |
-| API ↔ tiempo real (`/ws`) | C03 | `respuestas/C03-websocket-cocina.txt` |
+| App móvil → API → cocina web | C03 | Folio ORD-261021060215 en el teléfono y en el tablero, [`respuestas/C03-registro-cocina-web.txt`](respuestas/C03-registro-cocina-web.txt). La cocina web consulta cada 5 s; no usa `/ws` |
 
 **Reproducir las capturas web.** El script está en [`playwright/capturas-web.mjs`](playwright/capturas-web.mjs). Necesita Playwright y Google Chrome, y lee la contraseña de `C9_TEST_PASSWORD`.
 
