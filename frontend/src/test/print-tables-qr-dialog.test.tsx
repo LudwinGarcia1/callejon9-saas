@@ -29,9 +29,9 @@ vi.mock("qrcode", () => ({
 
 describe("PrintTablesQrDialog", () => {
   const mockTables: TableResponse[] = [
-    { id: "1", number: 1, capacity: 4, active: true, restaurantId: "r1" },
-    { id: "2", number: 2, capacity: 2, active: true, restaurantId: "r1" },
-    { id: "3", number: 3, capacity: 6, active: false, restaurantId: "r1" },
+    { id: "1", number: 1, capacity: 4, status: "FREE", waiterId: null, active: true },
+    { id: "2", number: 2, capacity: 2, status: "FREE", waiterId: null, active: true },
+    { id: "3", number: 3, capacity: 6, status: "FREE", waiterId: null, active: false },
   ];
 
   beforeEach(() => {
