@@ -1,6 +1,7 @@
 package com.callejon9.catalog.service;
 
 import com.callejon9.catalog.domain.Product;
+import com.callejon9.catalog.repository.CategoryRepository;
 import com.callejon9.catalog.repository.ProductRepository;
 import com.callejon9.shared.error.BusinessRuleException;
 import com.callejon9.shared.error.ResourceNotFoundException;
@@ -14,9 +15,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository) {
         this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     /**
@@ -42,6 +45,9 @@ public class ProductService {
     @Transactional
     public Product createProduct(String name, String description, BigDecimal price,
                                   UUID categoryId) {
+        validatePrice(price);
+        validateCategory(categoryId);
+
         return productRepository.save(Product.builder()
                 .name(name)
                 .description(description)
@@ -63,6 +69,9 @@ public class ProductService {
                                   BigDecimal price, UUID categoryId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("El producto no existe."));
+
+        validatePrice(price);
+        validateCategory(categoryId);
 
         if (productRepository.existsByNameAndIdNot(name, productId)) {
             throw new BusinessRuleException(
@@ -90,5 +99,17 @@ public class ProductService {
 
         product.setActive(active);
         return productRepository.save(product);
+    }
+
+    private void validatePrice(BigDecimal price) {
+        if (price != null && price.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BusinessRuleException("El precio no puede ser negativo.");
+        }
+    }
+
+    private void validateCategory(UUID categoryId) {
+        if (categoryId != null && !categoryRepository.existsById(categoryId)) {
+            throw new BusinessRuleException("La categoria especificada no existe.");
+        }
     }
 }
