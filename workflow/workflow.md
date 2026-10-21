@@ -27,6 +27,8 @@ Las issues de prueba (etiqueta `Testing`: UT, SIT y UAT) siguen el mismo flujo; 
 
 Quien revisa una issue de prueba no es quien la ejecutó. Una prueba que no se ejecutó no cuenta como evidencia, aunque el formato esté lleno.
 
+Nadie revisa su propio cambio. Revisa otro integrante del equipo o una sesión de agente independiente (Claude Code o Codex): una sesión nueva, que no escribió ni corrigió ese cambio, y que revisa con `$wf-review`. Cada revisión se registra en `review-history.jsonl` con `reviewer`, `reviewedHead` y `review`; si entra un commit después, se revisa de nuevo. Reglas y límites en `workflow/decisions/2026-10-20-revision-independiente.md`.
+
 ## `$wf-build`
 
 1. Identifica el issue o redacta un brief local; valida objetivo, criterios y fuera de alcance.
