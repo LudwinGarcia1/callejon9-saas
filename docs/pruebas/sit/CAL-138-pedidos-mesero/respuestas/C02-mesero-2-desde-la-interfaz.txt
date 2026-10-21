@@ -1,0 +1,46 @@
+# C02 · peticiones de la interfaz · mesero2@pruebas.com
+# 2026-10-21 12:50:16 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders/1fc109ec-0e69-4903-892e-7f24d9422e0e/items
+Content-Type: application/json
+
+{"items":[{"productId":"b66b9716-0a91-4d16-91c7-35756dcac0e8","quantity":1}]}
+
+HTTP 403
+Content-Type: application/json
+
+{
+  "timestamp": "2026-10-21T18:50:15.796+00:00",
+  "status": 403,
+  "error": "Forbidden",
+  "path": "/api/v1/orders/1fc109ec-0e69-4903-892e-7f24d9422e0e/items"
+}
+
+# C02 · peticiones de la interfaz · mesero2@pruebas.com
+# 2026-10-21 12:50:17 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders/1fc109ec-0e69-4903-892e-7f24d9422e0e/cancel
+
+
+HTTP 403
+Content-Type: application/json
+
+{
+  "timestamp": "2026-10-21T18:50:16.873+00:00",
+  "status": 403,
+  "error": "Forbidden",
+  "path": "/api/v1/orders/1fc109ec-0e69-4903-892e-7f24d9422e0e/cancel"
+}
+
+# C02 · peticiones de la interfaz · mesero2@pruebas.com
+# 2026-10-21 12:50:17 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders/1fc109ec-0e69-4903-892e-7f24d9422e0e/send-to-kitchen
+
+
+HTTP 403
+Content-Type: application/json
+
+{
+  "timestamp": "2026-10-21T18:50:17.718+00:00",
+  "status": 403,
+  "error": "Forbidden",
+  "path": "/api/v1/orders/1fc109ec-0e69-4903-892e-7f24d9422e0e/send-to-kitchen"
+}
