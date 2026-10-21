@@ -46,6 +46,8 @@ Una captura es evidencia solo si demuestra **dónde** y **cuándo** se tomó.
 
 - Ventana completa del navegador con la **barra de direcciones visible** y el **reloj del sistema** en la barra de tareas. En el teléfono, la barra de estado con la hora.
 - Formato PNG, sin recortes que oculten la URL. Se permite resaltar con un recuadro rojo el elemento relevante.
+- Pasa las capturas del teléfono a la computadora por cable, Drive o como **documento** en WhatsApp. Enviadas como foto, WhatsApp las comprime y pierden legibilidad.
+- En el teléfono, no captures notificaciones, música ni otras apps; solo la app bajo prueba y la barra de estado.
 - Una captura por paso significativo: el estado antes, la acción y el resultado.
 - Para el tiempo real o la red, captura también DevTools → Network (pestaña WS o la petición), con el código de estado visible.
 - **Tapa** contraseñas, valores de cookies, tokens y cualquier dato personal antes de guardarla. Nada más se edita.
