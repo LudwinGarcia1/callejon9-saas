@@ -22,6 +22,20 @@ cp /repo/docs/pruebas/sit/CAL-138-pedidos-mesero/playwright/sit-pedidos.mjs \
    /repo/scripts/pruebas-demo/cerrar-orden-a.mjs \
    /repo/scripts/pruebas-demo/verificar.mjs .
 
+# El frontend corre en el plan F1 de App Service, que se suspende sin tráfico: el
+# primer acceso puede tardar más que el límite de 30 s de page.goto. Se calienta
+# antes de los casos hasta que /login responda 200 en menos de 10 s.
+FRONTEND="${BASE_URL:-https://restohub.azurewebsites.net}"
+for i in $(seq 1 18); do
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$FRONTEND/login?slug=pruebas" || true)
+    if [ "$code" = "200" ]; then
+        echo "[SIT] Frontend listo (intento $i)"
+        break
+    fi
+    echo "[SIT] Calentando el frontend ($i/18, HTTP $code)"
+    sleep 10
+done
+
 status=0
 run() { echo "[SIT] $*"; "$@" || status=1; }
 
