@@ -1,0 +1,35 @@
+# CAL-127 · puertas del frontend (2026-10-22 10:53-10:54 America/Mexico_City)
+# Rama test/cal-127-ut-cocina-tiempo-real sobre main d31fd0c; el código de producción no cambia, solo las pruebas
+# Node 22.19.0 · Vitest 3.2.7 con jsdom
+
+$ pnpm exec vitest run src/test/kitchen-timing.test.ts --reporter=verbose
+ ✓ orderAge — Clasificación del semáforo > devuelve 'normal' si la fecha de envío es nula
+ ✓ orderAge — Clasificación del semáforo > devuelve 'normal' si han transcurrido menos de 15 minutos
+ ✓ orderAge — Clasificación del semáforo > devuelve 'warning' a partir de los 15 minutos
+ ✓ orderAge — Clasificación del semáforo > devuelve 'critical' a partir de los 25 minutos de espera
+ ✓ orderAge — Clasificación del semáforo > borde: un segundo antes de cada umbral conserva el color anterior
+ ✓ orderAge — Clasificación del semáforo > borde: una fecha de envío en el futuro (reloj adelantado) se trata como 'normal'
+ ✓ elapsedLabel — Etiquetas de tiempo transcurrido en lenguaje humano > devuelve string vacío si sentAt es nulo
+ ✓ elapsedLabel — Etiquetas de tiempo transcurrido en lenguaje humano > indica 'recién enviada' cuando el tiempo transcurrido es menor a 1 minuto
+ ✓ elapsedLabel — Etiquetas de tiempo transcurrido en lenguaje humano > indica 'hace X min' para tiempos menores a 60 minutos
+ ✓ elapsedLabel — Etiquetas de tiempo transcurrido en lenguaje humano > indica 'hace X h' o 'hace X h Y min' cuando supera 1 hora
+ ✓ elapsedLabel — Etiquetas de tiempo transcurrido en lenguaje humano > borde: 59 s sigue 'recién enviada' y 60 s ya es 'hace 1 min'
+ ✓ elapsedLabel — Etiquetas de tiempo transcurrido en lenguaje humano > borde: 119 min es 'hace 1 h 59 min' y 120 min es 'hace 2 h'
+ ✓ elapsedLabel — Etiquetas de tiempo transcurrido en lenguaje humano > borde: una fecha de envío en el futuro no muestra minutos negativos
+ Test Files  1 passed (1)
+      Tests  13 passed (13)
+   Start at  10:53:54
+
+$ pnpm test
+ ✓ src/test/kitchen-timing.test.ts (13 tests) 20ms
+ Test Files  22 passed (22)
+      Tests  157 passed (157)
+   Start at  10:53:56
+   Duration  15.90s
+
+$ pnpm lint
+> eslint
+(exit 0)
+
+$ pnpm exec tsc --noEmit
+(exit 0)
