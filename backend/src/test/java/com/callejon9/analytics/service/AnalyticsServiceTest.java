@@ -49,6 +49,7 @@ class AnalyticsServiceTest {
         assertThat(response.pareto()).isEmpty();
         assertThat(response.salesByDay()).hasSize(7); // 7 días generados con cero
         assertThat(response.salesByDay()).allMatch(row -> row.total().compareTo(BigDecimal.ZERO) == 0);
+        assertThat(response.salesByDay()).allMatch(row -> row.count() == 0);
         assertThat(response.paymentMix()).isEmpty();
     }
 }

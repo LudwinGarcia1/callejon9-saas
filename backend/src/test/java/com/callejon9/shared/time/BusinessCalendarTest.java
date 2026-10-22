@@ -1,9 +1,10 @@
 package com.callejon9.shared.time;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.ZoneOffset;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("UT · BusinessCalendar")
 class BusinessCalendarTest {
 
+    private static final ZoneId BUSINESS_ZONE = ZoneId.of("America/Mexico_City");
     private final BusinessCalendar calendar = new BusinessCalendar("America/Mexico_City");
 
     @Test
@@ -28,11 +30,13 @@ class BusinessCalendarTest {
         @Test
         @DisplayName("A las 19:00 horas locales de CDMX (01:00 UTC del día siguiente), el día de negocio sigue siendo el mismo día local")
         void businessDayPreservedAfterSixPmLocal() {
-            // 2026-10-20 a las 19:00 en CDMX equivale a 2026-10-21 01:00 UTC
-            ZonedDateTime dinnerTime = ZonedDateTime.of(2026, 10, 20, 19, 0, 0, 0, ZoneId.of("America/Mexico_City"));
-            LocalDate localDate = dinnerTime.toLocalDate();
+            LocalDate businessDay = LocalDate.of(2026, 10, 20);
+            Instant dinnerTime = businessDay.atTime(19, 0).atZone(BUSINESS_ZONE).toInstant();
+            BusinessCalendar atDinnerTime = new BusinessCalendar(
+                    BUSINESS_ZONE, Clock.fixed(dinnerTime, ZoneOffset.UTC));
 
-            assertThat(localDate).isEqualTo(LocalDate.of(2026, 10, 20));
+            assertThat(dinnerTime.atZone(ZoneOffset.UTC).toLocalDate()).isEqualTo(businessDay.plusDays(1));
+            assertThat(atDinnerTime.today()).isEqualTo(businessDay);
         }
 
         @Test
@@ -43,11 +47,14 @@ class BusinessCalendarTest {
 
             InstantRange range = calendar.toInstantRange(from, to);
 
-            Instant expectedStart = from.atStartOfDay(ZoneId.of("America/Mexico_City")).toInstant();
-            Instant expectedEnd = to.plusDays(1).atStartOfDay(ZoneId.of("America/Mexico_City")).toInstant();
+            Instant expectedStart = from.atStartOfDay(BUSINESS_ZONE).toInstant();
+            Instant expectedEnd = to.plusDays(1).atStartOfDay(BUSINESS_ZONE).toInstant();
+            Instant dinnerTime = from.atTime(19, 0).atZone(BUSINESS_ZONE).toInstant();
 
             assertThat(range.start()).isEqualTo(expectedStart);
             assertThat(range.endExclusive()).isEqualTo(expectedEnd);
+            assertThat(dinnerTime.isAfter(range.start())).isTrue();
+            assertThat(dinnerTime.isBefore(range.endExclusive())).isTrue();
         }
     }
 }
