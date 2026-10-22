@@ -1,0 +1,25 @@
+# CAL-120 · ClientIpTest contra el codigo de main (68e6e42), antes de corregir 2026-10-21 15:55 America/Mexico_City
+# .\mvnw.cmd -B test -Dtest=ClientIpTest
+
+[ERROR] Tests run: 7, Failures: 4, Errors: 0, Skipped: 0, Time elapsed: 0.169 s <<< FAILURE! -- in IP del cliente detras del proxy de Next
+[ERROR] com.callejon9.auth.throttle.ClientIpTest.blankOrPortOnlyLastHopFallsBackToTheConnection -- Time elapsed: 0.124 s <<< FAILURE!
+expected: "10.0.0.5"
+ but was: ":51234"
+[ERROR] com.callejon9.auth.throttle.ClientIpTest.sameClientDifferentPortsShareTheKey -- Time elapsed: 0.003 s <<< FAILURE!
+expected: "203.0.113.7:51999"
+ but was: "203.0.113.7:51234"
+[ERROR] com.callejon9.auth.throttle.ClientIpTest.handlesIpv6WithAndWithoutPort -- Time elapsed: 0.003 s <<< FAILURE!
+expected: "2001:db8::7"
+ but was: "[2001:db8::7]:51234"
+[ERROR] com.callejon9.auth.throttle.ClientIpTest.stripsThePortAddedByAppService -- Time elapsed: 0.002 s <<< FAILURE!
+expected: "203.0.113.7"
+ but was: "203.0.113.7:51234"
+expected: "10.0.0.5"
+ but was: ":51234"
+expected: "2001:db8::7"
+ but was: "[2001:db8::7]:51234"
+expected: "203.0.113.7:51999"
+ but was: "203.0.113.7:51234"
+expected: "203.0.113.7"
+ but was: "203.0.113.7:51234"
+[ERROR] Tests run: 7, Failures: 4, Errors: 0, Skipped: 0
