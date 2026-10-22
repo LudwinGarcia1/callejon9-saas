@@ -36,6 +36,10 @@ pipeline {
         JAVA_HOME = '/usr/lib/jvm/temurin-21-jdk-amd64'
         PATH = "${JAVA_HOME}/bin:${env.PATH}"
         PLAYWRIGHT_IMAGE = 'mcr.microsoft.com/playwright:v1.56.1-noble'
+        // En la primera corrida del job Jenkins aún no registra los parámetros como
+        // variables de entorno; se fijan aquí con el mismo valor por defecto.
+        BASE_URL = "${params.BASE_URL ?: 'https://restohub.azurewebsites.net'}"
+        API_HEALTH_URL = "${params.API_HEALTH_URL ?: 'https://app-callejon9-api-prod-3878c6.azurewebsites.net/actuator/health'}"
     }
 
     stages {
