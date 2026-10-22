@@ -6,48 +6,48 @@
 |---|---|
 | Issue | [CAL-122 — UT · Usuarios y roles](https://linear.app/callejon19/issue/CAL-122/ut-usuarios-y-roles) |
 | Issue padre | [CAL-119 — UT · Cerrar los huecos de pruebas unitarias por módulo](https://linear.app/callejon19/issue/CAL-119/ut-cerrar-los-huecos-de-pruebas-unitarias-por-modulo) |
-| Tipo / módulo | UT · Usuarios y roles |
-| Entorno | Local, backend |
-| Rama | chore/cal-122-user-limits-ut |
-| Base de trabajo | origin/main en d31fd0c |
-| Fecha y hora de ejecución | 2026-10-22 10:25:20, America/Mexico_City |
-| Estado de Linear consultado | Todo; no se modificó el issue |
+| Tipo | UT · backend |
+| Rama | `chore/cal-122-user-limits-ut` |
+| Base | `origin/main` en `d31fd0c` |
+| Ejecución focalizada | 2026-10-22, JDK 25.0.2 |
+| Estado de Linear | No se cambió desde este trabajo |
 
-## 2. Alcance
+## 2. Alcance implementado
 
-Se agregó una UT aislada para PlanLimitService.assertCanAddUser, con repositorios simulados. Cubre un cupo disponible, el límite exacto y un conteo por encima del límite.
+Se completaron las tres reglas del issue:
 
-No se agregó comportamiento de producción ni pruebas SIT. El cambio de rol y la edición de contraseña no tienen operaciones en el servicio/controlador actual, así que esas dos condiciones del issue quedan pendientes de que exista esa funcionalidad. La regla general de contraseña con datos personales ya tiene cobertura unitaria en PasswordPolicyTest; el caso de edición de usuario no existe todavía.
+- Cambio de rol de una cuenta existente; revoca sesiones anteriores y conserva la regla del último administrador activo. El login emite el rol vigente de la cuenta bloqueada en la transacción.
+- Cambio de contraseña validado contra los datos guardados del usuario y del restaurante. Una contraseña aceptada se almacena con el codificador configurado y revoca sesiones previas.
+- Alta de usuarios dentro, en el límite y por encima del cupo del plan.
+
+Se añadieron rutas backend `PATCH /api/v1/users/{id}/role` y `PATCH /api/v1/users/{id}/password`, y se actualizaron la guía API, OpenAPI y la matriz de autorización. No se implementó UI ni se agregaron pruebas SIT.
 
 ## 3. Casos ejecutados
 
-| Caso | Conteo / tope | Esperado | Obtenido |
-|---|---:|---|---|
-| C01 — queda un cupo | 2 / 3 | Permitir la operación | Aprobado |
-| C02 — justo en el tope | 3 / 3 | Rechazar con BusinessRuleException | Aprobado |
-| C03 — por encima del tope | 4 / 3 | Rechazar con BusinessRuleException | Aprobado |
+| Clase | Cobertura | Resultado |
+|---|---|---:|
+| `PlanLimitServiceTest` | Hay cupo, cupo exacto y exceso del límite | 3/3 |
+| `UserServiceTest` | Cambio de rol, último ADMIN, SUPER_ADMIN, operación repetida, contraseña válida, débil, con nombre, con slug y usuario inexistente | 11/11 |
+| `AuthServiceCurrentRoleTest` | El siguiente login usa el rol actual del usuario | 1/1 |
+| `RefreshTokenServiceIssueForLoginTest` | El JWT se genera con los datos del usuario bajo bloqueo | 1/1 |
+| **Total** |  | **16/16 aprobadas** |
 
-Resultado de Surefire: **3 pruebas, 0 fallos, 0 errores, 0 omitidas**; 2.192 s de ejecución de la clase. Maven terminó con BUILD SUCCESS en 17.549 s.
-
-El informe Word está en [CAL-122-evidencia-UT.docx](CAL-122-evidencia-UT.docx). La salida de Surefire se conserva en [respuestas/C01-surefire.txt](respuestas/C01-surefire.txt) y en XML resumido sin propiedades del equipo en [respuestas/C01-surefire-resumen.xml](respuestas/C01-surefire-resumen.xml). La imagen capturas/C01-salida-maven.png es una representación visual del resultado real del log; no es una captura literal del escritorio.
+Surefire reportó **16 pruebas, 0 fallos, 0 errores y 0 omitidas**. Maven terminó con `BUILD SUCCESS` en 24.410 s; el tiempo agregado de ejecución de las clases fue 3.197 s.
 
 ## 4. Cómo ejecutar
 
-Desde la raíz del worktree de esta rama, en PowerShell:
+Desde PowerShell, en un entorno Java 21:
 
     Set-Location backend
-    .\mvnw.cmd -B -Dtest=PlanLimitServiceTest test
+    .\mvnw.cmd -B "-Dmaven.repo.local=$env:USERPROFILE\.m2\repository" "-Dtest=UserServiceTest,AuthServiceCurrentRoleTest,RefreshTokenServiceIssueForLoginTest,PlanLimitServiceTest" test
 
-La prueba usa JUnit y Mockito, no levanta Spring ni PostgreSQL y **no requiere Docker**. En el entorno usado para esta ejecución, Java reportó user.home=C:\; por eso Maven necesitó que se le indicara una caché local existente. En una máquina que ya tenga Maven configurado, el comando anterior es suficiente. Si Maven intenta crear la caché en C:\.m2, usa esta alternativa en PowerShell:
-
-    .\mvnw.cmd -B "-Dmaven.repo.local=$env:USERPROFILE\.m2\repository" -Dtest=PlanLimitServiceTest test
+La ejecución local usó JDK 25.0.2 porque el JDK 26 disponible no es compatible con la versión de Byte Buddy fijada por el proyecto. Para reproducir en ese entorno, ejecuté las mismas clases con `-DforkCount=0` y `JAVA_TOOL_OPTIONS=-Dnet.bytebuddy.experimental=true`. No requiere Docker ni una base PostgreSQL: las clases ejecutadas usan JUnit y dobles de prueba.
 
 ## 5. Evidencia y límites
 
-- Prueba ejecutada: backend/src/test/java/com/callejon9/platform/tenant/service/PlanLimitServiceTest.java.
-- Resultado local: PASS, 3/3.
-- Esta evidencia corresponde a la ejecución local; el estado del CI y la revisión se consulta en el PR.
-- mvnw verify y las pruebas de integración no se ejecutaron; el alcance de esta entrega es la UT focalizada.
-- CAL-122 permanece abierto: el test del límite está cubierto en UT, pero el cambio de rol y la contraseña durante edición siguen sin una operación de producto que pueda probarse.
-
-La ejecución es local y reproducible con el comando indicado. La imagen solo facilita la lectura; el reporte Surefire es la evidencia verificable.
+- TXT por clase: [respuestas/C02-surefire.txt](respuestas/C02-surefire.txt).
+- XML agregado sin propiedades locales: [respuestas/C02-surefire-resumen.xml](respuestas/C02-surefire-resumen.xml).
+- Imagen de lectura del resumen real de Surefire: [capturas/C02-salida-maven.png](capturas/C02-salida-maven.png). Es una representación del reporte, no una captura literal del escritorio.
+- Informe Word: [CAL-122-evidencia-UT.docx](CAL-122-evidencia-UT.docx).
+- `mvnw verify`, CI y SIT no se ejecutaron localmente; la ejecución cubre únicamente las UT indicadas.
+- No se modificó manualmente el estado de CAL-122 en Linear.

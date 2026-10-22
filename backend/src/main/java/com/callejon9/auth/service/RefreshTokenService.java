@@ -90,18 +90,19 @@ public class RefreshTokenService {
             // leer con FOR SHARE por la misma razon que en la rotacion: una
             // desactivacion concurrente no puede dejar viva una sesion que
             // nacio despues de su revocacion.
-            if (userRepository.findByIdForShare(user.getId()).filter(User::isActive).isEmpty()) {
-                throw new BadCredentialsException("Credenciales invalidas.");
-            }
+            User currentUser = userRepository.findByIdForShare(user.getId())
+                    .filter(User::isActive)
+                    .orElseThrow(() -> new BadCredentialsException("Credenciales invalidas."));
 
             Instant now = Instant.now();
             refreshTokenRepository.deleteExpiredForUser(user.getId(), now);
 
             Instant sessionExpiresAt = now.plus(jwtService.refreshTokenTtl());
             UUID sessionId = UUID.randomUUID();
-            String refreshToken = persistNewToken(user, sessionId, sessionExpiresAt).raw();
+            String refreshToken = persistNewToken(currentUser, sessionId, sessionExpiresAt).raw();
 
-            return new IssuedTokens(user, jwtService.generateAccessToken(user, sessionId),
+            return new IssuedTokens(currentUser,
+                    jwtService.generateAccessToken(currentUser, sessionId),
                     refreshToken, sessionExpiresAt);
         });
     }

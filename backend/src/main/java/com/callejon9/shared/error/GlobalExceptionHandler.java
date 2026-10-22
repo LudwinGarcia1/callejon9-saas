@@ -1,5 +1,6 @@
 package com.callejon9.shared.error;
 
+import com.callejon9.auth.password.PasswordPolicyViolationException;
 import com.callejon9.shared.throttle.RateLimitExceededException;
 import com.callejon9.tenancy.NoTenantContextException;
 import java.util.LinkedHashMap;
@@ -48,6 +49,15 @@ public class GlobalExceptionHandler {
                 .forEach(error -> fieldErrors.put(error.getField(), error.getDefaultMessage()));
         problem.setProperty("errors", fieldErrors);
 
+        return problem;
+    }
+
+    @ExceptionHandler(PasswordPolicyViolationException.class)
+    ProblemDetail onPasswordPolicyViolation(PasswordPolicyViolationException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, "La solicitud contiene campos invalidos.");
+        problem.setTitle("Validacion fallida");
+        problem.setProperty("errors", Map.of("password", exception.getMessage()));
         return problem;
     }
 

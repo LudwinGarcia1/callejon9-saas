@@ -151,9 +151,13 @@ No hay `GET` por id para mesas, categorías ni productos: se lee la colección y
 | GET | `/users` | — | `200 UserResponse[]` | ADMIN |
 | POST | `/users` | `CreateUserRequest` | `201 UserResponse` | ADMIN |
 | PATCH | `/users/{id}` | `UpdateUserStatusRequest` (alta o baja) | `200 UserResponse` | ADMIN |
+| PATCH | `/users/{id}/role` | `UpdateUserRoleRequest` | `200 UserResponse` | ADMIN |
+| PATCH | `/users/{id}/password` | `UpdateUserPasswordRequest` | `204` | ADMIN |
 | GET | `/platform/plans` | — | `200 PlanView[]` | SUPER_ADMIN |
 
 Los campos de cada `…Request` y `…Response` están en `components.schemas` de `openapi.json`. En el frontend existente, las rutas están en `frontend/src/lib/endpoints.ts` y los tipos, en `frontend/src/lib`.
+
+Cambiar el rol o la contraseña revoca las sesiones existentes del usuario; debe iniciar sesión de nuevo. El backend valida la contraseña contra el nombre, correo y restaurante guardados. Un restaurante no puede asignar `SUPER_ADMIN` ni quitar el rol al último administrador activo.
 
 ## Para probar
 

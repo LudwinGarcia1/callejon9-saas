@@ -76,7 +76,7 @@ Las etiquetas en español viven en un solo lugar del frontend, `src/lib/types.ts
 | Cocina | `KITCHEN` | Tablero de cocina |
 | Cajero | `CASHIER` | Cobro y tickets |
 
-En el backend `ADMIN` aparece en todos los `@PreAuthorize` del camino operativo, así que puede hacer el recorrido completo. No existe todavía endpoint para crear usuarios con los otros roles.
+En el backend `ADMIN` aparece en todos los `@PreAuthorize` del camino operativo, así que puede hacer el recorrido completo. Puede crear usuarios con roles del restaurante y cambiar el rol de uno existente mediante `PATCH /api/v1/users/{id}/role`. `SUPER_ADMIN` se reserva para la plataforma; cambiar el rol revoca las sesiones del usuario para que el siguiente inicio use el nuevo.
 
 ## Campos y conceptos recurrentes
 

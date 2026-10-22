@@ -1116,6 +1116,81 @@
         }
       }
     },
+    "/api/v1/users/{id}/password": {
+      "patch": {
+        "tags": [
+          "user-controller"
+        ],
+        "operationId": "updatePassword",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        }
+      }
+    },
+    "/api/v1/users/{id}/role": {
+      "patch": {
+        "tags": [
+          "user-controller"
+        ],
+        "operationId": "updateRole",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRoleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/tickets": {
       "get": {
         "tags": [
@@ -2222,6 +2297,36 @@
         },
         "required": [
           "active"
+        ]
+      },
+      "UpdateUserRoleRequest": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "SUPER_ADMIN",
+              "ADMIN",
+              "WAITER",
+              "KITCHEN",
+              "CASHIER"
+            ]
+          }
+        },
+        "required": [
+          "role"
+        ]
+      },
+      "UpdateUserPasswordRequest": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "password"
         ]
       },
       "UpdateTableActiveRequest": {

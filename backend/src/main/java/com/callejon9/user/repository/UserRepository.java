@@ -32,4 +32,18 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Lock(LockModeType.PESSIMISTIC_READ)
     @Query("SELECT u FROM User u WHERE u.id = :id")
     Optional<User> findByIdForShare(@Param("id") UUID id);
+
+    /**
+     * Autenticacion lee y mantiene bloqueada la cuenta hasta emitir su sesion.
+     * Asi, un cambio de rol o contrasena concurrente se ordena antes o despues
+     * del login y no puede emitir una sesion con credenciales o permisos viejos.
+     */
+    @Lock(LockModeType.PESSIMISTIC_READ)
+    @Query("SELECT u FROM User u WHERE u.email = :email")
+    Optional<User> findByEmailForShare(@Param("email") String email);
+
+    /** Bloquea la cuenta antes de cambiar rol o contrasena. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT u FROM User u WHERE u.id = :id")
+    Optional<User> findByIdForUpdate(@Param("id") UUID id);
 }

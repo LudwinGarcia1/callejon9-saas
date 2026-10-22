@@ -1,0 +1,25 @@
+CAL-122 - ejecucion UT focalizada
+Fecha: 2026-10-22
+Resultado agregado: 16 tests, 0 failures, 0 errors, 0 skipped
+
+-------------------------------------------------------------------------------
+Test set: com.callejon9.platform.tenant.service.PlanLimitServiceTest
+-------------------------------------------------------------------------------
+Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.265 s -- in com.callejon9.platform.tenant.service.PlanLimitServiceTest
+
+-------------------------------------------------------------------------------
+Test set: com.callejon9.user.UserServiceTest
+-------------------------------------------------------------------------------
+Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.306 s -- in com.callejon9.user.UserServiceTest
+
+-------------------------------------------------------------------------------
+Test set: com.callejon9.auth.AuthServiceCurrentRoleTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.385 s -- in com.callejon9.auth.AuthServiceCurrentRoleTest
+
+-------------------------------------------------------------------------------
+Test set: com.callejon9.auth.RefreshTokenServiceIssueForLoginTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.241 s -- in com.callejon9.auth.RefreshTokenServiceIssueForLoginTest
+
+BUILD SUCCESS; Maven total time: 24.410 s; JDK 25.0.2; forkCount=0; Byte Buddy experimental.

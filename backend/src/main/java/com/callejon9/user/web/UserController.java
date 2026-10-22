@@ -2,6 +2,8 @@ package com.callejon9.user.web;
 
 import com.callejon9.user.service.UserService;
 import com.callejon9.user.web.dto.CreateUserRequest;
+import com.callejon9.user.web.dto.UpdateUserPasswordRequest;
+import com.callejon9.user.web.dto.UpdateUserRoleRequest;
 import com.callejon9.user.web.dto.UpdateUserStatusRequest;
 import com.callejon9.user.web.dto.UserResponse;
 import jakarta.validation.Valid;
@@ -53,6 +55,21 @@ public class UserController {
             Authentication authentication) {
         var user = userService.setActive(id, request.active(), callerIdOf(authentication));
         return UserResponse.from(user);
+    }
+
+    @PatchMapping("/{id}/role")
+    public UserResponse updateRole(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateUserRoleRequest request) {
+        return UserResponse.from(userService.setRole(id, request.role()));
+    }
+
+    @PatchMapping("/{id}/password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updatePassword(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateUserPasswordRequest request) {
+        userService.changePassword(id, request.password());
     }
 
     private UUID callerIdOf(Authentication authentication) {
