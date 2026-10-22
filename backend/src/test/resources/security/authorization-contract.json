@@ -1369,6 +1369,30 @@
     "reason": "CAL-5: permisos de UserController"
   },
   {
+    "method": "PATCH",
+    "path": "/api/v1/users/{id}/password",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-122: cambio de contrasena del usuario, solo ADMIN"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/users/{id}/role",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-122: cambio de rol del usuario, solo ADMIN"
+  },
+  {
     "method": "GET",
     "path": "/actuator",
     "params": [],

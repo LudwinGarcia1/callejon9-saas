@@ -1,5 +1,7 @@
 package com.callejon9.user.service;
 
+import com.callejon9.auth.password.PasswordPolicy;
+import com.callejon9.auth.password.PasswordPolicyViolationException;
 import com.callejon9.auth.service.RefreshTokenService;
 import com.callejon9.platform.tenant.repository.TenantRepository;
 import com.callejon9.platform.tenant.service.PlanLimitService;
@@ -10,6 +12,7 @@ import com.callejon9.tenancy.TenantContext;
 import com.callejon9.user.domain.User;
 import com.callejon9.user.domain.UserRole;
 import com.callejon9.user.repository.UserRepository;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.domain.Sort;
@@ -73,6 +76,73 @@ public class UserService {
     @Transactional(readOnly = true)
     public List<User> listUsers() {
         return userRepository.findAll(Sort.by("fullName"));
+    }
+
+    /**
+     * Cambia el rol de una cuenta del restaurante y cierra sus sesiones para
+     * que los tokens existentes no conserven los permisos anteriores. El
+     * siguiente login lee el rol persistido y emite una sesion nueva con el.
+     */
+    @Transactional
+    public User setRole(UUID userId, UserRole role) {
+        if (role == null) {
+            throw new InvalidRoleException("Debes indicar un rol valido.");
+        }
+        if (role == UserRole.SUPER_ADMIN) {
+            throw new InvalidRoleException(
+                    "El rol SUPER_ADMIN pertenece a la plataforma y no puede asignarse desde un restaurante.");
+        }
+
+        tenantRepository.findByIdForUpdate(TenantContext.require());
+        User target = userRepository.findByIdForUpdate(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("El usuario no existe."));
+
+        if (target.getRole() == role) {
+            return target;
+        }
+
+        if (target.isActive()
+                && target.getRole() == UserRole.ADMIN
+                && userRepository.countByRoleAndActiveTrue(UserRole.ADMIN) <= 1) {
+            throw new BusinessRuleException(
+                    "No se puede cambiar el rol del ultimo administrador activo del restaurante.");
+        }
+
+        target.setRole(role);
+        User saved = userRepository.save(target);
+        refreshTokenService.revokeAllSessionsOf(saved.getId());
+        return saved;
+    }
+
+    /**
+     * Actualiza la contrasena solo despues de validarla contra los datos ya
+     * guardados de la cuenta y su restaurante. Las sesiones anteriores se
+     * revocan junto con el cambio, en la misma transaccion.
+     */
+    @Transactional
+    public void changePassword(UUID userId, String rawPassword) {
+        User target = userRepository.findByIdForUpdate(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("El usuario no existe."));
+
+        if (rawPassword == null || rawPassword.isBlank()) {
+            throw new PasswordPolicyViolationException("Ingresa una contrasena.");
+        }
+
+        List<String> personalData = new ArrayList<>();
+        personalData.add(target.getEmail());
+        personalData.add(target.getFullName());
+        tenantRepository.findById(TenantContext.require()).ifPresent(tenant -> {
+            personalData.add(tenant.getName());
+            personalData.add(tenant.getSlug());
+        });
+
+        PasswordPolicy.check(rawPassword, personalData).ifPresent(message -> {
+            throw new PasswordPolicyViolationException(message);
+        });
+
+        target.setPasswordHash(passwordEncoder.encode(rawPassword));
+        userRepository.save(target);
+        refreshTokenService.revokeAllSessionsOf(target.getId());
     }
 
     /**

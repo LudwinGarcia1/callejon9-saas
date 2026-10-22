@@ -68,20 +68,25 @@ public class AuthService {
 
         TenantContext.set(tenant.getId());
         try {
-            User user = transactionTemplate.execute(status -> loadUser(email));
-            if (user == null) {
-                throw new BadCredentialsException("Credenciales invalidas.");
-            }
+            return transactionTemplate.execute(status -> {
+                // El bloqueo compartido se conserva hasta emitir la sesion.
+                // Un cambio de rol o contrasena concurrente espera a este
+                // login, o termina antes y hace que se verifiquen los datos
+                // actualizados.
+                User user = userRepository.findByEmailForShare(email)
+                        .orElseThrow(() -> new BadCredentialsException("Credenciales invalidas."));
 
-            if (!user.isActive() || !passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
-                throw new BadCredentialsException("Credenciales invalidas.");
-            }
+                if (!user.isActive()
+                        || !passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
+                    throw new BadCredentialsException("Credenciales invalidas.");
+                }
 
-            // Mismo tenant ya fijado: la fila de refresh_tokens pasa el WITH
-            // CHECK de RLS y queda en el restaurante del usuario.
-            var issued = refreshTokenService.issueForLogin(user);
-            return new AuthenticatedUser(user, issued.accessToken(), issued.refreshToken(),
-                    issued.sessionExpiresAt());
+                // La emision usa la misma transaccion y el tenant firmado ya
+                // fijado, asi que RLS limita la sesion a este restaurante.
+                var issued = refreshTokenService.issueForLogin(user);
+                return new AuthenticatedUser(issued.user(), issued.accessToken(),
+                        issued.refreshToken(), issued.sessionExpiresAt());
+            });
         } finally {
             TenantContext.clear();
         }
@@ -106,11 +111,6 @@ public class AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException("El restaurante no existe."));
 
         return new CurrentUser(user, tenant);
-    }
-
-    private User loadUser(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new BadCredentialsException("Credenciales invalidas."));
     }
 
     private Tenant findActiveTenant(String slug) {

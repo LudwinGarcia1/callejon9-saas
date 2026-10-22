@@ -75,7 +75,7 @@ Para la evidencia visual: levantar backend y frontend según `README.md`, abrir 
 
 ## 5. Mecanismo adicional: política de contraseñas
 
-El login autentica bien, pero hasta ahora el registro aceptaba cualquier contraseña de 8 caracteres o más, incluidas `12345678` y `password`. Una contraseña débil anula las demás defensas, porque basta con adivinarla. La política se aplica a **toda contraseña nueva**: alta de restaurante (`POST /api/v1/signup`) y alta de usuario (`POST /api/v1/users`). El login no la exige, para no revelar la política y para no dejar fuera a las cuentas creadas antes.
+El login autentica bien, pero hasta ahora el registro aceptaba cualquier contraseña de 8 caracteres o más, incluidas `12345678` y `password`. Una contraseña débil anula las demás defensas, porque basta con adivinarla. La política se aplica a **toda contraseña nueva**: alta de restaurante (`POST /api/v1/signup`), alta de usuario (`POST /api/v1/users`) y edición de contraseña (`PATCH /api/v1/users/{id}/password`). En una edición el backend compara el valor recibido con el nombre, correo y restaurante que ya tiene guardados para el usuario. El login no la exige, para no revelar la política y para no dejar fuera a las cuentas creadas antes.
 
 | Regla | Motivo |
 |---|---|

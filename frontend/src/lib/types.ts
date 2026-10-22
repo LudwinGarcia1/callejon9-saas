@@ -214,6 +214,18 @@ export interface UpdateUserStatusRequest {
   active: boolean;
 }
 
+/** PATCH /api/v1/users/{id}/role — SUPER_ADMIN no se asigna desde un restaurante. */
+export type RestaurantUserRole = Exclude<UserRole, "SUPER_ADMIN">;
+
+export interface UpdateUserRoleRequest {
+  role: RestaurantUserRole;
+}
+
+/** PATCH /api/v1/users/{id}/password — el backend valida los datos existentes de la cuenta. */
+export interface UpdateUserPasswordRequest {
+  password: string;
+}
+
 export interface OpenOrderRequest {
   tableId: string;
   guestCount: number;

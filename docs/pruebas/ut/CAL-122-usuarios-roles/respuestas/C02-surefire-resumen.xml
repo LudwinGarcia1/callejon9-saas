@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="16" failures="0" errors="0" skipped="0" time="3.197">
+  <testsuite name="com.callejon9.platform.tenant.service.PlanLimitServiceTest" tests="3" failures="0" errors="0" skipped="0" time="0.265"/>
+  <testsuite name="com.callejon9.user.UserServiceTest" tests="11" failures="0" errors="0" skipped="0" time="0.306"/>
+  <testsuite name="com.callejon9.auth.AuthServiceCurrentRoleTest" tests="1" failures="0" errors="0" skipped="0" time="2.385"/>
+  <testsuite name="com.callejon9.auth.RefreshTokenServiceIssueForLoginTest" tests="1" failures="0" errors="0" skipped="0" time="0.241"/>
+</testsuites>

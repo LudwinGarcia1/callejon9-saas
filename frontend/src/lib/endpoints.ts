@@ -41,6 +41,8 @@ export const endpoints = {
     list: () => "/api/v1/users",
     create: () => "/api/v1/users",
     updateStatus: (userId: string) => `/api/v1/users/${userId}`,
+    updateRole: (userId: string) => `/api/v1/users/${userId}/role`,
+    updatePassword: (userId: string) => `/api/v1/users/${userId}/password`,
   },
   orders: {
     list: () => "/api/v1/orders",

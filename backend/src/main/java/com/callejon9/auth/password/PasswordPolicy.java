@@ -14,9 +14,9 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Politica de contrasenas para toda contrasena nueva (alta de restaurante y
- * alta de usuario). El login no la aplica: exigirla ahi revelaria la politica
- * y dejaria fuera a cuentas creadas antes de que existiera.
+ * Politica de contrasenas para toda contrasena nueva (alta de restaurante,
+ * alta de usuario y edicion de contrasena). El login no la aplica: exigirla
+ * ahi revelaria la politica y dejaria fuera a cuentas creadas antes de que existiera.
  *
  * <p>Las reglas se evaluan en orden y se informa solo la primera que falla.
  * Los mensajes son fijos y nunca repiten la contrasena ni el dato personal
