@@ -1,0 +1,9 @@
+# Observador del canal en tiempo real · wss://app-callejon9-api-prod-3878c6.azurewebsites.net/ws
+# Cuenta: sit-mesero-10211827@pruebas.com (restaurante pruebas) · horas en America/Mexico_City
+# Valores de cookies omitidos; el script nunca los imprime
+2026-10-21 18:39:06  login            POST /api/v1/auth/login -> HTTP 200, rol WAITER, cookies: access_token, refresh_token
+2026-10-21 18:39:07  sesión           GET /api/v1/auth/me -> HTTP 200, SIT-Mesero-Prueba-2 (WAITER), restaurante pruebas
+2026-10-21 18:39:07  ws abriendo      wss://app-callejon9-api-prod-3878c6.azurewebsites.net/ws
+2026-10-21 18:39:07  ws abierto       handshake aceptado (101 Switching Protocols)
+2026-10-21 18:39:07  stomp CONNECTED  versión 1.2
+2026-10-21 18:41:24  ws cerrado       código 1008, motivo «Sesion revocada»
