@@ -1,0 +1,33 @@
+# CAL-127 · primera corrida de mvnw verify con JDK 25 (2026-10-22 10:54-10:59 America/Mexico_City) — descartada
+# Se conserva para explicar por qué la corrida válida es la de JDK 21 (backend-verify.txt).
+# Extracto literal de la salida de Maven; los caracteres que la consola no pudo mostrar («·», acentos) se restauraron.
+$ .\mvnw.cmd -B verify
+
+[INFO] Running UT · KitchenService (Cocina y KDS)
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.120 s -- in UT · KitchenService (Cocina y KDS)
+...
+[ERROR] Tests run: 7, Failures: 0, Errors: 7, Skipped: 0, Time elapsed: 2.567 s <<< FAILURE! -- in UT · InventoryItemService
+[ERROR] com.callejon9.inventory.service.InventoryItemServiceTest.listItemsDefaultExcludesInactive -- Time elapsed: 0.569 s <<< ERROR!
+org.mockito.exceptions.base.MockitoException:
+
+Mockito cannot mock this class: class com.callejon9.inventory.service.InventoryMovementService.
+...
+Java               : 25
+JVM vendor version : 25.0.2+10-69
+...
+Underlying exception : org.mockito.exceptions.base.MockitoException: Could not modify all classes [class com.callejon9.inventory.service.InventoryMovementService, class java.lang.Object]
+...
+[ERROR] Tests run: 7, Failures: 0, Errors: 7, Skipped: 0 <<< FAILURE! -- in UT · InventoryItemService
+[ERROR] Tests run: 6, Failures: 0, Errors: 6, Skipped: 0 <<< FAILURE! -- in UT · InventoryMovementService
+[ERROR] Tests run: 4, Failures: 0, Errors: 4, Skipped: 0 <<< FAILURE! -- in com.callejon9.order.PublicMenuControllerTest
+[ERROR] Tests run: 5, Failures: 0, Errors: 5, Skipped: 0 <<< FAILURE! -- in Validaciones de entrada y estados
+[ERROR] Tests run: 1, Failures: 0, Errors: 1, Skipped: 0 <<< FAILURE! -- in Cálculos de totales, propinas y cambio
+[ERROR] Tests run: 2, Failures: 0, Errors: 2, Skipped: 0 <<< FAILURE! -- in generatePdf — Generación de PDF de Ticket
+[ERROR] Tests run: 2, Failures: 0, Errors: 2, Skipped: 0 <<< FAILURE! -- in getTicketByFolio — Búsqueda por Folio
+[ERROR] Tests run: 2, Failures: 0, Errors: 2, Skipped: 0 <<< FAILURE! -- in getTicket — Búsqueda por ID
+[ERROR] Tests run: 641, Failures: 0, Errors: 29, Skipped: 0
+[INFO] BUILD FAILURE
+
+Nota: los 29 errores son de pruebas que simulan clases concretas (InventoryMovementService y otros servicios).
+Con Java 25, el agente de Byte Buddy 1.15.11 que usa Mockito no puede instrumentar esas clases. KitchenServiceTest
+solo simula interfaces (repositorios y ApplicationEventPublisher) y no se afectó. CI usa Java 21, igual que la corrida válida.
