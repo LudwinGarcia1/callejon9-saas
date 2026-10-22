@@ -280,6 +280,51 @@ class AnalyticsControllerTest {
     }
 
     @Test
+    @DisplayName("la analítica incluye la propina y reparte el total entre pagos divididos")
+    void analyticsIncludesTipAcrossSplitPayments() throws Exception {
+        Product taco = createProduct(tenant, "Taco", "20.00");
+        JsonNode order = openOrder(waiter, table);
+        UUID orderId = UUID.fromString(order.get("id").asText());
+        addItem(waiter, orderId, taco, 1);
+
+        String ticketBody = mockMvc.perform(post("/api/v1/orders/" + orderId + "/checkout")
+                        .cookie(cookieFor(cashier))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tipPercent\":10,\"payments\":["
+                                + "{\"method\":\"CASH\",\"amount\":10.00},"
+                                + "{\"method\":\"CARD\",\"amount\":12.00}]}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        UUID saleId = UUID.fromString(objectMapper.readTree(ticketBody).get("saleId").asText());
+        LocalDate day = LocalDate.now(BUSINESS_ZONE).minusDays(3);
+        backdateSale(tenant, saleId, day);
+
+        String analyticsBody = mockMvc.perform(get("/api/v1/analytics")
+                        .param("from", day.toString())
+                        .param("to", day.toString())
+                        .cookie(cookieFor(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pareto[0].revenue").value(20.00))
+                .andExpect(jsonPath("$.salesByDay[0].count").value(1))
+                .andExpect(jsonPath("$.salesByDay[0].total").value(22.00))
+                .andExpect(jsonPath("$.paymentMix.length()").value(2))
+                .andExpect(jsonPath("$.paymentMix[0].method").value("CARD"))
+                .andExpect(jsonPath("$.paymentMix[0].count").value(1))
+                .andExpect(jsonPath("$.paymentMix[0].total").value(12.00))
+                .andExpect(jsonPath("$.paymentMix[1].method").value("CASH"))
+                .andExpect(jsonPath("$.paymentMix[1].count").value(1))
+                .andExpect(jsonPath("$.paymentMix[1].total").value(10.00))
+                .andReturn().getResponse().getContentAsString();
+
+        JsonNode paymentMix = objectMapper.readTree(analyticsBody).get("paymentMix");
+        BigDecimal appliedPayments = BigDecimal.ZERO;
+        for (JsonNode payment : paymentMix) {
+            appliedPayments = appliedPayments.add(payment.get("total").decimalValue());
+        }
+        org.junit.jupiter.api.Assertions.assertEquals(0, appliedPayments.compareTo(new BigDecimal("22.00")));
+    }
+
+    @Test
     @DisplayName("sin parametros, el rango por defecto son los ultimos 7 dias terminando hoy")
     void defaultRangeIsLastSevenDaysEndingToday() throws Exception {
         Product taco = createProduct(tenant, "Taco", "10.00");

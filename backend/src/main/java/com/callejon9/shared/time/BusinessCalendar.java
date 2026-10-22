@@ -1,8 +1,10 @@
 package com.callejon9.shared.time;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -20,9 +22,16 @@ import org.springframework.stereotype.Component;
 public class BusinessCalendar {
 
     private final ZoneId zone;
+    private final Clock clock;
 
+    @Autowired
     public BusinessCalendar(@Value("${app.timezone}") String businessTimezone) {
-        this.zone = ZoneId.of(businessTimezone);
+        this(ZoneId.of(businessTimezone), Clock.system(ZoneId.of(businessTimezone)));
+    }
+
+    BusinessCalendar(ZoneId zone, Clock clock) {
+        this.zone = zone;
+        this.clock = clock;
     }
 
     public ZoneId zone() {
@@ -30,7 +39,7 @@ public class BusinessCalendar {
     }
 
     public LocalDate today() {
-        return LocalDate.now(zone);
+        return LocalDate.now(clock.withZone(zone));
     }
 
     /**
