@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuite version="3.0.2" name="com.callejon9.platform.tenant.service.PlanLimitServiceTest" time="2.192" tests="3" errors="0" skipped="0" failures="0">
+  <testcase name="allowsCreationBelowThePlanLimit" classname="Límite de usuarios del plan" time="2.11" />
+  <testcase name="rejectsCreationAtThePlanLimit" classname="Límite de usuarios del plan" time="0.018" />
+  <testcase name="rejectsCreationAboveThePlanLimit" classname="Límite de usuarios del plan" time="0.016" />
+</testsuite>
