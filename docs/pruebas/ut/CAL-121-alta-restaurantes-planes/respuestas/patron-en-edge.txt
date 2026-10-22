@@ -1,0 +1,36 @@
+# CAL-121 · el atributo pattern del identificador en un navegador real (2026-10-22 11:24 America/Mexico_City)
+# Microsoft Edge 155 en modo headless, con una página mínima que tiene el pattern actual de signup-view.tsx
+# y el mismo pattern con el guion escapado. Se le asigna cada valor al campo y se lee validity.patternMismatch.
+$ msedge --headless=new --disable-gpu --enable-logging=stderr --v=0 --dump-dom file:///…/slug-pattern.html
+
+## Página usada
+<!doctype html><meta charset="utf-8"><title>pattern</title>
+<input id="actual" pattern="[a-z0-9-]{3,80}">
+<input id="escapado" pattern="[a-z0-9\-]{3,80}">
+<pre id="out"></pre>
+<script>
+const rows = [];
+for (const id of ["actual", "escapado"]) {
+  const el = document.getElementById(id);
+  for (const v of ["la-esquina", "La_Esquina", "ab"]) {
+    el.value = v;
+    rows.push(`${id} pattern="${el.pattern}" valor="${v}" patternMismatch=${el.validity.patternMismatch} valido=${el.checkValidity()}`);
+  }
+}
+document.getElementById("out").textContent = navigator.userAgent + "\n" + rows.join("\n");
+</script>
+
+## Resultado (contenido de <pre id="out"> en el DOM)
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0
+actual pattern="[a-z0-9-]{3,80}" valor="la-esquina" patternMismatch=false valido=true
+actual pattern="[a-z0-9-]{3,80}" valor="La_Esquina" patternMismatch=false valido=true
+actual pattern="[a-z0-9-]{3,80}" valor="ab" patternMismatch=false valido=true
+escapado pattern="[a-z0-9\-]{3,80}" valor="la-esquina" patternMismatch=false valido=true
+escapado pattern="[a-z0-9\-]{3,80}" valor="La_Esquina" patternMismatch=true valido=false
+escapado pattern="[a-z0-9\-]{3,80}" valor="ab" patternMismatch=true valido=false
+
+## Consola del navegador (stderr de Edge, filtrado por «pattern»; se quitó la ruta local del archivo)
+[18236:18084:1022/112437.988:INFO:CONSOLE:11] "Pattern attribute value [a-z0-9-]{3,80} is not a valid regular expression: Uncaught SyntaxError: Failed to read the 'patternMismatch' property from 'ValidityState': Invalid regular expression: /[a-z0-9-]{3,80}/v: Invalid character class", source: slug-pattern.html (11)
+
+Conclusión: con pattern="[a-z0-9-]{3,80}" el navegador descarta el patrón y acepta «La_Esquina» y «ab».
+Con el guion escapado, [a-z0-9\-]{3,80}, los rechaza (patternMismatch=true) y sigue aceptando «la-esquina».

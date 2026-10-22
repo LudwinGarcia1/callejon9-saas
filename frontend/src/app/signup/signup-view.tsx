@@ -116,7 +116,9 @@ export function SignupView() {
               id="slug"
               name="slug"
               required
-              pattern="[a-z0-9-]{3,80}"
+              // El navegador compila pattern con la bandera v: dentro de [...]
+              // el guion va escapado o el patron entero se descarta (CAL-179).
+              pattern="[a-z0-9\-]{3,80}"
               title="Solo minúsculas, números y guiones, entre 3 y 80 caracteres."
               placeholder="mi-restaurante"
               disabled={signupMutation.isPending}
