@@ -43,7 +43,7 @@ La limpieza corre aunque falle algún caso, así que las mesas quedan como estab
 1. **Credencial.** Las SIT leen la contraseña de las cuentas de prueba de la credencial `c9-test-password` (Secret text). Con el plugin de Key Vault se crea así:
 
    ```powershell
-   az keyvault secret set --vault-name <vault> --name c9-test-password --value <contraseña> --tags type=secret-text
+   az keyvault secret set --vault-name <vault> --name c9-test-password --value <contraseña> --tags type=string
    ```
 
    La contraseña no se escribe en el repositorio ni en la configuración del job.
