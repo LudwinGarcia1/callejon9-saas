@@ -17,6 +17,10 @@ import java.net.UnknownHostException;
  * vive Next. Y se toma la ultima entrada, la que agrego el proxy, no la
  * primera, que el cliente pudo inventar. Si la peticion llega de una IP
  * publica, se usa la direccion de la conexion y la cabecera se ignora.
+ *
+ * <p>Azure App Service escribe cada entrada como {@code ip:puerto}. El puerto
+ * cambia en cada conexion, asi que se descarta: con el, un mismo cliente
+ * tendria una llave distinta por peticion y el limite por IP no lo frenaria.
  */
 public final class ClientIp {
 
@@ -33,8 +37,24 @@ public final class ClientIp {
             return remoteAddress;
         }
         String[] hops = forwardedFor.split(",");
-        String last = hops[hops.length - 1].strip();
+        String last = withoutPort(hops[hops.length - 1].strip());
         return last.isEmpty() ? remoteAddress : last;
+    }
+
+    /**
+     * Quita el puerto de una entrada: {@code 1.2.3.4:5678} y {@code [2001:db8::1]:443}.
+     * Una IPv6 sin corchetes tiene varios {@code :} y se deja tal cual.
+     */
+    private static String withoutPort(String hop) {
+        if (hop.startsWith("[")) {
+            int end = hop.indexOf(']');
+            return end > 1 ? hop.substring(1, end) : "";
+        }
+        int colon = hop.indexOf(':');
+        if (colon >= 0 && colon == hop.lastIndexOf(':')) {
+            return hop.substring(0, colon);
+        }
+        return hop;
     }
 
     private static boolean isInternal(String address) {

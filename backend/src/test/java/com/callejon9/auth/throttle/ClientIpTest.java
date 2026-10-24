@@ -38,4 +38,32 @@ class ClientIpTest {
     void ignoresTheHeaderFromAPublicAddress() {
         assertThat(ClientIp.of(request("203.0.113.7", "10.0.0.1"))).isEqualTo("203.0.113.7");
     }
+
+    @Test
+    @DisplayName("quita el puerto que Azure App Service agrega a cada entrada (ip:puerto)")
+    void stripsThePortAddedByAppService() {
+        assertThat(ClientIp.of(request("10.0.0.5", "203.0.113.7:51234"))).isEqualTo("203.0.113.7");
+        assertThat(ClientIp.of(request("10.0.0.5", "1.2.3.4, 203.0.113.7:443"))).isEqualTo("203.0.113.7");
+    }
+
+    @Test
+    @DisplayName("dos conexiones del mismo cliente con puertos distintos dan la misma llave")
+    void sameClientDifferentPortsShareTheKey() {
+        assertThat(ClientIp.of(request("10.0.0.5", "203.0.113.7:51234")))
+                .isEqualTo(ClientIp.of(request("10.0.0.5", "203.0.113.7:51999")));
+    }
+
+    @Test
+    @DisplayName("IPv6: quita el puerto entre corchetes y deja intacta una direccion sin puerto")
+    void handlesIpv6WithAndWithoutPort() {
+        assertThat(ClientIp.of(request("10.0.0.5", "[2001:db8::7]:51234"))).isEqualTo("2001:db8::7");
+        assertThat(ClientIp.of(request("10.0.0.5", "2001:db8::7"))).isEqualTo("2001:db8::7");
+    }
+
+    @Test
+    @DisplayName("una entrada final vacia o solo con puerto cae a la direccion de la conexion")
+    void blankOrPortOnlyLastHopFallsBackToTheConnection() {
+        assertThat(ClientIp.of(request("10.0.0.5", "203.0.113.7, "))).isEqualTo("10.0.0.5");
+        assertThat(ClientIp.of(request("10.0.0.5", ":51234"))).isEqualTo("10.0.0.5");
+    }
 }

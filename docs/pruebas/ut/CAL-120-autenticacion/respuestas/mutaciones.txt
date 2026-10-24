@@ -1,0 +1,38 @@
+# CAL-120 · pruebas con reglas rotas a propósito (2026-10-21 16:02 America/Mexico_City)
+# Cada mutación cambia una línea sobre el commit 4531dc9, se corren las pruebas del modulo y se restaura con git checkout.
+
+
+## M1 · ClientIp conserva el puerto
+Cambio en backend/src/main/java/com/callejon9/auth/throttle/ClientIp.java:
+  antes:   String last = withoutPort(hops[hops.length - 1].strip());
+  despues: String last = hops[hops.length - 1].strip();
+Tests run: 7, Failures: 4, Errors: 0, Skipped: 0, Time elapsed: 0.082 s <<< FAILURE! -- in IP del cliente detras del proxy de Next
+com.callejon9.auth.throttle.ClientIpTest.blankOrPortOnlyLastHopFallsBackToTheConnection -- Time elapsed: 0.059 s <<< FAILURE!
+com.callejon9.auth.throttle.ClientIpTest.sameClientDifferentPortsShareTheKey -- Time elapsed: 0.004 s <<< FAILURE!
+com.callejon9.auth.throttle.ClientIpTest.handlesIpv6WithAndWithoutPort -- Time elapsed: 0.002 s <<< FAILURE!
+com.callejon9.auth.throttle.ClientIpTest.stripsThePortAddedByAppService -- Time elapsed: 0.002 s <<< FAILURE!
+Tests run: 12, Failures: 4, Errors: 0, Skipped: 0
+
+## M2 · se renueva en el instante exacto del vencimiento
+Cambio en backend/src/main/java/com/callejon9/auth/service/RefreshTokenService.java:
+  antes:   if (!token.getExpiresAt().isAfter(now)) {
+  despues: if (token.getExpiresAt().isBefore(now)) {
+Tests run: 5, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 1.652 s <<< FAILURE! -- in UT · vida máxima de la sesión (refresh token)
+com.callejon9.auth.service.RefreshTokenSessionExpiryTest.rejectsExactlyAtTheEnd -- Time elapsed: 0.013 s <<< FAILURE!
+Tests run: 12, Failures: 1, Errors: 0, Skipped: 0
+
+## M3 · renovar alarga la sesión
+Cambio en backend/src/main/java/com/callejon9/auth/service/RefreshTokenService.java:
+  antes:   NewToken next = persistNewToken(user.get(), token.getFamilyId(), token.getExpiresAt());
+  despues: NewToken next = persistNewToken(user.get(), token.getFamilyId(), now.plus(jwtService.refreshTokenTtl()));
+Tests run: 5, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 1.623 s <<< FAILURE! -- in UT · vida máxima de la sesión (refresh token)
+com.callejon9.auth.service.RefreshTokenSessionExpiryTest.renewsJustBeforeTheEndWithoutExtendingTheSession -- Time elapsed: 1.498 s <<< FAILURE!
+Tests run: 12, Failures: 1, Errors: 0, Skipped: 0
+
+## M4 · el formulario conserva la contraseña tras un fallo
+Cambio en frontend/src/app/login/login-view.tsx:
+  antes:   password.value = "";
+  despues: // password.value = "";
+   × formulario de login > tras un 401 borra la contraseña, conserva restaurante y correo y muestra el mensaje único 137ms
+   × formulario de login > tras un 429 también borra la contraseña y muestra el aviso de bloqueo del servidor 28ms
+      Tests  2 failed | 2 passed (4)
