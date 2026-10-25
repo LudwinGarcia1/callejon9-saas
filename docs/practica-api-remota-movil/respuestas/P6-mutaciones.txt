@@ -1,0 +1,15 @@
+# 2026-10-24 11:27:47 America/Mexico_City (UTC-6)
+# Prueba de mutacion: se cambia una linea, se corren productFormRules.test.ts y catalog.test.ts, y se restaura el archivo.
+# Una mutacion 'Detectada' significa que al menos una prueba falla con el codigo alterado.
+Id  Archivo             Mutacion                                   Resultado                   
+--  -------             --------                                   ---------                   
+M01 productFormRules.ts El nombre deja de ser obligatorio          Detectada (2 pruebas fallan)
+M02 productFormRules.ts El precio deja de ser obligatorio          Detectada (2 pruebas fallan)
+M03 productFormRules.ts El nombre de 160 caracteres se rechaza     Detectada (1 pruebas fallan)
+M04 productFormRules.ts La descripcion de 501 caracteres se acepta Detectada (1 pruebas fallan)
+M05 productFormRules.ts Se aceptan 9 enteros en el precio          Detectada (1 pruebas fallan)
+M06 productFormRules.ts Se aceptan precios negativos               Detectada (1 pruebas fallan)
+M07 productFormRules.ts El nombre no se recorta                    Detectada (1 pruebas fallan)
+M08 productFormRules.ts La coma decimal no se convierte            Detectada (1 pruebas fallan)
+M09 productFormRules.ts La descripcion vacia viaja en el POST      Detectada (1 pruebas fallan)
+M10 catalog.ts          El registro no renueva la sesion caducada  Detectada (1 pruebas fallan)

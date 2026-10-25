@@ -1,0 +1,20 @@
+# 2026-10-24 19:00:46 America/Mexico_City (UTC-6)
+# $ POST https://app-callejon9-api-prod-3878c6.azurewebsites.net/api/v1/auth/login  {"slug":"pruebas","email":"mesero@pruebas.com","password":"<redactado>"}
+# Cabeceras tal como las entrega fetch de Node 22.
+
+HTTP/1.1 200 OK
+cache-control: no-cache, no-store, max-age=0, must-revalidate
+content-security-policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+content-type: application/json
+date: Sun, 25 Oct 2026 01:00:47 GMT
+expires: 0
+pragma: no-cache
+referrer-policy: strict-origin-when-cross-origin
+set-cookie: <redactado>
+set-cookie: <redactado>
+transfer-encoding: chunked
+x-content-type-options: nosniff
+x-frame-options: DENY
+x-xss-protection: 0
+
+{"userId":"d2eb44bd-506d-4660-9d9e-2d3f67a13b2d","fullName":"Mesero de piso","role":"WAITER","twoFactorRequired":false}
