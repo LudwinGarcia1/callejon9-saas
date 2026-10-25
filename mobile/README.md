@@ -71,5 +71,6 @@ En ese caso el backend debe arrancar con `AUTH_COOKIE_SECURE=false` (`scripts/ru
 
 ```powershell
 pnpm exec tsc --noEmit
+pnpm test                                  # cliente HTTP, configuración, login y catálogo
 pnpm exec expo export --platform android   # comprueba que el bundle compila
 ```

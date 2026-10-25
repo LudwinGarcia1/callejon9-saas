@@ -14,25 +14,14 @@ import { ApiError } from '../api/client';
 import type { Category, Product } from '../api/types';
 import { Banner, Button } from '../ui/components';
 import { colors, radius } from '../ui/theme';
-
-type Field = 'name' | 'price' | 'description';
-type FieldErrors = Partial<Record<Field, string>>;
-
-const NAME_MAX = 160;
-const DESCRIPTION_MAX = 500;
-/** numeric(10,2) en PostgreSQL: hasta 8 enteros y 2 decimales. */
-const PRICE_PATTERN = /^\d{1,8}([.,]\d{1,2})?$/;
-
-/** Mismas reglas que CreateProductRequest en el backend, para avisar antes de enviar. */
-function validate(name: string, price: string, description: string): FieldErrors {
-  const errors: FieldErrors = {};
-  if (!name) errors.name = 'El nombre es obligatorio.';
-  else if (name.length > NAME_MAX) errors.name = `Máximo ${NAME_MAX} caracteres.`;
-  if (!price) errors.price = 'El precio es obligatorio.';
-  else if (!PRICE_PATTERN.test(price)) errors.price = 'Escribe un precio válido, p. ej. 45 o 45.50.';
-  if (description.length > DESCRIPTION_MAX) errors.description = `Máximo ${DESCRIPTION_MAX} caracteres.`;
-  return errors;
-}
+import {
+  NAME_MAX,
+  toCreateProductRequest,
+  trimValues,
+  validateProduct,
+  type ProductField as Field,
+  type ProductFieldErrors as FieldErrors,
+} from './productFormRules';
 
 interface Props {
   onCancel: () => void;
@@ -66,20 +55,15 @@ export function ProductFormScreen({ onCancel, onCreated }: Props) {
   }, []);
 
   async function handleSubmit() {
-    const values = { name: name.trim(), price: price.trim(), description: description.trim() };
-    const errors = validate(values.name, values.price, values.description);
+    const values = trimValues({ name, price, description });
+    const errors = validateProduct(values);
     setFieldErrors(errors);
     setError(null);
     if (Object.keys(errors).length > 0) return;
 
     setSubmitting(true);
     try {
-      const product = await createProduct({
-        name: values.name,
-        price: Number(values.price.replace(',', '.')),
-        description: values.description || undefined,
-        categoryId: categoryId ?? undefined,
-      });
+      const product = await createProduct(toCreateProductRequest(values, categoryId));
       onCreated(product);
     } catch (cause) {
       if (cause instanceof ApiError) {
