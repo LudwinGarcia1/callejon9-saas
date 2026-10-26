@@ -165,6 +165,27 @@ export function CashSessionsView() {
           >
             {session ? (
               <SessionDetails session={session} />
+            ) : detailQuery.isError ? (
+              <section className="flex flex-col items-start gap-3 rounded-lg border bg-card p-5">
+                <QueryState isLoading={false} error={detailQuery.error}>{null}</QueryState>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={detailQuery.isFetching}
+                  onClick={() => void detailQuery.refetch()}
+                >
+                  {detailQuery.isFetching ? "Cargando…" : "Reintentar"}
+                </Button>
+              </section>
+            ) : detailQuery.isLoading ? (
+              <QueryState isLoading>{null}</QueryState>
+            ) : selectedId ? (
+              <section className="rounded-lg border bg-card p-5">
+                <p className="eyebrow">Turno no disponible</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  No se pudo encontrar el turno seleccionado. Elige otro de la lista.
+                </p>
+              </section>
             ) : (
               <section className="rounded-lg border bg-card p-5">
                 <p className="eyebrow">Selecciona un turno</p>
