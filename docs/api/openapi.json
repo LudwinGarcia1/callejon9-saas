@@ -482,6 +482,97 @@
         }
       }
     },
+    "/api/v1/public/{slug}/tables/{tableNumber}/orders": {
+      "post": {
+        "tags": [
+          "public-menu-controller"
+        ],
+        "operationId": "createTableOrder",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tableNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddOrderItemsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/public/{slug}/tables/{tableNumber}/call-waiter": {
+      "post": {
+        "tags": [
+          "public-menu-controller"
+        ],
+        "operationId": "callWaiter",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tableNumber",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/products": {
       "get": {
         "tags": [
@@ -999,6 +1090,177 @@
         }
       }
     },
+    "/api/v1/cash-sessions": {
+      "get": {
+        "tags": [
+          "cash-session-controller"
+        ],
+        "operationId": "list_7",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CashSessionListResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "cash-session-controller"
+        ],
+        "operationId": "open_1",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OpenCashSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CashSessionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cash-sessions/{id}/movements": {
+      "post": {
+        "tags": [
+          "cash-session-controller"
+        ],
+        "operationId": "addMovement",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CashMovementRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CashSessionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cash-sessions/{id}/force-close": {
+      "post": {
+        "tags": [
+          "cash-session-controller"
+        ],
+        "operationId": "forceClose",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloseCashSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CashSessionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cash-sessions/{id}/close": {
+      "post": {
+        "tags": [
+          "cash-session-controller"
+        ],
+        "operationId": "closeOwn",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloseCashSessionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CashSessionResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/refresh": {
       "post": {
         "tags": [
@@ -1249,12 +1511,42 @@
         }
       }
     },
+    "/api/v1/public/{slug}/catalog": {
+      "get": {
+        "tags": [
+          "public-menu-controller"
+        ],
+        "operationId": "getCatalog",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicCatalogResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/platform/plans": {
       "get": {
         "tags": [
           "plan-controller"
         ],
-        "operationId": "list_7",
+        "operationId": "list_8",
         "responses": {
           "200": {
             "description": "OK",
@@ -1319,6 +1611,37 @@
                   "items": {
                     "$ref": "#/components/schemas/KitchenOrderResponse"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/cash-sessions/{id}": {
+      "get": {
+        "tags": [
+          "cash-session-controller"
+        ],
+        "operationId": "get_2",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CashSessionResponse"
                 }
               }
             }
@@ -1718,47 +2041,42 @@
           }
         }
       },
-      "CreateProductRequest": {
+      "AddOrderItemRequest": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "maxLength": 160,
-            "minLength": 0
-          },
-          "description": {
-            "type": "string"
-          },
-          "price": {
-            "type": "number",
-            "minimum": 0
-          },
-          "categoryId": {
-            "type": "string",
-            "format": "uuid"
-          }
-        },
-        "required": [
-          "price"
-        ]
-      },
-      "OpenOrderRequest": {
-        "type": "object",
-        "properties": {
-          "tableId": {
+          "productId": {
             "type": "string",
             "format": "uuid"
           },
-          "guestCount": {
+          "quantity": {
             "type": "integer",
             "format": "int32",
+            "maximum": 99,
             "minimum": 1
+          },
+          "notes": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 0
           }
         },
         "required": [
-          "guestCount",
-          "tableId"
+          "productId",
+          "quantity"
         ]
+      },
+      "AddOrderItemsRequest": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AddOrderItemRequest"
+            },
+            "maxItems": 50,
+            "minItems": 0
+          }
+        }
       },
       "OrderItemResponse": {
         "type": "object",
@@ -1837,38 +2155,48 @@
           }
         }
       },
-      "AddOrderItemRequest": {
+      "CreateProductRequest": {
         "type": "object",
         "properties": {
-          "productId": {
+          "name": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 0
+          },
+          "description": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number",
+            "minimum": 0
+          },
+          "categoryId": {
             "type": "string",
             "format": "uuid"
-          },
-          "quantity": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 1
-          },
-          "notes": {
-            "type": "string"
           }
         },
         "required": [
-          "productId",
-          "quantity"
+          "price"
         ]
       },
-      "AddOrderItemsRequest": {
+      "OpenOrderRequest": {
         "type": "object",
         "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AddOrderItemRequest"
-            },
-            "minItems": 1
+          "tableId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "guestCount": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 50,
+            "minimum": 1
           }
-        }
+        },
+        "required": [
+          "guestCount",
+          "tableId"
+        ]
       },
       "CheckoutRequest": {
         "type": "object",
@@ -2175,6 +2503,173 @@
           }
         }
       },
+      "OpenCashSessionRequest": {
+        "type": "object",
+        "properties": {
+          "openingFund": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "openingFund"
+        ]
+      },
+      "CashMovementResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "DEPOSIT",
+              "WITHDRAWAL"
+            ]
+          },
+          "amount": {
+            "type": "number"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "recordedBy": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CashPaymentMethodSummary": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "CARD",
+              "TRANSFER",
+              "MIXED",
+              "MERCADOPAGO"
+            ]
+          },
+          "paymentCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "appliedAmount": {
+            "type": "number"
+          },
+          "receivedAmount": {
+            "type": "number"
+          },
+          "changeAmount": {
+            "type": "number"
+          }
+        }
+      },
+      "CashSessionResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "cashierId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "cashierName": {
+            "type": "string"
+          },
+          "openingFund": {
+            "type": "number"
+          },
+          "openedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closedBy": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedCash": {
+            "type": "number"
+          },
+          "countedCash": {
+            "type": "number"
+          },
+          "difference": {
+            "type": "number"
+          },
+          "closureReason": {
+            "type": "string"
+          },
+          "paymentSummary": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CashPaymentMethodSummary"
+            }
+          },
+          "movements": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CashMovementResponse"
+            }
+          }
+        }
+      },
+      "CashMovementRequest": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "DEPOSIT",
+              "WITHDRAWAL"
+            ]
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 0.01
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 250,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "amount",
+          "type"
+        ]
+      },
+      "CloseCashSessionRequest": {
+        "type": "object",
+        "properties": {
+          "countedCash": {
+            "type": "number",
+            "minimum": 0
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 250,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "countedCash"
+        ]
+      },
       "LoginRequest": {
         "type": "object",
         "properties": {
@@ -2357,6 +2852,29 @@
           }
         }
       },
+      "PublicCatalogResponse": {
+        "type": "object",
+        "properties": {
+          "restaurantName": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryResponse"
+            }
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProductResponse"
+            }
+          }
+        }
+      },
       "PlanView": {
         "type": "object",
         "properties": {
@@ -2483,6 +3001,56 @@
           },
           "signedQuantity": {
             "type": "number"
+          }
+        }
+      },
+      "CashSessionListItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "cashierId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "cashierName": {
+            "type": "string"
+          },
+          "openingFund": {
+            "type": "number"
+          },
+          "openedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "closedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expectedCash": {
+            "type": "number"
+          },
+          "countedCash": {
+            "type": "number"
+          },
+          "difference": {
+            "type": "number"
+          },
+          "closureReason": {
+            "type": "string"
+          }
+        }
+      },
+      "CashSessionListResponse": {
+        "type": "object",
+        "properties": {
+          "sessions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CashSessionListItem"
+            }
           }
         }
       },

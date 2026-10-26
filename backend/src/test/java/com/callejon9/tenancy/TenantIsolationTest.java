@@ -36,6 +36,10 @@ class TenantIsolationTest {
 
     private UUID tenantA;
     private UUID tenantB;
+    private UUID cashierA;
+    private UUID cashierB;
+    private UUID sessionA;
+    private UUID sessionB;
 
     @BeforeEach
     void seedTenants() {
@@ -47,8 +51,10 @@ class TenantIsolationTest {
                 "INSERT INTO tenants (name, slug) VALUES ('Tenant B', 'tenant-b') RETURNING id",
                 UUID.class);
 
-        insertUserAs(tenantA, "a@demo.com", "Usuario A");
-        insertUserAs(tenantB, "b@demo.com", "Usuario B");
+        cashierA = insertUserAs(tenantA, "a@demo.com", "Usuario A");
+        cashierB = insertUserAs(tenantB, "b@demo.com", "Usuario B");
+        sessionA = insertCashSessionAs(tenantA, cashierA);
+        sessionB = insertCashSessionAs(tenantB, cashierB);
     }
 
     @AfterEach
@@ -59,14 +65,28 @@ class TenantIsolationTest {
         jdbcTemplate.update("DELETE FROM tenants WHERE slug IN ('tenant-a','tenant-b')");
     }
 
-    private void insertUserAs(UUID tenantId, String email, String name) {
+    private UUID insertUserAs(UUID tenantId, String email, String name) {
         TenantContext.set(tenantId);
-        transactionTemplate.executeWithoutResult(status ->
-                jdbcTemplate.update("""
-                        INSERT INTO users (tenant_id, email, password_hash, full_name, role)
-                        VALUES (?, ?, 'x', ?, 'ADMIN')
-                        """, tenantId, email, name));
-        TenantContext.clear();
+        try {
+            return transactionTemplate.execute(status -> jdbcTemplate.queryForObject("""
+                    INSERT INTO users (tenant_id, email, password_hash, full_name, role)
+                    VALUES (?, ?, 'x', ?, 'ADMIN') RETURNING id
+                    """, UUID.class, tenantId, email, name));
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    private UUID insertCashSessionAs(UUID tenantId, UUID cashierId) {
+        TenantContext.set(tenantId);
+        try {
+            return transactionTemplate.execute(status -> jdbcTemplate.queryForObject("""
+                    INSERT INTO cash_sessions (tenant_id, cashier_id, opening_fund)
+                    VALUES (?, ?, 100) RETURNING id
+                    """, UUID.class, tenantId, cashierId));
+        } finally {
+            TenantContext.clear();
+        }
     }
 
     private List<String> readEmailsAs(UUID tenantId) {
@@ -141,5 +161,46 @@ class TenantIsolationTest {
 
         TenantContext.clear();
         assertThat(readEmailsAs(tenantB)).containsExactly("b@demo.com");
+    }
+
+    @Test
+    @DisplayName("sesiones y movimientos de caja quedan aislados y sus llaves impiden referencias cruzadas")
+    void cashSessionsAndMovementsAreTenantScoped() {
+        assertThat(readCountAs(tenantA, "cash_sessions", sessionA)).isEqualTo(1);
+        assertThat(readCountAs(tenantA, "cash_sessions", sessionB)).isZero();
+        assertThat(readCountAs(tenantB, "cash_sessions", sessionB)).isEqualTo(1);
+        assertThat(readCountAs(tenantB, "cash_sessions", sessionA)).isZero();
+
+        TenantContext.set(tenantA);
+        try {
+            assertThatThrownBy(() -> transactionTemplate.executeWithoutResult(status ->
+                    jdbcTemplate.update("""
+                            INSERT INTO cash_sessions (tenant_id, cashier_id, opening_fund)
+                            VALUES (?, ?, 100)
+                            """, tenantA, cashierB)))
+                    .rootCause().isInstanceOfSatisfying(SQLException.class,
+                            cause -> assertThat(cause.getSQLState()).isEqualTo("23503"));
+
+            assertThatThrownBy(() -> transactionTemplate.executeWithoutResult(status ->
+                    jdbcTemplate.update("""
+                            INSERT INTO cash_movements
+                                (tenant_id, cash_session_id, movement_type, amount, reason, recorded_by)
+                            VALUES (?, ?, 'DEPOSIT', 10, 'Prueba', ?)
+                            """, tenantA, sessionB, cashierA)))
+                    .rootCause().isInstanceOfSatisfying(SQLException.class,
+                            cause -> assertThat(cause.getSQLState()).isEqualTo("23503"));
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
+    private int readCountAs(UUID tenantId, String table, UUID id) {
+        TenantContext.set(tenantId);
+        try {
+            return transactionTemplate.execute(status -> jdbcTemplate.queryForObject(
+                    "SELECT count(*) FROM " + table + " WHERE id = ?", Integer.class, id));
+        } finally {
+            TenantContext.clear();
+        }
     }
 }

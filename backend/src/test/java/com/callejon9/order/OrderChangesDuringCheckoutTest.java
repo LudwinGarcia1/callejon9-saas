@@ -1,6 +1,8 @@
 package com.callejon9.order;
 
 import com.callejon9.auth.service.AuthService;
+import com.callejon9.cashier.service.CashSessionService;
+import com.callejon9.cashier.web.dto.OpenCashSessionRequest;
 import com.callejon9.catalog.service.ProductService;
 import com.callejon9.order.service.NewOrderItem;
 import com.callejon9.order.service.OrderActor;
@@ -67,6 +69,7 @@ class OrderChangesDuringCheckoutTest {
 
     @Autowired private OrderService orderService;
     @Autowired private CheckoutService checkoutService;
+    @Autowired private CashSessionService cashSessionService;
     @Autowired private TableService tableService;
     @Autowired private ProductService productService;
     @Autowired private TenantOnboardingService onboardingService;
@@ -91,6 +94,8 @@ class OrderChangesDuringCheckoutTest {
         userId = authService.authenticate(SLUG, "admin@cobro-concurrente.com", "Secreto123!")
                 .user().getId();
         actor = new OrderActor(userId, true);
+
+        inTenant(() -> cashSessionService.open(userId, new OpenCashSessionRequest(BigDecimal.ZERO)));
 
         inTenant(() -> {
             tableId = tableService.createTable(1, 4).getId();

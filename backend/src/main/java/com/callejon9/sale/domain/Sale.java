@@ -32,6 +32,9 @@ public class Sale extends TenantScopedEntity {
     @Column(name = "cashier_id")
     private UUID cashierId;
 
+    @Column(name = "cash_session_id")
+    private UUID cashSessionId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private SaleStatus status;

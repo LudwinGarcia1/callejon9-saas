@@ -2,8 +2,10 @@ package com.callejon9.ticket;
 
 import com.callejon9.catalog.domain.Product;
 import com.callejon9.catalog.repository.ProductRepository;
+import com.callejon9.cashier.service.CashSessionService;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
+import com.callejon9.support.CashSessionFixtures;
 import com.callejon9.support.TestSessions;
 import com.callejon9.table.domain.RestaurantTable;
 import com.callejon9.table.domain.TableStatus;
@@ -47,6 +49,7 @@ class TicketControllerTest {
     @Autowired private UserRepository userRepository;
     @Autowired private RestaurantTableRepository tableRepository;
     @Autowired private ProductRepository productRepository;
+    @Autowired private CashSessionService cashSessionService;
 
     private Tenant tenant;
     private User waiter;
@@ -71,6 +74,7 @@ class TicketControllerTest {
                     .number(1).capacity(4).status(TableStatus.FREE).active(true).build()));
             product = transactionTemplate.execute(status -> productRepository.save(Product.builder()
                     .name("Taco").description("Taco").price(new BigDecimal("25.00")).active(true).build()));
+            CashSessionFixtures.openFor(cashSessionService, cashier);
         } finally {
             TenantContext.clear();
         }
