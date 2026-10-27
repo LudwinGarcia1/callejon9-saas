@@ -1,0 +1,17 @@
+# 2026-10-21 22:55:38 America/Mexico_City (04:55:38 UTC del 22 de octubre)
+$ curl -i https://restohub.azurewebsites.net/api/v1/platform/plans  (con la cookie de la sesión de plataforma)
+HTTP/1.1 200 OK
+Content-Type: application/json
+Date: Thu, 22 Oct 2026 04:55:39 GMT
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Expires: 0
+Pragma: no-cache
+Transfer-Encoding: chunked
+Vary: Accept-Encoding
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+
+[{"code":"FREE","name":"Gratis","priceMonthly":0.00,"maxUsers":3,"maxTables":5},{"code":"PRO","name":"Profesional","priceMonthly":499.00,"maxUsers":15,"maxTables":30},{"code":"PREMIUM","name":"Premium","priceMonthly":999.00,"maxUsers":60,"maxTables":120}]
