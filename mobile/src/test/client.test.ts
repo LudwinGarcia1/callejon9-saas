@@ -94,6 +94,7 @@ describe('client: traducción de errores HTTP', () => {
     ['404 con detalle', () => problem(404, { detail: 'La mesa 9 no existe.' }), { kind: 'notFound', status: 404, message: 'La mesa 9 no existe.' }],
     ['404 sin cuerpo', () => empty(404), { kind: 'notFound', status: 404, message: 'El recurso solicitado no existe.' }],
     ['409 con detalle', () => problem(409, { detail: 'La mesa 4 no esta disponible (OCCUPIED).' }), { kind: 'conflict', status: 409, message: 'La mesa 4 no esta disponible (OCCUPIED).' }],
+    ['409 sin cuerpo', () => empty(409), { kind: 'conflict', status: 409, message: 'La operación entra en conflicto con el estado actual.' }],
     ['429 con detalle', () => problem(429, { detail: 'Demasiados intentos fallidos. Intenta de nuevo en 15 minutos.' }), { kind: 'throttled', status: 429, message: 'Demasiados intentos fallidos. Intenta de nuevo en 15 minutos.' }],
     ['429 sin cuerpo', () => empty(429), { kind: 'throttled', status: 429, message: 'Demasiados intentos. Espera unos minutos.' }],
     ['500', () => problem(500, { detail: 'NullPointerException' }), { kind: 'server', status: 500, message: 'El servidor tuvo un problema. Intenta más tarde.' }],
