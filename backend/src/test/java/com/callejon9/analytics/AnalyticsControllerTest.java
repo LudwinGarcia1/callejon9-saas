@@ -345,6 +345,15 @@ class AnalyticsControllerTest {
     }
 
     @Test
+    @DisplayName("rechaza fechas de analitica que no cumplen el formato ISO")
+    void rejectsDateWithInvalidFormat() throws Exception {
+        mockMvc.perform(get("/api/v1/analytics")
+                        .param("from", "20/10/2026")
+                        .cookie(cookieFor(admin)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("una venta de otro restaurante nunca aporta a la analitica")
     void crossTenantSaleNeverContributes() throws Exception {
         Product ownProduct = createProduct(tenant, "Taco", "25.00");
