@@ -139,6 +139,33 @@ class SignupRateLimitTest {
     }
 
     @Test
+    @DisplayName("CAL-169: en Azure el cupo es por cliente, no global, por la web y directo")
+    void limitIsPerClientBehindAppService() throws Exception {
+        // El contenedor recibe todo desde el enlace local de App Service; por la
+        // web, la ultima entrada es la IP de salida del frontend (application-test.yml).
+        String appServiceHop = "169.254.129.3";
+        String viaFrontend = "203.0.113.20:51234, 192.0.2.10:40000";
+        for (int i = 0; i < maxPerIp; i++) {
+            mockMvc.perform(signupRequest(appServiceHop, slugPrefix + "-" + i)
+                            .header("X-Forwarded-For", viaFrontend))
+                    .andExpect(status().isCreated());
+        }
+
+        mockMvc.perform(signupRequest(appServiceHop, slugPrefix + "-web")
+                        .header("X-Forwarded-For", viaFrontend))
+                .andExpect(status().isTooManyRequests());
+        mockMvc.perform(signupRequest(appServiceHop, slugPrefix + "-directo")
+                        .header("X-Forwarded-For", "203.0.113.20:50000"))
+                .andExpect(status().isTooManyRequests());
+
+        String otherSlug = slugPrefix + "-otro";
+        mockMvc.perform(signupRequest(appServiceHop, otherSlug)
+                        .header("X-Forwarded-For", "203.0.113.21:51234, 192.0.2.10:40000"))
+                .andExpect(status().isCreated());
+        assertThat(tenantsWithSlug(otherSlug)).isEqualTo(1);
+    }
+
+    @Test
     @DisplayName("estrenar una direccion IPv6 de la misma red /64 no evade el limite")
     void rotatingIpv6AddressesInTheSameNetworkCannotEvade() throws Exception {
         for (int i = 1; i <= maxPerIp; i++) {
