@@ -1,0 +1,19 @@
+# 2026-10-21 22:55:32 America/Mexico_City (04:55:32 UTC del 22 de octubre)
+$ curl -i -X POST https://restohub.azurewebsites.net/api/v1/auth/login -H "Content-Type: application/json" -d {"slug":"platform","email":"super@callejon9.com","password":"<redactado>"}
+HTTP/1.1 200 OK
+Content-Type: application/json
+Date: Thu, 22 Oct 2026 04:55:38 GMT
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Expires: 0
+Pragma: no-cache
+Set-Cookie: access_token=<redactado>; Path=/; Max-Age=604798; Expires=Thu, 29 Oct 2026 04:55:36 GMT; Secure; HttpOnly; SameSite=Strict
+Set-Cookie: refresh_token=<redactado>; Path=/api/v1/auth; Max-Age=604798; Expires=Thu, 29 Oct 2026 04:55:36 GMT; Secure; HttpOnly; SameSite=Strict
+Transfer-Encoding: chunked
+Vary: Accept-Encoding
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+
+{"userId":"5b921fd3-f82c-49e3-bc81-d2167fae4bc1","fullName":"Super Administrador","role":"SUPER_ADMIN","twoFactorRequired":false}
