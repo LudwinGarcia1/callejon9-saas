@@ -1,0 +1,31 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+Date: Mon, 26 Oct 2026 22:52:10 GMT
+Server: Kestrel
+Transfer-Encoding: chunked
+
+{
+  "sales": [
+    {
+      "id": "s1a80123-0001-4000-8000-000000000088",
+      "folio": "TCK-2026-0091",
+      "subtotal": 350.00,
+      "tipAmount": 35.00,
+      "total": 385.00,
+      "createdAt": "2026-10-26T22:34:11Z",
+      "payments": [
+        {
+          "method": "CARD",
+          "amount": 200.00
+        },
+        {
+          "method": "CASH",
+          "amount": 185.00
+        }
+      ]
+    }
+  ],
+  "totalAmount": 385.00,
+  "totalTip": 35.00,
+  "count": 1
+}
