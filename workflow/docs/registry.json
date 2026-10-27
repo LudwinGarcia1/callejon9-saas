@@ -29,6 +29,8 @@
     {"path": "docs/operacion-probes.md", "kind": "operations", "authority": "high"},
     {"path": "docs/cal-14-escaneo-dependencias-codigo.md", "kind": "security", "authority": "high"},
     {"path": "docs/cal-17-imagenes-produccion.md", "kind": "operations", "authority": "high"},
-    {"path": "docs/cal-89-checks-jenkins-pr.md", "kind": "operations", "authority": "high"}
+    {"path": "docs/cal-89-checks-jenkins-pr.md", "kind": "operations", "authority": "high"},
+    {"path": "docs/plan-gestion-bloqueos.md", "kind": "governance", "authority": "high"},
+    {"path": "docs/plan-reasignacion-ausencias.md", "kind": "governance", "authority": "high"}
   ]
 }
