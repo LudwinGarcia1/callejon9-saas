@@ -139,7 +139,7 @@ class SignupRateLimitTest {
     }
 
     @Test
-    @DisplayName("CAL-169: en Azure el cupo es por cliente, no global, por la web y directo")
+    @DisplayName("CAL-169 y CAL-176: en Azure el cupo es por cliente, por la web y directo, y no se evade inventando cabeceras")
     void limitIsPerClientBehindAppService() throws Exception {
         // El contenedor recibe todo desde el enlace local de App Service; por la
         // web, la ultima entrada es la IP de salida del frontend (application-test.yml).
@@ -157,6 +157,12 @@ class SignupRateLimitTest {
         mockMvc.perform(signupRequest(appServiceHop, slugPrefix + "-directo")
                         .header("X-Forwarded-For", "203.0.113.20:50000"))
                 .andExpect(status().isTooManyRequests());
+        // Una entrada inventada a la izquierda no cambia la llave del cliente.
+        String spoofedSlug = slugPrefix + "-spoof";
+        mockMvc.perform(signupRequest(appServiceHop, spoofedSlug)
+                        .header("X-Forwarded-For", "198.51.100.77, " + viaFrontend))
+                .andExpect(status().isTooManyRequests());
+        assertThat(tenantsWithSlug(spoofedSlug)).isZero();
 
         String otherSlug = slugPrefix + "-otro";
         mockMvc.perform(signupRequest(appServiceHop, otherSlug)
