@@ -155,7 +155,7 @@ export function RegisterMovementDialog({ item, onOpenChange }: RegisterMovementD
             </div>
 
             {isAdjustment ? (
-              <div className="flex flex-col gap-1.5">
+              <div key="adjustment-count" className="flex flex-col gap-1.5">
                 <Label htmlFor="countedStock">Conteo fisico</Label>
                 <Input
                   id="countedStock"
@@ -176,7 +176,7 @@ export function RegisterMovementDialog({ item, onOpenChange }: RegisterMovementD
                 <FieldError error={apiError} field="countedStock" />
               </div>
             ) : (
-              <div className="flex flex-col gap-1.5">
+              <div key="movement-quantity" className="flex flex-col gap-1.5">
                 <Label htmlFor="quantity">Cantidad ({item.unit})</Label>
                 <Input
                   id="quantity"
