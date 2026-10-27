@@ -123,11 +123,18 @@ class OrderServiceItemsTest {
     @DisplayName("el precio queda congelado en la línea aunque el producto cambie después")
     void priceIsSnapshottedOnTheLine() {
         Product margarita = product("Margarita", "135.00", true);
+        Product cerveza = product("Cerveza", "50.00", true);
         service.addItems(order.getId(), List.of(new NewOrderItem(margarita.getId(), 1, null)), waiter());
 
+        // El producto cambia de precio en catálogo
         margarita.setPrice(new BigDecimal("150.00"));
 
+        // Se agrega un segundo lote de otro producto
+        OrderWithItems result = service.addItems(order.getId(), List.of(new NewOrderItem(cerveza.getId(), 1, null)), waiter());
+
+        // La primera línea conserva su precio snapshot y el total no se recalcula con el precio nuevo de catálogo
         assertThat(stored.get(0).getUnitPrice()).isEqualByComparingTo("135.00");
+        assertThat(result.order().getTotal()).isEqualByComparingTo("185.00"); // 135 + 50, no 150 + 50
     }
 
     @Test
