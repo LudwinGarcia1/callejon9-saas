@@ -154,7 +154,7 @@ Con `SPRING_PROFILES_ACTIVE=prod`, el backend se niega a arrancar, antes de cone
 - `app.auth.cookie-secure` se forzó a `false`;
 - se activa junto a `demo` o `dev`.
 
-El error enumera cada problema por el nombre de la variable, nunca por su valor. `prod` fija además `server.forward-headers-strategy=none`: la IP del cliente la resuelve `ClientIp` con su propio modelo de confianza, y así Spring Boot no lo cambia por su cuenta al detectar una plataforma en la nube. La validación vive en `ProductionConfigurationGuard`.
+El error enumera cada problema por el nombre de la variable, nunca por su valor. `prod` fija además `server.forward-headers-strategy=none`: la IP del cliente la resuelve `ClientIp` con su propio modelo de confianza (red local y `APP_TRUSTED_PROXIES`), y así Spring Boot no lo cambia por su cuenta al detectar una plataforma en la nube. La validación vive en `ProductionConfigurationGuard`.
 
 ### 3. Frontend
 

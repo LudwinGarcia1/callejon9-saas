@@ -16,3 +16,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+
+app:
+  client-ip:
+    # IP de salida simulada del frontend (rango de documentacion 192.0.2.0/24)
+    # para probar la cadena navegador -> Next -> App Service de la API.
+    trusted-proxies: 192.0.2.10

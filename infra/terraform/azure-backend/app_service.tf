@@ -86,6 +86,11 @@ resource "azurerm_linux_web_app" "api" {
     # the cookies stay secure if the profile is ever changed.
     AUTH_COOKIE_SECURE  = "true"
     APP_ALLOWED_ORIGINS = var.frontend_origin
+
+    # Requests that come through the frontend carry its outbound IP as the last
+    # X-Forwarded-For hop. Without it here, every web user shares one key in the
+    # per-IP login and signup limits (CAL-169).
+    APP_TRUSTED_PROXIES = join(",", var.trusted_proxy_addresses)
   }, local.monitoring_settings, local.swagger_settings)
 
   logs {
