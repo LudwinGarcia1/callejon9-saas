@@ -2,6 +2,9 @@
 const WARNING_AFTER_MINUTES = 15;
 const CRITICAL_AFTER_MINUTES = 25;
 
+/** Intervalo compartido para refrescar el tablero y la orden abierta del mesero. */
+export const KITCHEN_SYNC_INTERVAL_MS = 5_000;
+
 export type OrderAge = "normal" | "warning" | "critical";
 
 /**

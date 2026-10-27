@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { OrderView } from "@/app/(authenticated)/waiter/order/[id]/order-view";
 import { api, ApiError } from "@/lib/api";
+import { KITCHEN_SYNC_INTERVAL_MS } from "@/lib/kitchen-timing";
 import { queryKeys } from "@/lib/query-keys";
 import type { OrderResponse } from "@/lib/types";
 import type { ComponentProps } from "react";
@@ -94,3 +95,16 @@ it("cancels only once, invalidates orders and tables, and returns to waiter", as
   await waitFor(() => expect(effects.push).toHaveBeenCalledWith("/waiter"));
   expect(client.getQueryState(queryKeys.orders.all())?.isInvalidated).toBe(true);
 });
+
+it("shows the kitchen-ready status in the waiter order without reloading", async () => {
+  order = { ...order, status: "SENT", sentToKitchenAt: "2026-10-27T12:00:00Z" };
+  client.setQueryData(queryKeys.orders.detail("o1"), order);
+
+  mount();
+
+  expect(screen.getByText("Enviada a cocina")).toBeTruthy();
+
+  order = { ...order, status: "READY" };
+  expect(await screen.findByText("Lista", {}, { timeout: KITCHEN_SYNC_INTERVAL_MS + 2_000 })).toBeTruthy();
+  expect(api.get).toHaveBeenCalledWith("/api/v1/orders/o1");
+}, KITCHEN_SYNC_INTERVAL_MS + 5_000);

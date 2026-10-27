@@ -11,7 +11,12 @@ import { QueryState } from "@/components/shared/query-state";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { ApiError, api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
-import { elapsedLabel, orderAge, type OrderAge } from "@/lib/kitchen-timing";
+import {
+  elapsedLabel,
+  KITCHEN_SYNC_INTERVAL_MS,
+  orderAge,
+  type OrderAge,
+} from "@/lib/kitchen-timing";
 import { queryKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 import {
@@ -23,7 +28,6 @@ import {
   type UpdateKitchenItemStatusRequest,
 } from "@/lib/types";
 
-const KITCHEN_POLL_INTERVAL_MS = 5_000;
 const CLOCK_TICK_MS = 30_000;
 
 const AGE_CARD_STYLES: Record<OrderAge, string> = {
@@ -68,7 +72,7 @@ export function KitchenView() {
   const ordersQuery = useQuery({
     queryKey: queryKeys.kitchen.orders(),
     queryFn: () => api.get<KitchenOrderResponse[]>(endpoints.kitchen.orders()),
-    refetchInterval: KITCHEN_POLL_INTERVAL_MS,
+    refetchInterval: KITCHEN_SYNC_INTERVAL_MS,
     refetchIntervalInBackground: false,
   });
 

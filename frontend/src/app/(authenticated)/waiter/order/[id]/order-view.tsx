@@ -23,6 +23,7 @@ import { useSession } from "@/hooks/use-session";
 import { ApiError, api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { formatShortTime } from "@/lib/format";
+import { KITCHEN_SYNC_INTERVAL_MS } from "@/lib/kitchen-timing";
 import { queryKeys } from "@/lib/query-keys";
 import type {
   AddOrderItemsRequest,
@@ -63,6 +64,11 @@ export function OrderView({ orderId }: OrderViewProps) {
   const orderQuery = useQuery({
     queryKey: queryKeys.orders.detail(orderId),
     queryFn: () => api.get<OrderResponse>(endpoints.orders.detail(orderId)),
+    refetchInterval: (query) =>
+      query.state.data?.status === "PAID" || query.state.data?.status === "CANCELED"
+        ? false
+        : KITCHEN_SYNC_INTERVAL_MS,
+    refetchIntervalInBackground: false,
   });
   const tablesQuery = useQuery({
     queryKey: queryKeys.tables.all(),
