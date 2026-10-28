@@ -1,5 +1,7 @@
 package com.callejon9.sale.service;
 
+import com.callejon9.cashier.domain.CashSession;
+import com.callejon9.cashier.repository.CashSessionRepository;
 import com.callejon9.order.domain.Order;
 import com.callejon9.order.domain.OrderItem;
 import com.callejon9.order.domain.OrderStatus;
@@ -69,6 +71,9 @@ class CheckoutServiceTest {
     @Mock
     private PaymentRepository paymentRepository;
 
+    @Mock
+    private CashSessionRepository cashSessionRepository;
+
     private CheckoutService checkoutService;
 
     @BeforeEach
@@ -81,7 +86,8 @@ class CheckoutServiceTest {
                 ticketRepository,
                 tableService,
                 folioGenerator,
-                paymentRepository
+                paymentRepository,
+                cashSessionRepository
         );
     }
 
@@ -215,6 +221,13 @@ class CheckoutServiceTest {
             when(folioGenerator.next("TCK-")).thenReturn("TCK-2026-999");
             when(saleRepository.save(any(Sale.class))).thenAnswer(invocation -> invocation.getArgument(0));
             when(ticketRepository.save(any(Ticket.class))).thenAnswer(invocation -> invocation.getArgument(0));
+            CashSession session = CashSession.builder()
+                    .cashierId(CASHIER_ID)
+                    .openingFund(BigDecimal.ZERO)
+                    .openedAt(Instant.now())
+                    .build();
+            session.setId(UUID.randomUUID());
+            when(cashSessionRepository.findOpenForCashierForUpdate(CASHIER_ID)).thenReturn(Optional.of(session));
 
             // 10% de propina sobre $199.98 = $19.998 -> redondeado a $20.00
             // Total = $199.98 + $20.00 = $219.98

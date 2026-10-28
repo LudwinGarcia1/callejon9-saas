@@ -126,6 +126,8 @@ function New-Comanda {
 }
 
 Step 'comandas cobradas (historial de ventas)'
+Step 'apertura de turno para las ventas de demostracion'
+Invoke-Api POST '/api/v1/cash-sessions' @{ openingFund = 1000 } | Out-Null
 $pagos = @('CASH','CARD','TRANSFER')
 foreach ($i in 0..4) {
     $o = New-Comanda $mesas[$i] (Get-Random -Minimum 2 -Maximum 5) (Get-Random -Minimum 2 -Maximum 5)

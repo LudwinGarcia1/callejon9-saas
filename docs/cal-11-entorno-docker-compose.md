@@ -38,7 +38,7 @@ Elimina la necesidad de instalar previamente Java 21, Maven, PostgreSQL o Node.j
 | - Init script: scripts/setup-db.sql                          |
 | - Roles: callejon9_owner, callejon9_app                      |
 | - Bases: callejon9, callejon9_test                           |
-| - RLS forzado en 15 tablas de datos                          |
+| - RLS forzado en 17 tablas de datos                          |
 +--------------------------------------------------------------+
 ```
 

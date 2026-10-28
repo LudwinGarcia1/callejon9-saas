@@ -25,6 +25,20 @@ variable "frontend_origin" {
   }
 }
 
+variable "trusted_proxy_addresses" {
+  description = "Outbound IPs (or CIDR ranges) of the frontend web app. ClientIp skips them in X-Forwarded-For so the per-IP login and signup limits key on the browser, not on the frontend. Becomes APP_TRUSTED_PROXIES. Take them from the outbound_ip_addresses output of azure-frontend."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition = alltrue([
+      for address in var.trusted_proxy_addresses :
+      can(cidrhost(address, 0)) || can(cidrhost("${address}/32", 0)) || can(cidrhost("${address}/128", 0))
+    ])
+    error_message = "Each trusted proxy must be an IP address or a CIDR range."
+  }
+}
+
 variable "app_service_sku" {
   description = "App Service plan SKU. B1 is the cheapest tier with Always On; F1 unloads the app and caps CPU at 60 minutes a day."
   type        = string

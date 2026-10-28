@@ -31,6 +31,12 @@ public class GlobalExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());
     }
 
+    @ExceptionHandler(com.callejon9.cashier.service.CashSessionRequiredException.class)
+    ProblemDetail onCashSessionRequired(
+            com.callejon9.cashier.service.CashSessionRequiredException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());
+    }
+
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     private static final String DATA_INTEGRITY_DETAIL =

@@ -1,5 +1,7 @@
 package com.callejon9.sale.service;
 
+import com.callejon9.cashier.repository.CashSessionRepository;
+import com.callejon9.cashier.service.CashSessionRequiredException;
 import com.callejon9.order.domain.Order;
 import com.callejon9.order.domain.OrderItem;
 import com.callejon9.order.domain.OrderStatus;
@@ -46,6 +48,7 @@ public class CheckoutService {
     private final TableService tableService;
     private final FolioGenerator folioGenerator;
     private final com.callejon9.sale.repository.PaymentRepository paymentRepository;
+    private final CashSessionRepository cashSessionRepository;
 
     public CheckoutService(
             OrderRepository orderRepository,
@@ -54,7 +57,8 @@ public class CheckoutService {
             TicketRepository ticketRepository,
             TableService tableService,
             FolioGenerator folioGenerator,
-            com.callejon9.sale.repository.PaymentRepository paymentRepository) {
+            com.callejon9.sale.repository.PaymentRepository paymentRepository,
+            CashSessionRepository cashSessionRepository) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.saleRepository = saleRepository;
@@ -62,6 +66,7 @@ public class CheckoutService {
         this.tableService = tableService;
         this.folioGenerator = folioGenerator;
         this.paymentRepository = paymentRepository;
+        this.cashSessionRepository = cashSessionRepository;
     }
 
     @Transactional
@@ -101,12 +106,16 @@ public class CheckoutService {
         var payments = PaymentAllocation.allocate(requestedPayments, total);
         PaymentMethod paymentMethod = payments.size() == 1 ? payments.getFirst().method() : PaymentMethod.MIXED;
 
+        var cashSession = cashSessionRepository.findOpenForCashierForUpdate(cashierId)
+                .orElseThrow(CashSessionRequiredException::new);
+
         Instant now = Instant.now();
 
         Sale sale = saleRepository.save(Sale.builder()
                 .orderId(order.getId())
                 .tableId(order.getTableId())
                 .cashierId(cashierId)
+                .cashSessionId(cashSession.getId())
                 .status(SaleStatus.COMPLETED)
                 .paymentMethod(paymentMethod)
                 .subtotal(subtotal)

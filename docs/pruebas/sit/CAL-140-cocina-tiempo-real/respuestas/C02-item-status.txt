@@ -1,0 +1,36 @@
+Request URL
+https://restohub.azurewebsites.net/api/v1/kitchen/items/72f33841-c96a-471d-babe-846cd4eb8042/status
+Request method
+POST
+Status code
+200 OK
+Remote address
+20.118.138.144:443
+Referrer policy
+strict-origin-when-cross-origin
+cache-control
+no-cache, no-store, max-age=0, must-revalidate
+content-encoding
+gzip
+content-security-policy
+default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+content-type
+application/json
+date
+Wed, 21 Oct 2026 22:07:20 GMT
+expires
+0
+pragma
+no-cache
+referrer-policy
+strict-origin-when-cross-origin
+vary
+Accept-Encoding
+x-content-type-options
+nosniff
+x-frame-options
+DENY
+x-xss-protection
+0
+
+{"id":"72f33841-c96a-471d-babe-846cd4eb8042","orderId":"85a12106-1afb-44c7-89ec-a689f667e7f4","productId":"be1ca00c-caa2-42de-ad22-846a86fc935b","productName":"Pescado a la talla","quantity":1,"kitchenStatus":"IN_PREPARATION","notes":null}

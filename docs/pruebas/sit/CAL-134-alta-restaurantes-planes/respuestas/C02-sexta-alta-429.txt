@@ -1,0 +1,38 @@
+Request URL
+https://restohub.azurewebsites.net/api/v1/signup
+Request method
+POST
+Status code
+429 Too Many Requests
+Remote address
+20.118.138.144:443
+Referrer policy
+strict-origin-when-cross-origin
+cache-control
+no-cache, no-store, max-age=0, must-revalidate
+content-encoding
+gzip
+content-security-policy
+default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+content-type
+application/problem+json
+date
+Thu, 22 Oct 2026 02:59:56 GMT
+expires
+0
+pragma
+no-cache
+referrer-policy
+strict-origin-when-cross-origin
+retry-after
+2001
+vary
+Accept-Encoding
+x-content-type-options
+nosniff
+x-frame-options
+DENY
+x-xss-protection
+0
+
+{"type":"about:blank","title":"Demasiadas altas","status":429,"detail":"Se alcanzo el limite de registros de restaurantes desde esta conexion. Intenta de nuevo en 34 minutos.","instance":"/api/v1/signup"}

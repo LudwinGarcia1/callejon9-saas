@@ -154,5 +154,9 @@ class RefreshTokenSessionExpiryTest {
         RefreshTokenService.IssuedTokens rotated = serviceAt(LOGIN.plus(Duration.ofDays(3))).rotate("refresh-presentado");
 
         assertThat(rotated.sessionExpiresAt()).isEqualTo(SESSION_END).isNotEqualTo(LOGIN.plus(Duration.ofDays(10)));
+        ArgumentCaptor<RefreshToken> saved = ArgumentCaptor.forClass(RefreshToken.class);
+        verify(refreshTokenRepository).save(saved.capture());
+        assertThat(saved.getValue().getExpiresAt()).isEqualTo(SESSION_END);
+        verify(jwtService).generateRefreshToken(eq(user.getId()), eq(tenantId), anyString(), eq(SESSION_END));
     }
 }

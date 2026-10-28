@@ -1,0 +1,37 @@
+# 2026-10-21 13:52:03 America/Mexico_City (19:52:03 UTC)
+$ curl -i -X POST https://restohub.azurewebsites.net/api/v1/auth/login -H "Content-Type: application/json" -d {"slug":"pruebas","email":"sonda-bloqueo@pruebas.com","password":"<cualquiera>"}
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/problem+json
+Date: Wed, 21 Oct 2026 19:52:04 GMT
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Expires: 0
+Pragma: no-cache
+Retry-After: 230
+Transfer-Encoding: chunked
+Vary: Accept-Encoding
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+
+{"type":"about:blank","title":"Demasiados intentos","status":429,"detail":"Demasiados intentos fallidos. Intenta de nuevo en 4 minutos.","instance":"/api/v1/auth/login"}
+
+# 2026-10-21 13:52:04 America/Mexico_City (19:52:04 UTC)
+$ curl -i -X POST https://app-callejon9-api-prod-3878c6.azurewebsites.net/api/v1/auth/login -H "Content-Type: application/json" -d {"slug":"pruebas","email":"sonda-bloqueo@pruebas.com","password":"<cualquiera>"}
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/problem+json
+Date: Wed, 21 Oct 2026 19:52:04 GMT
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Expires: 0
+Pragma: no-cache
+Retry-After: 230
+Transfer-Encoding: chunked
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+
+{"type":"about:blank","title":"Demasiados intentos","status":429,"detail":"Demasiados intentos fallidos. Intenta de nuevo en 4 minutos.","instance":"/api/v1/auth/login"}
+
