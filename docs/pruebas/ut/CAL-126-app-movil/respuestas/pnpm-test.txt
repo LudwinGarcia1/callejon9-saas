@@ -1,0 +1,47 @@
+# CAL-126 · pnpm test en mobile/ (2026-10-21 15:50 America/Mexico_City, commit base d31fd0c)
+$ pnpm exec vitest run --reporter=verbose
+
+ RUN  v5.0.5 mobile
+
+ ✓ src/test/config.test.ts > config: URL del servidor > acepta una URL https y le quita las diagonales finales 7ms
+ ✓ src/test/config.test.ts > config: URL del servidor > informa el error cuando falta EXPO_PUBLIC_API_URL 1ms
+ ✓ src/test/config.test.ts > config: URL del servidor > rechaza http:// en desarrollo si no se habilitó explícitamente 1ms
+ ✓ src/test/config.test.ts > config: URL del servidor > acepta http:// solo en desarrollo y con EXPO_PUBLIC_ALLOW_INSECURE_HTTP=true 1ms
+ ✓ src/test/config.test.ts > config: URL del servidor > rechaza http:// en una build de producción aunque se pida permitirlo 1ms
+ ✓ src/test/config.test.ts > config: URL del servidor > rechaza cualquier otro esquema 1ms
+ ✓ src/test/config.test.ts > config: URL del servidor > fija el tiempo límite de cada petición en 15 segundos 0ms
+ ✓ src/test/auth.test.ts > auth: login > devuelve el usuario cuando las credenciales son válidas 34ms
+ ✓ src/test/auth.test.ts > auth: login > ante un 401 muestra un único mensaje, sin decir qué dato falló ni intentar renovar 2ms
+ ✓ src/test/auth.test.ts > auth: login > un 429 conserva el mensaje del servidor sobre el bloqueo 1ms
+ ✓ src/test/auth.test.ts > auth: logout > llama a /auth/logout sin intentar renovar la sesión 1ms
+ ✓ src/test/auth.test.ts > auth: logout > termina sin error aunque el servidor no responda 1ms
+ ✓ src/test/auth.test.ts > auth: sesión guardada > fetchCurrentUser consulta /auth/me y renueva si el token caducó 3ms
+ ✓ src/test/client.test.ts > client: transporte > arma la URL con /api/v1, envía la cookie y solo pone Content-Type cuando hay cuerpo 29ms
+ ✓ src/test/client.test.ts > client: transporte > devuelve el JSON de una respuesta correcta y undefined en un 204 2ms
+ ✓ src/test/client.test.ts > client: transporte > no llama al servidor si la configuración es inválida 3ms
+ ✓ src/test/client.test.ts > client: transporte > traduce una falla de red a un mensaje para el usuario 2ms
+ ✓ src/test/client.test.ts > client: transporte > corta la petición a los 15 segundos y la reporta como tiempo agotado 5ms
+ ✓ src/test/client.test.ts > client: traducción de errores HTTP > 400 con detalle y errores por campo 1ms
+ ✓ src/test/client.test.ts > client: traducción de errores HTTP > 400 sin cuerpo 1ms
+ ✓ src/test/client.test.ts > client: traducción de errores HTTP > 403 1ms
+ ✓ src/test/client.test.ts > client: traducción de errores HTTP > 404 con detalle 1ms
+ ✓ src/test/client.test.ts > client: traducción de errores HTTP > 404 sin cuerpo 1ms
+ ✓ src/test/client.test.ts > client: traducción de errores HTTP > 409 con detalle 1ms
+ ✓ src/test/client.test.ts > client: traducción de errores HTTP > 429 con detalle 1ms
+ ✓ src/test/client.test.ts > client: traducción de errores HTTP > 429 sin cuerpo 1ms
+ ✓ src/test/client.test.ts > client: traducción de errores HTTP > 500 1ms
+ ✓ src/test/client.test.ts > client: traducción de errores HTTP > 503 con cuerpo que no es JSON 1ms
+ ✓ src/test/client.test.ts > client: renovación de la sesión ante un 401 > renueva una vez con /auth/refresh y repite la petición original 1ms
+ ✓ src/test/client.test.ts > client: renovación de la sesión ante un 401 > si la renovación falla, avisa que la sesión expiró y no repite la petición 1ms
+ ✓ src/test/client.test.ts > client: renovación de la sesión ante un 401 > si la red falla durante la renovación, la trata como renovación fallida 1ms
+ ✓ src/test/client.test.ts > client: renovación de la sesión ante un 401 > varias peticiones con 401 a la vez comparten una sola renovación 11ms
+ ✓ src/test/client.test.ts > client: renovación de la sesión ante un 401 > con skipRefresh no intenta renovar ni avisa expiración 1ms
+
+ Test Files  3 passed (3)
+      Tests  33 passed (33)
+   Start at  15:51:00
+   Duration  263ms (tests 52%, import 14%, worker 13%, transform 12%, setup 9%)
+
+
+$ pnpm exec tsc --noEmit
+(sin errores, exit 0)

@@ -41,6 +41,15 @@ class LoginRateLimitTest {
 
     private static final String PASSWORD = "Mantel-Azul-47";
 
+    /**
+     * Cadena real de Azure (CAL-169): el contenedor recibe todo desde una
+     * direccion de enlace local de App Service, y lo que entra por la web
+     * trae al final la IP de salida del frontend (192.0.2.10 en
+     * application-test.yml). Antes del arreglo todas compartian una llave.
+     */
+    private static final String APP_SERVICE_HOP = "169.254.129.3";
+    private static final String FRONTEND_OUTBOUND = "192.0.2.10";
+
     @Autowired private MockMvc mockMvc;
     @Autowired private TenantOnboardingService onboardingService;
     @Autowired private JdbcTemplate jdbcTemplate;
@@ -65,9 +74,17 @@ class LoginRateLimitTest {
     }
 
     private ResultActions login(String remoteAddress, String email, String password) throws Exception {
+        return login(remoteAddress, null, email, password);
+    }
+
+    private ResultActions login(String remoteAddress, String forwardedFor,
+                                String email, String password) throws Exception {
         return mockMvc.perform(post("/api/v1/auth/login")
                 .with(request -> {
                     request.setRemoteAddr(remoteAddress);
+                    if (forwardedFor != null) {
+                        request.addHeader("X-Forwarded-For", forwardedFor);
+                    }
                     return request;
                 })
                 .contentType(MediaType.APPLICATION_JSON)
@@ -151,5 +168,35 @@ class LoginRateLimitTest {
             login("198.51.100.50", "admin@limite.mx", "").andExpect(status().isBadRequest());
         }
         login("198.51.100.50", "admin@limite.mx", PASSWORD).andExpect(status().isOk());
+    }
+
+    private static String viaFrontend(String browser) {
+        return browser + ":51234, " + FRONTEND_OUTBOUND + ":40000";
+    }
+
+    @Test
+    @DisplayName("CAL-169: los fallos de un cliente en Azure no bloquean a otro, por la web ni directo")
+    void failuresBehindAppServiceOnlyBlockThatClient() throws Exception {
+        String attacker = "198.51.100.60";
+        for (int attempt = 0; attempt < maxPerIp; attempt++) {
+            login(APP_SERVICE_HOP, viaFrontend(attacker), "cuenta" + attempt + "@limite.mx", "Incorrecta-1")
+                    .andExpect(status().isUnauthorized());
+        }
+
+        // El cliente que fallo queda bloqueado, entre por la web o directo a la API...
+        login(APP_SERVICE_HOP, viaFrontend(attacker), "otra@limite.mx", "Incorrecta-1")
+                .andExpect(status().isTooManyRequests());
+        login(APP_SERVICE_HOP, attacker + ":50000", "otra@limite.mx", "Incorrecta-1")
+                .andExpect(status().isTooManyRequests());
+        // ...y una cabecera inventada a la izquierda no lo libera.
+        login(APP_SERVICE_HOP, "203.0.113.99, " + viaFrontend(attacker), "otra@limite.mx", "Incorrecta-1")
+                .andExpect(status().isTooManyRequests());
+
+        // Otro cliente, en otra red, entra con su contrasena por las dos rutas.
+        login(APP_SERVICE_HOP, viaFrontend("198.51.100.61"), "admin@limite.mx", PASSWORD)
+                .andExpect(status().isOk())
+                .andExpect(cookie().exists("access_token"));
+        login(APP_SERVICE_HOP, "198.51.100.62:50000", "admin@limite.mx", PASSWORD)
+                .andExpect(status().isOk());
     }
 }

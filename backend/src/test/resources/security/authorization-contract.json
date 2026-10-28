@@ -1431,5 +1431,85 @@
       "WAITER"
     ],
     "reason": "Infraestructura autenticada: errores, enlaces Actuator, health descendiente y OpenAPI YAML conservan sesion obligatoria"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/cash-sessions",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": ["ADMIN", "CASHIER"],
+    "reason": "CAL-98: turnos de caja visibles para administrador y cajero"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/v1/cash-sessions",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": ["ADMIN", "CASHIER"],
+    "reason": "CAL-98: HEAD hereda el acceso autenticado del listado de turnos"
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/cash-sessions/{id}",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": ["ADMIN", "CASHIER"],
+    "reason": "CAL-98: detalle de turno con autorización por propietario en servicio"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/v1/cash-sessions/{id}",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": ["ADMIN", "CASHIER"],
+    "reason": "CAL-98: HEAD hereda la autorización del detalle de turno"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/cash-sessions",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": ["ADMIN", "CASHIER"],
+    "reason": "CAL-98: apertura de turno para el usuario autenticado"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/cash-sessions/{id}/close",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": ["ADMIN", "CASHIER"],
+    "reason": "CAL-98: cierre de turno con verificación de propietario en servicio"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/cash-sessions/{id}/force-close",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": ["ADMIN"],
+    "reason": "CAL-98: cierre forzado reservado a administradores"
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/cash-sessions/{id}/movements",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": ["ADMIN", "CASHIER"],
+    "reason": "CAL-98: depósitos y retiros autenticados; propietario validado en servicio"
   }
 ]

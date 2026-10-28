@@ -63,7 +63,8 @@ class DatabaseSecurityContractTest {
     private static final Set<String> TENANT_TABLES = Set.of(
             "users", "refresh_tokens", "restaurant_tables", "categories", "products",
             "customers", "orders", "order_items", "sales", "payments", "tickets",
-            "inventory_items", "inventory_movements", "notifications", "tenant_folio_sequences");
+            "inventory_items", "inventory_movements", "notifications", "tenant_folio_sequences",
+            "cash_sessions", "cash_movements");
 
     /**
      * Control plane, sin RLS. Cada privilegio responde a un uso real:

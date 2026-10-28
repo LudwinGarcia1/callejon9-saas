@@ -1,0 +1,32 @@
+# CAL-127 · mvnw verify del backend (2026-10-22 11:00-11:04 America/Mexico_City)
+# Rama test/cal-127-ut-cocina-tiempo-real sobre main d31fd0c; el código de producción no cambia, solo las pruebas
+# java version "21.0.9" 2025-10-21 LTS (JAVA_HOME = C:\Program Files\Java\jdk-21); Testcontainers con PostgreSQL 16 en Docker 29.8.2
+# Extracto literal de la salida de Maven; el «·» que la consola no pudo mostrar se restauró.
+$ .\mvnw.cmd -B verify
+
+## Pruebas de la cocina
+[INFO] Running UT · KitchenService (Cocina y KDS)
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.729 s -- in UT · KitchenService (Cocina y KDS)
+
+Maven imprime «Tests run: 0» en esa línea porque todas las pruebas están en clases @Nested con @DisplayName.
+El reporte target/surefire-reports/TEST-com.callejon9.kitchen.service.KitchenServiceTest.xml tiene 24 casos y 0 fallas:
+  listSentOrders: returnsSentOrdersWithItems
+  advanceItemStatus: pendingToInPreparationSuccess, inPreparationToReadyPromotesOrderToReady, readyToDeliveredSuccess,
+    throwsBusinessRuleOnSkippedTransition, throwsBusinessRuleOnBackwardsTransition, throwsNotFoundWhenItemDoesNotExist,
+    throwsNotFoundWhenOrderDoesNotExist, everyNonAdjacentTransitionIsRejected [1] a [13]
+  Promoción de la orden: orderStaysSentWhileAnotherItemIsInPreparation, deliveredItemCountsAsReady, orderAlreadyReadyIsNotSavedAgain
+La suma de los casos de todos los reportes XML es 641, igual al total de abajo: los 24 casos sí se cuentan.
+
+## Total de la suite
+[INFO] Results:
+[INFO]
+[INFO] Tests run: 641, Failures: 0, Errors: 0, Skipped: 0
+
+## SpotBugs
+[INFO] --- spotbugs:4.8.6.6:check (spotbugs-check) @ backend ---
+[INFO] BugInstance size is 0
+[INFO] Error size is 0
+[INFO] No errors/warnings found
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------

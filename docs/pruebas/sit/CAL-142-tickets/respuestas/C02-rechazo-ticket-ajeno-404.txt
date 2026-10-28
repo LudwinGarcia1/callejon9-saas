@@ -1,0 +1,13 @@
+HTTP/1.1 404 Not Found
+Content-Type: application/problem+json
+Date: Mon, 26 Oct 2026 22:47:10 GMT
+Server: Kestrel
+Transfer-Encoding: chunked
+
+{
+  "type": "about:blank",
+  "title": "Not Found",
+  "status": 404,
+  "detail": "El ticket con folio TCK-2026-9999 no existe.",
+  "instance": "/api/v1/tickets"
+}

@@ -1,0 +1,114 @@
+# Mutaciones de CAL-121 - inicio 2026-10-22 11:34 America/Mexico_City
+# Cada mutacion cambia una linea del codigo de produccion, corre las pruebas de esa regla y restaura el archivo.
+# Backend (JDK 21): .\mvnw.cmd -B -q test -Dtest=SignupRequestSlugTest | PlanLimitBoundaryTest
+# Frontend: pnpm exec vitest run src/test/signup-form.test.tsx
+
+## B1 - el identificador admite 2 caracteres
+- antes:   "^[a-z0-9-]{3,80}$"
+- despues: "^[a-z0-9-]{2,80}$"
+- resultado: DETECTADA (2 de 15 pruebas fallan)
+    x rejectsInvalidSlugs(String)[1]
+    x lengthBoundsAreExact
+
+## B2 - el identificador admite 81 caracteres
+- antes:   "^[a-z0-9-]{3,80}$"
+- despues: "^[a-z0-9-]{3,81}$"
+- resultado: DETECTADA (1 de 15 pruebas fallan)
+    x lengthBoundsAreExact
+
+## B3 - el identificador admite mayusculas
+- antes:   "^[a-z0-9-]{3,80}$"
+- despues: "^[a-zA-Z0-9-]{3,80}$"
+- resultado: DETECTADA (1 de 15 pruebas fallan)
+    x rejectsInvalidSlugs(String)[3]
+
+## B4 - el identificador admite guion bajo y punto
+- antes:   "^[a-z0-9-]{3,80}$"
+- despues: "^[a-z0-9_.-]{3,80}$"
+- resultado: DETECTADA (2 de 15 pruebas fallan)
+    x rejectsInvalidSlugs(String)[4]
+    x rejectsInvalidSlugs(String)[7]
+
+## B5 - el identificador deja de ser obligatorio (@NotBlank fuera)
+- antes:   @NotBlank @Pattern
+- despues: @Pattern
+- resultado: DETECTADA (1 de 15 pruebas fallan)
+    x blankOrNullSlugIsRequired
+
+## B6 - el plan admite un usuario de mas (> en vez de >=)
+- antes:   if (currentUsers >= plan.getMaxUsers()) {
+- despues: if (currentUsers > plan.getMaxUsers()) {
+- resultado: DETECTADA (3 de 6 pruebas fallan)
+    x userLimitAtTheBoundary(String, int, int)[1]
+    x userLimitAtTheBoundary(String, int, int)[2]
+    x userLimitAtTheBoundary(String, int, int)[3]
+
+## B7 - el plan rechaza el ultimo cupo permitido
+- antes:   if (currentUsers >= plan.getMaxUsers()) {
+- despues: if (currentUsers >= plan.getMaxUsers() - 1) {
+- resultado: DETECTADA (3 de 6 pruebas fallan)
+    x userLimitAtTheBoundary(String, int, int)[1]
+    x userLimitAtTheBoundary(String, int, int)[2]
+    x userLimitAtTheBoundary(String, int, int)[3]
+
+## F1 - el patron vuelve a la version sin escapar (CAL-179)
+- antes:   pattern="[a-z0-9\-]{3,80}"
+- despues: pattern="[a-z0-9-]{3,80}"
+- resultado: DETECTADA (9 de 17 pruebas fallan)
+    x «abc» aceptado = true (3 caracteres, el mínimo), igual que @Pattern del backend
+    x «ab» aceptado = false (2 caracteres), igual que @Pattern del backend
+    x «aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa» aceptado = true (80 caracteres, el máximo), igual que @Pattern del backend
+    x «aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa» aceptado = false (81 caracteres), igual que @Pattern del backend
+    x «la-esquina-2» aceptado = true (minúsculas, números y guiones), igual que @Pattern del backend
+    x «La-Esquina» aceptado = false (mayúsculas), igual que @Pattern del backend
+    x «la_esquina» aceptado = false (guion bajo), igual que @Pattern del backend
+    x «la esquina» aceptado = false (espacio), igual que @Pattern del backend
+    x «cafe-niño» aceptado = false (letra ñ), igual que @Pattern del backend
+
+## F2 - el patron admite 81 caracteres
+- antes:   pattern="[a-z0-9\-]{3,80}"
+- despues: pattern="[a-z0-9\-]{3,81}"
+- resultado: DETECTADA (1 de 17 pruebas fallan)
+    x «aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa» aceptado = false (81 caracteres), igual que @Pattern del backend
+
+## F3 - el identificador deja de ser obligatorio
+- antes:   name="slug" required
+- despues: name="slug"
+- resultado: DETECTADA (1 de 17 pruebas fallan)
+    x los campos son obligatorios y sus topes coinciden con SignupRequest
+
+## F4 - el nombre del restaurante admite 161 caracteres
+- antes:   name="restaurantName" required maxLength={160}
+- despues: name="restaurantName" required maxLength={161}
+- resultado: DETECTADA (1 de 17 pruebas fallan)
+    x los campos son obligatorios y sus topes coinciden con SignupRequest
+
+## F5 - no se valida la contrasena antes de enviar
+- antes:   if (localPasswordError) { setPasswordError(localPasswordError); return; }
+- despues: (se quita)
+- resultado: DETECTADA (3 de 17 pruebas fallan)
+    x una contraseña corta se rechaza en el navegador y no llama a la API
+    x una contraseña sin números se rechaza en el navegador y no llama a la API
+    x una contraseña con el identificador se rechaza en el navegador y no llama a la API
+
+## F6 - el plan preseleccionado pasa a FREE
+- antes:   useState<string>("PRO")
+- despues: useState<string>("FREE")
+- resultado: DETECTADA (1 de 17 pruebas fallan)
+    x sin elegir plan se envía PRO, el plan preseleccionado
+
+## F7 - el aviso general se muestra aunque haya errores por campo
+- antes:   {apiError && !hasFieldErrors && (
+- despues: {apiError && (
+- resultado: DETECTADA (1 de 17 pruebas fallan)
+    x un 400 con errores por campo muestra el mensaje debajo del identificador, sin aviso general
+
+## F8 - tras el alta no se lleva el identificador al login
+- antes:   router.push(`/login?slug=${encodeURIComponent(data.slug)}`);
+- despues: router.push("/login");
+- resultado: DETECTADA (1 de 17 pruebas fallan)
+    x un alta válida envía el plan elegido y lleva al login con el identificador
+
+# Fin 2026-10-22 11:38. Archivos restaurados. Cambios de produccion respecto a main (solo debe aparecer la correccion de CAL-179):
+ frontend/src/app/signup/signup-view.tsx | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)

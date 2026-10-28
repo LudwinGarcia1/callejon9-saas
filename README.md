@@ -36,7 +36,7 @@ El cuarto resultado es un error a propósito: PostgreSQL rechaza que un inquilin
 
 1. **`TenantFilter`** traduce la cookie JWT al `TenantContext` y limpia el `ThreadLocal` en un `finally`, para que un hilo reutilizado del pool no herede el inquilino anterior.
 2. **`TenantAwareTransactionManager`** publica el inquilino a PostgreSQL al abrir cada transacción con `set_config('app.tenant_id', …, true)`. El tercer argumento hace la variable local a la transacción, así que no puede filtrarse a otra petición cuando HikariCP devuelve la conexión.
-3. **Las políticas RLS** de las 15 tablas usan `USING` y `WITH CHECK`. La primera filtra lecturas, actualizaciones y borrados; la segunda impide escribir dentro de otro inquilino. Ambas leen `nullif(current_setting('app.tenant_id', true), '')::uuid`, porque una variable de sesión personalizada que ya se usó vuelve a cadena vacía y no a nula.
+3. **Las políticas RLS** de las 17 tablas usan `USING` y `WITH CHECK`. La primera filtra lecturas, actualizaciones y borrados; la segunda impide escribir dentro de otro inquilino. Ambas leen `nullif(current_setting('app.tenant_id', true), '')::uuid`, porque una variable de sesión personalizada que ya se usó vuelve a cadena vacía y no a nula.
 4. **Dos roles de base de datos.** `callejon9_owner` solo ejecuta migraciones; `callejon9_app` corre la aplicación y **no es dueño de ninguna tabla**, por lo que las políticas sí le aplican. Además todas las tablas llevan `FORCE ROW LEVEL SECURITY`, que somete incluso al dueño.
 
 Ese cuarto punto no es teórico: la migración `V6` tuvo que publicar el inquilino con `set_config` antes de insertar el super-administrador, porque Flyway corre como el dueño y la política lo rechazaba. La política es lo bastante real como para obligar a la propia migración.
@@ -154,7 +154,7 @@ Con `SPRING_PROFILES_ACTIVE=prod`, el backend se niega a arrancar, antes de cone
 - `app.auth.cookie-secure` se forzó a `false`;
 - se activa junto a `demo` o `dev`.
 
-El error enumera cada problema por el nombre de la variable, nunca por su valor. `prod` fija además `server.forward-headers-strategy=none`: la IP del cliente la resuelve `ClientIp` con su propio modelo de confianza, y así Spring Boot no lo cambia por su cuenta al detectar una plataforma en la nube. La validación vive en `ProductionConfigurationGuard`.
+El error enumera cada problema por el nombre de la variable, nunca por su valor. `prod` fija además `server.forward-headers-strategy=none`: la IP del cliente la resuelve `ClientIp` con su propio modelo de confianza (red local y `APP_TRUSTED_PROXIES`), y así Spring Boot no lo cambia por su cuenta al detectar una plataforma en la nube. La validación vive en `ProductionConfigurationGuard`.
 
 ### 3. Frontend
 

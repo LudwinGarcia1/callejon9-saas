@@ -1,0 +1,56 @@
+# CAL-122 · reglas de usuarios y roles en el borde, con las pruebas del correo activadas (2026-10-22 13:06-13:07 America/Mexico_City)
+# Rama test/cal-122-ut-usuarios-roles sobre main d31fd0c; JDK 21.0.9; Testcontainers con PostgreSQL 16
+# Fallan solo las dos pruebas del correo con mayúsculas (CAL-180). Después de este registro quedaron con @Disabled.
+$ .\mvnw.cmd -B test "-Dtest=UserRulesBoundaryTest*"
+
+## Casos de UserRulesBoundaryTest (reporte XML)
+  x userCreatedWithUppercaseEmailLogsInWithLowercase
+  ok invalidFieldsAreRejected
+  x emailDifferingOnlyInCaseIsADuplicate
+  ok maximumLengthsAreAccepted
+  ok passwordsWithPersonalDataAreRejected(String)[1]
+  ok passwordsWithPersonalDataAreRejected(String)[2]
+  ok passwordsWithPersonalDataAreRejected(String)[3]
+  ok tenCharactersAreAccepted
+  ok weakPasswordsAreRejected(String, String)[1]
+  ok weakPasswordsAreRejected(String, String)[2]
+  ok weakPasswordsAreRejected(String, String)[3]
+  ok weakPasswordsAreRejected(String, String)[4]
+  ok inactiveUsersKeepTheirSlot
+  ok invalidRolesAreRejected(String)[1]
+  ok invalidRolesAreRejected(String)[2]
+  ok invalidRolesAreRejected(String)[3]
+  ok invalidRolesAreRejected(String)[4]
+  ok sessionCarriesTheRoleAssignedAtCreation(String)[1]
+  ok sessionCarriesTheRoleAssignedAtCreation(String)[2]
+  ok sessionCarriesTheRoleAssignedAtCreation(String)[3]
+  ok sessionCarriesTheRoleAssignedAtCreation(String)[4]
+  ok reactivatedUserNeedsANewSessionWithTheSameRole
+  ok missingRoleIsRejected
+
+## Salida de Maven (los caracteres que la consola no pudo mostrar se restauraron)
+[ERROR] Tests run: 4, Failures: 2, Errors: 0, Skipped: 0, Time elapsed: 41.53 s <<< FAILURE! -- in Las validaciones del alta
+[ERROR] com.callejon9.user.UserRulesBoundaryTest.userCreatedWithUppercaseEmailLogsInWithLowercase -- Time elapsed: 2.058 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<200> but was:<401>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+[ERROR] com.callejon9.user.UserRulesBoundaryTest.emailDifferingOnlyInCaseIsADuplicate -- Time elapsed: 0.478 s <<< FAILURE!
+java.lang.AssertionError: Status expected:<409> but was:<201>
+	at org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:61)
+	at org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:128)
+[INFO] Tests run: 8, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.796 s -- in La contraseña al crear al usuario
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.933 s -- in El cupo del plan con usuarios desactivados
+[INFO] Tests run: 10, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.584 s -- in El rol y la sesión
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 48.67 s -- in UT · reglas de usuarios y roles en el borde
+[ERROR]   UserRulesBoundaryTest.emailDifferingOnlyInCaseIsADuplicate Status expected:<409> but was:<201>
+[ERROR]   UserRulesBoundaryTest.userCreatedWithUppercaseEmailLogsInWithLowercase Status expected:<200> but was:<401>
+[ERROR] Tests run: 23, Failures: 2, Errors: 0, Skipped: 0
+[INFO] BUILD FAILURE
+
+## Por qué afecta a la app móvil
+mobile/src/screens/LoginScreen.tsx, línea 52:
+const credentials = { slug: slug.trim().toLowerCase(), email: email.trim().toLowerCase(), password };
+
+Lectura: el backend compara el correo exacto (findByEmail) y la base solo exige UNIQUE (tenant_id, email).
+Un usuario creado como Ana.Caja@… no puede entrar desde la app, que envía ana.caja@…, y se pueden crear
+mesero@… y Mesero@… como dos usuarios del mismo restaurante.

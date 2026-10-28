@@ -15,7 +15,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.transaction.TransactionStatus;
@@ -39,7 +38,6 @@ class RefreshTokenServiceIssueForLoginTest {
     @Mock private TenantRepository tenantRepository;
     @Mock private JwtService jwtService;
     @Mock private TransactionTemplate transactionTemplate;
-    @InjectMocks private RefreshTokenService refreshTokenService;
 
     @AfterEach
     void clearTenant() {
@@ -48,6 +46,8 @@ class RefreshTokenServiceIssueForLoginTest {
 
     @Test
     void tokenClaimsUseRoleFromLockedUserRatherThanEarlierLoginRead() {
+        RefreshTokenService refreshTokenService = new RefreshTokenService(
+                refreshTokenRepository, userRepository, tenantRepository, jwtService, transactionTemplate);
         UUID tenantId = UUID.randomUUID();
         UUID userId = UUID.randomUUID();
         TenantContext.set(tenantId);

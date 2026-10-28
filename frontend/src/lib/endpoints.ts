@@ -67,6 +67,14 @@ export const endpoints = {
     /** GET; acepta los query params opcionales `from`/`to` (fechas ISO). */
     history: () => "/api/v1/sales",
   },
+  cashSessions: {
+    list: () => "/api/v1/cash-sessions",
+    detail: (sessionId: string) => `/api/v1/cash-sessions/${sessionId}`,
+    open: () => "/api/v1/cash-sessions",
+    close: (sessionId: string) => `/api/v1/cash-sessions/${sessionId}/close`,
+    forceClose: (sessionId: string) => `/api/v1/cash-sessions/${sessionId}/force-close`,
+    movements: (sessionId: string) => `/api/v1/cash-sessions/${sessionId}/movements`,
+  },
   analytics: {
     /** GET; acepta los query params opcionales `from`/`to` (fechas ISO). Default: ultimos 7 dias. */
     summary: () => "/api/v1/analytics",

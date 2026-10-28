@@ -4,6 +4,8 @@ import com.callejon9.catalog.domain.Product;
 import com.callejon9.catalog.repository.ProductRepository;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
+import com.callejon9.cashier.service.CashSessionService;
+import com.callejon9.support.CashSessionFixtures;
 import com.callejon9.support.TestSessions;
 import com.callejon9.table.domain.RestaurantTable;
 import com.callejon9.table.domain.TableStatus;
@@ -57,6 +59,7 @@ class AnalyticsControllerTest {
     @Autowired private RestaurantTableRepository tableRepository;
     @Autowired private ProductRepository productRepository;
     @Autowired private ObjectMapper objectMapper;
+    @Autowired private CashSessionService cashSessionService;
 
     private static final ZoneId BUSINESS_ZONE = ZoneId.of("America/Mexico_City");
 
@@ -84,6 +87,7 @@ class AnalyticsControllerTest {
                     .role(UserRole.ADMIN).active(true).build()));
             table = transactionTemplate.execute(status -> tableRepository.save(RestaurantTable.builder()
                     .number(9).capacity(4).status(TableStatus.FREE).active(true).build()));
+            CashSessionFixtures.openFor(cashSessionService, cashier);
         } finally {
             TenantContext.clear();
         }
@@ -280,6 +284,51 @@ class AnalyticsControllerTest {
     }
 
     @Test
+    @DisplayName("la analítica incluye la propina y reparte el total entre pagos divididos")
+    void analyticsIncludesTipAcrossSplitPayments() throws Exception {
+        Product taco = createProduct(tenant, "Taco", "20.00");
+        JsonNode order = openOrder(waiter, table);
+        UUID orderId = UUID.fromString(order.get("id").asText());
+        addItem(waiter, orderId, taco, 1);
+
+        String ticketBody = mockMvc.perform(post("/api/v1/orders/" + orderId + "/checkout")
+                        .cookie(cookieFor(cashier))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tipPercent\":10,\"payments\":["
+                                + "{\"method\":\"CASH\",\"amount\":10.00},"
+                                + "{\"method\":\"CARD\",\"amount\":12.00}]}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        UUID saleId = UUID.fromString(objectMapper.readTree(ticketBody).get("saleId").asText());
+        LocalDate day = LocalDate.now(BUSINESS_ZONE).minusDays(3);
+        backdateSale(tenant, saleId, day);
+
+        String analyticsBody = mockMvc.perform(get("/api/v1/analytics")
+                        .param("from", day.toString())
+                        .param("to", day.toString())
+                        .cookie(cookieFor(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pareto[0].revenue").value(20.00))
+                .andExpect(jsonPath("$.salesByDay[0].count").value(1))
+                .andExpect(jsonPath("$.salesByDay[0].total").value(22.00))
+                .andExpect(jsonPath("$.paymentMix.length()").value(2))
+                .andExpect(jsonPath("$.paymentMix[0].method").value("CARD"))
+                .andExpect(jsonPath("$.paymentMix[0].count").value(1))
+                .andExpect(jsonPath("$.paymentMix[0].total").value(12.00))
+                .andExpect(jsonPath("$.paymentMix[1].method").value("CASH"))
+                .andExpect(jsonPath("$.paymentMix[1].count").value(1))
+                .andExpect(jsonPath("$.paymentMix[1].total").value(10.00))
+                .andReturn().getResponse().getContentAsString();
+
+        JsonNode paymentMix = objectMapper.readTree(analyticsBody).get("paymentMix");
+        BigDecimal appliedPayments = BigDecimal.ZERO;
+        for (JsonNode payment : paymentMix) {
+            appliedPayments = appliedPayments.add(payment.get("total").decimalValue());
+        }
+        org.junit.jupiter.api.Assertions.assertEquals(0, appliedPayments.compareTo(new BigDecimal("22.00")));
+    }
+
+    @Test
     @DisplayName("sin parametros, el rango por defecto son los ultimos 7 dias terminando hoy")
     void defaultRangeIsLastSevenDaysEndingToday() throws Exception {
         Product taco = createProduct(tenant, "Taco", "10.00");
@@ -297,6 +346,15 @@ class AnalyticsControllerTest {
                 .andExpect(jsonPath("$.salesByDay.length()").value(7))
                 .andExpect(jsonPath("$.pareto[0].revenue").value(10.00))
                 .andExpect(jsonPath("$.paymentMix[0].count").value(1));
+    }
+
+    @Test
+    @DisplayName("rechaza fechas de analitica que no cumplen el formato ISO")
+    void rejectsDateWithInvalidFormat() throws Exception {
+        mockMvc.perform(get("/api/v1/analytics")
+                        .param("from", "20/10/2026")
+                        .cookie(cookieFor(admin)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -325,6 +383,7 @@ class AnalyticsControllerTest {
                     .role(UserRole.ADMIN).active(true).build()));
             tableB = transactionTemplate.execute(status -> tableRepository.save(RestaurantTable.builder()
                     .number(1).capacity(2).status(TableStatus.FREE).active(true).build()));
+            CashSessionFixtures.openFor(cashSessionService, cashierB);
         } finally {
             TenantContext.clear();
         }

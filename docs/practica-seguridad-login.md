@@ -123,7 +123,7 @@ Decisiones de diseño:
 - **Una cuenta inexistente se bloquea igual que una real.** La llave se arma con lo que se envió, así que el límite no sirve para descubrir correos válidos.
 - **Un acierto limpia el contador de la cuenta, no el de la IP.** Así un atacante con cuenta propia no puede reiniciarlo intercalando logins válidos.
 - **Un `400` por formato inválido no cuenta**, porque nunca llega a probar una contraseña.
-- **IP real detrás de Next.js.** Todas las peticiones llegan desde el servidor de Next, que agrega la IP del navegador al final de `X-Forwarded-For`. Esa cabecera solo se cree cuando la conexión viene de la red local (loopback o privada) y se toma la última entrada; si no, cualquiera podría inventarse una IP.
+- **IP real detrás de Next.js.** Todas las peticiones llegan desde un proxy, que agrega a quien se le conectó al final de `X-Forwarded-For`. `ClientIp` recorre esa cadena de derecha a izquierda, salta los proxies de confianza (red local, incluido el enlace local 169.254.x.x de Azure App Service, y las IP de salida del frontend en `APP_TRUSTED_PROXIES`) y toma la primera dirección que no lo es. Las entradas a su izquierda las pudo inventar el cliente y no se leen. Si la conexión no viene de un proxy de confianza, la cabecera se ignora (CAL-169).
 - **Bloqueo temporal, no permanente.** Un atacante no puede dejar a un mesero sin acceso indefinidamente; como mucho lo retrasa 15 minutos.
 
 Configuración en `application.yml`: `AUTH_LOGIN_MAX_FAILURES_ACCOUNT` (5), `AUTH_LOGIN_MAX_FAILURES_IP` (20) y `AUTH_LOGIN_WINDOW` (15m).

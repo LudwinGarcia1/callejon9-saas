@@ -2,6 +2,7 @@ export const PROTECTED_PAGE_PREFIXES = [
   "/admin",
   "/analytics",
   "/cashier",
+  "/cash-sessions",
   "/history",
   "/inventory",
   "/kitchen",

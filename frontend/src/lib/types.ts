@@ -292,6 +292,64 @@ export interface PaymentRequest {
   amount: number;
 }
 
+/** POST /api/v1/cash-sessions */
+export interface OpenCashSessionRequest {
+  openingFund: number;
+}
+
+/** POST /api/v1/cash-sessions/{id}/close or /force-close */
+export interface CloseCashSessionRequest {
+  countedCash: number;
+  reason?: string;
+}
+
+/** POST /api/v1/cash-sessions/{id}/movements */
+export interface CashMovementRequest {
+  type: "DEPOSIT" | "WITHDRAWAL";
+  amount: number;
+  reason: string;
+}
+
+export interface CashPaymentMethodSummary {
+  method: PaymentMethod;
+  paymentCount: number;
+  appliedAmount: number;
+  receivedAmount: number;
+  changeAmount: number;
+}
+
+export interface CashMovementResponse {
+  id: string;
+  type: "DEPOSIT" | "WITHDRAWAL";
+  amount: number;
+  reason: string;
+  recordedBy: string;
+  createdAt: string;
+}
+
+export interface CashSessionListItem {
+  id: string;
+  cashierId: string;
+  cashierName: string;
+  openingFund: number;
+  openedAt: string;
+  closedAt: string | null;
+  expectedCash: number | null;
+  countedCash: number | null;
+  difference: number | null;
+  closureReason: string | null;
+}
+
+export interface CashSessionListResponse {
+  sessions: CashSessionListItem[];
+}
+
+export interface CashSessionResponse extends CashSessionListItem {
+  closedBy: string | null;
+  paymentSummary: CashPaymentMethodSummary[];
+  movements: CashMovementResponse[];
+}
+
 export interface TicketPaymentSnapshot {
   method: PaymentMethod;
   amount: number;

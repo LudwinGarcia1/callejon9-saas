@@ -1,0 +1,74 @@
+# Alta 2 - 2026-10-21 22:01:35 America/Mexico_City (04:01:35 UTC)
+$ curl -i -X POST https://restohub.azurewebsites.net/api/v1/signup -H "Content-Type: application/json" -d {"restaurantName":"SIT Alta Braulio","slug":"sit-alta-10211930","adminEmail":"admin@sit-alta-10211930.test","adminFullName":"Admin SIT","password":"<redactado>","planCode":"Pro"}
+HTTP/1.1 409 Conflict
+Content-Type: application/problem+json
+Date: Thu, 22 Oct 2026 04:01:36 GMT
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Expires: 0
+Pragma: no-cache
+Transfer-Encoding: chunked
+Vary: Accept-Encoding
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+
+{"type":"about:blank","title":"Regla de negocio","status":409,"detail":"Ya existe un restaurante con el identificador 'sit-alta-10211930'.","instance":"/api/v1/signup"}
+
+# Alta 3 - 2026-10-21 22:01:35 America/Mexico_City (04:01:35 UTC)
+$ curl -i -X POST https://restohub.azurewebsites.net/api/v1/signup -H "Content-Type: application/json" -d {"restaurantName":"SIT Alta Braulio","slug":"sit-alta-10211930","adminEmail":"admin@sit-alta-10211930.test","adminFullName":"Admin SIT","password":"<redactado>","planCode":"Pro"}
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/problem+json
+Date: Thu, 22 Oct 2026 04:01:36 GMT
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Expires: 0
+Pragma: no-cache
+Retry-After: 3586
+Transfer-Encoding: chunked
+Vary: Accept-Encoding
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+
+{"type":"about:blank","title":"Demasiadas altas","status":429,"detail":"Se alcanzo el limite de registros de restaurantes desde esta conexion. Intenta de nuevo en 60 minutos.","instance":"/api/v1/signup"}
+
+# Alta 4 - 2026-10-21 22:01:36 America/Mexico_City (04:01:36 UTC)
+$ curl -i -X POST https://restohub.azurewebsites.net/api/v1/signup -H "Content-Type: application/json" -d {"restaurantName":"SIT Alta Braulio","slug":"sit-alta-10211930","adminEmail":"admin@sit-alta-10211930.test","adminFullName":"Admin SIT","password":"<redactado>","planCode":"Pro"}
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/problem+json
+Date: Thu, 22 Oct 2026 04:01:36 GMT
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Expires: 0
+Pragma: no-cache
+Retry-After: 3585
+Transfer-Encoding: chunked
+Vary: Accept-Encoding
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+
+{"type":"about:blank","title":"Demasiadas altas","status":429,"detail":"Se alcanzo el limite de registros de restaurantes desde esta conexion. Intenta de nuevo en 60 minutos.","instance":"/api/v1/signup"}
+
+# Alta 5 - 2026-10-21 22:01:36 America/Mexico_City (04:01:36 UTC)
+$ curl -i -X POST https://restohub.azurewebsites.net/api/v1/signup -H "Content-Type: application/json" -d {"restaurantName":"SIT Alta Braulio","slug":"sit-alta-10211930","adminEmail":"admin@sit-alta-10211930.test","adminFullName":"Admin SIT","password":"<redactado>","planCode":"Pro"}
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/problem+json
+Date: Thu, 22 Oct 2026 04:01:37 GMT
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Expires: 0
+Pragma: no-cache
+Retry-After: 3585
+Transfer-Encoding: chunked
+Vary: Accept-Encoding
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+
+{"type":"about:blank","title":"Demasiadas altas","status":429,"detail":"Se alcanzo el limite de registros de restaurantes desde esta conexion. Intenta de nuevo en 60 minutos.","instance":"/api/v1/signup"}
