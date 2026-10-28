@@ -87,7 +87,9 @@ Cuando el integrante reanuda sus actividades:
 
 ---
 
-## 7. Revisión de Issues Abiertos en Riesgo (26 de Octubre de 2026)
+## 7. Revisión de issues abiertos en riesgo
+
+### Revisión original (26 de octubre de 2026)
 
 En aplicación inmediata de este plan, se revisó el estado de los issues con fecha de entrega comprometida en la semana actual:
 
@@ -98,3 +100,27 @@ En aplicación inmediata de este plan, se revisó el estado de los issues con fe
 | **CAL-175** (Plan de ausencias) | 26-oct-2026 *(Hoy)* | Todo | Octavio Duarte | En proceso de atención y formalización con este documento. |
 | **CAL-69** (Normas y regulaciones) | 28-oct-2026 *(Mié)* | Todo | *Sin asignar* | Asignar antes del 27-oct para evitar retraso en entrega de Integradora. |
 | **CAL-70** (Software funcional CI) | 31-oct-2026 *(Sáb)* | Todo | *Sin asignar* | Vinculado a la cadena técnica Jenkins (CAL-86/87/89) de Ludwin G. |
+
+### Actualización al 2026-10-28 12:45 (America/Mexico_City)
+
+| Issue | Vencimiento | Estado | Asignado | Situación |
+|---|---|---|---|---|
+| **CAL-67** (PWA, video de la Beta) | 24-oct *(vencido)* | In Progress | García Gaytán Ludwin | Reabierto el 27-oct por revisión: URL del video inválida y configuración que no corresponde al repositorio |
+| **CAL-69** (Normas y regulaciones) | 28-oct *(hoy)* | In Progress | García Gaytán Ludwin | Cambios solicitados el 27-oct en PR #95: cita la LFPDPPP abrogada |
+| **CAL-70** (Software con integración continua) | 31-oct | In Progress | García Gaytán Ludwin | Cambios solicitados el 27-oct en PR #97: los logs de Jenkins no corresponden al repositorio |
+| **CAL-174** y **CAL-175** (estos planes) | 26-oct | Done | Octavio Duarte | Acordados por el equipo el 28-oct (ver abajo) |
+
+Ninguno de esos issues tiene un comentario de reasignación con la plantilla de la sección 5. Si alguno se reasignó el 26-oct, falta dejar ese registro.
+
+---
+
+## Acuerdo del equipo
+
+Acordado el **2026-10-28** en el grupo de WhatsApp del equipo. El Scrum Master compartió este documento y los puntos clave a las 12:41, y la encuesta «¿de acuerdo?» de las 12:43 quedó con **3 votos a favor y 0 en contra**, de 4 integrantes; un voto quedó pendiente. Puntos aprobados:
+
+- Un bloqueo se avisa en el grupo en máximo 2 h y se marca en Linear con «Blocked by».
+- Si un bloqueo sigue más de 12 h hábiles, se escala y el Scrum Master reasigna.
+- Las ausencias se avisan con 12 a 24 h de anticipación, con la rama subida y un comentario en el issue.
+- Una tarea se reasigna si vence en 48 h, si lleva 24 h sin avance o si bloquea a alguien.
+
+La captura de la encuesta la conserva el Scrum Master y no se sube al repositorio, porque muestra números de teléfono.
