@@ -122,3 +122,27 @@ Elimina la necesidad de instalar previamente Java 21, Maven, PostgreSQL o Node.j
 
 > **Corrección (CAL-17, 2026-10-14):** la afirmación sobre los rewrites de esta verificación no se sostenía. Next fija el destino del rewrite al compilar y la imagen se compilaba sin `BACKEND_ORIGIN`, así que `/api/v1/*` se reenviaba a `http://localhost:8080` dentro del contenedor y respondía 500; la variable que Compose pasaba al arrancar no lo cambiaba. CAL-17 lo corrige con un argumento de compilación y lo verifica con una prueba de humo de alta, login y `/auth/me` a través del frontend (`docs/cal-17-imagenes-produccion.md`).
 
+
+## Re-verificación sobre `main` (2026-10-28)
+
+Se repitió la verificación sobre un checkout limpio de `main` (`9a130f4`) para cerrar los criterios pendientes de CAL-11 antes de liberar CAL-28. Se usó un nombre de proyecto y puertos alternos para no chocar con otro stack local; ninguno es obligatorio:
+
+```bash
+DB_PORT=55432 BACKEND_PORT=18080 FRONTEND_PORT=13000 docker compose -p cal11 up -d --build
+```
+
+| Criterio | Comprobación | Resultado |
+|---|---|---|
+| Los tres servicios levantan sanos | `docker compose -p cal11 ps` | `db`, `backend` y `frontend` en `healthy` (construcción completa en ~6 min, salida 0) |
+| La UI responde | `GET /` y `GET /login` en el frontend | HTTP 200 en ambas |
+| El rol de runtime no es privilegiado | `pg_roles` para `callejon9_%` | `callejon9_app` y `callejon9_owner` sin `SUPERUSER`, `BYPASSRLS`, `CREATEROLE` ni `CREATEDB` |
+| El rol de runtime no es dueño de tablas | `pg_tables` agrupado por dueño | Las 21 tablas pertenecen a `callejon9_owner` |
+| Flyway completa | `flyway_schema_history` | V1–V14 aplicadas, todas con `success = true` |
+| RLS forzado | `pg_class` de tablas con `tenant_id` | 17 de 18 con `ENABLE` y `FORCE`; la restante es `subscriptions`, plano de control por diseño |
+| `verify-rls.sql` en el contenedor | `psql -U callejon9_app -f /tmp/verify-rls.sql` dentro de `callejon9-db` | check_1 a check_9 con el resultado esperado: 0 filas sin tenant, aislamiento A/B, y los tres INSERT cruzados rechazados (dos por RLS, uno por FK compuesta). El script limpia sus tenants al final |
+| Flujo same-origin real | alta, login, `/auth/me`, `/tables` y `/admin` a través de `:13000` | 201, 200, 200, 200 y 200; `access_token` y `refresh_token` llegan como cookies `HttpOnly` |
+| Persistencia | marcador en `tenants` → `down` (sin `-v`) → `up --wait` | El volumen `cal11_pgdata` sobrevive, el marcador sigue presente y Flyway no reaplica nada (14 filas) |
+| Reset explícito | `docker compose -p cal11 down -v` | Elimina contenedores, red y solo el volumen `cal11_pgdata` |
+| Portabilidad | búsqueda de `C:\` y `5433` en `docker-compose.yml`, `.env.example`, Dockerfiles, `scripts/setup-db.sql` y esta guía | Sin coincidencias; todos los puertos publicados son configurables por variable |
+
+La contraseña de la cuenta de prueba se generó al vuelo en una variable de shell y no se imprimió ni se guardó. El usuario no-root de las imágenes no se volvió a revisar aquí: lo cubre `scripts/verify-images.sh` (CAL-17).
