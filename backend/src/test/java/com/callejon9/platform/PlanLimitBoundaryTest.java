@@ -11,7 +11,6 @@ import com.callejon9.tenancy.TenantContext;
 import java.util.List;
 import java.util.Locale;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -86,7 +85,6 @@ class PlanLimitBoundaryTest {
                 .hasMessage("Alcanzaste el limite de " + lastAllowed + " usuarios del plan " + planCode + ".");
     }
 
-    @Disabled("CAL-178: el límite de mesas del plan no se aplica; se activa con la corrección")
     @ParameterizedTest(name = "{0}: la mesa {1} entra y la {2} se rechaza")
     @CsvSource({"FREE, 5, 6", "PRO, 30, 31", "PREMIUM, 120, 121"})
     @DisplayName("Mesas: la Ãºltima mesa del plan se permite y la siguiente se rechaza")
