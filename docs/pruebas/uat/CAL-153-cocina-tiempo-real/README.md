@@ -110,3 +110,7 @@ No hay capturas, resultados observados ni aceptación del participante todavía.
 ## 8. Cierre pendiente
 
 Después de la sesión: completar fechas reales, observaciones textuales del participante, métricas medidas, capturas con URL y reloj visibles, respuestas necesarias con cookies redactadas, defectos y conclusión. La declaración de autenticidad y la sección de revisión se llenan únicamente tras una ejecución real y revisión independiente.
+
+## Sesi?n local guiada en PC y Android
+
+El ensayo solicitado el 2026-10-28 se documenta por separado en [sesion-local-pc-android.md](sesion-local-pc-android.md). Usa un restaurante ficticio local y la web en Chrome Android; no se declara ejecutada la sesi?n formal de Azure ni la app m?vil. Resultados y capturas pendientes de confirmar.
