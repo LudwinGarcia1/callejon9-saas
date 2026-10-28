@@ -1,0 +1,21 @@
+# La orden del mesero 1 sobre la mesa después de los intentos
+# 2026-10-28 14:07:55 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+GET /api/v1/orders/3494cb88-dc57-4c8b-8579-89f2542e1e71
+
+
+HTTP 200
+Content-Type: application/json
+
+{
+  "id": "3494cb88-dc57-4c8b-8579-89f2542e1e71",
+  "folio": "ORD-261028200752",
+  "tableId": "0568fb35-160c-4be4-a0cb-cc8c42962644",
+  "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+  "guestCount": 2,
+  "status": "NEW",
+  "total": 0,
+  "openedAt": "2026-10-28T20:07:52.678283Z",
+  "sentToKitchenAt": null,
+  "closedAt": null,
+  "items": []
+}
