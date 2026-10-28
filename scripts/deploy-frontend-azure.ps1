@@ -65,14 +65,45 @@ if ($BackendOrigin -notmatch '^https://[a-z0-9.-]+(:[0-9]+)?$') {
     throw "BackendOrigin debe ser un origen https:// sin ruta ni diagonal final. Recibido: '$BackendOrigin'."
 }
 
-# CAL-165: Advertencia preventiva sobre limites de cuota de Azure App Service Plan F1
+# CAL-165: Validacion estricta de cuotas y limites de Azure App Service Plan F1
 try {
-    $planSku = Invoke-Native 'az' @('appservice', 'plan', 'list', '-g', $ResourceGroup, '--query', "[0].sku.name", '-o', 'tsv') 2>$null
-    if ($planSku -eq 'F1') {
-        Write-Warning "El Frontend se encuentra en Azure App Service Plan F1 (Gratuito: 60 min CPU/dia, WPStopRequests). Si se alcanza la cuota diaria, escalar a B1 temporalmente."
+    # Obtener el plan exacto asociado a la Web App
+    $planId = Invoke-Native 'az' @('webapp', 'show', '-g', $ResourceGroup, '-n', $WebAppName, '--query', 'appServicePlanId', '-o', 'tsv') 2>$null
+    if ($planId) {
+        $planJson = Invoke-Native 'az' @('appservice', 'plan', 'show', '--ids', $planId, '-o', 'json') | ConvertFrom-Json
+        $planSku = $planJson.sku.name
+
+        if ($planSku -eq 'F1') {
+            Write-Warning "El Frontend se encuentra en Azure App Service Plan F1 (Gratuito: 60 min CPU/dia, WPStopRequests = 15/dia)."
+            
+            # Consultar estado de cuota y usages del App Service Plan
+            $usagesJson = Invoke-Native 'az' @('rest', '--method', 'get', '--uri', "$planId/usages?api-version=2022-03-01") 2>$null
+            if ($usagesJson) {
+                $usages = ($usagesJson | ConvertFrom-Json).value
+                $stopReqUsage = $usages | Where-Object { $_.name.value -eq 'WPStopRequests' -or $_.name.localizedValue -match 'Stop' }
+                if ($stopReqUsage) {
+                    $curr = [int]$stopReqUsage.currentValue
+                    $limit = [int]$stopReqUsage.limit
+                    Write-Host "Cuota de reinicios de aplicacion (WPStopRequests): $curr / $limit consumidos hoy."
+                    if ($curr -ge $limit) {
+                        throw "CUOTA AGOTADA (CAL-165): Se alcanzo el limite de $limit reinicios diarios (WPStopRequests) en el plan F1. La aplicacion respondera 403 QuotaExceeded. La cuota se reinicia a las 04:00 UTC. Para continuar de inmediato, escale el plan a B1: en infra/terraform/azure-frontend/terraform.tfvars configure app_service_sku = 'B1' y ejecute terraform apply."
+                    }
+                }
+            }
+
+            # Consultar si el sitio se encuentra reportando QuotaExceeded
+            $appState = Invoke-Native 'az' @('webapp', 'show', '-g', $ResourceGroup, '-n', $WebAppName, '--query', 'state', '-o', 'tsv') 2>$null
+            $appAvailability = Invoke-Native 'az' @('webapp', 'show', '-g', $ResourceGroup, '-n', $WebAppName, '--query', 'availabilityState', '-o', 'tsv') 2>$null
+            if ($appState -eq 'QuotaExceeded' -or $appAvailability -eq 'QuotaExceeded') {
+                throw "SITIO BLOQUEADO POR CUOTA (CAL-165): La Web App '$WebAppName' se encuentra en estado QuotaExceeded. La cuota diaria se reinicia a las 04:00 UTC. Para desbloquearla ahora, escale a SKU B1 con Terraform."
+            }
+        }
     }
 } catch {
-    # No bloquear si la consulta de cuota/plan falla
+    if ($_.Exception.Message -match 'CUOTA AGOTADA' -or $_.Exception.Message -match 'SITIO BLOQUEADO') {
+        throw $_
+    }
+    Write-Warning "No fue posible consultar las metricas de cuota en Azure: $($_.Exception.Message)"
 }
 
 $work = Join-Path ([IO.Path]::GetTempPath()) "callejon9-frontend-$([guid]::NewGuid().ToString('N').Substring(0, 8))"
