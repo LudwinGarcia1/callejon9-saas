@@ -39,7 +39,8 @@ Para evitar caídas de cuota (`QuotaExceeded`) o retrasos por arranque en frío 
    `az rest --method get --uri /subscriptions/{subId}/resourceGroups/{rg}/providers/Microsoft.Web/serverfarms/{plan}/usages?api-version=2022-03-01 --query "value[].{name:name.localizedValue, current:currentValue, limit:limit}" -o table`
 3. **Regresar a F1 tras concluir la sesión:**
    Revertir `app_service_sku = "F1"` y ejecutar `terraform apply`.
-El estado de Terraform cuesta centavos.
+
+*El estado de Terraform cuesta centavos.*
 
 ## Requisitos
 
