@@ -9,5 +9,7 @@ public record MeResponse(
         String role,
         UUID tenantId,
         String slug,
-        String restaurantName) {
+        String restaurantName,
+        /** ID IANA del restaurante, para que el cliente muestre fechas en su hora local (CAL-19). */
+        String timezone) {
 }

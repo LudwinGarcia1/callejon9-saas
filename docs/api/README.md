@@ -34,7 +34,7 @@ Para publicar el frontend hace falta una plataforma que ejecute el servidor de N
 
 - **El login no devuelve un token.** `POST /api/v1/auth/login` responde con el usuario y deja dos cookies `httpOnly`, `Secure` y `SameSite=Strict`: `access_token` (15 minutos) y `refresh_token`. El navegador las envía solo. No hay header `Authorization: Bearer`, y el token no se guarda en `localStorage` ni en JavaScript.
 - **Cuando una petición responde `401`,** se llama una sola vez a `POST /api/v1/auth/refresh`. Si responde `204`, se repite la petición original; si responde `401`, la sesión terminó y hay que volver al login.
-- **`GET /api/v1/auth/me`** devuelve el usuario, su rol y su restaurante. Sirve para restaurar la sesión al recargar la página.
+- **`GET /api/v1/auth/me`** devuelve el usuario, su rol y su restaurante. Sirve para restaurar la sesión al recargar la página, e incluye `timezone`: el ID IANA con el que el restaurante corta sus días (CAL-19).
 - **El restaurante lo decide el backend.** Sale de la cookie firmada; ninguna ruta acepta `tenant_id` del cliente.
 - **Un login incorrecto** responde `401` sin cuerpo: no indica si falló el restaurante, el correo o la contraseña.
 
@@ -148,6 +148,8 @@ El resumen de efectivo suma el fondo inicial, el efectivo recibido menos el camb
 | GET | `/sales` | `?from&to` | `200 SalesHistoryResponse` | ADMIN, CASHIER |
 | GET | `/analytics` | `?from&to` | `200 AnalyticsResponse` | ADMIN |
 
+`from` y `to` son días de calendario en la zona del restaurante (`/settings`), no en UTC. Cambiar la zona reinterpreta el historial en la siguiente consulta; los instantes guardados no se modifican.
+
 ### Inventario
 
 | Método | Ruta | Cuerpo / parámetros | Respuesta | Roles |
@@ -167,6 +169,8 @@ El resumen de efectivo suma el fondo inicial, el efectivo recibido menos el camb
 | POST | `/users` | `CreateUserRequest` | `201 UserResponse` | ADMIN |
 | PATCH | `/users/{id}` | `UpdateUserStatusRequest` (alta o baja) | `200 UserResponse` | ADMIN |
 | GET | `/platform/plans` | — | `200 PlanView[]` | SUPER_ADMIN |
+| GET | `/settings` | — | `200 RestaurantSettingsResponse` | ADMIN |
+| PATCH | `/settings` | `UpdateRestaurantSettingsRequest` (`timezone`, ID IANA geográfico como `America/Cancun`) | `200 RestaurantSettingsResponse`; `400` si la zona no existe, es un offset fijo (`-05:00`, `Etc/GMT+5`) o un alias heredado (`EST`) | ADMIN |
 
 Los campos de cada `…Request` y `…Response` están en `components.schemas` de `openapi.json`. En el frontend existente, las rutas están en `frontend/src/lib/endpoints.ts` y los tipos, en `frontend/src/lib`.
 

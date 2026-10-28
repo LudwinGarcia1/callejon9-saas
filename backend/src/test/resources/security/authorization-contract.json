@@ -1067,6 +1067,42 @@
     "reason": "CAL-5: permisos de SalesController"
   },
   {
+    "method": "GET",
+    "path": "/api/v1/settings",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-19: configuracion del restaurante (zona horaria)"
+  },
+  {
+    "method": "HEAD",
+    "path": "/api/v1/settings",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-19: configuracion del restaurante (zona horaria)"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/settings",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN"
+    ],
+    "reason": "CAL-19: configuracion del restaurante (zona horaria)"
+  },
+  {
     "method": "POST",
     "path": "/api/v1/signup",
     "params": [],

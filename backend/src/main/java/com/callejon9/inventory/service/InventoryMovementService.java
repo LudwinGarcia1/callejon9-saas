@@ -10,6 +10,7 @@ import com.callejon9.shared.error.BusinessRuleException;
 import com.callejon9.shared.error.ResourceNotFoundException;
 import com.callejon9.shared.time.BusinessCalendar;
 import com.callejon9.shared.time.InstantRange;
+import com.callejon9.shared.time.TenantCalendar;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -103,11 +104,12 @@ public class InventoryMovementService {
      */
     @Transactional(readOnly = true)
     public List<InventoryMovementRow> listMovements(LocalDate from, LocalDate to, UUID itemId) {
-        LocalDate today = businessCalendar.today();
+        TenantCalendar calendar = businessCalendar.current();
+        LocalDate today = calendar.today();
         LocalDate effectiveFrom = from != null ? from : (to != null ? to : today);
         LocalDate effectiveTo = to != null ? to : effectiveFrom;
 
-        InstantRange range = businessCalendar.toInstantRange(effectiveFrom, effectiveTo);
+        InstantRange range = calendar.toInstantRange(effectiveFrom, effectiveTo);
         return movementRepository.findHistory(range.start(), range.endExclusive(), itemId);
     }
 }

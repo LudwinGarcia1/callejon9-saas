@@ -15,6 +15,10 @@ public interface TenantRepository extends JpaRepository<Tenant, UUID> {
 
     boolean existsBySlug(String slug);
 
+    /** Solo la zona horaria: el calendario la consulta en cada peticion y no necesita la entidad. */
+    @Query("select t.timezone from Tenant t where t.id = :id")
+    Optional<String> findTimezoneById(@Param("id") UUID id);
+
     /**
      * Igual que {@code findById}, pero con {@code SELECT ... FOR UPDATE}: serializa
      * operaciones "leer conteo, decidir, escribir" que corren sobre el mismo tenant

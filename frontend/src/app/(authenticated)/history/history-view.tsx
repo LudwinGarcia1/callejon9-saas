@@ -21,6 +21,7 @@ import { Money } from "@/components/shared/money";
 import { QueryState } from "@/components/shared/query-state";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { TicketSummary } from "@/components/shared/ticket-summary";
+import { useSession } from "@/hooks/use-session";
 import { ApiError, api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { formatShortDate, formatShortTime, todayIsoDate } from "@/lib/format";
@@ -35,7 +36,8 @@ import type { SaleHistoryRow, SalesHistoryResponse, TicketResponse } from "@/lib
  * ticket puntual por folio sin importar si esta dentro del rango visible.
  */
 export function HistoryView() {
-  const today = todayIsoDate();
+  const { user } = useSession();
+  const today = todayIsoDate(user?.timezone);
   const [range, setRange] = useState({ from: today, to: today });
   const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
   const [folioResult, setFolioResult] = useState<TicketResponse | null>(null);

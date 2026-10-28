@@ -5,6 +5,7 @@ import com.callejon9.analytics.web.dto.AnalyticsResponse;
 import com.callejon9.shared.time.BusinessCalendar;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,7 +30,7 @@ class AnalyticsServiceTest {
 
     @BeforeEach
     void setUp() {
-        businessCalendar = new BusinessCalendar("America/Mexico_City");
+        businessCalendar = BusinessCalendar.fixed(ZoneId.of("America/Mexico_City"));
         analyticsService = new AnalyticsService(analyticsRepository, businessCalendar);
     }
 
