@@ -1,0 +1,15 @@
+# Caja de `pruebas` pide el PDF del ticket del restaurante B
+# 2026-10-28 14:34:51 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+GET /api/v1/tickets/4468b4d9-ec20-4e5c-b545-5fa5f42760d0/pdf
+
+
+HTTP 404
+Content-Type: application/problem+json
+
+{
+  "type": "about:blank",
+  "title": "Recurso no encontrado",
+  "status": 404,
+  "detail": "El ticket 4468b4d9-ec20-4e5c-b545-5fa5f42760d0 no existe.",
+  "instance": "/api/v1/tickets/4468b4d9-ec20-4e5c-b545-5fa5f42760d0/pdf"
+}

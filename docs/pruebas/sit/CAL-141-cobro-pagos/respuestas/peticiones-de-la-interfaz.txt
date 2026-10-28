@@ -1,0 +1,385 @@
+# Peticiones de la interfaz · mesero@pruebas.com
+# 2026-10-28 14:11:39 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders
+Content-Type: application/json
+
+{"tableId":"4edb1976-8287-434c-9785-7d6787883bee","guestCount":2}
+
+HTTP 201
+Content-Type: application/json
+
+{
+  "id": "53cf75fc-6681-49c7-8b05-3605cd565fb8",
+  "folio": "ORD-261028201139",
+  "tableId": "4edb1976-8287-434c-9785-7d6787883bee",
+  "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+  "guestCount": 2,
+  "status": "NEW",
+  "total": 0,
+  "openedAt": "2026-10-28T20:11:39.297993Z",
+  "sentToKitchenAt": null,
+  "closedAt": null,
+  "items": []
+}
+
+# Peticiones de la interfaz · mesero@pruebas.com
+# 2026-10-28 14:11:44 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders/53cf75fc-6681-49c7-8b05-3605cd565fb8/items
+Content-Type: application/json
+
+{"items":[{"productId":"33dafe69-08e7-4c4d-b1b4-d99902472968","quantity":2},{"productId":"620e77f4-cfb7-4aec-96d2-602da6ad398a","quantity":1}]}
+
+HTTP 200
+Content-Type: application/json
+
+{
+  "id": "53cf75fc-6681-49c7-8b05-3605cd565fb8",
+  "folio": "ORD-261028201139",
+  "tableId": "4edb1976-8287-434c-9785-7d6787883bee",
+  "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+  "guestCount": 2,
+  "status": "NEW",
+  "total": 325,
+  "openedAt": "2026-10-28T20:11:39.297993Z",
+  "sentToKitchenAt": null,
+  "closedAt": null,
+  "items": [
+    {
+      "id": "94a5168b-70e1-4137-95cf-32fd5f81ae15",
+      "productId": "33dafe69-08e7-4c4d-b1b4-d99902472968",
+      "productName": "Guacamole con totopos",
+      "unitPrice": 95,
+      "quantity": 2,
+      "kitchenStatus": "PENDING",
+      "notes": null
+    },
+    {
+      "id": "74444e5f-aa4f-43f8-89f4-fa37d1930d29",
+      "productId": "620e77f4-cfb7-4aec-96d2-602da6ad398a",
+      "productName": "Margarita",
+      "unitPrice": 135,
+      "quantity": 1,
+      "kitchenStatus": "PENDING",
+      "notes": null
+    }
+  ]
+}
+
+# Peticiones de la interfaz · mesero@pruebas.com
+# 2026-10-28 14:11:45 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders/53cf75fc-6681-49c7-8b05-3605cd565fb8/send-to-kitchen
+
+
+HTTP 200
+Content-Type: application/json
+
+{
+  "id": "53cf75fc-6681-49c7-8b05-3605cd565fb8",
+  "folio": "ORD-261028201139",
+  "tableId": "4edb1976-8287-434c-9785-7d6787883bee",
+  "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+  "guestCount": 2,
+  "status": "SENT",
+  "total": 325,
+  "openedAt": "2026-10-28T20:11:39.297993Z",
+  "sentToKitchenAt": "2026-10-28T20:11:44.884074493Z",
+  "closedAt": null,
+  "items": [
+    {
+      "id": "94a5168b-70e1-4137-95cf-32fd5f81ae15",
+      "productId": "33dafe69-08e7-4c4d-b1b4-d99902472968",
+      "productName": "Guacamole con totopos",
+      "unitPrice": 95,
+      "quantity": 2,
+      "kitchenStatus": "PENDING",
+      "notes": null
+    },
+    {
+      "id": "74444e5f-aa4f-43f8-89f4-fa37d1930d29",
+      "productId": "620e77f4-cfb7-4aec-96d2-602da6ad398a",
+      "productName": "Margarita",
+      "unitPrice": 135,
+      "quantity": 1,
+      "kitchenStatus": "PENDING",
+      "notes": null
+    }
+  ]
+}
+
+# Peticiones de la interfaz · mesero@pruebas.com
+# 2026-10-28 14:11:48 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders
+Content-Type: application/json
+
+{"tableId":"0568fb35-160c-4be4-a0cb-cc8c42962644","guestCount":2}
+
+HTTP 201
+Content-Type: application/json
+
+{
+  "id": "3ef3b8fe-2f3c-4722-a868-60ed3f7be29b",
+  "folio": "ORD-261028201148",
+  "tableId": "0568fb35-160c-4be4-a0cb-cc8c42962644",
+  "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+  "guestCount": 2,
+  "status": "NEW",
+  "total": 0,
+  "openedAt": "2026-10-28T20:11:48.098575Z",
+  "sentToKitchenAt": null,
+  "closedAt": null,
+  "items": []
+}
+
+# Peticiones de la interfaz · mesero@pruebas.com
+# 2026-10-28 14:11:53 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders/3ef3b8fe-2f3c-4722-a868-60ed3f7be29b/items
+Content-Type: application/json
+
+{"items":[{"productId":"fca14107-3ac2-4ec4-a338-348b2b5d2b43","quantity":1}]}
+
+HTTP 200
+Content-Type: application/json
+
+{
+  "id": "3ef3b8fe-2f3c-4722-a868-60ed3f7be29b",
+  "folio": "ORD-261028201148",
+  "tableId": "0568fb35-160c-4be4-a0cb-cc8c42962644",
+  "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+  "guestCount": 2,
+  "status": "NEW",
+  "total": 110,
+  "openedAt": "2026-10-28T20:11:48.098575Z",
+  "sentToKitchenAt": null,
+  "closedAt": null,
+  "items": [
+    {
+      "id": "0c13a246-ba75-4cd7-884f-3479436c2805",
+      "productId": "fca14107-3ac2-4ec4-a338-348b2b5d2b43",
+      "productName": "Queso fundido",
+      "unitPrice": 110,
+      "quantity": 1,
+      "kitchenStatus": "PENDING",
+      "notes": null
+    }
+  ]
+}
+
+# Peticiones de la interfaz · mesero@pruebas.com
+# 2026-10-28 14:11:53 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders/3ef3b8fe-2f3c-4722-a868-60ed3f7be29b/send-to-kitchen
+
+
+HTTP 200
+Content-Type: application/json
+
+{
+  "id": "3ef3b8fe-2f3c-4722-a868-60ed3f7be29b",
+  "folio": "ORD-261028201148",
+  "tableId": "0568fb35-160c-4be4-a0cb-cc8c42962644",
+  "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+  "guestCount": 2,
+  "status": "SENT",
+  "total": 110,
+  "openedAt": "2026-10-28T20:11:48.098575Z",
+  "sentToKitchenAt": "2026-10-28T20:11:53.365285939Z",
+  "closedAt": null,
+  "items": [
+    {
+      "id": "0c13a246-ba75-4cd7-884f-3479436c2805",
+      "productId": "fca14107-3ac2-4ec4-a338-348b2b5d2b43",
+      "productName": "Queso fundido",
+      "unitPrice": 110,
+      "quantity": 1,
+      "kitchenStatus": "PENDING",
+      "notes": null
+    }
+  ]
+}
+
+# Peticiones de la interfaz · cocina@pruebas.com
+# 2026-10-28 14:11:55 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/kitchen/items/94a5168b-70e1-4137-95cf-32fd5f81ae15/status
+Content-Type: application/json
+
+{"status":"IN_PREPARATION"}
+
+HTTP 200
+Content-Type: application/json
+
+{
+  "id": "94a5168b-70e1-4137-95cf-32fd5f81ae15",
+  "orderId": "53cf75fc-6681-49c7-8b05-3605cd565fb8",
+  "productId": "33dafe69-08e7-4c4d-b1b4-d99902472968",
+  "productName": "Guacamole con totopos",
+  "quantity": 2,
+  "kitchenStatus": "IN_PREPARATION",
+  "notes": null
+}
+
+# Peticiones de la interfaz · cocina@pruebas.com
+# 2026-10-28 14:11:56 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/kitchen/items/74444e5f-aa4f-43f8-89f4-fa37d1930d29/status
+Content-Type: application/json
+
+{"status":"IN_PREPARATION"}
+
+HTTP 200
+Content-Type: application/json
+
+{
+  "id": "74444e5f-aa4f-43f8-89f4-fa37d1930d29",
+  "orderId": "53cf75fc-6681-49c7-8b05-3605cd565fb8",
+  "productId": "620e77f4-cfb7-4aec-96d2-602da6ad398a",
+  "productName": "Margarita",
+  "quantity": 1,
+  "kitchenStatus": "IN_PREPARATION",
+  "notes": null
+}
+
+# Peticiones de la interfaz · cocina@pruebas.com
+# 2026-10-28 14:11:57 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/kitchen/items/94a5168b-70e1-4137-95cf-32fd5f81ae15/status
+Content-Type: application/json
+
+{"status":"READY"}
+
+HTTP 200
+Content-Type: application/json
+
+{
+  "id": "94a5168b-70e1-4137-95cf-32fd5f81ae15",
+  "orderId": "53cf75fc-6681-49c7-8b05-3605cd565fb8",
+  "productId": "33dafe69-08e7-4c4d-b1b4-d99902472968",
+  "productName": "Guacamole con totopos",
+  "quantity": 2,
+  "kitchenStatus": "READY",
+  "notes": null
+}
+
+# Peticiones de la interfaz · cocina@pruebas.com
+# 2026-10-28 14:11:58 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/kitchen/items/74444e5f-aa4f-43f8-89f4-fa37d1930d29/status
+Content-Type: application/json
+
+{"status":"READY"}
+
+HTTP 200
+Content-Type: application/json
+
+{
+  "id": "74444e5f-aa4f-43f8-89f4-fa37d1930d29",
+  "orderId": "53cf75fc-6681-49c7-8b05-3605cd565fb8",
+  "productId": "620e77f4-cfb7-4aec-96d2-602da6ad398a",
+  "productName": "Margarita",
+  "quantity": 1,
+  "kitchenStatus": "READY",
+  "notes": null
+}
+
+# Peticiones de la interfaz · caja@pruebas.com
+# 2026-10-28 14:12:04 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders/3ef3b8fe-2f3c-4722-a868-60ed3f7be29b/checkout
+Content-Type: application/json
+
+{"payments":[{"method":"CASH","amount":50}],"tipPercent":0}
+
+HTTP 422
+Content-Type: application/problem+json
+
+{
+  "type": "about:blank",
+  "title": "Unprocessable Entity",
+  "status": 422,
+  "detail": "Los pagos no cubren el total de la cuenta.",
+  "instance": "/api/v1/orders/3ef3b8fe-2f3c-4722-a868-60ed3f7be29b/checkout"
+}
+
+# Peticiones de la interfaz · caja@pruebas.com
+# 2026-10-28 14:12:12 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders/53cf75fc-6681-49c7-8b05-3605cd565fb8/checkout
+Content-Type: application/json
+
+{"payments":[{"method":"CASH","amount":200},{"method":"CARD","amount":157.5}],"tipPercent":10}
+
+HTTP 201
+Content-Type: application/json
+
+{
+  "id": "564335dd-e8a5-4e8a-ad0f-5456d205308f",
+  "saleId": "be65f367-c292-4ba2-bf95-b2cebbeed708",
+  "orderId": "53cf75fc-6681-49c7-8b05-3605cd565fb8",
+  "folio": "TCK-261028201211",
+  "items": [
+    {
+      "productId": "33dafe69-08e7-4c4d-b1b4-d99902472968",
+      "productName": "Guacamole con totopos",
+      "unitPrice": 95,
+      "quantity": 2,
+      "subtotal": 190
+    },
+    {
+      "productId": "620e77f4-cfb7-4aec-96d2-602da6ad398a",
+      "productName": "Margarita",
+      "unitPrice": 135,
+      "quantity": 1,
+      "subtotal": 135
+    }
+  ],
+  "subtotal": 325,
+  "tip": 32.5,
+  "tipPercent": 10,
+  "total": 357.5,
+  "paymentMethod": "MIXED",
+  "closedAt": "2026-10-28T20:12:11.061543232Z",
+  "payments": [
+    {
+      "method": "CASH",
+      "amount": 200,
+      "receivedAmount": 200,
+      "change": 0
+    },
+    {
+      "method": "CARD",
+      "amount": 157.5,
+      "receivedAmount": 157.5,
+      "change": 0
+    }
+  ],
+  "change": 0
+}
+
+# Peticiones de la interfaz · mesero@pruebas.com
+# 2026-10-28 14:12:21 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders/53cf75fc-6681-49c7-8b05-3605cd565fb8/items
+Content-Type: application/json
+
+{"items":[{"productId":"fca14107-3ac2-4ec4-a338-348b2b5d2b43","quantity":1}]}
+
+HTTP 409
+Content-Type: application/problem+json
+
+{
+  "type": "about:blank",
+  "title": "Regla de negocio",
+  "status": 409,
+  "detail": "La orden ORD-261028201139 ya esta PAID y no admite mas productos.",
+  "instance": "/api/v1/orders/53cf75fc-6681-49c7-8b05-3605cd565fb8/items"
+}
+
+# Peticiones de la interfaz · mesero@pruebas.com
+# 2026-10-28 14:12:22 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders/53cf75fc-6681-49c7-8b05-3605cd565fb8/items
+Content-Type: application/json
+
+{"items":[{"productId":"fca14107-3ac2-4ec4-a338-348b2b5d2b43","quantity":1}]}
+
+HTTP 409
+Content-Type: application/problem+json
+
+{
+  "type": "about:blank",
+  "title": "Regla de negocio",
+  "status": 409,
+  "detail": "La orden ORD-261028201139 ya esta PAID y no admite mas productos.",
+  "instance": "/api/v1/orders/53cf75fc-6681-49c7-8b05-3605cd565fb8/items"
+}
