@@ -30,6 +30,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -471,6 +472,98 @@ class OrderControllerTest {
         mockMvc.perform(post("/api/v1/orders/" + UUID.randomUUID() + "/cancel")
                         .cookie(cookieFor(waiter)))
                 .andExpect(status().isNotFound());
+    }
+
+    private String addItemsAndReturnBody(UUID orderId, String itemsJson) throws Exception {
+        return mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
+                        .cookie(cookieFor(waiter))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"items\":[" + itemsJson + "]}"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+    }
+
+    private String itemJson(int quantity, String notes) {
+        return "{\"productId\":\"" + product.getId() + "\",\"quantity\":" + quantity
+                + (notes == null ? "" : ",\"notes\":\"" + notes + "\"") + "}";
+    }
+
+    private UUID firstItemId(String orderBody) {
+        return UUID.fromString(orderBody.replaceAll(
+                "(?s).*\"items\":\\[\\{\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
+    }
+
+    @Test
+    @DisplayName("CAL-151: quitar una linea de una orden NEW la elimina y recalcula el total")
+    void removingAnItemFromANewOrderRecomputesTheTotal() throws Exception {
+        UUID orderId = openOrder();
+        // Dos lotes: las lineas de un mismo lote comparten orderedAt y su
+        // orden en la respuesta no es estable.
+        UUID removedId = firstItemId(addItemsAndReturnBody(orderId, itemJson(2, "sin crema")));
+        addItemsAndReturnBody(orderId, itemJson(1, null));
+
+        mockMvc.perform(delete("/api/v1/orders/" + orderId + "/items/" + removedId)
+                        .cookie(cookieFor(waiter)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("NEW"))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].id").value(org.hamcrest.Matchers.not(removedId.toString())))
+                .andExpect(jsonPath("$.items[0].quantity").value(1))
+                .andExpect(jsonPath("$.total").value(25.00));
+
+        mockMvc.perform(get("/api/v1/orders/" + orderId).cookie(cookieFor(waiter)))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.total").value(25.00));
+    }
+
+    @Test
+    @DisplayName("CAL-151: una orden ya enviada a cocina no permite quitar lineas (409)")
+    void removingAnItemAfterSendingToKitchenIsRejected() throws Exception {
+        UUID orderId = openOrder();
+        UUID itemId = firstItemId(addItemsAndReturnBody(orderId, itemJson(1, null)));
+        mockMvc.perform(post("/api/v1/orders/" + orderId + "/send-to-kitchen").cookie(cookieFor(waiter)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(delete("/api/v1/orders/" + orderId + "/items/" + itemId)
+                        .cookie(cookieFor(waiter)))
+                .andExpect(status().isConflict());
+
+        mockMvc.perform(get("/api/v1/orders/" + orderId).cookie(cookieFor(waiter)))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.total").value(25.00));
+    }
+
+    @Test
+    @DisplayName("CAL-151: una linea que no pertenece a la orden da 404 y no se borra")
+    void removingAnItemOfAnotherOrderGives404() throws Exception {
+        UUID orderId = openOrder();
+        UUID itemId = firstItemId(addItemsAndReturnBody(orderId, itemJson(1, null)));
+
+        TenantContext.set(tenant.getId());
+        RestaurantTable otherTable;
+        try {
+            otherTable = transactionTemplate.execute(status -> tableRepository.save(RestaurantTable.builder()
+                    .number(2).capacity(4).status(TableStatus.FREE).active(true).build()));
+        } finally {
+            TenantContext.clear();
+        }
+        String otherBody = mockMvc.perform(post("/api/v1/orders")
+                        .cookie(cookieFor(waiter))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tableId\":\"" + otherTable.getId() + "\",\"guestCount\":1}"))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        UUID otherOrderId = UUID.fromString(otherBody.replaceAll(".*\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
+
+        mockMvc.perform(delete("/api/v1/orders/" + otherOrderId + "/items/" + itemId)
+                        .cookie(cookieFor(waiter)))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(delete("/api/v1/orders/" + orderId + "/items/" + UUID.randomUUID())
+                        .cookie(cookieFor(waiter)))
+                .andExpect(status().isNotFound());
+
+        mockMvc.perform(get("/api/v1/orders/" + orderId).cookie(cookieFor(waiter)))
+                .andExpect(jsonPath("$.items.length()").value(1));
     }
 
     @Test

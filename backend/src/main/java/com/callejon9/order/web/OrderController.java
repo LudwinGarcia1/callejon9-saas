@@ -14,6 +14,7 @@ import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -67,6 +68,13 @@ public class OrderController {
                 .map(item -> new NewOrderItem(item.productId(), item.quantity(), item.notes()))
                 .toList();
         return OrderResponse.from(orderService.addItems(id, items, actorOf(authentication)));
+    }
+
+    @DeleteMapping("/{id}/items/{itemId}")
+    @PreAuthorize("hasAnyRole('WAITER','ADMIN')")
+    public OrderResponse removeItem(@PathVariable UUID id, @PathVariable UUID itemId,
+                                     Authentication authentication) {
+        return OrderResponse.from(orderService.removeItem(id, itemId, actorOf(authentication)));
     }
 
     @PostMapping("/{id}/send-to-kitchen")

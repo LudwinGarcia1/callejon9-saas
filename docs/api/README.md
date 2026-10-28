@@ -112,9 +112,12 @@ No hay `GET` por id para mesas, categorías ni productos: se lee la colección y
 | POST | `/orders` | `OpenOrderRequest` | `201 OrderResponse` | ADMIN, WAITER |
 | GET | `/orders/{id}` | — | `200 OrderResponse` | ADMIN, WAITER, CASHIER |
 | POST | `/orders/{id}/items` | `AddOrderItemsRequest` | `200 OrderResponse` | ADMIN, WAITER |
+| DELETE | `/orders/{id}/items/{itemId}` | — | `200 OrderResponse` | ADMIN, WAITER |
 | POST | `/orders/{id}/send-to-kitchen` | — | `200 OrderResponse` | ADMIN, WAITER |
 | POST | `/orders/{id}/cancel` | — | `200 OrderResponse` | ADMIN, WAITER |
 | POST | `/orders/{id}/checkout` | `CheckoutRequest` | `201 TicketResponse` | ADMIN, CASHIER |
+
+Quitar un producto (`DELETE …/items/{itemId}`) solo se permite mientras la orden está en `NEW`, es decir, antes de enviarla a cocina. Después responde `409`. Las reglas son las mismas que al agregar: un mesero solo toca sus propias órdenes (`403`), y un `itemId` que no pertenece a la orden da `404`. La ruta se agregó a mano a `openapi.json` el 2026-10-28 (CAL-151), con el formato del export.
 
 El checkout requiere un turno abierto para el usuario autenticado. Sin turno responde `422`; la venta queda asociada al turno al que pertenece el cajero.
 

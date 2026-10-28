@@ -12,7 +12,7 @@ import type { ProductPicker } from "@/app/(authenticated)/waiter/order/[id]/prod
 const effects = vi.hoisted(() => ({ push: vi.fn(), success: vi.fn(), error: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: effects.push }) }));
 vi.mock("sonner", () => ({ toast: effects }));
-vi.mock("@/lib/api", async (original) => ({ ...await original<typeof import("@/lib/api")>(), api: { get: vi.fn(), post: vi.fn() } }));
+vi.mock("@/lib/api", async (original) => ({ ...await original<typeof import("@/lib/api")>(), api: { get: vi.fn(), post: vi.fn(), del: vi.fn() } }));
 vi.mock("@/app/(authenticated)/waiter/order/[id]/product-picker", () => ({
   ProductPicker: (props: ComponentProps<typeof ProductPicker>) => <section>
     <button onClick={() => props.onAddProduct({ id: "p1", name: "Producto", price: 10, active: true, categoryId: null, description: null })}>Agregar</button>
