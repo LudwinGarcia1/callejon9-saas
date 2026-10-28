@@ -37,6 +37,11 @@
       "authority": "high"
     },
     {
+      "path": "scripts/informe-pruebas/README.md",
+      "kind": "testing",
+      "authority": "medium"
+    },
+    {
       "path": "docs/cabeceras-seguridad.md",
       "kind": "security",
       "authority": "high"
