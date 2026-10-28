@@ -1,13 +1,17 @@
 package com.callejon9.table.service;
 
+import com.callejon9.platform.tenant.service.PlanLimitService;
 import com.callejon9.shared.error.BusinessRuleException;
 import com.callejon9.shared.error.ResourceNotFoundException;
 import com.callejon9.table.domain.RestaurantTable;
 import com.callejon9.table.domain.TableStatus;
 import com.callejon9.table.repository.RestaurantTableRepository;
+import com.callejon9.tenancy.TenantContext;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -29,8 +34,23 @@ class TableServiceTest {
     @Mock
     private RestaurantTableRepository tableRepository;
 
+    @Mock
+    private PlanLimitService planLimitService;
+
     @InjectMocks
     private TableService tableService;
+
+    private static final UUID TENANT_ID = UUID.fromString("00000000-0000-0000-0000-000000000010");
+
+    @BeforeEach
+    void setTenantContext() {
+        TenantContext.set(TENANT_ID);
+    }
+
+    @AfterEach
+    void clearTenantContext() {
+        TenantContext.clear();
+    }
 
     @Test
     @DisplayName("createTable guarda la mesa cuando el numero no esta duplicado")
@@ -45,6 +65,7 @@ class TableServiceTest {
         assertThat(table.getCapacity()).isEqualTo(4);
         assertThat(table.getStatus()).isEqualTo(TableStatus.FREE);
         assertThat(table.isActive()).isTrue();
+        verify(planLimitService).assertCanAddTable(TENANT_ID);
         verify(tableRepository).save(any(RestaurantTable.class));
     }
 
@@ -56,6 +77,20 @@ class TableServiceTest {
         assertThatThrownBy(() -> tableService.createTable(5, 4))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessageContaining("Ya existe una mesa con el numero 5.");
+
+        verify(tableRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("createTable rechaza una mesa cuando el plan llego al limite")
+    void createTableAtPlanLimitThrows() {
+        when(tableRepository.existsByNumber(6)).thenReturn(false);
+        doThrow(new BusinessRuleException("Alcanzaste el limite de 5 mesas del plan FREE."))
+                .when(planLimitService).assertCanAddTable(TENANT_ID);
+
+        assertThatThrownBy(() -> tableService.createTable(6, 4))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessage("Alcanzaste el limite de 5 mesas del plan FREE.");
 
         verify(tableRepository, never()).save(any());
     }
@@ -252,6 +287,24 @@ class TableServiceTest {
 
         assertThat(deactivated.isActive()).isFalse();
         verify(tableRepository).save(table);
+    }
+
+    @Test
+    @DisplayName("setActive valida el limite del plan al reactivar una mesa")
+    void setActiveReactivationChecksPlanLimit() {
+        UUID tableId = UUID.randomUUID();
+        RestaurantTable table = RestaurantTable.builder()
+                .number(13).status(TableStatus.FREE).active(false).build();
+        table.setId(tableId);
+        when(tableRepository.findById(tableId)).thenReturn(Optional.of(table));
+        doThrow(new BusinessRuleException("Alcanzaste el limite de 5 mesas del plan FREE."))
+                .when(planLimitService).assertCanAddTable(TENANT_ID);
+
+        assertThatThrownBy(() -> tableService.setActive(tableId, true))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessage("Alcanzaste el limite de 5 mesas del plan FREE.");
+
+        verify(tableRepository, never()).save(any());
     }
 
     @Test

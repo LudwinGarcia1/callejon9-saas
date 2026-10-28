@@ -180,6 +180,16 @@
       "path": "docs/cal-67-pwa-plataformas-pruebas-beta.md",
       "kind": "compliance",
       "authority": "high"
+    },
+    {
+      "path": "docs/pruebas/ut/CAL-121-alta-restaurantes-planes/README.md",
+      "kind": "testing",
+      "authority": "medium"
+    },
+    {
+      "path": "docs/pruebas/ut/CAL-121-alta-restaurantes-planes/evidencia-rama-original.md",
+      "kind": "testing",
+      "authority": "medium"
     }
   ]
 }
