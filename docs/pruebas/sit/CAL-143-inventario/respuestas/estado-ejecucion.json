@@ -1,0 +1,14 @@
+{
+  "startedAt": "2026-10-28 14:17:53",
+  "itemName": "SIT CAL-143 Tortilla 1417",
+  "itemId": "64093307-dba5-47c8-85bb-32724f8042fc",
+  "c01Movement": 201,
+  "c01AdminRow": "SIT CAL-143 Tortilla 1417 7 kg SUFICIENTE 2 kg $25.00 ACTIVO Movimiento Editar Dar de baja",
+  "c01Stock": 7,
+  "c02Deactivate": 200,
+  "c02FromUi": 409,
+  "c02Direct": 409,
+  "c02Stock": 7,
+  "c02Active": false,
+  "finishedAt": "2026-10-28 14:18:18"
+}
