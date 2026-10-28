@@ -1,0 +1,39 @@
+# CAL-121 · puertas del frontend DESPUÉS de corregir CAL-179 (2026-10-22 11:38-11:39 America/Mexico_City)
+# Rama test/cal-121-ut-alta-restaurantes-planes sobre main d31fd0c, con signup-view.tsx corregido: pattern="[a-z0-9\-]{3,80}"
+# Node 22.19.0 · Vitest 3.2.7 con jsdom
+
+$ pnpm exec vitest run src/test/signup-form.test.tsx --reporter=verbose
+ ✓ reglas del identificador > «abc» aceptado = true (3 caracteres, el mínimo), igual que @Pattern del backend 361ms
+ ✓ reglas del identificador > «ab» aceptado = false (2 caracteres), igual que @Pattern del backend 89ms
+ ✓ reglas del identificador > «aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa» aceptado = true (80 caracteres, el máximo), igual que @Pattern del backend 90ms
+ ✓ reglas del identificador > «aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa» aceptado = false (81 caracteres), igual que @Pattern del backend 65ms
+ ✓ reglas del identificador > «la-esquina-2» aceptado = true (minúsculas, números y guiones), igual que @Pattern del backend 62ms
+ ✓ reglas del identificador > «La-Esquina» aceptado = false (mayúsculas), igual que @Pattern del backend 64ms
+ ✓ reglas del identificador > «la_esquina» aceptado = false (guion bajo), igual que @Pattern del backend 71ms
+ ✓ reglas del identificador > «la esquina» aceptado = false (espacio), igual que @Pattern del backend 75ms
+ ✓ reglas del identificador > «cafe-niño» aceptado = false (letra ñ), igual que @Pattern del backend 53ms
+ ✓ reglas del identificador > los campos son obligatorios y sus topes coinciden con SignupRequest 70ms
+ ✓ envío > una contraseña corta se rechaza en el navegador y no llama a la API 410ms
+ ✓ envío > una contraseña sin números se rechaza en el navegador y no llama a la API 326ms
+ ✓ envío > una contraseña con el identificador se rechaza en el navegador y no llama a la API 235ms
+ ✓ envío > un alta válida envía el plan elegido y lleva al login con el identificador 649ms
+ ✓ envío > sin elegir plan se envía PRO, el plan preseleccionado 241ms
+ ✓ envío > un 400 con errores por campo muestra el mensaje debajo del identificador, sin aviso general 302ms
+ ✓ envío > un 409 por identificador ocupado muestra el aviso general con el detalle del servidor 284ms
+ Test Files  1 passed (1)
+      Tests  17 passed (17)
+   Start at  11:38:44
+
+$ pnpm test
+ ✓ src/test/signup-form.test.tsx (17 tests) 4578ms
+ Test Files  23 passed (23)
+      Tests  169 passed (169)
+   Start at  11:38:56
+   Duration  15.83s (transform 5.80s, setup 0ms, collect 46.42s, tests 15.41s, environment 21.67s, prepare 9.25s)
+
+$ pnpm lint
+> eslint
+(exit 0)
+
+$ pnpm exec tsc --noEmit
+(exit 0)

@@ -101,4 +101,9 @@ Estos son los motivos por los que se reabrieron evidencias del ciclo 6; sirven c
 
 ## Entrega académica
 
-Para un entregable en PDF, exporta el `README.md` de cada carpeta con sus imágenes; no se redacta un informe aparte con datos distintos. Un informe consolidado solo resume y enlaza evidencias ya revisadas, y su fecha de corte es posterior a la última revisión aprobada.
+Se entregan dos archivos, generados con [`scripts/informe-pruebas`](../../scripts/informe-pruebas/README.md) a partir de esta carpeta:
+
+- **Informe de pruebas:** estrategia, estado del plan, resultados resumidos, defectos y métricas. Se lee de corrido y crece poco aunque se sumen pruebas.
+- **Anexos de evidencia:** la evidencia completa de cada prueba, con código de anexo (por ejemplo `SIT-138`). El informe la cita con un enlace y un código QR.
+
+No se redacta un informe aparte con datos distintos: ambos archivos salen de los `README.md` de evidencia. Para una entrega formal, su fecha de corte es posterior a la última revisión aprobada.

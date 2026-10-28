@@ -39,7 +39,8 @@ Para evitar caídas de cuota (`QuotaExceeded`) o retrasos por arranque en frío 
    `az rest --method get --uri /subscriptions/{subId}/resourceGroups/{rg}/providers/Microsoft.Web/serverfarms/{plan}/usages?api-version=2022-03-01 --query "value[].{name:name.localizedValue, current:currentValue, limit:limit}" -o table`
 3. **Regresar a F1 tras concluir la sesión:**
    Revertir `app_service_sku = "F1"` y ejecutar `terraform apply`.
-El estado de Terraform cuesta centavos.
+
+*El estado de Terraform cuesta centavos.*
 
 ## Requisitos
 
@@ -105,6 +106,14 @@ terraform output -raw frontend_url
 
 Llega al backend como `APP_ALLOWED_ORIGINS`, la lista de orígenes del WebSocket `/ws`.
 
+También necesita las IP con las que este frontend llama a la API, como `trusted_proxy_addresses`:
+
+```powershell
+terraform output -json outbound_ip_addresses
+```
+
+Sin ellas, la API ve a todos los usuarios de la web con la misma IP y los límites por IP del login y del alta se vuelven globales (CAL-169).
+
 ## Verificación
 
 Con el backend encendido (`.\scripts\azure-backend-power.ps1 -Action Status`):
@@ -120,5 +129,5 @@ El último debe responder `401`, que viene del backend a través del proxy de Ne
 
 ## Riesgos y pendientes
 
-- **Límites por IP del backend.** Todas las peticiones llegan a la API desde las IP de salida de esta Web App. Ver el pendiente «`ClientIp` detrás de dos proxies» en `../azure-backend/README.md`: hay que verificarlo con este frontend ya publicado.
+- **Límites por IP del backend.** Todas las peticiones llegan a la API desde las IP de salida de esta Web App; el backend las salta solo si están en su `trusted_proxy_addresses` (paso 6). Si la Web App cambia de plan o de región, sus IP de salida cambian y hay que actualizarlas en el backend. En `F1` esas IP son compartidas con otras apps de Azure del mismo stamp, que podrían escribir `X-Forwarded-For` como si fueran este frontend.
 - **Arranque en frío con `F1`.** La primera visita tras un periodo inactivo tarda varios segundos. Para una demostración, abre la página unos minutos antes o sube a `B1`.

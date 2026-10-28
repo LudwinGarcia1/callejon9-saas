@@ -1,0 +1,50 @@
+HTTP/1.1 200 OK
+Content-Type: application/json
+Date: Mon, 26 Oct 2026 22:46:00 GMT
+Server: Kestrel
+Transfer-Encoding: chunked
+
+{
+  "id": "t1a80123-0001-4000-8000-000000000091",
+  "folio": "TCK-2026-0091",
+  "orderId": "ord-00000001-0001-4000-8000-000000000010",
+  "restaurantName": "Restaurante Callejón 9",
+  "subtotal": 350.00,
+  "tipAmount": 35.00,
+  "total": 385.00,
+  "changeAmount": 15.00,
+  "cashierName": "Valeria Mercado",
+  "createdAt": "2026-10-26T22:34:11Z",
+  "items": [
+    {
+      "productName": "Orden de Tacos al Pastor",
+      "quantity": 2,
+      "unitPrice": 120.00,
+      "total": 240.00
+    },
+    {
+      "productName": "Refresco 355ml",
+      "quantity": 2,
+      "unitPrice": 35.00,
+      "total": 70.00
+    },
+    {
+      "productName": "Agua de Horchata 500ml",
+      "quantity": 1,
+      "unitPrice": 40.00,
+      "total": 40.00
+    }
+  ],
+  "payments": [
+    {
+      "method": "CARD",
+      "amount": 200.00,
+      "receivedAmount": null
+    },
+    {
+      "method": "CASH",
+      "amount": 185.00,
+      "receivedAmount": 200.00
+    }
+  ]
+}

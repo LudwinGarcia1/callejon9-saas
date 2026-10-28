@@ -1,0 +1,25 @@
+# CAL-120 · puertas del frontend (2026-10-21 16:03 America/Mexico_City, commit 4531dc9)
+
+$ pnpm exec vitest run src/test/login-form.test.tsx --reporter=verbose
+ RUN  v3.2.7 frontend
+ ✓ src/test/login-form.test.tsx > formulario de login > tras un 401 borra la contraseña, conserva restaurante y correo y muestra el mensaje único 177ms
+ ✓ src/test/login-form.test.tsx > formulario de login > tras un 429 también borra la contraseña y muestra el aviso de bloqueo del servidor 36ms
+ ✓ src/test/login-form.test.tsx > formulario de login > si la validación local falla, no envía nada y conserva la contraseña 25ms
+ ✓ src/test/login-form.test.tsx > formulario de login > con credenciales válidas entra a la vista de su rol 46ms
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  16:03:44
+   Duration  6.05s (transform 254ms, setup 0ms, collect 3.12s, tests 286ms, environment 1.77s, prepare 374ms)
+
+$ pnpm test
+ Test Files  23 passed (23)
+      Tests  156 passed (156)
+
+$ pnpm lint
+> frontend@0.1.0 lint frontend
+> eslint
+
+(exit 0)
+
+$ pnpm exec tsc --noEmit
+(exit 0)

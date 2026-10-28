@@ -1,0 +1,123 @@
+# Mutaciones de CAL-127 - inicio 2026-10-22 10:50 America/Mexico_City
+# Cada mutacion cambia una linea del codigo de produccion, corre la prueba de su capa y restaura el archivo.
+# Backend: .\mvnw.cmd -B -q test -Dtest=KitchenServiceTest*   Frontend: pnpm exec vitest run src/test/kitchen-timing.test.ts
+
+## M1 - se permiten los saltos hacia adelante (PENDING -> READY)
+- antes:   if (nextIndex != currentIndex + 1) {
+- despues: if (nextIndex <= currentIndex) {
+- resultado: DETECTADA (4 de 24 pruebas fallan)
+    x throwsBusinessRuleOnSkippedTransition
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[2]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[3]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[6]
+
+## M2 - se permiten los retrocesos (READY -> PENDING)
+- antes:   if (nextIndex != currentIndex + 1) {
+- despues: if (nextIndex != currentIndex + 1 && nextIndex > currentIndex) {
+- resultado: DETECTADA (11 de 24 pruebas fallan)
+    x throwsBusinessRuleOnBackwardsTransition
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[1]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[4]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[5]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[7]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[8]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[9]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[10]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[11]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[12]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[13]
+
+## M3 - se acepta el mismo estado (PENDING -> PENDING)
+- antes:   if (nextIndex != currentIndex + 1) {
+- despues: if (nextIndex != currentIndex + 1 && nextIndex != currentIndex) {
+- resultado: DETECTADA (4 de 24 pruebas fallan)
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[1]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[5]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[9]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[13]
+
+## M4 - DELIVERED deja de ser final y vuelve a PENDING
+- antes:   if (nextIndex != currentIndex + 1) {
+- despues: if (nextIndex != (currentIndex + 1) % FORWARD_SEQUENCE.size()) {
+- resultado: DETECTADA (1 de 24 pruebas fallan)
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[10]
+
+## M5 - el estado del producto cambia antes de validar la transicion
+- antes:   validateForwardTransition(item.getKitchenStatus(), newStatus); item.setKitchenStatus(newStatus);
+- despues: KitchenItemStatus previous = item.getKitchenStatus(); item.setKitchenStatus(newStatus); validateForwardTransition(previous, newStatus);
+- resultado: DETECTADA (9 de 24 pruebas fallan)
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[2]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[3]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[4]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[6]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[7]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[8]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[10]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[11]
+    x everyNonAdjacentTransitionIsRejected(KitchenItemStatus, KitchenItemStatus)[12]
+
+## M6 - una orden inexistente no se valida
+- antes:   .orElseThrow(() -> new ResourceNotFoundException("La orden " + item.getOrderId() + " no existe."));
+- despues: ;
+- resultado: DETECTADA (1 de 24 pruebas fallan)
+    x throwsNotFoundWhenOrderDoesNotExist
+
+## M7 - la orden pasa a READY con que un solo producto este listo (anyMatch)
+- antes:   .allMatch(item -> item.getKitchenStatus()
+- despues: .anyMatch(item -> item.getKitchenStatus()
+- resultado: DETECTADA (1 de 24 pruebas fallan)
+    x orderStaysSentWhileAnotherItemIsInPreparation
+
+## M8 - un producto DELIVERED ya no cuenta como listo
+- antes:   || item.getKitchenStatus() == KitchenItemStatus.DELIVERED);
+- despues: );
+- resultado: DETECTADA (3 de 24 pruebas fallan)
+    x readyToDeliveredSuccess
+    x orderAlreadyReadyIsNotSavedAgain
+    x deliveredItemCountsAsReady
+
+## M9 - la orden se guarda aunque ya no este en SENT
+- antes:   if (order.getStatus() == OrderStatus.SENT) {
+- despues: if (true) {
+- resultado: DETECTADA (1 de 24 pruebas fallan)
+    x orderAlreadyReadyIsNotSavedAgain
+
+## F1 - el umbral de alerta usa > en vez de >= (15 min exactos quedan normal)
+- antes:   if (minutes >= WARNING_AFTER_MINUTES) {
+- despues: if (minutes > WARNING_AFTER_MINUTES) {
+- resultado: DETECTADA (1 de 13 pruebas fallan)
+    x devuelve 'warning' a partir de los 15 minutos
+
+## F2 - el umbral de alerta baja a 14 min
+- antes:   const WARNING_AFTER_MINUTES = 15;
+- despues: const WARNING_AFTER_MINUTES = 14;
+- resultado: DETECTADA (1 de 13 pruebas fallan)
+    x borde: un segundo antes de cada umbral conserva el color anterior
+
+## F3 - el umbral critico usa > en vez de >=
+- antes:   if (minutes >= CRITICAL_AFTER_MINUTES) {
+- despues: if (minutes > CRITICAL_AFTER_MINUTES) {
+- resultado: DETECTADA (1 de 13 pruebas fallan)
+    x devuelve 'critical' a partir de los 25 minutos de espera
+
+## F4 - la etiqueta redondea en vez de truncar (59 s -> 1 min)
+- antes:   const minutes = Math.floor((now - new Date(sentAt).getTime()) / 60_000);
+- despues: const minutes = Math.round((now - new Date(sentAt).getTime()) / 60_000);
+- resultado: DETECTADA (2 de 13 pruebas fallan)
+    x indica 'recién enviada' cuando el tiempo transcurrido es menor a 1 minuto
+    x borde: 59 s sigue 'recién enviada' y 60 s ya es 'hace 1 min'
+
+## F5 - la etiqueta pasa a horas despues de 60 min, no en 60
+- antes:   if (minutes < MINUTES_PER_HOUR) {
+- despues: if (minutes <= MINUTES_PER_HOUR) {
+- resultado: DETECTADA (1 de 13 pruebas fallan)
+    x indica 'hace X h' o 'hace X h Y min' cuando supera 1 hora
+
+## F6 - el semaforo no revisa la fecha nula
+- antes:   export function orderAge(sentAt: string | null, now: number): OrderAge { if (!sentAt) { return "normal"; }
+- despues: export function orderAge(sentAt: string | null, now: number): OrderAge {
+- resultado: DETECTADA (1 de 13 pruebas fallan)
+    x devuelve 'normal' si la fecha de envío es nula
+
+# Fin 2026-10-22 10:53. Archivos restaurados; git diff de produccion vacio:
+(sin cambios)

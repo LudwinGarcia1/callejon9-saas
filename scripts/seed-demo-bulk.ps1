@@ -106,6 +106,7 @@ if (-not $VerifyOnly) {
     }
 
     Write-Host "Creando $Count ventas y tickets..."
+    Invoke-Api POST '/api/v1/cash-sessions' @{ openingFund = 1000 } | Out-Null
     $ticketIds = @()
     for ($i = 0; $i -lt $Count; $i++) {
         $order = New-DemoOrder $tables[$i] $i

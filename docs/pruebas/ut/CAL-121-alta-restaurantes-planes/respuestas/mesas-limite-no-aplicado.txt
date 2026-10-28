@@ -1,0 +1,41 @@
+# CAL-121 · límites de cada plan en el borde, con la prueba de mesas activada (2026-10-22 11:28-11:29 America/Mexico_City)
+# Rama test/cal-121-ut-alta-restaurantes-planes sobre main d31fd0c; JDK 21.0.9; Testcontainers con PostgreSQL 16
+# Las parametrizaciones [1], [2] y [3] son FREE, PRO y PREMIUM, en ese orden.
+$ .\mvnw.cmd -B test "-Dtest=SignupRequestSlugTest,PlanLimitBoundaryTest"
+
+## Casos de PlanLimitBoundaryTest (reporte XML)
+  ok userLimitAtTheBoundary(String, int, int)[1]
+  ok userLimitAtTheBoundary(String, int, int)[2]
+  ok userLimitAtTheBoundary(String, int, int)[3]
+  ok seededPlansMatchThePublishedLimits(String, int, int)[1]
+  ok seededPlansMatchThePublishedLimits(String, int, int)[2]
+  ok seededPlansMatchThePublishedLimits(String, int, int)[3]
+  x tableLimitAtTheBoundary(String, int, int)[1]
+  x tableLimitAtTheBoundary(String, int, int)[2]
+  x tableLimitAtTheBoundary(String, int, int)[3]
+
+## Salida de Maven
+[ERROR] Tests run: 9, Failures: 3, Errors: 0, Skipped: 0, Time elapsed: 32.60 s <<< FAILURE! -- in Límites de usuarios y mesas de cada plan en el borde
+[ERROR] com.callejon9.platform.PlanLimitBoundaryTest.tableLimitAtTheBoundary(String, int, int)[1] -- Time elapsed: 0.335 s <<< FAILURE!
+java.lang.AssertionError: 
+
+Expecting code to raise a throwable.
+	at com.callejon9.platform.PlanLimitBoundaryTest.tableLimitAtTheBoundary(PlanLimitBoundaryTest.java:101)
+...
+[ERROR] com.callejon9.platform.PlanLimitBoundaryTest.tableLimitAtTheBoundary(String, int, int)[2] -- Time elapsed: 0.602 s <<< FAILURE!
+java.lang.AssertionError: 
+
+Expecting code to raise a throwable.
+[ERROR] com.callejon9.platform.PlanLimitBoundaryTest.tableLimitAtTheBoundary(String, int, int)[3] -- Time elapsed: 1.592 s <<< FAILURE!
+java.lang.AssertionError: 
+
+Expecting code to raise a throwable.
+...
+[INFO] Running UT · identificador del alta de restaurante
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.224 s -- in UT · identificador del alta de restaurante
+[ERROR] Tests run: 24, Failures: 3, Errors: 0, Skipped: 0
+[INFO] BUILD FAILURE
+
+Lectura: con el plan FREE se crearon las mesas 1 a 6 sin error (la 6 rebasa el tope de 5); con PRO, la 31; con PREMIUM, la 121.
+TableService.createTable solo comprueba que el número no esté repetido; ningún código consulta plans.max_tables.
+Después de este registro la prueba se dejó con @Disabled y el ID del defecto, para que CI siga en verde hasta la corrección.

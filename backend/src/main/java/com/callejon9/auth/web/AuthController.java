@@ -37,6 +37,7 @@ public class AuthController {
     private final LoginAttemptLimiter loginAttemptLimiter;
     private final RefreshTokenService refreshTokenService;
     private final AuthCookies authCookies;
+    private final ClientIp clientIp;
 
     /**
      * Los atributos de las cookies (httpOnly, Secure, SameSite, path y
@@ -46,11 +47,13 @@ public class AuthController {
     public AuthController(AuthService authService,
                           LoginAttemptLimiter loginAttemptLimiter,
                           RefreshTokenService refreshTokenService,
-                          AuthCookies authCookies) {
+                          AuthCookies authCookies,
+                          ClientIp clientIp) {
         this.authService = authService;
         this.loginAttemptLimiter = loginAttemptLimiter;
         this.refreshTokenService = refreshTokenService;
         this.authCookies = authCookies;
+        this.clientIp = clientIp;
     }
 
     /**
@@ -60,15 +63,15 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request,
                                                HttpServletRequest httpRequest) {
-        String clientIp = ClientIp.of(httpRequest);
-        loginAttemptLimiter.checkAllowed(clientIp, request.slug(), request.email());
+        String clientAddress = clientIp.of(httpRequest);
+        loginAttemptLimiter.checkAllowed(clientAddress, request.slug(), request.email());
 
         AuthService.AuthenticatedUser authenticated;
         try {
             authenticated = authService.authenticate(
                     request.slug(), request.email(), request.password());
         } catch (BadCredentialsException exception) {
-            loginAttemptLimiter.recordFailure(clientIp, request.slug(), request.email());
+            loginAttemptLimiter.recordFailure(clientAddress, request.slug(), request.email());
             throw exception;
         }
         loginAttemptLimiter.recordSuccess(request.slug(), request.email());

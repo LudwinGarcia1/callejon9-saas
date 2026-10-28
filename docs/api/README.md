@@ -2,7 +2,7 @@
 
 Guía para quien construye o despliega un frontend contra el backend. El contrato completo, con cada cuerpo y respuesta, está en [`openapi.json`](openapi.json) (OpenAPI 3). Se puede abrir en <https://editor.swagger.io> o importar en Postman o Insomnia.
 
-`openapi.json` se exportó de `/v3/api-docs` con el backend en local el 2026-10-16. Si cambia un controller, hay que volver a exportarlo.
+`openapi.json` se exportó de `/v3/api-docs` con el backend en local el 2026-10-25. Si cambia un controller, hay que volver a exportarlo.
 
 Para explorar y probar la API en el navegador, usa Swagger UI:
 
@@ -115,6 +115,21 @@ No hay `GET` por id para mesas, categorías ni productos: se lee la colección y
 | POST | `/orders/{id}/send-to-kitchen` | — | `200 OrderResponse` | ADMIN, WAITER |
 | POST | `/orders/{id}/cancel` | — | `200 OrderResponse` | ADMIN, WAITER |
 | POST | `/orders/{id}/checkout` | `CheckoutRequest` | `201 TicketResponse` | ADMIN, CASHIER |
+
+El checkout requiere un turno abierto para el usuario autenticado. Sin turno responde `422`; la venta queda asociada al turno al que pertenece el cajero.
+
+### Turnos de caja
+
+| Método | Ruta | Cuerpo / parámetros | Respuesta | Roles |
+|---|---|---|---|---|
+| GET | `/cash-sessions` | — | `200 CashSessionListResponse` | ADMIN (restaurante), CASHIER (propias) |
+| GET | `/cash-sessions/{id}` | — | `200 CashSessionResponse` | ADMIN, dueño CASHIER |
+| POST | `/cash-sessions` | `OpenCashSessionRequest` | `201 CashSessionResponse` | ADMIN, CASHIER |
+| POST | `/cash-sessions/{id}/close` | `CloseCashSessionRequest` | `200 CashSessionResponse` | dueño ADMIN, CASHIER |
+| POST | `/cash-sessions/{id}/force-close` | `CloseCashSessionRequest` con motivo | `200 CashSessionResponse` | ADMIN |
+| POST | `/cash-sessions/{id}/movements` | `CashMovementRequest` con motivo obligatorio | `201 CashSessionResponse` | ADMIN, CASHIER dueño |
+
+El resumen de efectivo suma el fondo inicial, el efectivo recibido menos el cambio, los depósitos y resta los retiros. Los pagos con tarjeta y transferencia aparecen en el resumen por método, pero no aumentan el cajón.
 
 ### Cocina
 
