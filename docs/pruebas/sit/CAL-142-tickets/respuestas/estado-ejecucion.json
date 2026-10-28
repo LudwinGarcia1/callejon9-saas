@@ -16,5 +16,13 @@
     "total": true
   },
   "c02": "no ejecutado: falta el restaurante B",
-  "finishedAt": "2026-10-28 14:16:40"
+  "finishedAt": "2026-10-28 14:16:40",
+  "c02StartedAt": "2026-10-28 14:34:44",
+  "c02Search": 404,
+  "c02ByFolio": 404,
+  "c02ById": 404,
+  "c02Pdf": 404,
+  "c02OwnSearch": 200,
+  "c02Own": 200,
+  "c02FinishedAt": "2026-10-28 14:34:57"
 }

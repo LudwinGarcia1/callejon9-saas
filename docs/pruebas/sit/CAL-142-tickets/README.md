@@ -36,9 +36,9 @@ Todas las horas en `America/Mexico_City`, formato `AAAA-MM-DD HH:MM`.
 | Elemento | Inicio planeado | Fin planeado | Inicio real | Fin real | Desviación |
 |---|---|---|---|---|---|
 | Historia / issue padre (CAL-118) | 2026-10-20 | 2026-10-21 | 2026-10-20 | | Sigue abierta: 7 SIT se re-ejecutan |
-| Esta tarea (CAL-142) | 2026-10-21 | 2026-10-21 | 2026-10-21 | | v1 retirada el 2026-10-27; re-ejecución el 2026-10-28; C02 pendiente |
-| Preparación del entorno y datos | 2026-10-28 | 2026-10-28 | 2026-10-28 14:11 | 2026-10-28 14:12 | La venta es la de la SIT de CAL-141. C02 necesita un segundo restaurante (sección 8) |
-| Ejecución de los casos | 2026-10-28 | 2026-10-28 | 2026-10-28 14:16 | 2026-10-28 14:16 | — |
+| Esta tarea (CAL-142) | 2026-10-21 | 2026-10-21 | 2026-10-21 | | v1 retirada el 2026-10-27; re-ejecución el 2026-10-28 |
+| Preparación del entorno y datos | 2026-10-28 | 2026-10-28 | 2026-10-28 14:11 | 2026-10-28 14:34 | La venta de C01 es la de la SIT de CAL-141; el restaurante B se dio de alta a las 14:34, una vez autorizado |
+| Ejecución de los casos | 2026-10-28 | 2026-10-28 | 2026-10-28 14:16 | 2026-10-28 14:34 | C01 a las 14:16; C02 a las 14:34, tras crear el restaurante B |
 | Re-prueba de defectos | | | | | Sin defectos |
 
 ## 4. Alcance y criterios cubiertos
@@ -50,7 +50,7 @@ Todas las horas en `America/Mexico_City`, formato `AAAA-MM-DD HH:MM`.
 | Criterio del issue | Caso(s) que lo cubren |
 |---|---|
 | 1. Descarga del ticket en PDF desde caja: tipo `application/pdf`, con folio, partidas, propina y total de la venta cobrada. | C01 |
-| 2. Búsqueda por folio de otro restaurante: 404. | C02 — ⏭️ No ejecutado |
+| 2. Búsqueda por folio de otro restaurante: 404. | C02 |
 
 ## 5. Preparación
 
@@ -60,7 +60,7 @@ Todas las horas en `America/Mexico_City`, formato `AAAA-MM-DD HH:MM`.
 - [x] Commit desplegado tomado del registro de despliegue: API `fb36760`, frontend `e6a6782`
 - [x] Frontend accesible en `https://restohub.azurewebsites.net`
 - [x] Venta cobrada: la de [CAL-141](../CAL-141-cobro-pagos/README.md) C01, ticket `TCK-261028201211` — 2 × Guacamole con totopos y 1 × Margarita, subtotal $325.00, propina 10 % $32.50, total $357.50, efectivo $200.00 y tarjeta $157.50
-- [ ] Segundo restaurante con una venta propia para C02 — **no disponible** (sección 8)
+- [x] Segundo restaurante para C02, dado de alta por el registro público con autorización del responsable (2026-10-28 14:34), igual que en la SIT de CAL-134: «SIT Restaurante B», slug `sit-restaurante-b-28101434`, plan FREE. Su administrador creó la mesa 1, un producto de $50.00 y cobró la orden `ORD-261028203443` → ticket `TCK-261028203444` — [`PREP-B-01`](respuestas/PREP-B-01-alta-restaurante-b.txt) a [`PREP-B-06`](respuestas/PREP-B-06-cobro.txt), [`estado-restaurante-b.json`](respuestas/estado-restaurante-b.json)
 
 **Datos de prueba**
 
@@ -68,11 +68,13 @@ Todas las horas en `America/Mexico_City`, formato `AAAA-MM-DD HH:MM`.
 |---|---|---|
 | Caja | `caja@pruebas.com` (CASHIER) | Alta de usuarios de prueba del 2026-10-16 |
 | Ticket | `TCK-261028201211`, id `564335dd-e8a5-4e8a-ad0f-5456d205308f` | Cobro de CAL-141 C01 |
+| Administrador del restaurante B | `admin@sit-restaurante-b-28101434.test` (ADMIN) | Alta pública del restaurante B; su contraseña se generó al azar y vive fuera del repositorio (`~/.config/callejon9-sit-restaurante-b-password`) |
+| Ticket del restaurante B | `TCK-261028203444`, id `4468b4d9-ec20-4e5c-b545-5fa5f42760d0` | Cobro del administrador de B en la preparación |
 | Contraseña | La de las cuentas de prueba | Vive fuera del repositorio; el script la lee de `C9_TEST_PASSWORD` |
 
 ## 6. Casos de prueba
 
-Los pasos los ejecutó [`playwright/sit-tickets.mjs`](playwright/sit-tickets.mjs) (`casos`). Las peticiones de la interfaz están en [`peticiones-de-la-interfaz.txt`](respuestas/peticiones-de-la-interfaz.txt). Cada captura lleva una banda roja con la URL y la hora.
+Los pasos los ejecutó [`playwright/sit-tickets.mjs`](playwright/sit-tickets.mjs): `casos` para C01, `preparacion` para el restaurante B y `c02` para C02. Las peticiones de la interfaz están en [`peticiones-de-la-interfaz.txt`](respuestas/peticiones-de-la-interfaz.txt). Cada captura lleva una banda roja con la URL y la hora.
 
 ### C01 — Caja descarga el ticket en PDF con folio, partidas, propina y total
 
@@ -103,12 +105,41 @@ Los pasos los ejecutó [`playwright/sit-tickets.mjs`](playwright/sit-tickets.mjs
 |---|---|
 | Criterio cubierto | 2 |
 | Prioridad | Alta |
-| Rol que ejecuta | — |
-| Inicio / fin de ejecución | — |
-| Estado | ⏭️ No ejecutado |
+| Rol que ejecuta | CASHIER de `pruebas` (`caja@pruebas.com`); control con el ADMIN del restaurante B |
+| Inicio / fin de ejecución | `2026-10-28 14:34` / `2026-10-28 14:34` |
+| Estado | ✅ Aprobado |
 | Defecto vinculado | — |
 
-**Motivo.** Se necesita el folio de una venta real de otro restaurante. Solo se tiene acceso a `pruebas`, y dar de alta un restaurante nuevo en producción no estaba autorizado en esta ejecución. El script ya incluye la etapa `preparacion` ([`../comun/restaurante-b.mjs`](../comun/restaurante-b.mjs)) y el caso C02 completo, que corre en cuanto exista el restaurante B. Buscar un folio inventado devolvería 404 sin demostrar el aislamiento, por eso no se usa como sustituto.
+**Precondición.** El restaurante B tiene una venta cobrada con ticket `TCK-261028203444`; la caja de `pruebas` tiene sesión.
+
+**Pasos para reproducir**
+
+| # | Acción | Dato usado | Resultado esperado | Resultado obtenido | Evidencia |
+|---|---|---|---|---|---|
+| 1 | Caja de `pruebas`: «Historial» → «Buscar ticket por folio» | `TCK-261028203444` (del restaurante B) | 404 y aviso | 14:34:50 · `GET /api/v1/tickets?folio=TCK-261028203444` → **404**; aviso «No existe ningún ticket con ese folio.»; el historial solo muestra la venta propia | [`C02-P01`](capturas/C02-P01-folio-de-otro-restaurante.png), [`C02-folio-de-otro-restaurante.txt`](respuestas/C02-folio-de-otro-restaurante.txt) |
+| 2 | Pedir ese ticket por su id | `GET /api/v1/tickets/4468b4d9-…` | 404 | 14:34:50 · **404** | [`C02-ticket-de-otro-restaurante-por-id.txt`](respuestas/C02-ticket-de-otro-restaurante-por-id.txt) |
+| 3 | Pedir su PDF | `GET /api/v1/tickets/4468b4d9-…/pdf` | 404 | 14:34:51 · **404** | [`C02-pdf-de-otro-restaurante.txt`](respuestas/C02-pdf-de-otro-restaurante.txt) |
+| 4 | Control: el administrador de B busca el mismo folio en su historial | `TCK-261028203444` | Lo encuentra | 14:34:56 · resumen del ticket; `GET …?folio=` → **200** | [`C02-P02`](capturas/C02-P02-restaurante-b-encuentra-su-folio.png), [`C02-restaurante-b-su-propio-folio.txt`](respuestas/C02-restaurante-b-su-propio-folio.txt) |
+
+**Respuesta HTTP literal**
+
+```text
+# Caja de `pruebas` pide el ticket del restaurante B por folio
+GET /api/v1/tickets?folio=TCK-261028203444
+
+HTTP 404
+Content-Type: application/problem+json
+
+{
+  "type": "about:blank",
+  "title": "Recurso no encontrado",
+  "status": 404,
+  "detail": "El ticket con folio TCK-261028203444 no existe.",
+  "instance": "/api/v1/tickets"
+}
+```
+
+**Observaciones.** El paso 4 demuestra que el folio existe: el 404 de los pasos 1 a 3 viene del aislamiento entre restaurantes, no de un folio inválido. El restaurante B queda en producción con su venta de $50.00; es de prueba y lo reutiliza CAL-145 C02.
 
 ## 7. Defectos encontrados
 
@@ -120,14 +151,14 @@ Los pasos los ejecutó [`playwright/sit-tickets.mjs`](playwright/sit-tickets.mjs
 
 | Total | ✅ Aprobados | ❌ Fallidos | ⛔ Bloqueados | ⏭️ No ejecutados |
 |---|---|---|---|---|
-| 2 | 1 | 0 | 0 | 1 |
+| 2 | 2 | 0 | 0 | 0 |
 
 **Desviaciones y limitaciones.**
 
-- **C02 no ejecutado.** Falta un segundo restaurante con una venta; ver el motivo en el caso.
+- **Restaurante B.** Para C02 se dio de alta un restaurante de prueba en producción, con autorización del responsable.
 - **Commit de la API fuera de `main`.** `fb36760` es un hotfix desplegado sin fusionar (PR #105). No toca tickets.
 
-**Conclusión del ejecutor.** El criterio 1 se cumple sobre Azure: caja recupera por folio el ticket de la venta de la SIT y descarga un PDF real con folio, partidas, propina y total. El criterio 2 queda sin ejecutar hasta contar con un segundo restaurante.
+**Conclusión del ejecutor.** El criterio 1 se cumple sobre Azure: caja recupera por folio el ticket de la venta de la SIT y descarga un PDF real con folio, partidas, propina y total. El criterio 2 también: el folio, el id y el PDF de un ticket de otro restaurante responden 404, mientras su dueño sí lo encuentra.
 
 ## 9. Anexos por tipo de prueba
 
@@ -137,7 +168,7 @@ Los pasos los ejecutó [`playwright/sit-tickets.mjs`](playwright/sit-tickets.mjs
 |---|---|---|
 | Frontend ↔ API (proxy `/api/v1/*`) | C01 | `GET /tickets?folio=` 200 y `GET /tickets/{id}/pdf` 200 `application/pdf` desde el navegador |
 | App móvil ↔ API | — | No aplica |
-| API ↔ PostgreSQL (RLS en la base real) | C01, C02 | C01 lee la venta escrita en CAL-141; C02 no ejecutado |
+| API ↔ PostgreSQL (RLS en la base real) | C01, C02 | C01 lee la venta escrita en CAL-141; C02: el ticket de B es invisible para `pruebas` y visible para B |
 | API ↔ tiempo real (`/ws`) | — | No aplica |
 
 ## 10. Revisión

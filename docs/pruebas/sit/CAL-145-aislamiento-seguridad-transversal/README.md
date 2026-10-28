@@ -17,8 +17,8 @@
 | Registro de despliegue | API: comentario «Despliegue» de Braulio Hernández en [CAL-118](https://linear.app/callejon19/issue/CAL-118/sit-probar-la-integracion-de-sistemas-en-azure-antes-de-la-uat), 2026-10-28 10:56. Frontend: comentario «Despliegue» de Octavio Duarte en CAL-118, 2026-10-22 |
 | Commit del frontend | `e6a6782` (`main`) |
 | Ejecución de CI | No aplica |
-| Navegador / dispositivo | `curl` 8.23.0 desde Garuda Linux, sin sesión ni credenciales |
-| Restaurante de prueba | No aplica en C01, C03 y C04 (peticiones sin sesión) |
+| Navegador / dispositivo | C01, C03, C04: `curl` 8.23.0 desde Garuda Linux, sin sesión ni credenciales. C02: Brave 156.1.98.60 (Chromium 156.0.8078.48) automatizado con Playwright 1.56.1 |
+| Restaurante de prueba | C02: `pruebas` contra «SIT Restaurante B» (`sit-restaurante-b-28101434`); C01, C03 y C04 sin sesión |
 | Versión de esta evidencia | v2 · 2026-10-28 |
 
 ## 2. Responsables
@@ -36,9 +36,9 @@ Todas las horas en `America/Mexico_City`, formato `AAAA-MM-DD HH:MM`.
 | Elemento | Inicio planeado | Fin planeado | Inicio real | Fin real | Desviación |
 |---|---|---|---|---|---|
 | Historia / issue padre (CAL-118) | 2026-10-20 | 2026-10-21 | 2026-10-20 | | Sigue abierta: 7 SIT se re-ejecutan |
-| Esta tarea (CAL-145) | 2026-10-21 | 2026-10-21 | 2026-10-21 | | v1 retirada el 2026-10-27; re-ejecución el 2026-10-28; C02 pendiente |
-| Preparación del entorno y datos | 2026-10-28 | 2026-10-28 | — | — | C02 necesita un segundo restaurante (sección 8) |
-| Ejecución de los casos | 2026-10-28 | 2026-10-28 | 2026-10-28 14:22 | 2026-10-28 14:23 | Primera corrida 14:22; la de esta evidencia, 14:23, agrega `C03-api-por-http.txt` |
+| Esta tarea (CAL-145) | 2026-10-21 | 2026-10-21 | 2026-10-21 | | v1 retirada el 2026-10-27; re-ejecución el 2026-10-28 |
+| Preparación del entorno y datos | 2026-10-28 | 2026-10-28 | 2026-10-28 14:34 | 2026-10-28 14:34 | Restaurante B dado de alta una vez autorizado (ver CAL-142) |
+| Ejecución de los casos | 2026-10-28 | 2026-10-28 | 2026-10-28 14:22 | 2026-10-28 14:35 | C01, C03 y C04 a las 14:23 (la primera corrida, 14:22, no tenía `C03-api-por-http.txt`); C02 a las 14:35 |
 | Re-prueba de defectos | | | | | Defectos abiertos (sección 7) |
 
 ## 4. Alcance y criterios cubiertos
@@ -50,7 +50,7 @@ Todas las horas en `America/Mexico_City`, formato `AAAA-MM-DD HH:MM`.
 | Criterio del issue | Caso(s) que lo cubren |
 |---|---|
 | 1. `/actuator/health` en `UP` con liveness y readiness: Key Vault y PostgreSQL integrados. | C01 |
-| 2. Desde el restaurante `pruebas`, pedir una orden o mesa de otro restaurante: 404 (RLS en la base real). | C02 — ⏭️ No ejecutado |
+| 2. Desde el restaurante `pruebas`, pedir una orden o mesa de otro restaurante: 404 (RLS en la base real). | C02 |
 | 3. Cabeceras de seguridad en el frontend y la API desplegados (CSP, HSTS, X-Frame-Options, nosniff). | C03 |
 | 4. Swagger UI y `/v3/api-docs` apagados en producción mientras `swagger_enabled` siga en `false`. | C04 |
 
@@ -60,17 +60,19 @@ Todas las horas en `America/Mexico_City`, formato `AAAA-MM-DD HH:MM`.
 
 - [x] Backend encendido — [`respuestas/C01-health.txt`](respuestas/C01-health.txt), 2026-10-28 14:23
 - [x] Commit desplegado tomado del registro de despliegue: API `fb36760`, frontend `e6a6782`
-- [ ] Segundo restaurante con datos propios para C02 — **no disponible** (sección 8)
+- [x] Segundo restaurante para C02: «SIT Restaurante B», dado de alta y con una orden cobrada en la mesa 1, preparado en la SIT de [CAL-142](../CAL-142-tickets/README.md) (`respuestas/estado-restaurante-b.json` de esa carpeta)
 
 **Datos de prueba**
 
 | Dato | Valor | Cómo se creó |
 |---|---|---|
-| Peticiones | Sin cookie ni cabecera de autorización | [`comandos/sit-seguridad.sh`](comandos/sit-seguridad.sh) |
+| Peticiones de C01, C03 y C04 | Sin cookie ni cabecera de autorización | [`comandos/sit-seguridad.sh`](comandos/sit-seguridad.sh) |
+| Mesero de `pruebas` | `mesero@pruebas.com` (WAITER) | Alta de usuarios de prueba del 2026-10-16 |
+| Orden y mesa del restaurante B | Orden `d217bda8-1939-4c98-a8d8-7508b561bc71` (`ORD-261028203443`, cobrada); mesa `589825be-1cba-4140-aa41-09536991dc82` | Preparación de CAL-142 |
 
 ## 6. Casos de prueba
 
-C01, C03 y C04 los ejecutó [`comandos/sit-seguridad.sh`](comandos/sit-seguridad.sh), que guarda cada respuesta literal de `curl -i` en `respuestas/` (las cabeceras `Set-Cookie`, si aparecieran, se redactan; no apareció ninguna).
+C02 lo ejecutó [`playwright/sit-aislamiento.mjs`](playwright/sit-aislamiento.mjs) (`c02`). C01, C03 y C04 los ejecutó [`comandos/sit-seguridad.sh`](comandos/sit-seguridad.sh), que guarda cada respuesta literal de `curl -i` en `respuestas/` (las cabeceras `Set-Cookie`, si aparecieran, se redactan; no apareció ninguna).
 
 ### C01 — La API desplegada responde UP en health, liveness y readiness
 
@@ -101,12 +103,48 @@ C01, C03 y C04 los ejecutó [`comandos/sit-seguridad.sh`](comandos/sit-seguridad
 |---|---|
 | Criterio cubierto | 2 |
 | Prioridad | Alta |
-| Rol que ejecuta | — |
-| Inicio / fin de ejecución | — |
-| Estado | ⏭️ No ejecutado |
+| Rol que ejecuta | WAITER de `pruebas` (`mesero@pruebas.com`); control con el ADMIN del restaurante B |
+| Inicio / fin de ejecución | `2026-10-28 14:34` / `2026-10-28 14:35` |
+| Estado | ✅ Aprobado |
 | Defecto vinculado | — |
 
-**Motivo.** Se necesita un segundo restaurante con una orden y una mesa reales para pedirlas desde la sesión de `pruebas`. Solo se tiene acceso a `pruebas`, y dar de alta un restaurante nuevo en producción no estaba autorizado en esta ejecución. El procedimiento ya está preparado en [`../comun/restaurante-b.mjs`](../comun/restaurante-b.mjs) (alta pública, mesa, producto y venta) para ejecutarlo en cuanto se autorice o se facilite un restaurante de prueba existente. Pedir un UUID inventado devolvería 404 sin demostrar RLS, por eso no se usa como sustituto.
+**Precondición.** El restaurante B tiene la orden `ORD-261028203443` y la mesa 1; el mesero de `pruebas` tiene sesión.
+
+**Pasos para reproducir**
+
+| # | Acción | Dato usado | Resultado esperado | Resultado obtenido | Evidencia |
+|---|---|---|---|---|---|
+| 1 | Mesero de `pruebas`: pedir la orden del restaurante B | `GET /api/v1/orders/d217bda8-…` | 404 | 14:35:00 · **404** «La orden no existe.» | [`C02-orden-de-otro-restaurante.txt`](respuestas/C02-orden-de-otro-restaurante.txt) |
+| 2 | Abrir en el navegador `/waiter/order/d217bda8-…` | — | La interfaz no muestra la orden | 14:35:02 · «Error · La orden no existe.» | [`C02-P01`](capturas/C02-P01-orden-de-otro-restaurante.png) |
+| 3 | Intentar abrir una orden sobre la mesa del restaurante B | `{"tableId":"589825be-…","guestCount":1}` | 404, nada creado | 14:35:02 · **404** «La mesa no existe.» | [`C02-abrir-orden-en-mesa-de-otro-restaurante.txt`](respuestas/C02-abrir-orden-en-mesa-de-otro-restaurante.txt) |
+| 4 | Pedir sus mesas | `GET /api/v1/tables` | La mesa de B no aparece | 14:35:02 · **200**; la lista no incluye `589825be-…` | [`C02-mesas-de-pruebas.txt`](respuestas/C02-mesas-de-pruebas.txt) |
+| 5 | Control: el administrador de B pide la misma orden | `GET /api/v1/orders/d217bda8-…` | 200 | 14:35:05 · **200**, `status: PAID`; B tiene 1 mesa | [`C02-restaurante-b-su-propia-orden.txt`](respuestas/C02-restaurante-b-su-propia-orden.txt) |
+
+**Respuesta HTTP literal**
+
+```text
+# El mesero de `pruebas` intenta abrir una orden sobre la mesa del restaurante B
+POST /api/v1/orders
+Content-Type: application/json
+
+{
+  "tableId": "589825be-1cba-4140-aa41-09536991dc82",
+  "guestCount": 1
+}
+
+HTTP 404
+Content-Type: application/problem+json
+
+{
+  "type": "about:blank",
+  "title": "Recurso no encontrado",
+  "status": 404,
+  "detail": "La mesa no existe.",
+  "instance": "/api/v1/orders"
+}
+```
+
+**Observaciones.** El control del paso 5 demuestra que la orden existe: los 404 vienen del aislamiento en la base real (la consulta corre con `app.tenant_id` de `pruebas` y RLS oculta las filas de B), no de un id inválido. El paso 3 muestra que tampoco se puede **escribir** sobre una fila ajena: `occupy` no encuentra la mesa bajo RLS y no se crea ninguna orden.
 
 ### C03 — Cabeceras de seguridad en el frontend y la API
 
@@ -168,15 +206,15 @@ C01, C03 y C04 los ejecutó [`comandos/sit-seguridad.sh`](comandos/sit-seguridad
 
 | Total | ✅ Aprobados | ❌ Fallidos | ⛔ Bloqueados | ⏭️ No ejecutados |
 |---|---|---|---|---|
-| 4 | 1 | 2 | 0 | 1 |
+| 4 | 2 | 2 | 0 | 0 |
 
 **Desviaciones y limitaciones.**
 
-- **C02 no ejecutado.** Falta un segundo restaurante con datos; ver el motivo en el caso. El criterio de aislamiento queda sin evidencia sobre Azure en esta versión.
+- **Restaurante B.** Para C02 se usó un restaurante de prueba dado de alta en producción con autorización del responsable (ver CAL-142).
 - **Key Vault y PostgreSQL de forma indirecta.** Producción oculta los componentes de health (sección 6, C01).
 - **Commit de la API fuera de `main`.** `fb36760` es un hotfix desplegado sin fusionar (PR #105). La configuración de seguridad y de springdoc es la misma que en `main`.
 
-**Conclusión del ejecutor.** La API desplegada está sana (C01). Fallan dos controles: la documentación interactiva y el contrato de la API están expuestos sin sesión en producción (C04, [CAL-182](https://linear.app/callejon19/issue/CAL-182)), y la API no envía HSTS (C03, [CAL-183](https://linear.app/callejon19/issue/CAL-183)). El aislamiento entre restaurantes (C02) sigue sin probarse sobre Azure. El issue no puede cerrarse en este estado.
+**Conclusión del ejecutor.** La API desplegada está sana (C01) y aísla a los restaurantes en la base real: `pruebas` no lee ni escribe la orden ni la mesa de otro restaurante (C02). Fallan dos controles: la documentación interactiva y el contrato de la API están expuestos sin sesión en producción (C04, [CAL-182](https://linear.app/callejon19/issue/CAL-182)), y la API no envía HSTS (C03, [CAL-183](https://linear.app/callejon19/issue/CAL-183)). El issue no puede cerrarse mientras CAL-182 y CAL-183 sigan abiertos.
 
 ## 9. Anexos por tipo de prueba
 
@@ -186,7 +224,7 @@ C01, C03 y C04 los ejecutó [`comandos/sit-seguridad.sh`](comandos/sit-seguridad
 |---|---|---|
 | Frontend ↔ API (proxy `/api/v1/*`) | C03, C04 | El proxy reenvía las cabeceras de la API y no expone `/v3/api-docs` |
 | App móvil ↔ API | C03 | El host de la API, que usa la app, no envía HSTS |
-| API ↔ PostgreSQL (RLS en la base real) | C01 (indirecto), C02 | C02 no ejecutado |
+| API ↔ PostgreSQL (RLS en la base real) | C01 (indirecto), C02 | Orden y mesa de B: 404 para `pruebas`, 200 para B |
 | API ↔ Key Vault | C01 (indirecto) | El perfil `prod` no arranca sin los secretos |
 
 ## 10. Revisión
@@ -194,6 +232,7 @@ C01, C03 y C04 los ejecutó [`comandos/sit-seguridad.sh`](comandos/sit-seguridad
 *La llena el revisor, que no puede ser quien ejecutó la prueba.*
 
 - [ ] Cada criterio del issue tiene al menos un caso con resultado
+- [ ] La captura de C02 muestra la URL y la hora (banda de la captura automatizada) y coincide con los pasos
 - [ ] Las respuestas HTTP coinciden con el comportamiento real del código (rutas, códigos y mensajes)
 - [ ] El commit probado corresponde al registro de despliegue
 - [ ] Los defectos están registrados en Linear y enlazados
@@ -205,6 +244,6 @@ C01, C03 y C04 los ejecutó [`comandos/sit-seguridad.sh`](comandos/sit-seguridad
 
 ## 11. Declaración de autenticidad
 
-Declaro que esta evidencia proviene de una ejecución real en el entorno y la fecha indicados, que las respuestas no fueron editadas salvo para ocultar secretos, y que los casos marcados como no ejecutados no se ejecutaron.
+Declaro que esta evidencia proviene de una ejecución real en el entorno y la fecha indicados, que las capturas y respuestas no fueron editadas salvo para ocultar secretos, y que los casos marcados como no ejecutados no se ejecutaron.
 
 **Ejecutor:** Octavio Duarte · **Fecha:** `2026-10-28`

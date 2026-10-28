@@ -1,0 +1,15 @@
+# Caja de `pruebas` pide el ticket del restaurante B por folio
+# 2026-10-28 14:34:50 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+GET /api/v1/tickets?folio=TCK-261028203444
+
+
+HTTP 404
+Content-Type: application/problem+json
+
+{
+  "type": "about:blank",
+  "title": "Recurso no encontrado",
+  "status": 404,
+  "detail": "El ticket con folio TCK-261028203444 no existe.",
+  "instance": "/api/v1/tickets"
+}
