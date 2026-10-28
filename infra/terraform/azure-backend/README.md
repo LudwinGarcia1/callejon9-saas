@@ -78,7 +78,7 @@ Guarda `bootstrap/terraform.tfstate` fuera del repositorio. La asignación de ro
 
 ### 3. Variables
 
-Copia `backend.hcl.example` a `backend.hcl` con el storage account que imprimió el bootstrap, y `terraform.tfvars.example` a `terraform.tfvars` con el origen público del frontend y el valor de `$operator`. Ambos archivos están ignorados por git.
+Copia `backend.hcl.example` a `backend.hcl` con el storage account que imprimió el bootstrap, y `terraform.tfvars.example` a `terraform.tfvars` con el origen público del frontend, sus IP de salida (`trusted_proxy_addresses`) y el valor de `$operator`. Ambos archivos están ignorados por git.
 
 ### 4. Primer apply, en dos pasos
 
@@ -325,6 +325,7 @@ Si el corte dejó en Azure algo que el estado no registra, el siguiente `apply` 
 | `DB_APP_PASSWORD`, `DB_OWNER_PASSWORD`, `JWT_SECRET` | Referencias `@Microsoft.KeyVault(...)` | Key Vault, leídas con la identidad de la Web App |
 | `AUTH_COOKIE_SECURE` | `true` | Sin efecto mientras `prod` esté activo, porque el perfil fija `cookie-secure: true`. Se conserva para que las cookies sigan siendo `Secure` si alguien cambia el perfil |
 | `APP_ALLOWED_ORIGINS` | `frontend_origin` | Orígenes del WebSocket `/ws` |
+| `APP_TRUSTED_PROXIES` | `trusted_proxy_addresses`, separadas por comas | IP de salida del frontend. `ClientIp` las salta en `X-Forwarded-For` para que los límites por IP del login y del alta cuenten por navegador (CAL-169) |
 | `SERVER_PORT` | `80` | Puerto en el que App Service enruta a Java SE |
 | `JAVA_OPTS` | `-XX:+UseG1GC -XX:MaxRAMPercentage=75.0` | Mismas opciones que `JAVA_TOOL_OPTIONS` en `backend/Dockerfile` |
 | `SPRINGDOC_APIDOCS_ENABLED`, `SPRINGDOC_SWAGGERUI_ENABLED` | `true` | Solo con `swagger_enabled = true`. Encienden OpenAPI y Swagger UI, que `prod` apaga |
@@ -340,7 +341,7 @@ Corre `terraform fmt -check` y `terraform validate` en todos los roots, incluido
 ## Pendientes antes de exponer la API
 
 - **Referencias de Key Vault resueltas.** Si App Service no logra resolver una referencia `@Microsoft.KeyVault(...)`, entrega como valor el texto de la referencia. El guard de `prod` no lo detecta: ese texto no está vacío, supera los 32 bytes y no es un valor publicado. Tras el primer despliegue, comprueba en el portal (Web App → Variables de entorno) que `JWT_SECRET`, `DB_APP_PASSWORD` y `DB_OWNER_PASSWORD` aparecen como resueltas. En el despliegue del 2026-10-16 las tres aparecieron como `Resolved`. Después de cambiar un secreto, sigue [Cambiar una contraseña de la base](#cambiar-una-contraseña-de-la-base).
-- **`ClientIp` detrás de dos proxies.** El servidor del frontend reenvía todas las peticiones, así que el backend las verá llegar desde unas pocas IP de esa plataforma. Los límites por IP pasarían a ser globales: 5 altas por hora y 20 logins fallidos cada 15 minutos para todos los usuarios juntos. Hay que verificarlo tras el primer despliegue y ajustar la confianza en `X-Forwarded-For`.
+- **`ClientIp` detrás de dos proxies (CAL-169).** La SIT del 2026-10-21 confirmó que los límites por IP eran globales: 20 logins fallidos de cualquiera bloqueaban el login de todos. App Service entrega al contenedor desde una dirección de enlace local (169.254.x.x) en la que `ClientIp` no confiaba, y lo que llega por la web trae al final la IP de salida del frontend. `ClientIp` ya confía en el enlace local y salta las direcciones de `trusted_proxy_addresses`. Tras desplegar, llena esa variable con `terraform output outbound_ip_addresses` de `azure-frontend` y repite las fases A a C de la SIT CAL-133 C05, por el frontend y directo a la API.
 - **Contraseña del super-administrador.** La de `V6__seed_platform_admin.sql` está publicada en el README; se cambia tras el primer despliegue, con una migración nueva o desde la aplicación, nunca reescribiendo `V6`. En el despliegue del 2026-10-16 se cambió directamente en la base, y la contraseña nueva está en Key Vault como `platform-admin-password`, un secreto creado fuera de Terraform. `V6` la sigue sembrando en cualquier base nueva, así que el pendiente sigue abierto para los demás ambientes.
 - **Valores verificados en el primer despliegue (2026-10-16):** el stack `JAVA|21-java21` que genera `application_stack` y el puerto 80 de Java SE, que Tomcat abrió en el arranque.
 

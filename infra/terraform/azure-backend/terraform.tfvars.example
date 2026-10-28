@@ -4,6 +4,10 @@ environment               = "prod"
 frontend_origin           = "https://callejon9.example.com"
 key_vault_admin_object_id = "00000000-0000-0000-0000-000000000000"
 
+# Outbound IPs of the frontend (terraform output outbound_ip_addresses in
+# azure-frontend). Without them every web user shares the per-IP limits.
+# trusted_proxy_addresses = ["20.0.0.1", "20.0.0.2"]
+
 # Only while running scripts/setup-db-azure.sql; remove afterwards.
 # operator_ip_address = "203.0.113.10"
 
