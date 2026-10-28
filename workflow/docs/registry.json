@@ -190,6 +190,31 @@
       "path": "docs/pruebas/ut/CAL-121-alta-restaurantes-planes/evidencia-rama-original.md",
       "kind": "testing",
       "authority": "medium"
+    },
+    {
+      "path": "docs/pruebas/uat/CAL-151-pedidos-mesero/README.md",
+      "kind": "testing",
+      "authority": "medium"
+    },
+    {
+      "path": "docs/pruebas/uat/CAL-151-pedidos-mesero/registro-aceptacion.md",
+      "kind": "testing",
+      "authority": "medium"
+    },
+    {
+      "path": "docs/pruebas/uat/CAL-153-cocina-tiempo-real/README.md",
+      "kind": "testing",
+      "authority": "medium"
+    },
+    {
+      "path": "docs/pruebas/uat/CAL-153-cocina-tiempo-real/registro-aceptacion.md",
+      "kind": "testing",
+      "authority": "medium"
+    },
+    {
+      "path": "docs/pruebas/uat/CAL-153-cocina-tiempo-real/sesion-local-pc-android.md",
+      "kind": "testing",
+      "authority": "medium"
     }
   ]
 }
