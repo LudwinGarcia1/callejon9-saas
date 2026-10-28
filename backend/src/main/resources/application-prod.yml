@@ -34,9 +34,9 @@ app:
 
 server:
   # Sin cabeceras X-Forwarded-* a nivel de Tomcat. ClientIp ya interpreta
-  # X-Forwarded-For con su propio modelo de confianza (solo desde la red
-  # interna, ultima entrada). Fijarlo evita que Spring Boot active el modo
-  # nativo por su cuenta al detectar una plataforma en la nube.
+  # X-Forwarded-For con su propio modelo de confianza (red local y
+  # app.client-ip.trusted-proxies). Fijarlo evita que Spring Boot active el
+  # modo nativo por su cuenta al detectar una plataforma en la nube.
   forward-headers-strategy: none
 
 # Politica de exposicion en produccion:

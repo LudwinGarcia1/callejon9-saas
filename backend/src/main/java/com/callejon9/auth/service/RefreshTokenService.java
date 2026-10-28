@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
@@ -18,6 +19,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -62,18 +64,32 @@ public class RefreshTokenService {
     private final TenantRepository tenantRepository;
     private final JwtService jwtService;
     private final TransactionTemplate transactionTemplate;
+    private final Clock clock;
 
+    @Autowired
     public RefreshTokenService(
             RefreshTokenRepository refreshTokenRepository,
             UserRepository userRepository,
             TenantRepository tenantRepository,
             JwtService jwtService,
             TransactionTemplate transactionTemplate) {
+        this(refreshTokenRepository, userRepository, tenantRepository, jwtService, transactionTemplate,
+                Clock.systemUTC());
+    }
+
+    RefreshTokenService(
+            RefreshTokenRepository refreshTokenRepository,
+            UserRepository userRepository,
+            TenantRepository tenantRepository,
+            JwtService jwtService,
+            TransactionTemplate transactionTemplate,
+            Clock clock) {
         this.refreshTokenRepository = refreshTokenRepository;
         this.userRepository = userRepository;
         this.tenantRepository = tenantRepository;
         this.jwtService = jwtService;
         this.transactionTemplate = transactionTemplate;
+        this.clock = clock;
     }
 
     /**
@@ -94,7 +110,7 @@ public class RefreshTokenService {
                 throw new BadCredentialsException("Credenciales invalidas.");
             }
 
-            Instant now = Instant.now();
+            Instant now = clock.instant();
             refreshTokenRepository.deleteExpiredForUser(user.getId(), now);
 
             Instant sessionExpiresAt = now.plus(jwtService.refreshTokenTtl());
@@ -144,7 +160,7 @@ public class RefreshTokenService {
 
         TenantContext.callAs(claims.tenantId(), () -> transactionTemplate.execute(status -> {
             findOwnedToken(claims).ifPresent(token ->
-                    refreshTokenRepository.revokeFamily(token.getFamilyId(), Instant.now()));
+                    refreshTokenRepository.revokeFamily(token.getFamilyId(), clock.instant()));
             return null;
         }));
     }
@@ -156,7 +172,7 @@ public class RefreshTokenService {
      */
     public void revokeSessionById(UUID sessionId) {
         transactionTemplate.executeWithoutResult(status ->
-                refreshTokenRepository.revokeFamily(sessionId, Instant.now()));
+                refreshTokenRepository.revokeFamily(sessionId, clock.instant()));
     }
 
     /**
@@ -170,11 +186,11 @@ public class RefreshTokenService {
      */
     public void revokeAllSessionsOf(UUID userId) {
         transactionTemplate.executeWithoutResult(status ->
-                refreshTokenRepository.revokeAllForUser(userId, Instant.now()));
+                refreshTokenRepository.revokeAllForUser(userId, clock.instant()));
     }
 
     private Outcome rotateInTransaction(JwtService.RefreshClaims claims) {
-        Instant now = Instant.now();
+        Instant now = clock.instant();
 
         // Un token de otro tenant queda oculto por RLS y cae aqui como
         // desconocido: ni se lee ni se modifica.

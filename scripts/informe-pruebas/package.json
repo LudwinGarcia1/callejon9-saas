@@ -1,0 +1,14 @@
+{
+  "name": "informe-pruebas",
+  "private": true,
+  "description": "Genera el informe de pruebas y los anexos de evidencia a partir de docs/pruebas/",
+  "type": "module",
+  "scripts": {
+    "generar": "node generar.mjs"
+  },
+  "dependencies": {
+    "docx": "9.5.1",
+    "marked": "15.0.12",
+    "qrcode": "1.5.4"
+  }
+}

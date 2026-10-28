@@ -1,0 +1,15 @@
+# C04 · logout desde la interfaz
+# 2026-10-21 13:31:43 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/auth/logout
+
+
+HTTP 204
+content-security-policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+referrer-policy: strict-origin-when-cross-origin
+set-cookie: access_token=<redactado>; Path=/; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure; HttpOnly; SameSite=Strict
+set-cookie: refresh_token=<redactado>; Path=/api/v1/auth; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure; HttpOnly; SameSite=Strict
+x-content-type-options: nosniff
+x-frame-options: DENY
+x-xss-protection: 0
+
+

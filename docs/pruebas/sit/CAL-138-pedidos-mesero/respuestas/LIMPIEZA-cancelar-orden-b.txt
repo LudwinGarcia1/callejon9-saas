@@ -1,0 +1,31 @@
+# Limpieza: el dueño cancela la orden de C02 y C03, que sigue en «Nueva»
+# 2026-10-21 12:51:02 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders/1fc109ec-0e69-4903-892e-7f24d9422e0e/cancel
+
+
+HTTP 200
+Content-Type: application/json
+
+{
+  "id": "1fc109ec-0e69-4903-892e-7f24d9422e0e",
+  "folio": "ORD-261021185004",
+  "tableId": "d96ba4bd-ebd4-46ec-88cc-60bf5edd25c7",
+  "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+  "guestCount": 2,
+  "status": "CANCELED",
+  "total": 85,
+  "openedAt": "2026-10-21T18:50:04.445167Z",
+  "sentToKitchenAt": null,
+  "closedAt": "2026-10-21T18:51:02.243243148Z",
+  "items": [
+    {
+      "id": "29e5f663-2552-408e-8f6e-2c1e48131189",
+      "productId": "056aa0a0-0a1f-4520-a534-a315284e1614",
+      "productName": "Sopa de tortilla",
+      "unitPrice": 85,
+      "quantity": 1,
+      "kitchenStatus": "PENDING",
+      "notes": null
+    }
+  ]
+}

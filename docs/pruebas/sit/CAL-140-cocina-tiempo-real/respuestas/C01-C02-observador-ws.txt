@@ -1,0 +1,13 @@
+# Observador del canal en tiempo real · wss://app-callejon9-api-prod-3878c6.azurewebsites.net/ws
+# Cuenta: cocina@pruebas.com (restaurante pruebas) · horas en America/Mexico_City
+# Valores de cookies omitidos; el script nunca los imprime
+2026-10-21 14:34:57  login            POST /api/v1/auth/login -> HTTP 200, rol KITCHEN, cookies: access_token, refresh_token
+2026-10-21 14:34:57  sesión           GET /api/v1/auth/me -> HTTP 200, Jefe de cocina (KITCHEN), restaurante pruebas
+2026-10-21 14:34:57  ws abriendo      wss://app-callejon9-api-prod-3878c6.azurewebsites.net/ws
+2026-10-21 14:34:58  ws abierto       handshake aceptado (101 Switching Protocols)
+2026-10-21 14:34:58  stomp CONNECTED  versión 1.2
+2026-10-21 14:34:58  stomp SUBSCRIBE  /topic/tenant.b1041f82-e0df-4519-8c9f-e9a2b46de2d2.kitchen
+2026-10-21 14:38:24  stomp MESSAGE    /topic/tenant.b1041f82-e0df-4519-8c9f-e9a2b46de2d2.kitchen {"id":"85a12106-1afb-44c7-89ec-a689f667e7f4","folio":"ORD-261021203800","tableId":"b1e548c9-1e77-4736-9bb1-886f4a2ebfcf","waiterId":"d2eb44bd-506d-4660-9d9e-2d3f67a13b2d","guestCount":5,"status":"SENT","total":975.00,"openedAt":"2026-10-21T20:38:00.998180Z","sentToKitchenAt":"2026-10-21T20:38:23.708480507Z","closedAt":null,"items":[{"id":"9dfa1ce9-65fd-46ca-ae0b-1f59b037fc9f","productId":"d54f4db2
+2026-10-21 14:47:12  stomp MESSAGE    /topic/tenant.b1041f82-e0df-4519-8c9f-e9a2b46de2d2.kitchen {"id":"9dfa1ce9-65fd-46ca-ae0b-1f59b037fc9f","orderId":"85a12106-1afb-44c7-89ec-a689f667e7f4","productId":"d54f4db2-c760-4a27-a856-153244ea8dfc","productName":"Chiles en nogada","quantity":1,"kitchenStatus":"IN_PREPARATION","notes":null}
+2026-10-21 14:54:57  fin              se cumplieron 20 min; el observador cierra la conexión
+2026-10-21 14:54:58  ws cerrado       código 1002

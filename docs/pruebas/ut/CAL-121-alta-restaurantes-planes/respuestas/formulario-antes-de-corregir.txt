@@ -1,0 +1,31 @@
+# CAL-121 · formulario de alta ANTES de corregir el patrón del identificador (2026-10-22 11:25 America/Mexico_City)
+# Rama test/cal-121-ut-alta-restaurantes-planes sobre main d31fd0c; signup-view.tsx sin cambios: pattern="[a-z0-9-]{3,80}"
+# Las 9 pruebas del identificador fallan porque el navegador compila pattern con la bandera v y [a-z0-9-] es inválido con ella.
+$ pnpm exec vitest run src/test/signup-form.test.tsx --reporter=verbose
+
+ × reglas del identificador > «abc» aceptado = true (3 caracteres, el mínimo), igual que @Pattern del backend 480ms
+ × reglas del identificador > «ab» aceptado = false (2 caracteres), igual que @Pattern del backend 116ms
+ × reglas del identificador > «aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa» aceptado = true (80 caracteres, el máximo), igual que @Pattern del backend 98ms
+ × reglas del identificador > «aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa» aceptado = false (81 caracteres), igual que @Pattern del backend 83ms
+ × reglas del identificador > «la-esquina-2» aceptado = true (minúsculas, números y guiones), igual que @Pattern del backend 87ms
+ × reglas del identificador > «La-Esquina» aceptado = false (mayúsculas), igual que @Pattern del backend 69ms
+ × reglas del identificador > «la_esquina» aceptado = false (guion bajo), igual que @Pattern del backend 118ms
+ × reglas del identificador > «la esquina» aceptado = false (espacio), igual que @Pattern del backend 79ms
+ × reglas del identificador > «cafe-niño» aceptado = false (letra ñ), igual que @Pattern del backend 56ms
+ ✓ reglas del identificador > los campos son obligatorios y sus topes coinciden con SignupRequest 77ms
+ ✓ envío > una contraseña corta se rechaza en el navegador y no llama a la API 344ms
+ ✓ envío > una contraseña sin números se rechaza en el navegador y no llama a la API 257ms
+ ✓ envío > una contraseña con el identificador se rechaza en el navegador y no llama a la API 305ms
+ ✓ envío > un alta válida envía el plan elegido y lleva al login con el identificador 1038ms
+ ✓ envío > sin elegir plan se envía PRO, el plan preseleccionado 225ms
+ ✓ envío > un 400 con errores por campo muestra el mensaje debajo del identificador, sin aviso general 431ms
+ ✓ envío > un 409 por identificador ocupado muestra el aviso general con el detalle del servidor 297ms
+
+Error de las 9 pruebas que fallan:
+SyntaxError: Invalid regular expression: /^(?:[a-z0-9-]{3,80})$/v: Invalid character class
+ ❯ slugAccepted src/test/signup-form.test.tsx:57:10
+
+ Test Files  1 failed (1)
+      Tests  9 failed | 8 passed (17)
+   Start at  11:25:27
+   Duration  11.64s (transform 539ms, setup 0ms, collect 4.53s, tests 4.17s, environment 1.73s, prepare 330ms)

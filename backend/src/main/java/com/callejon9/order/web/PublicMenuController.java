@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,6 +47,12 @@ import org.springframework.web.bind.annotation.RestController;
  * Endpoints publicos para autoservicio del comensal mediante codigo QR en mesa.
  * No requiere sesion ni credenciales: el slug identifica al tenant y
  * {@link TenantContext#callAs} encapsula las consultas dentro del tenant_id correspondiente.
+ *
+ * <p>Las transacciones se abren con {@link TransactionTemplate} DENTRO de
+ * {@code callAs}, igual que en {@code AuthService}: el tenant se conoce a mitad
+ * del metodo, y {@code TenantAwareTransactionManager} lo publica a PostgreSQL
+ * solo al abrir la transaccion. Con {@code @Transactional} en el metodo, la
+ * transaccion se abriria sin tenant y RLS no devolveria ninguna fila.
  */
 @RestController
 @RequestMapping("/api/v1/public")
@@ -62,6 +68,7 @@ public class PublicMenuController {
     private final OrderItemRepository orderItemRepository;
     private final FolioGenerator folioGenerator;
     private final ApplicationEventPublisher eventPublisher;
+    private final TransactionTemplate transactionTemplate;
 
     public PublicMenuController(
             TenantRepository tenantRepository,
@@ -71,7 +78,8 @@ public class PublicMenuController {
             OrderRepository orderRepository,
             OrderItemRepository orderItemRepository,
             FolioGenerator folioGenerator,
-            ApplicationEventPublisher eventPublisher) {
+            ApplicationEventPublisher eventPublisher,
+            TransactionTemplate transactionTemplate) {
         this.tenantRepository = tenantRepository;
         this.categoryRepository = categoryRepository;
         this.productRepository = productRepository;
@@ -80,15 +88,15 @@ public class PublicMenuController {
         this.orderItemRepository = orderItemRepository;
         this.folioGenerator = folioGenerator;
         this.eventPublisher = eventPublisher;
+        this.transactionTemplate = transactionTemplate;
     }
 
     @GetMapping("/{slug}/catalog")
-    @Transactional(readOnly = true)
     public PublicCatalogResponse getCatalog(@PathVariable String slug) {
         Tenant tenant = tenantRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("El restaurante '" + slug + "' no existe."));
 
-        return TenantContext.callAs(tenant.getId(), () -> {
+        return TenantContext.callAs(tenant.getId(), () -> transactionTemplate.execute(status -> {
             List<CategoryResponse> categories = categoryRepository.findAllByOrderBySortOrderAscNameAsc().stream()
                     .map(CategoryResponse::from)
                     .toList();
@@ -97,12 +105,11 @@ public class PublicMenuController {
                     .toList();
 
             return new PublicCatalogResponse(tenant.getName(), tenant.getSlug(), categories, products);
-        });
+        }));
     }
 
     @PostMapping("/{slug}/tables/{tableNumber}/orders")
     @ResponseStatus(HttpStatus.CREATED)
-    @Transactional
     public OrderResponse createTableOrder(
             @PathVariable String slug,
             @PathVariable int tableNumber,
@@ -110,7 +117,7 @@ public class PublicMenuController {
         Tenant tenant = tenantRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("El restaurante '" + slug + "' no existe."));
 
-        return TenantContext.callAs(tenant.getId(), () -> {
+        return TenantContext.callAs(tenant.getId(), () -> transactionTemplate.execute(status -> {
             RestaurantTable table = tableRepository.findByNumber(tableNumber)
                     .orElseThrow(() -> new ResourceNotFoundException("La mesa " + tableNumber + " no existe."));
 
@@ -179,7 +186,7 @@ public class PublicMenuController {
                     order.getFolio(), slug, tableNumber, total);
 
             return OrderResponse.from(orderWithItems);
-        });
+        }));
     }
 
     @PostMapping("/{slug}/tables/{tableNumber}/call-waiter")
@@ -189,15 +196,15 @@ public class PublicMenuController {
         Tenant tenant = tenantRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("El restaurante '" + slug + "' no existe."));
 
-        return TenantContext.callAs(tenant.getId(), () -> {
+        return TenantContext.callAs(tenant.getId(), () -> transactionTemplate.execute(status -> {
             RestaurantTable table = tableRepository.findByNumber(tableNumber)
                     .orElseThrow(() -> new ResourceNotFoundException("La mesa " + tableNumber + " no existe."));
             log.info("Notificacion de llamada a mesero: tenant={} mesa={}", slug, table.getNumber());
-            return Map.of(
+            return Map.<String, Object>of(
                     "success", true,
                     "message", "Mesero notificado para la Mesa " + tableNumber,
                     "tableNumber", tableNumber
             );
-        });
+        }));
     }
 }

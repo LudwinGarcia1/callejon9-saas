@@ -46,7 +46,9 @@ Dejarlas abiertas, en `http://localhost:3000/login`, y con las tres cuentas ya e
 
 ### 3. Calentar las rutas
 
-Visitar una vez cada pantalla: `/login`, `/admin`, `/waiter`, `/kitchen`, `/cashier`, `/history`, `/platform`.
+Visitar una vez cada pantalla: `/login`, `/admin`, `/waiter`, `/kitchen`, `/cashier`, `/cash-sessions`, `/history`, `/platform`.
+
+Antes del primer cobro, inicia sesión como `CASHIER` y abre su turno en `/cash-sessions` con el fondo inicial. El checkout devuelve `422` si ese cajero no tiene un turno abierto. Al terminar la demostración, registra depósitos o retiros con motivo y cierra el turno con el efectivo contado.
 
 ### 4. Dejar preparado aparte
 

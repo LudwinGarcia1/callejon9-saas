@@ -1,0 +1,24 @@
+# CAL-125 · puertas del frontend (2026-10-21 16:54 America/Mexico_City, commit c2fe3c6)
+
+$ pnpm exec vitest run src/test/order-cart.test.tsx --reporter=verbose
+ ✓ src/test/order-cart.test.tsx > carrito de la orden: tope de 99 por línea > subir la cantidad se detiene en 99 y el lote enviado lleva 99, no más 874ms
+ ✓ src/test/order-cart.test.tsx > cancelación según el rol (CAL-113) > WAITER con orden NEW: botón «Cancelar orden» visible = true 21ms
+ ✓ src/test/order-cart.test.tsx > cancelación según el rol (CAL-113) > WAITER con orden SENT: botón «Cancelar orden» visible = false 20ms
+ ✓ src/test/order-cart.test.tsx > cancelación según el rol (CAL-113) > WAITER con orden READY: botón «Cancelar orden» visible = false 12ms
+ ✓ src/test/order-cart.test.tsx > cancelación según el rol (CAL-113) > ADMIN con orden NEW: botón «Cancelar orden» visible = true 18ms
+ ✓ src/test/order-cart.test.tsx > cancelación según el rol (CAL-113) > ADMIN con orden SENT: botón «Cancelar orden» visible = true 14ms
+ ✓ src/test/order-cart.test.tsx > cancelación según el rol (CAL-113) > ADMIN con orden READY: botón «Cancelar orden» visible = true 16ms
+ ✓ src/test/order-cart.test.tsx > cancelación según el rol (CAL-113) > ADMIN con orden PAID: botón «Cancelar orden» visible = false 14ms
+ ✓ src/test/order-cart.test.tsx > cancelación según el rol (CAL-113) > ADMIN con orden CANCELED: botón «Cancelar orden» visible = false 16ms
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+
+$ pnpm test
+ Test Files  23 passed (23)
+      Tests  161 passed (161)
+
+$ pnpm lint
+(exit 0)
+
+$ pnpm exec tsc --noEmit
+(exit 0)

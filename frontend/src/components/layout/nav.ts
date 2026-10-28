@@ -9,6 +9,7 @@ const NAV_ADMIN: NavItem = { href: "/admin", label: "Administración" };
 const NAV_WAITER: NavItem = { href: "/waiter", label: "Mesas" };
 const NAV_KITCHEN: NavItem = { href: "/kitchen", label: "Cocina" };
 const NAV_CASHIER: NavItem = { href: "/cashier", label: "Caja" };
+const NAV_CASH_SESSIONS: NavItem = { href: "/cash-sessions", label: "Turnos de caja" };
 const NAV_HISTORY: NavItem = { href: "/history", label: "Historial" };
 const NAV_ANALYTICS: NavItem = { href: "/analytics", label: "Analítica" };
 const NAV_INVENTORY: NavItem = { href: "/inventory", label: "Inventario" };
@@ -32,8 +33,8 @@ const NAV_INVENTORY: NavItem = { href: "/inventory", label: "Inventario" };
  */
 export const NAV_ITEMS_BY_ROLE: Record<UserRole, NavItem[]> = {
   SUPER_ADMIN: [{ href: "/platform", label: "Plataforma" }],
-  ADMIN: [NAV_ADMIN, NAV_WAITER, NAV_KITCHEN, NAV_CASHIER, NAV_INVENTORY, NAV_HISTORY, NAV_ANALYTICS],
+  ADMIN: [NAV_ADMIN, NAV_WAITER, NAV_KITCHEN, NAV_CASHIER, NAV_CASH_SESSIONS, NAV_INVENTORY, NAV_HISTORY, NAV_ANALYTICS],
   WAITER: [NAV_WAITER],
   KITCHEN: [NAV_KITCHEN, NAV_INVENTORY],
-  CASHIER: [NAV_CASHIER, NAV_HISTORY],
+  CASHIER: [NAV_CASHIER, NAV_CASH_SESSIONS, NAV_HISTORY],
 };

@@ -4,6 +4,8 @@ import com.callejon9.catalog.domain.Product;
 import com.callejon9.catalog.repository.ProductRepository;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
+import com.callejon9.cashier.service.CashSessionService;
+import com.callejon9.support.CashSessionFixtures;
 import com.callejon9.support.TestSessions;
 import com.callejon9.table.domain.RestaurantTable;
 import com.callejon9.table.domain.TableStatus;
@@ -59,6 +61,7 @@ class SalesControllerTest {
     @Autowired private RestaurantTableRepository tableRepository;
     @Autowired private ProductRepository productRepository;
     @Autowired private ObjectMapper objectMapper;
+    @Autowired private CashSessionService cashSessionService;
 
     private Tenant tenant;
     private User waiter;
@@ -80,6 +83,7 @@ class SalesControllerTest {
                     .role(UserRole.CASHIER).active(true).build()));
             table = transactionTemplate.execute(status -> tableRepository.save(RestaurantTable.builder()
                     .number(7).capacity(4).status(TableStatus.FREE).active(true).build()));
+            CashSessionFixtures.openFor(cashSessionService, cashier);
         } finally {
             TenantContext.clear();
         }
@@ -347,6 +351,7 @@ class SalesControllerTest {
                     .number(1).capacity(2).status(TableStatus.FREE).active(true).build()));
             productB = transactionTemplate.execute(status -> productRepository.save(Product.builder()
                     .name("Torta").description("Torta").price(new BigDecimal("40.00")).active(true).build()));
+            CashSessionFixtures.openFor(cashSessionService, cashierB);
         } finally {
             TenantContext.clear();
         }

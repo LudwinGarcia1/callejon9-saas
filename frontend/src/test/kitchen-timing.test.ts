@@ -29,6 +29,19 @@ describe("lib/kitchen-timing (Semáforo y temporizadores de cocina)", () => {
       const fortyMinutesAgo = new Date(BASE_TIME - 40 * 60_000).toISOString();
       expect(orderAge(fortyMinutesAgo, BASE_TIME)).toBe("critical");
     });
+
+    it("borde: un segundo antes de cada umbral conserva el color anterior", () => {
+      const justBeforeWarning = new Date(BASE_TIME - (15 * 60_000 - 1_000)).toISOString();
+      expect(orderAge(justBeforeWarning, BASE_TIME)).toBe("normal");
+
+      const justBeforeCritical = new Date(BASE_TIME - (25 * 60_000 - 1_000)).toISOString();
+      expect(orderAge(justBeforeCritical, BASE_TIME)).toBe("warning");
+    });
+
+    it("borde: una fecha de envío en el futuro (reloj adelantado) se trata como 'normal'", () => {
+      const inTwoMinutes = new Date(BASE_TIME + 2 * 60_000).toISOString();
+      expect(orderAge(inTwoMinutes, BASE_TIME)).toBe("normal");
+    });
   });
 
   describe("elapsedLabel — Etiquetas de tiempo transcurrido en lenguaje humano", () => {
@@ -55,6 +68,27 @@ describe("lib/kitchen-timing (Semáforo y temporizadores de cocina)", () => {
 
       const oneHourTwentyMinutesAgo = new Date(BASE_TIME - 80 * 60_000).toISOString();
       expect(elapsedLabel(oneHourTwentyMinutesAgo, BASE_TIME)).toBe("hace 1 h 20 min");
+    });
+
+    it("borde: 59 s sigue 'recién enviada' y 60 s ya es 'hace 1 min'", () => {
+      const fiftyNineSecondsAgo = new Date(BASE_TIME - 59_000).toISOString();
+      expect(elapsedLabel(fiftyNineSecondsAgo, BASE_TIME)).toBe("recién enviada");
+
+      const sixtySecondsAgo = new Date(BASE_TIME - 60_000).toISOString();
+      expect(elapsedLabel(sixtySecondsAgo, BASE_TIME)).toBe("hace 1 min");
+    });
+
+    it("borde: 119 min es 'hace 1 h 59 min' y 120 min es 'hace 2 h'", () => {
+      const oneHourFiftyNineAgo = new Date(BASE_TIME - 119 * 60_000).toISOString();
+      expect(elapsedLabel(oneHourFiftyNineAgo, BASE_TIME)).toBe("hace 1 h 59 min");
+
+      const twoHoursAgo = new Date(BASE_TIME - 120 * 60_000).toISOString();
+      expect(elapsedLabel(twoHoursAgo, BASE_TIME)).toBe("hace 2 h");
+    });
+
+    it("borde: una fecha de envío en el futuro no muestra minutos negativos", () => {
+      const inTwoMinutes = new Date(BASE_TIME + 2 * 60_000).toISOString();
+      expect(elapsedLabel(inTwoMinutes, BASE_TIME)).toBe("recién enviada");
     });
   });
 });

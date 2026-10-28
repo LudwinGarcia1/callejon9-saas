@@ -1,0 +1,107 @@
+# C01 · peticiones de la interfaz · mesero@pruebas.com
+# 2026-10-21 12:49:54 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders
+Content-Type: application/json
+
+{"tableId":"9d7daaae-59db-472c-843f-846117635a97","guestCount":2}
+
+HTTP 201
+Content-Type: application/json
+
+{
+  "id": "313c2fe8-07da-42dc-9844-b37fc908a5e2",
+  "folio": "ORD-261021184954",
+  "tableId": "9d7daaae-59db-472c-843f-846117635a97",
+  "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+  "guestCount": 2,
+  "status": "NEW",
+  "total": 0,
+  "openedAt": "2026-10-21T18:49:54.220391Z",
+  "sentToKitchenAt": null,
+  "closedAt": null,
+  "items": []
+}
+
+# C01 · peticiones de la interfaz · mesero@pruebas.com
+# 2026-10-21 12:50:00 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders/313c2fe8-07da-42dc-9844-b37fc908a5e2/items
+Content-Type: application/json
+
+{"items":[{"productId":"33dafe69-08e7-4c4d-b1b4-d99902472968","quantity":2},{"productId":"620e77f4-cfb7-4aec-96d2-602da6ad398a","quantity":1}]}
+
+HTTP 200
+Content-Type: application/json
+
+{
+  "id": "313c2fe8-07da-42dc-9844-b37fc908a5e2",
+  "folio": "ORD-261021184954",
+  "tableId": "9d7daaae-59db-472c-843f-846117635a97",
+  "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+  "guestCount": 2,
+  "status": "NEW",
+  "total": 325,
+  "openedAt": "2026-10-21T18:49:54.220391Z",
+  "sentToKitchenAt": null,
+  "closedAt": null,
+  "items": [
+    {
+      "id": "3636db5b-425c-46c4-afe0-6dda2bb57b66",
+      "productId": "33dafe69-08e7-4c4d-b1b4-d99902472968",
+      "productName": "Guacamole con totopos",
+      "unitPrice": 95,
+      "quantity": 2,
+      "kitchenStatus": "PENDING",
+      "notes": null
+    },
+    {
+      "id": "c06e1de1-9ccf-49ae-b145-42cfd8159a2e",
+      "productId": "620e77f4-cfb7-4aec-96d2-602da6ad398a",
+      "productName": "Margarita",
+      "unitPrice": 135,
+      "quantity": 1,
+      "kitchenStatus": "PENDING",
+      "notes": null
+    }
+  ]
+}
+
+# C01 · peticiones de la interfaz · mesero@pruebas.com
+# 2026-10-21 12:50:01 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders/313c2fe8-07da-42dc-9844-b37fc908a5e2/send-to-kitchen
+
+
+HTTP 200
+Content-Type: application/json
+
+{
+  "id": "313c2fe8-07da-42dc-9844-b37fc908a5e2",
+  "folio": "ORD-261021184954",
+  "tableId": "9d7daaae-59db-472c-843f-846117635a97",
+  "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+  "guestCount": 2,
+  "status": "SENT",
+  "total": 325,
+  "openedAt": "2026-10-21T18:49:54.220391Z",
+  "sentToKitchenAt": "2026-10-21T18:50:00.998308711Z",
+  "closedAt": null,
+  "items": [
+    {
+      "id": "3636db5b-425c-46c4-afe0-6dda2bb57b66",
+      "productId": "33dafe69-08e7-4c4d-b1b4-d99902472968",
+      "productName": "Guacamole con totopos",
+      "unitPrice": 95,
+      "quantity": 2,
+      "kitchenStatus": "PENDING",
+      "notes": null
+    },
+    {
+      "id": "c06e1de1-9ccf-49ae-b145-42cfd8159a2e",
+      "productId": "620e77f4-cfb7-4aec-96d2-602da6ad398a",
+      "productName": "Margarita",
+      "unitPrice": 135,
+      "quantity": 1,
+      "kitchenStatus": "PENDING",
+      "notes": null
+    }
+  ]
+}

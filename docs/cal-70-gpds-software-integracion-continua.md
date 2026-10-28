@@ -1,10 +1,10 @@
 # CAL-70 — Software Funcional con Integración Continua (GPDS)
 
-> **Asignatura:** Gestión del Proceso de Desarrollo de Software (GPDS)  
-> **Fecha oficial:** 7 de noviembre de 2026 · **Fecha interna de cierre:** 31 de octubre de 2026  
-> **Docentes evaluadores:** MIA Miguel Antonio Islas, ITIC Roberto Vinicio Camacho Mendoza, MEL Miguel Ángel Orona López  
-> **Proyecto:** RestoHub — Sistema SaaS Multi-tenant de Punto de Venta y Gestión Gastronómica  
-> **Equipo:** Callejón 19  
+> **Asignatura:** Gestión del Proceso de Desarrollo de Software (GPDS)\
+> **Fecha oficial:** 7 de noviembre de 2026 · **Fecha interna de cierre:** 31 de octubre de 2026\
+> **Docentes evaluadores:** MIA Miguel Antonio Islas, ITIC Roberto Vinicio Camacho Mendoza, MEL Miguel Ángel Orona López\
+> **Proyecto:** RestoHub — Sistema SaaS Multi-tenant de Punto de Venta y Gestión Gastronómica\
+> **Equipo:** Callejón 19\
 
 ---
 
@@ -215,11 +215,11 @@ Para demostrar que el pipeline **detiene la integración y rechaza código defec
 [Gitleaks] 0 leaks detected.
 [Pipeline] stage: Backend Quality Gates
 [INFO] Running com.callejon9.security.TenantIsolationTest
-[ERROR] Failures: 
-[ERROR]   TenantIsolationTest.tenantCannotReadOtherTenantOrders:84 
+[ERROR] Failures:
+[ERROR]   TenantIsolationTest.tenantCannotReadOtherTenantOrders:84
 Expected: <0>
      but: was <1>
-[INFO] 
+[INFO]
 [ERROR] Tests run: 266, Failures: 1, Errors: 0, Skipped: 0
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD FAILURE
