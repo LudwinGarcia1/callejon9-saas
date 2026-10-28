@@ -1,0 +1,85 @@
+{
+  "startedAt": "2026-10-28 14:20:30",
+  "day": "2026-10-28",
+  "sit141": {
+    "orderFolio": "ORD-261028201139",
+    "ticketFolio": "TCK-261028201211",
+    "total": 357.5,
+    "cash": 200,
+    "card": 157.5
+  },
+  "c01CashierUi": {
+    "ventas": "VENTAS EN EL RANGO 1",
+    "total": "TOTAL COBRADO $357.50"
+  },
+  "c01AdminUi": {
+    "ventas": "VENTAS EN EL RANGO 1",
+    "total": "TOTAL COBRADO $357.50"
+  },
+  "c01Cashier": {
+    "count": 1,
+    "total": 357.5
+  },
+  "c01Admin": {
+    "count": 1,
+    "total": 357.5
+  },
+  "c01Rows": [
+    {
+      "orderFolio": "ORD-261028201139",
+      "total": 357.5,
+      "paymentMethod": "MIXED",
+      "createdAt": "2026-10-28T20:12:11.111264Z"
+    }
+  ],
+  "c01Has141": true,
+  "c01PaymentMix": [
+    {
+      "method": "CASH",
+      "count": 1,
+      "total": 200
+    },
+    {
+      "method": "CARD",
+      "count": 1,
+      "total": 157.5
+    }
+  ],
+  "c01AdminHeader": "COBRADO HOY $435.00",
+  "c02SalesByDay": [
+    {
+      "day": "2026-10-28",
+      "total": 357.5,
+      "count": 1
+    }
+  ],
+  "c02PaymentMix": [
+    {
+      "method": "CASH",
+      "count": 1,
+      "total": 200,
+      "share": 55.94
+    },
+    {
+      "method": "CARD",
+      "count": 1,
+      "total": 157.5,
+      "share": 44.06
+    }
+  ],
+  "c02Pareto": [
+    {
+      "productName": "Guacamole con totopos",
+      "revenue": 190,
+      "revenueShare": 58.46,
+      "cumulativeShare": 58.46
+    },
+    {
+      "productName": "Margarita",
+      "revenue": 135,
+      "revenueShare": 41.54,
+      "cumulativeShare": 100
+    }
+  ],
+  "finishedAt": "2026-10-28 14:20:45"
+}
