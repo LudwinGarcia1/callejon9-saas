@@ -82,13 +82,14 @@ export function evidencia({ issue, outDir }) {
     });
   }
 
-  async function login(browser, email, sink) {
+  /** Inicia sesión desde /login. `as` permite otro restaurante y su contraseña (p. ej. el restaurante B). */
+  async function login(browser, email, sink, as = {}) {
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "es-MX", acceptDownloads: true });
     const page = await context.newPage();
     if (sink) recordApi(page, email, sink);
-    await page.goto(`${BASE_URL}/login?slug=${SLUG}`, { waitUntil: "networkidle" });
+    await page.goto(`${BASE_URL}/login?slug=${as.slug ?? SLUG}`, { waitUntil: "networkidle" });
     await page.locator("#email").fill(email);
-    await page.locator("#password").fill(password);
+    await page.locator("#password").fill(as.password ?? password);
     await page.locator('button[type="submit"]').click();
     await page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 60_000 });
     await page.waitForLoadState("networkidle");

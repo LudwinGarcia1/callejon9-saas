@@ -1,0 +1,20 @@
+{
+  "startedAt": "2026-10-28 14:16:32",
+  "folio": "TCK-261028201211",
+  "c01Search": 200,
+  "ticketId": "564335dd-e8a5-4e8a-ad0f-5456d205308f",
+  "pdfStatus": 200,
+  "pdfContentType": "application/pdf",
+  "pdfDisposition": "",
+  "pdfFile": "ticket-TCK-261028201211.pdf",
+  "pdfChecks": {
+    "folio": true,
+    "guacamole": true,
+    "margarita": true,
+    "propina": true,
+    "tip": true,
+    "total": true
+  },
+  "c02": "no ejecutado: falta el restaurante B",
+  "finishedAt": "2026-10-28 14:16:40"
+}

@@ -1,0 +1,9 @@
+# Descarga del PDF desde «Descargar ticket en PDF» (sesión de caja)
+# 2026-10-28 14:16:40 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+GET /api/v1/tickets/564335dd-e8a5-4e8a-ad0f-5456d205308f/pdf
+
+HTTP 200
+Content-Type: application/pdf
+
+
+<1334 bytes; guardado como ticket-TCK-261028201211.pdf>

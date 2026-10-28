@@ -1,0 +1,15 @@
+# Salud de la API antes de ejecutar
+# 2026-10-28 14:16:32 America/Mexico_City · directo a la API
+GET https://app-callejon9-api-prod-3878c6.azurewebsites.net/actuator/health
+
+
+HTTP 200
+Content-Type: application/vnd.spring-boot.actuator.v3+json
+
+{
+  "status": "UP",
+  "groups": [
+    "liveness",
+    "readiness"
+  ]
+}

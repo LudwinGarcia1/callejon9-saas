@@ -1,0 +1,51 @@
+# Ticket por folio desde la sesión de caja
+# 2026-10-28 14:16:38 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+GET /api/v1/tickets?folio=TCK-261028201211
+
+
+HTTP 200
+Content-Type: application/json
+
+{
+  "id": "564335dd-e8a5-4e8a-ad0f-5456d205308f",
+  "saleId": "be65f367-c292-4ba2-bf95-b2cebbeed708",
+  "orderId": "53cf75fc-6681-49c7-8b05-3605cd565fb8",
+  "folio": "TCK-261028201211",
+  "items": [
+    {
+      "productId": "33dafe69-08e7-4c4d-b1b4-d99902472968",
+      "productName": "Guacamole con totopos",
+      "unitPrice": 95,
+      "quantity": 2,
+      "subtotal": 190
+    },
+    {
+      "productId": "620e77f4-cfb7-4aec-96d2-602da6ad398a",
+      "productName": "Margarita",
+      "unitPrice": 135,
+      "quantity": 1,
+      "subtotal": 135
+    }
+  ],
+  "subtotal": 325,
+  "tip": 32.5,
+  "tipPercent": 10,
+  "total": 357.5,
+  "paymentMethod": "MIXED",
+  "closedAt": "2026-10-28T20:12:11.061543Z",
+  "payments": [
+    {
+      "method": "CASH",
+      "amount": 200,
+      "receivedAmount": 200,
+      "change": 0
+    },
+    {
+      "method": "CARD",
+      "amount": 157.5,
+      "receivedAmount": 157.5,
+      "change": 0
+    }
+  ],
+  "change": 0
+}
