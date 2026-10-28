@@ -1,0 +1,19 @@
+# C01: Registro de salida de insumo de inventario
+# Fecha: 2026-10-28 14:44:41 America/Mexico_City (20:44:41 UTC)
+$ curl.exe -i -s -X POST https://restohub.azurewebsites.net/api/v1/inventory/movements -b <cookies> -H "Content-Type: application/json" -d '{"inventoryItemId":"d3ed3188-c32b-4f30-bc62-a23b8d8082f1","quantity":3.5,"reason":"Preparacion de agua fresca","movementType":"OUT"}'
+
+HTTP/1.1 201 Created
+Content-Type: application/json
+Date: Wed, 28 Oct 2026 20:44:41 GMT
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Expires: 0
+Pragma: no-cache
+Transfer-Encoding: chunked
+Vary: Accept-Encoding
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+
+{"id":"43368d48-c8d4-4631-a8d5-50742871e0c3","inventoryItemId":"d3ed3188-c32b-4f30-bc62-a23b8d8082f1","movementType":"OUT","quantity":3.5,"reason":"Preparacion de agua fresca","createdAt":"2026-10-28T20:44:41.812782834Z"}

@@ -1,0 +1,19 @@
+# C02: Desactivacion de insumo de inventario
+# Fecha: 2026-10-28 14:44:42 America/Mexico_City (20:44:42 UTC)
+$ curl.exe -i -s -X PATCH https://restohub.azurewebsites.net/api/v1/inventory/items/d3ed3188-c32b-4f30-bc62-a23b8d8082f1 -b <cookies> -H "Content-Type: application/json" -d '{"active":false}'
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Date: Wed, 28 Oct 2026 20:44:42 GMT
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Expires: 0
+Pragma: no-cache
+Transfer-Encoding: chunked
+Vary: Accept-Encoding
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+
+{"id":"d3ed3188-c32b-4f30-bc62-a23b8d8082f1","name":"Mango Fresco 20261028144417","unit":"KG","stock":16.500,"minStock":5.000,"unitCost":25.00,"active":false,"level":"OK"}

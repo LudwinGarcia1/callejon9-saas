@@ -1,31 +1,19 @@
+# C01: Historial consolidado de ventas del dia
+# Fecha: 2026-10-28 14:44:43 America/Mexico_City (20:44:43 UTC)
+$ curl.exe -i -s -X GET https://restohub.azurewebsites.net/api/v1/sales -b <cookies>
+
 HTTP/1.1 200 OK
 Content-Type: application/json
-Date: Mon, 26 Oct 2026 22:52:10 GMT
-Server: Kestrel
+Date: Wed, 28 Oct 2026 20:44:43 GMT
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Expires: 0
+Pragma: no-cache
 Transfer-Encoding: chunked
+Vary: Accept-Encoding
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
 
-{
-  "sales": [
-    {
-      "id": "s1a80123-0001-4000-8000-000000000088",
-      "folio": "TCK-2026-0091",
-      "subtotal": 350.00,
-      "tipAmount": 35.00,
-      "total": 385.00,
-      "createdAt": "2026-10-26T22:34:11Z",
-      "payments": [
-        {
-          "method": "CARD",
-          "amount": 200.00
-        },
-        {
-          "method": "CASH",
-          "amount": 185.00
-        }
-      ]
-    }
-  ],
-  "totalAmount": 385.00,
-  "totalTip": 35.00,
-  "count": 1
-}
+{"sales":[{"id":"4dc0cea6-e0f2-49b7-a4d5-5398a9eea8d1","orderFolio":"ORD-261028204433","tableNumber":9989,"cashierName":"Cajero SIT","ticketId":"8ebee504-8c12-4aed-89e6-a8f8f639cae3","paymentMethod":"MIXED","subtotal":90.00,"tip":9.00,"total":99.00,"createdAt":"2026-10-28T20:44:37.524587Z"},{"id":"603432b8-26a7-45e0-9465-dd95a5d17606","orderFolio":"ORD-261028204110","tableNumber":2173,"cashierName":"Cajero SIT","ticketId":"a4a14c77-d847-4dd2-83bd-1a3cdaa489fb","paymentMethod":"MIXED","subtotal":90.00,"tip":9.00,"total":99.00,"createdAt":"2026-10-28T20:42:21.349873Z"}],"summary":{"count":2,"total":198.00},"paymentMix":[{"method":"CASH","count":2,"total":100.00},{"method":"CARD","count":2,"total":98.00}]}

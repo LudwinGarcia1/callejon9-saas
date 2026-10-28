@@ -1,42 +1,19 @@
+# C02: Analitica ejecutiva (Pareto, ventas diarias y mezcla de pago)
+# Fecha: 2026-10-28 14:44:44 America/Mexico_City (20:44:44 UTC)
+$ curl.exe -i -s -X GET https://restohub.azurewebsites.net/api/v1/analytics -b <cookies>
+
 HTTP/1.1 200 OK
 Content-Type: application/json
-Date: Mon, 26 Oct 2026 22:54:30 GMT
-Server: Kestrel
+Date: Wed, 28 Oct 2026 20:44:45 GMT
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Expires: 0
+Pragma: no-cache
 Transfer-Encoding: chunked
+Vary: Accept-Encoding
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
 
-{
-  "totalRevenue": 385.00,
-  "netRevenue": 350.00,
-  "totalTips": 35.00,
-  "totalOrders": 1,
-  "averageTicket": 385.00,
-  "paymentMix": [
-    {
-      "method": "CARD",
-      "amount": 200.00,
-      "percentage": 51.95
-    },
-    {
-      "method": "CASH",
-      "amount": 185.00,
-      "percentage": 48.05
-    }
-  ],
-  "topSellingProducts": [
-    {
-      "productName": "Orden de Tacos al Pastor",
-      "quantity": 2,
-      "revenue": 240.00
-    },
-    {
-      "productName": "Refresco 355ml",
-      "quantity": 2,
-      "revenue": 70.00
-    },
-    {
-      "productName": "Agua de Horchata 500ml",
-      "quantity": 1,
-      "revenue": 40.00
-    }
-  ]
-}
+{"pareto":[{"productName":"Agua Fresca 20261028144417","revenue":90.00,"revenueShare":50.00,"cumulativeShare":50.00},{"productName":"Agua Fresca de Mango","revenue":90.00,"revenueShare":50.00,"cumulativeShare":100.00}],"salesByDay":[{"day":"2026-10-22","total":0.00,"count":0},{"day":"2026-10-23","total":0.00,"count":0},{"day":"2026-10-24","total":0.00,"count":0},{"day":"2026-10-25","total":0.00,"count":0},{"day":"2026-10-26","total":0.00,"count":0},{"day":"2026-10-27","total":0.00,"count":0},{"day":"2026-10-28","total":198.00,"count":2}],"paymentMix":[{"method":"CASH","count":2,"total":100.00,"share":50.51},{"method":"CARD","count":2,"total":98.00,"share":49.49}]}

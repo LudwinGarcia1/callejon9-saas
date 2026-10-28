@@ -1,0 +1,41 @@
+# C04: Verificacion de endpoint /swagger-ui/index.html en Azure
+# Fecha: 2026-10-28 14:44:26 America/Mexico_City (20:44:26 UTC)
+$ curl.exe -i -s -X GET https://app-callejon9-api-prod-3878c6.azurewebsites.net/swagger-ui/index.html
+
+HTTP/1.1 200 OK
+Content-Length: 734
+Content-Type: text/html
+Date: Wed, 28 Oct 2026 20:44:26 GMT
+Accept-Ranges: bytes
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Expires: 0
+Last-Modified: Wed, 28 Oct 2026 16:52:51 GMT
+Pragma: no-cache
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+
+<!-- HTML for static distribution bundle build -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Swagger UI</title>
+    <link rel="stylesheet" type="text/css" href="./swagger-ui.css" />
+    <link rel="stylesheet" type="text/css" href="index.css" />
+    <link rel="icon" type="image/png" href="./favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="./favicon-16x16.png" sizes="16x16" />
+  </head>
+
+  <body>
+    <div id="swagger-ui"></div>
+    <script src="./swagger-ui-bundle.js" charset="UTF-8"> </script>
+    <script src="./swagger-ui-standalone-preset.js" charset="UTF-8"> </script>
+    <script src="./swagger-initializer.js" charset="UTF-8"> </script>
+  </body>
+</html>

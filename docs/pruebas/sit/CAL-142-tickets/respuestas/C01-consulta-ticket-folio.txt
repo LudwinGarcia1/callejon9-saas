@@ -1,0 +1,19 @@
+# C01: Consulta de ticket por folio
+# Fecha: 2026-10-28 14:44:39 America/Mexico_City (20:44:39 UTC)
+$ curl.exe -i -s -X GET https://restohub.azurewebsites.net/api/v1/tickets?folio=TCK-261028204437 -b <cookies>
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+Date: Wed, 28 Oct 2026 20:44:40 GMT
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Expires: 0
+Pragma: no-cache
+Transfer-Encoding: chunked
+Vary: Accept-Encoding
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+
+{"id":"8ebee504-8c12-4aed-89e6-a8f8f639cae3","saleId":"4dc0cea6-e0f2-49b7-a4d5-5398a9eea8d1","orderId":"65e7a18c-32aa-4a3f-b036-ddd4b5e203e4","folio":"TCK-261028204437","items":[{"productId":"5a31db6d-483b-4881-b260-91993a43bb08","productName":"Agua Fresca 20261028144417","unitPrice":45.00,"quantity":2,"subtotal":90.00}],"subtotal":90.00,"tip":9.00,"tipPercent":10.00,"total":99.00,"paymentMethod":"MIXED","closedAt":"2026-10-28T20:44:37.524447Z","payments":[{"method":"CASH","amount":50.00,"receivedAmount":50.00,"change":0.00},{"method":"CARD","amount":49.00,"receivedAmount":49.00,"change":0.00}],"change":0.00}

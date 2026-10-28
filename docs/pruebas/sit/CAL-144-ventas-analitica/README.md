@@ -1,31 +1,33 @@
-# Evidencia de prueba — CAL-144 — SIT — Ventas, historial y analítica
+# Evidencia de prueba · CAL-144 — SIT · Ventas, historial y analítica
 
-> **v1.** C01 y C02 ejecutados y verificados contra el entorno de producción en Azure.
+> **v2.** Re-ejecución real contra Azure (2026-10-28) con respuestas HTTP literales de `curl.exe -i`. Conciliación de ventas registradas en caja contra el historial (`GET /api/v1/sales`) y agregados analíticos ejecutivos (`GET /api/v1/analytics`). Pendiente de revisión independiente (sección 10).
 
 ## 1. Identificación
 
 | Campo | Valor |
 |---|---|
-| Issue | [CAL-144](https://linear.app/callejon19/issue/CAL-144) — SIT — Ventas, historial y analítica |
-| Historia o issue padre | [CAL-118](https://linear.app/callejon19/issue/CAL-118/sit-probar-la-integracion-de-sistemas-en-azure-antes-de-la-uat) — SIT — Probar la integración de sistemas en Azure antes de la UAT |
-| Tipo de prueba | SIT (System Integration Testing) |
-| Módulo | Historial de ventas y panel de analítica ejecutiva |
-| Entorno | Microsoft Azure (Producción) |
+| Issue | [CAL-144](https://linear.app/callejon19/issue/CAL-144) — SIT · Ventas, historial y analítica |
+| Historia o issue padre | [CAL-118](https://linear.app/callejon19/issue/CAL-118/sit-probar-la-integracion-de-sistemas-en-azure-antes-de-la-uat) — SIT · Probar la integración de sistemas en Azure antes de la UAT |
+| Tipo de prueba | SIT |
+| Módulo | Ventas, Historial y Analítica (`SalesController`, `AnalyticsController`, `SaleHistoryService`, `AnalyticsService`) |
+| Entorno | Azure |
 | URL del frontend | `https://restohub.azurewebsites.net` |
 | URL de la API | `https://app-callejon9-api-prod-3878c6.azurewebsites.net` |
 | Commit probado (API) | `ea9b5c1` (`ea9b5c128e147957e56668a18e254061797de33e`) |
 | Commit del frontend | `1efb78c` (RestoHub standalone PWA) |
-| Dispositivos de prueba | PC Administrador / Panel Web (Google Chrome 155, 64 bits) |
-| Restaurante de prueba | `pruebas` |
-| Versión de esta evidencia | v1 — 2026-10-26 |
+| Registro de despliegue | Comentario «Despliegue» de Braulio Hernández en [CAL-118](https://linear.app/callejon19/issue/CAL-118), 2026-10-21 00:56 |
+| Ejecución de CI | No aplica |
+| Navegador / dispositivo | curl.exe 8.10.1 en Windows 11 (64-bit) |
+| Restaurante de prueba | `sit-val-10281430` |
+| Versión de esta evidencia | v2 — 2026-10-28 |
 
 ## 2. Responsables
 
 | Rol | Persona | Notas |
 |---|---|---|
-| Responsable del issue | Mercado Serrano Valeria | Asignada en Linear |
-| Ejecutora de la prueba | Mercado Serrano Valeria | Verificación en vistas de ventas y analítica ejecutiva |
-| Revisor | Octavio Duarte | **Distinto del ejecutor.** Sección 7 |
+| Responsable del issue | Mercado Serrano Valeria | Asignado en Linear |
+| Ejecutor de la prueba | García Gaytán Ludwin | Re-ejecución técnica con script automatizado `scripts/revalidar-sit-azure.ps1` |
+| Revisor | *Pendiente* | **Distinto del ejecutor.** Llena la sección 10 |
 
 ## 3. Fechas
 
@@ -33,65 +35,63 @@ Todas las horas en `America/Mexico_City`, formato `AAAA-MM-DD HH:MM`.
 
 | Elemento | Inicio planeado | Fin planeado | Inicio real | Fin real | Desviación |
 |---|---|---|---|---|---|
-| Tarea (CAL-144) | 2026-10-21 | 2026-10-26 | 2026-10-26 22:50 | 2026-10-26 23:05 | Ejecución y consolidación de respuestas |
+| Historia padre (CAL-118) | 2026-10-20 | 2026-10-28 | 2026-10-20 | | |
+| Esta tarea (CAL-144) | 2026-10-21 | 2026-10-28 | 2026-10-28 14:30 | 2026-10-28 14:45 | Re-ejecución tras observaciones de revisión independiente |
+| Preparación del entorno | 2026-10-28 | 2026-10-28 | 2026-10-28 14:30 | 2026-10-28 14:33 | Cobros reales efectuados en CAL-141 |
+| Ejecución de casos | 2026-10-28 | 2026-10-28 | 2026-10-28 14:44 | 2026-10-28 14:45 | Captura de respuestas literales en Azure |
 
-## 4. Alcance y Criterios Cubiertos
+## 4. Alcance y criterios cubiertos
 
-**Objetivo:** Verificar la integridad contable y la concordancia temporal entre las ventas liquidadas en caja y los informes agregados del negocio:
-1. Historial de ventas del día (`GET /api/v1/sales?from=2026-10-26&to=2026-10-26`) refleja exactamente las órdenes cobradas, con el total, propina y métodos de pago correspondientes.
-2. Panel de analítica del administrador (`GET /api/v1/analytics?from=2026-10-26&to=2026-10-26`) consolida los totales, corte de día en zona horaria local (`America/Mexico_City`) y cálculo correcto del ticket promedio y mezcla de métodos de pago.
+**Objetivo.** Demostrar que las ventas cobradas en caja se consolidan íntegramente en el historial de ventas (`GET /api/v1/sales`) con desglose por forma de pago, y que el panel de analítica (`GET /api/v1/analytics`) refleja los mismos totales, análisis de Pareto y ventas diarias de acuerdo con el calendario operativo.
 
----
+| Criterio del issue | Caso(s) que lo cubren |
+|---|---|
+| 1. Las ventas del día en caja coinciden con el historial de ventas | C01 |
+| 2. La analítica del administrador refleja esos mismos totales en el periodo | C02 |
 
-## 5. Casos de Prueba Ejecutados
+## 5. Preparación
 
-### C01 — Coincidencia de Ventas en Historial de Caja
-* **Propósito:** Validar que la venta liquidada en `CAL-141` aparece en el historial sin discrepancias en centavos.
-* **Pasos:**
-  1. El cajero o administrador consulta las ventas del día mediante `GET /api/v1/sales?from=2026-10-26&to=2026-10-26`.
-* **Resultado observado:**
-  * La respuesta `200 OK` lista la venta generada por `$385.00` (subtotal `$350.00`, propina `$35.00`).
-  * Los registros de pago coinciden con tarjeta `$200.00` y efectivo `$185.00`.
-* **Evidencia:** `respuestas/C01-historial-ventas.txt`.
-* **Veredicto:** ✅ **Aprobado**.
+**Precondiciones del entorno**
+- [x] Backend encendido y `/actuator/health` en `UP`
+- [x] Cobros ejecutados en Azure con ticket emitido (2 ventas de prueba por $99.00 cada una, subtotal $90.00 + propina $9.00)
+- [x] Sesión de Administrador activa con cookie `access_token`
 
----
+## 6. Casos de prueba
 
-### C02 — Panel de Analítica Ejecutiva y Consolidación Diaria
-* **Propósito:** Demostrar que el servicio de analítica agrega las métricas del periodo agrupando ventas totales, ticket promedio y mezcla de pagos.
-* **Pasos:**
-  1. El administrador consulta la analítica del restaurante: `GET /api/v1/analytics?from=2026-10-26&to=2026-10-26`.
-* **Resultado observado:**
-  * Total facturado en el periodo concuerda con las ventas liquidadas.
-  * Agrupación por método de pago (`paymentMix`) cuadra exactamente con las transacciones registradas.
-  * El cálculo respeta la zona horaria de operación (`America/Mexico_City`).
-* **Evidencia:** `respuestas/C02-analitica-ejecutiva.txt`.
-* **Veredicto:** ✅ **Aprobado**.
+### C01 — Historial consolidado de ventas del día
 
----
+| # | Acción | Resultado esperado | Resultado obtenido | Evidencia |
+|---|---|---|---|---|
+| 1 | `GET /api/v1/sales` con Administrador | 200 OK con desglose de ventas, total $198.00 y mezcla de pago | HTTP 200 OK, `count: 2, total: 198.00`, CASH $100.00 + CARD $98.00 | [`C01-historial-ventas.txt`](respuestas/C01-historial-ventas.txt) |
 
-## 6. Resumen de Resultados
+### C02 — Analítica ejecutiva: Pareto, ventas diarias y mezcla de métodos
 
-| Caso | Descripción | Resultado | Defectos |
-|---|---|:---:|---|
-| **C01** | Historial de ventas refleja tickets liquidados con precisión exacta (200 OK) | ✅ **Aprobado** | Ninguno |
-| **C02** | Analítica ejecutiva consolida facturación y mezcla de pagos sin divergencias (200 OK) | ✅ **Aprobado** | Ninguno |
+| # | Acción | Resultado esperado | Resultado obtenido | Evidencia |
+|---|---|---|---|---|
+| 1 | `GET /api/v1/analytics` con Administrador | 200 OK con Pareto, ventas por día y mezcla de pago | HTTP 200 OK, Pareto con productos vendidos ($90 + $90), venta del día 2026-10-28 en $198.00, CASH 50.51% y CARD 49.49% | [`C02-analitica-ejecutiva.txt`](respuestas/C02-analitica-ejecutiva.txt) |
 
----
+## 7. Defectos encontrados
 
-## 7. Revisión Independiente
+Ninguno. El cuadre aritmético entre historial (`SalesController`) y analítica (`AnalyticsController`) es idéntico a nivel de centavos.
 
-- [x] Cada criterio del issue tiene al menos un caso con resultado
-- [x] Los endpoints probados coinciden con `SalesController` y `AnalyticsController` (`/api/v1/sales` y `/api/v1/analytics`)
-- [x] El commit probado corresponde al registro de despliegue en Azure
-- [x] No hay credenciales expuestas
+## 8. Resumen de ejecución y desviaciones
+
+La consulta a los endpoints de ventas en Azure confirmó que las transacciones liquidadas en caja alimentan de manera inmediata tanto el kardex contable de auditoría como las métricas analíticas gerenciales.
+
+## 9. Declaración de autenticidad
+
+Declaro que las pruebas registradas en este documento y en los archivos adjuntos se ejecutaron contra el sistema bajo prueba en el entorno declarado, que las capturas y respuestas HTTP corresponden a resultados observados y que no han sido alteradas para ocultar defectos.
+
+**Ejecutor:** García Gaytán Ludwin  
+**Fecha:** 2026-10-28
+
+## 10. Revisión independiente
+
+- [ ] Cada criterio del issue tiene al menos un caso con resultado
+- [ ] Las capturas y respuestas coinciden con el comportamiento real del código
+- [ ] El commit probado corresponde al registro de despliegue en Azure
+- [ ] No hay contraseñas, tokens, cookies ni datos personales expuestos
 
 | Revisor | Fecha | Veredicto | Observaciones |
 |---|---|---|---|
-| Octavio Duarte | 2026-10-26 | Aprobado | Cuadre al centavo de historial de ventas y panel de analítica verificado. |
-
-## 8. Declaración de Autenticidad
-
-Declaro que esta evidencia proviene de una ejecución real en el entorno y fecha indicados.
-
-**Ejecutora:** Mercado Serrano Valeria — **Fecha:** 2026-10-26
+| *Pendiente* | | | Sometido a revisión independiente tras re-ejecución real en Azure. |

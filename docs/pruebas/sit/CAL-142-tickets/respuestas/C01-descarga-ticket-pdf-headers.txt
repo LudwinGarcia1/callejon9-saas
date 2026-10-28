@@ -1,0 +1,61 @@
+# C01: Cabeceras de descarga de ticket PDF
+# Fecha: 2026-10-28 14:44:39 America/Mexico_City (20:44:39 UTC)
+$ curl.exe -i -s -X GET https://restohub.azurewebsites.net/api/v1/tickets/8ebee504-8c12-4aed-89e6-a8f8f639cae3/pdf -b <cookies>
+
+HTTP/1.1 200 OK
+Content-Length: 1301
+Content-Type: application/pdf
+Date: Wed, 28 Oct 2026 20:44:39 GMT
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Expires: 0
+Pragma: no-cache
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+
+%PDF-1.5
+%����
+3 0 obj
+<</Filter/FlateDecode/Length 440>>stream
+x��SMS�0��W�<P��4M�)#�:�DX�����&-t���f������x���p��L=d��pB���g�?׻R��-5,n%<�M��$˷rm� �a-D��N�M��@���)A��� r������R2D����G9>��+����V��~Y�ڌ��g·"˶�r:(U���X��۸Ou��9����tm�}��3���N���pz��	�0�I����ɩ��X��FgqKƺ"���ui��;+|-���^����G�>�6EH�ďB�
+�-��>v�G�0C�����1?b���k�N�`��g��(ضP�b�&�Y���U0{��z��s'
+���]���8����;-�8,
+�ǅwx����͆^��
+&��%�*N�<��}{���)c�F���j����h�9���5<�H3t�S6�D�G
+endstream
+endobj
+5 0 obj
+<</Contents 3 0 R/Type/Page/Resources<</Font<</F1 1 0 R/F2 2 0 R>>>>/Parent 4 0 R/MediaBox[0 0 595 842]>>
+endobj
+1 0 obj
+<</Subtype/Type1/Type/Font/BaseFont/Helvetica-Bold/Encoding/WinAnsiEncoding>>
+endobj
+2 0 obj
+<</Subtype/Type1/Type/Font/BaseFont/Helvetica/Encoding/WinAnsiEncoding>>
+endobj
+4 0 obj
+<</Kids[5 0 R]/Type/Pages/Count 1>>
+endobj
+6 0 obj
+<</Type/Catalog/Pages 4 0 R>>
+endobj
+7 0 obj
+<</CreationDate(D:20261028204439Z)/Producer(OpenPDF 2.4.0)>>
+endobj
+xref
+0 8
+0000000000 65535 f 
+0000000643 00000 n 
+0000000736 00000 n 
+0000000015 00000 n 
+0000000824 00000 n 
+0000000522 00000 n 
+0000000875 00000 n 
+0000000920 00000 n 
+trailer
+<</Info 7 0 R/ID [<8ad6792a213ae15ef473b4fac18aec79><8ad6792a213ae15ef473b4fac18aec79>]/Root 6 0 R/Size 8>>
+startxref
+996
+%%EOF

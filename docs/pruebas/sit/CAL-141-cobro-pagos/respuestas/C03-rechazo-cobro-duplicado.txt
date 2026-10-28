@@ -1,13 +1,19 @@
-HTTP/1.1 400 Bad Request
-Content-Type: application/problem+json
-Date: Mon, 26 Oct 2026 22:38:05 GMT
-Server: Kestrel
-Transfer-Encoding: chunked
+# C03: Rechazo con 409 al intentar cobrar orden ya pagada
+# Fecha: 2026-10-28 14:44:38 America/Mexico_City (20:44:38 UTC)
+$ curl.exe -i -s -X POST https://restohub.azurewebsites.net/api/v1/orders/65e7a18c-32aa-4a3f-b036-ddd4b5e203e4/checkout -b <cookies> -H "Content-Type: application/json" -d '{"payments":[{"method":"CASH","amount":50},{"method":"CARD","amount":49}],"tipPercent":10}'
 
-{
-  "type": "about:blank",
-  "title": "Bad Request",
-  "status": 400,
-  "detail": "La orden ya esta PAID y no admite cobro",
-  "instance": "/api/v1/orders/ord-00000001-0001-4000-8000-000000000010/checkout"
-}
+HTTP/1.1 409 Conflict
+Content-Type: application/problem+json
+Date: Wed, 28 Oct 2026 20:44:38 GMT
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Expires: 0
+Pragma: no-cache
+Transfer-Encoding: chunked
+Vary: Accept-Encoding
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+
+{"type":"about:blank","title":"Regla de negocio","status":409,"detail":"La orden ORD-261028204433 ya esta PAID y no admite cobro.","instance":"/api/v1/orders/65e7a18c-32aa-4a3f-b036-ddd4b5e203e4/checkout"}

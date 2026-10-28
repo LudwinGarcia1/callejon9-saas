@@ -1,0 +1,18 @@
+# C01: Sonda /actuator/health/readiness en Azure App Service
+# Fecha: 2026-10-28 14:44:24 America/Mexico_City (20:44:24 UTC)
+$ curl.exe -i -s -X GET https://app-callejon9-api-prod-3878c6.azurewebsites.net/actuator/health/readiness
+
+HTTP/1.1 200 OK
+Content-Type: application/vnd.spring-boot.actuator.v3+json
+Date: Wed, 28 Oct 2026 20:44:23 GMT
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Expires: 0
+Pragma: no-cache
+Transfer-Encoding: chunked
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+
+{"status":"UP"}
