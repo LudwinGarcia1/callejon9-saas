@@ -71,19 +71,36 @@ Todo bloqueo debe quedar reflejado en la herramienta de gestión (Linear) para m
 
 ---
 
-## 6. Mapeo de Bloqueos Vigentes del Ciclo de Pruebas
+## 6. Bloqueos vigentes del ciclo de pruebas
 
-En cumplimiento con los criterios de aceptación de CAL-174, se establecen y formalizan las siguientes dependencias bloqueantes entre las pruebas de integración (SIT) y las pruebas de aceptación (UAT) en Linear:
+Las diez relaciones «Blocked by» de esta tabla están registradas en Linear: cada UAT está bloqueada por la SIT de su módulo (verificado el 2026-10-28).
 
-| Módulo | Issue UAT (Bloqueado) | Dependencia Crítica | Issue SIT (Bloqueador) | Estado SIT Actual |
-|---|---|---|---|---|
-| **Alta de Restaurantes** | `CAL-147` UAT Alta restaurantes y planes | **Blocked by** | `CAL-134` SIT Alta restaurantes y planes | In review (PR #88) |
-| **Usuarios y Roles** | `CAL-148` UAT Usuarios y roles | **Blocked by** | `CAL-135` SIT Usuarios y roles | In review (PR #88) |
-| **Cocina Tiempo Real** | `CAL-153` UAT Cocina y tiempo real | **Blocked by** | `CAL-140` SIT Cocina y tiempo real | In review (PR #88) |
-| **Catálogo** | `CAL-149` UAT Catálogo | **Blocked by** | `CAL-136` SIT Catálogo | In Progress |
-| **Mesas** | `CAL-150` UAT Mesas | **Blocked by** | `CAL-137` SIT Mesas | In Progress |
-| **Cobro y Pagos** | `CAL-154` UAT Cobro y pagos | **Blocked by** | `CAL-141` SIT Cobro y pagos | In Progress |
-| **Tickets** | `CAL-155` UAT Tickets | **Blocked by** | `CAL-142` SIT Tickets | In Progress |
-| **Ventas y Analítica** | `CAL-157` UAT Ventas, historial y analítica | **Blocked by** | `CAL-144` SIT Ventas, historial y analítica | In Progress |
-| **Inventario** | `CAL-156` UAT Inventario | **Blocked by** | `CAL-143` SIT Inventario | In Progress |
-| **Seguridad y Permisos** | `CAL-158` UAT Aislamiento y permisos | **Blocked by** | `CAL-145` SIT Aislamiento y seguridad transversal | In Progress |
+Estado al **2026-10-28 12:45** (America/Mexico_City). La primera versión de esta tabla (26-oct) quedó desactualizada: el 27-oct se aprobaron CAL-134, 135 y 140, y se reabrieron por revisión CAL-136, 137 y 141 a 145.
+
+| Módulo | UAT (bloqueada) | Estado UAT | SIT (bloqueadora) | Estado SIT | Observación |
+|---|---|---|---|---|---|
+| Alta de restaurantes | `CAL-147` | In Progress | `CAL-134` | Done | Desbloqueada |
+| Usuarios y roles | `CAL-148` | In Progress | `CAL-135` | Done | Desbloqueada |
+| Cocina y tiempo real | `CAL-153` | In Progress | `CAL-140` | Done | Desbloqueada |
+| Catálogo | `CAL-149` | In Progress | `CAL-136` | In Progress | **Bloqueada.** No se ejecuta ni avanza a In review hasta aprobar la SIT |
+| Mesas | `CAL-150` | In Progress | `CAL-137` | In Progress | **Bloqueada.** Igual que CAL-149 |
+| Inventario | `CAL-156` | In Progress | `CAL-143` | In Progress | **Bloqueada.** Igual que CAL-149 |
+| Cobro y pagos | `CAL-154` | Todo | `CAL-141` | In Progress | Bloqueada |
+| Tickets | `CAL-155` | Todo | `CAL-142` | In Progress | Bloqueada |
+| Ventas y analítica | `CAL-157` | Todo | `CAL-144` | In Progress | Bloqueada |
+| Aislamiento y permisos | `CAL-158` | Todo | `CAL-145` | In Progress | Bloqueada |
+
+> Este plan permite que una tarea bloqueada siga visible en *In Progress* (sección 4), pero no que avance a *In review* ni a *Done*. Además, `docs/pruebas/README.md` rechaza toda UAT ejecutada antes de aprobar la SIT de su módulo.
+
+---
+
+## Acuerdo del equipo
+
+Acordado el **2026-10-28** en el grupo de WhatsApp del equipo. El Scrum Master compartió este documento y los puntos clave a las 12:41, y la encuesta «¿de acuerdo?» de las 12:43 quedó con **3 votos a favor y 0 en contra**, de 4 integrantes; un voto quedó pendiente. Puntos aprobados:
+
+- Un bloqueo se avisa en el grupo en máximo 2 h y se marca en Linear con «Blocked by».
+- Si un bloqueo sigue más de 12 h hábiles, se escala y el Scrum Master reasigna.
+- Las ausencias se avisan con 12 a 24 h de anticipación, con la rama subida y un comentario en el issue.
+- Una tarea se reasigna si vence en 48 h, si lleva 24 h sin avance o si bloquea a alguien.
+
+La captura de la encuesta la conserva el Scrum Master y no se sube al repositorio, porque muestra números de teléfono.
