@@ -1,0 +1,32 @@
+# CAL-121 · mvnw verify del backend (2026-10-22 11:39-11:44 America/Mexico_City)
+# Rama test/cal-121-ut-alta-restaurantes-planes sobre main d31fd0c, con las pruebas nuevas y la corrección de CAL-179
+# java version "21.0.9" 2025-10-21 LTS (JAVA_HOME = C:\Program Files\Java\jdk-21); Testcontainers con PostgreSQL 16 en Docker 29.8.2
+# Extracto literal de la salida de Maven; el «·» que la consola no pudo mostrar se restauró.
+$ .\mvnw.cmd -B verify
+
+## Pruebas nuevas
+[INFO] Running Límites de usuarios y mesas de cada plan en el borde
+[WARNING] Tests run: 7, Failures: 0, Errors: 0, Skipped: 1, Time elapsed: 0.891 s -- in Límites de usuarios y mesas de cada plan en el borde
+[INFO] Running UT · identificador del alta de restaurante
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.089 s -- in UT · identificador del alta de restaurante
+
+La prueba omitida es PlanLimitBoundaryTest.tableLimitAtTheBoundary, con @Disabled("CAL-178: …").
+
+## Pruebas que ya cubrían el identificador duplicado (C02)
+[INFO] Running Limite de altas de restaurantes
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.863 s -- in Limite de altas de restaurantes
+[INFO] Running Onboarding de un restaurante nuevo
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.588 s -- in Onboarding de un restaurante nuevo
+
+## Total de la suite
+[INFO] Results:
+[WARNING] Tests run: 646, Failures: 0, Errors: 0, Skipped: 1
+
+## SpotBugs
+[INFO] --- spotbugs:4.8.6.6:check (spotbugs-check) @ backend ---
+[INFO] BugInstance size is 0
+[INFO] Error size is 0
+[INFO] No errors/warnings found
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
