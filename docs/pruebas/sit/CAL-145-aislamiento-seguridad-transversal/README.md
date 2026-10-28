@@ -117,7 +117,7 @@ C01, C03 y C04 los ejecutó [`comandos/sit-seguridad.sh`](comandos/sit-seguridad
 | Rol que ejecuta | Sin sesión |
 | Inicio / fin de ejecución | `2026-10-28 14:23` / `2026-10-28 14:23` |
 | Estado | ❌ Fallido |
-| Defecto vinculado | Ver sección 7: HSTS ausente en la API |
+| Defecto vinculado | [CAL-183](https://linear.app/callejon19/issue/CAL-183) |
 
 **Precondición.** Ninguna.
 
@@ -142,7 +142,7 @@ C01, C03 y C04 los ejecutó [`comandos/sit-seguridad.sh`](comandos/sit-seguridad
 | Rol que ejecuta | Sin sesión |
 | Inicio / fin de ejecución | `2026-10-28 14:23` / `2026-10-28 14:23` |
 | Estado | ❌ Fallido |
-| Defecto vinculado | Ver sección 7: documentación de la API expuesta |
+| Defecto vinculado | [CAL-182](https://linear.app/callejon19/issue/CAL-182) |
 
 **Precondición.** Según el criterio, `swagger_enabled = false` en el despliegue.
 
@@ -161,8 +161,8 @@ C01, C03 y C04 los ejecutó [`comandos/sit-seguridad.sh`](comandos/sit-seguridad
 
 | ID | Caso | Severidad | Descripción breve | Estado | Re-probado el |
 |---|---|---|---|---|---|
-| *Por registrar en Linear* | C04 | Alta | Swagger UI y el contrato OpenAPI completo responden 200 sin sesión en la API de producción | Abierto | — |
-| *Por registrar en Linear* | C03 | Baja | La API desplegada no envía `Strict-Transport-Security` (sí CSP, X-Frame-Options y nosniff); HTTP sí redirige a HTTPS | Abierto | — |
+| [CAL-182](https://linear.app/callejon19/issue/CAL-182) | C04 | Alta | Swagger UI y el contrato OpenAPI completo responden 200 sin sesión en la API de producción | Abierto | — |
+| [CAL-183](https://linear.app/callejon19/issue/CAL-183) | C03 | Media | La API desplegada no envía `Strict-Transport-Security` (sí CSP, X-Frame-Options y nosniff); HTTP sí redirige a HTTPS | Abierto | — |
 
 ## 8. Resumen
 
@@ -176,7 +176,7 @@ C01, C03 y C04 los ejecutó [`comandos/sit-seguridad.sh`](comandos/sit-seguridad
 - **Key Vault y PostgreSQL de forma indirecta.** Producción oculta los componentes de health (sección 6, C01).
 - **Commit de la API fuera de `main`.** `fb36760` es un hotfix desplegado sin fusionar (PR #105). La configuración de seguridad y de springdoc es la misma que en `main`.
 
-**Conclusión del ejecutor.** La API desplegada está sana (C01). Fallan dos controles: la documentación interactiva y el contrato de la API están expuestos sin sesión en producción (C04), y la API no envía HSTS (C03). El aislamiento entre restaurantes (C02) sigue sin probarse sobre Azure. El issue no puede cerrarse en este estado.
+**Conclusión del ejecutor.** La API desplegada está sana (C01). Fallan dos controles: la documentación interactiva y el contrato de la API están expuestos sin sesión en producción (C04, [CAL-182](https://linear.app/callejon19/issue/CAL-182)), y la API no envía HSTS (C03, [CAL-183](https://linear.app/callejon19/issue/CAL-183)). El aislamiento entre restaurantes (C02) sigue sin probarse sobre Azure. El issue no puede cerrarse en este estado.
 
 ## 9. Anexos por tipo de prueba
 

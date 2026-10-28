@@ -83,7 +83,7 @@ Los pasos los ejecutó [`playwright/sit-ventas.mjs`](playwright/sit-ventas.mjs) 
 | Rol que ejecuta | CASHIER (`caja@pruebas.com`) y ADMIN (`admin@pruebas.com`) |
 | Inicio / fin de ejecución | `2026-10-28 14:20` / `2026-10-28 14:21` |
 | Estado | ✅ Aprobado |
-| Defecto vinculado | Observado fuera del criterio: «Cobrado hoy» de `/admin` (sección 7) |
+| Defecto vinculado | [CAL-184](https://linear.app/callejon19/issue/CAL-184), observado fuera del criterio: «Cobrado hoy» de `/admin` |
 
 **Precondición.** El único cobro del día en `pruebas` es el de CAL-141 ($357.50).
 
@@ -95,7 +95,7 @@ Los pasos los ejecutó [`playwright/sit-ventas.mjs`](playwright/sit-ventas.mjs) 
 | 2 | Pedir las ventas del día con la sesión de caja | `GET /api/v1/sales?from=2026-10-28&to=2026-10-28` | Igual | **200**, `summary: {count: 1, total: 357.5}`; `paymentMix`: CASH 200, CARD 157.5 | [`C01-ventas-del-dia-caja.txt`](respuestas/C01-ventas-del-dia-caja.txt) |
 | 3 | Administrador: abrir «Historial» | 2026-10-28 | Lo mismo que caja | 14:20:40 · «Ventas en el rango 1», «Total cobrado $357.50» | [`C01-P02`](capturas/C01-P02-historial-del-administrador.png) |
 | 4 | Pedir las ventas del día con la sesión del administrador | misma petición | Igual | **200**, `summary: {count: 1, total: 357.5}`; la venta es `ORD-261028201139`, `MIXED`, `total: 357.5`, `createdAt: 2026-10-28T20:12:11Z` | [`C01-ventas-del-dia-administrador.txt`](respuestas/C01-ventas-del-dia-administrador.txt) |
-| 5 | Administrador: abrir «Administración» | — | (indicador relacionado) | 14:20:43 · «Cobrado hoy **$435.00**», distinto de lo cobrado. Ver sección 7 | [`C01-P03`](capturas/C01-P03-administracion-cobrado-hoy.png) |
+| 5 | Administrador: abrir «Administración» | — | (indicador relacionado) | 14:20:43 · «Cobrado hoy **$435.00**», distinto de lo cobrado. Ver [CAL-184](https://linear.app/callejon19/issue/CAL-184) | [`C01-P03`](capturas/C01-P03-administracion-cobrado-hoy.png) |
 
 **Observaciones.** Caja, historial del administrador y API coinciden entre sí y con el cobro de la SIT: 1 venta, $357.50. El indicador «Cobrado hoy» de la pantalla de Administración no coincide; no es parte del criterio («caja e historial»), pero se registra como defecto.
 
@@ -125,7 +125,7 @@ Los pasos los ejecutó [`playwright/sit-ventas.mjs`](playwright/sit-ventas.mjs) 
 
 | ID | Caso | Severidad | Descripción breve | Estado | Re-probado el |
 |---|---|---|---|---|---|
-| *Por registrar en Linear* | C01 paso 5 | Media | «Cobrado hoy» de `/admin` suma el `total` de **todas** las órdenes abiertas hoy, incluidas las canceladas, y sin propina: marcó $435.00 cuando lo cobrado fue $357.50 | Abierto | — |
+| [CAL-184](https://linear.app/callejon19/issue/CAL-184) | C01 paso 5 | Media | «Cobrado hoy» de `/admin` suma el `total` de **todas** las órdenes abiertas hoy, incluidas las canceladas, y sin propina: marcó $435.00 cuando lo cobrado fue $357.50 | Abierto | — |
 
 **Detalle.** `admin-view.tsx` calcula «Cobrado hoy» como la suma de `order.total` de las órdenes de `GET /api/v1/orders` cuyo `openedAt` es hoy, sin filtrar por estado. Ese día eran ([`C01-ordenes-que-suma-cobrado-hoy.txt`](respuestas/C01-ordenes-que-suma-cobrado-hoy.txt)): `ORD-261028201148` CANCELED $110.00, `ORD-261028201139` PAID $325.00 y tres canceladas en $0.00. Suma $435.00. **Esperado:** lo cobrado, es decir, las ventas del día con propina: $357.50, como en el historial. **Pasos:** cancelar una orden con productos ya enviada a cocina y cobrar otra con propina el mismo día; abrir Administración.
 
@@ -141,7 +141,7 @@ Los pasos los ejecutó [`playwright/sit-ventas.mjs`](playwright/sit-ventas.mjs) 
 - **Commit de la API fuera de `main`.** `fb36760` es un hotfix desplegado sin fusionar (PR #105). No toca ventas ni analítica.
 - **Solo web.** La app móvil no tiene ventas; no aplica.
 
-**Conclusión del ejecutor.** Los dos criterios se cumplen sobre Azure: caja, historial del administrador y analítica muestran el mismo cobro de la SIT, $357.50 en efectivo y tarjeta. Se encontró un defecto fuera del criterio: el indicador «Cobrado hoy» de Administración suma órdenes canceladas y omite la propina, y debe registrarse en Linear.
+**Conclusión del ejecutor.** Los dos criterios se cumplen sobre Azure: caja, historial del administrador y analítica muestran el mismo cobro de la SIT, $357.50 en efectivo y tarjeta. Se encontró un defecto fuera del criterio: el indicador «Cobrado hoy» de Administración suma órdenes canceladas y omite la propina, registrado como [CAL-184](https://linear.app/callejon19/issue/CAL-184).
 
 ## 9. Anexos por tipo de prueba
 
