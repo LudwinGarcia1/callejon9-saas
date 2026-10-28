@@ -10,6 +10,7 @@ import { headers } from "next/headers";
 import "./globals.css";
 
 import { Toaster } from "@/components/ui/sonner";
+import { PwaRegister } from "@/components/pwa/pwa-register";
 import { PATHNAME_HEADER } from "@/lib/request-headers";
 import { Providers } from "./providers";
 
@@ -71,6 +72,7 @@ export default async function RootLayout({
       <body className="antialiased">
         <Providers>{children}</Providers>
         <Toaster />
+        <PwaRegister />
       </body>
     </html>
   );

@@ -1,0 +1,36 @@
+# 2026-10-21 22:55:39 America/Mexico_City (04:55:39 UTC del 22 de octubre)
+$ curl -i https://restohub.azurewebsites.net/api/v1/platform/tenants  (con la cookie de la sesión de plataforma)
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+Date: Thu, 22 Oct 2026 04:55:40 GMT
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Expires: 0
+Pragma: no-cache
+Transfer-Encoding: chunked
+Vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Accept-Encoding
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+
+{"timestamp":"2026-10-22T04:55:40.729+00:00","status":404,"error":"Not Found","path":"/api/v1/platform/tenants"}
+
+# 2026-10-21 22:55:40 America/Mexico_City (04:55:40 UTC del 22 de octubre)
+$ curl -i https://restohub.azurewebsites.net/api/v1/tenants  (con la cookie de la sesión de plataforma)
+HTTP/1.1 404 Not Found
+Content-Type: application/json
+Date: Thu, 22 Oct 2026 04:55:41 GMT
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Expires: 0
+Pragma: no-cache
+Transfer-Encoding: chunked
+Vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Accept-Encoding
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+
+{"timestamp":"2026-10-22T04:55:41.391+00:00","status":404,"error":"Not Found","path":"/api/v1/tenants"}
+

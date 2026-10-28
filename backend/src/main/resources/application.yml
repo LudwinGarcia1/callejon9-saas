@@ -66,6 +66,14 @@ app:
       max-failures-per-ip: ${AUTH_LOGIN_MAX_FAILURES_IP:20}
       window: ${AUTH_LOGIN_WINDOW:15m}
 
+  client-ip:
+    # Proxies cuya entrada en X-Forwarded-For se salta al buscar la IP del
+    # cliente (ClientIp), ademas de la red local, en la que siempre se confia.
+    # IPs o rangos CIDR separados por comas. En Azure van aqui las IP de
+    # salida del App Service del frontend: sin ellas, todos los usuarios que
+    # entran por la web compartirian la llave de los limites por IP.
+    trusted-proxies: ${APP_TRUSTED_PROXIES:}
+
   signup:
     # Freno contra altas masivas (SignupRateLimiter). Cada alta que pasa la
     # validacion cuenta para la IP del cliente, termine creada (201) o con el

@@ -116,6 +116,24 @@ pipeline {
             }
         }
 
+        stage('Mobile Quality Gates') {
+            steps {
+                dir('mobile') {
+                    sh '''#!/usr/bin/env bash
+                        set -euo pipefail
+                        echo "[CI] Instalando dependencias de la app movil con pnpm..."
+                        pnpm install --frozen-lockfile
+
+                        echo "[CI] Comprobando tipos TypeScript de la app movil..."
+                        pnpm exec tsc --noEmit
+
+                        echo "[CI] Ejecutando pruebas unitarias de la app movil..."
+                        pnpm test
+                    '''
+                }
+            }
+        }
+
         stage('Production Images') {
             steps {
                 sh '''#!/usr/bin/env bash

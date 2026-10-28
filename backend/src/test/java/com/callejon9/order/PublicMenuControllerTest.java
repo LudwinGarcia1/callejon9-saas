@@ -35,6 +35,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -69,6 +71,9 @@ class PublicMenuControllerTest {
     @Mock
     private ApplicationEventPublisher eventPublisher;
 
+    @Mock
+    private PlatformTransactionManager transactionManager;
+
     private PublicMenuController controller;
 
     private final UUID tenantId = UUID.randomUUID();
@@ -84,7 +89,8 @@ class PublicMenuControllerTest {
                 orderRepository,
                 orderItemRepository,
                 folioGenerator,
-                eventPublisher
+                eventPublisher,
+                new TransactionTemplate(transactionManager)
         );
     }
 

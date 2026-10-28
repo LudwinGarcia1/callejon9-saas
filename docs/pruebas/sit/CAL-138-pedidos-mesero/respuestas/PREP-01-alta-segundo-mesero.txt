@@ -1,0 +1,22 @@
+# Alta del segundo mesero desde la sesión web del administrador
+# 2026-10-21 12:49:27 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/users
+Content-Type: application/json
+
+{
+  "fullName": "Mesero de prueba 2",
+  "email": "mesero2@pruebas.com",
+  "password": "<redactado>",
+  "role": "WAITER"
+}
+
+HTTP 201
+Content-Type: application/json
+
+{
+  "id": "0bf6dba3-dffb-48fe-af7f-e5567536f9c5",
+  "email": "mesero2@pruebas.com",
+  "fullName": "Mesero de prueba 2",
+  "role": "WAITER",
+  "active": true
+}

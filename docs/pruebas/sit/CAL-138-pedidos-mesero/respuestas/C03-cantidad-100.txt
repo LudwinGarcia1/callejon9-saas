@@ -1,0 +1,27 @@
+# El dueño de la orden envía una línea con cantidad 100
+# 2026-10-21 12:50:25 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders/1fc109ec-0e69-4903-892e-7f24d9422e0e/items
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": "cf7c9c27-1bbd-4378-903c-50d29311be16",
+      "quantity": 100
+    }
+  ]
+}
+
+HTTP 400
+Content-Type: application/problem+json
+
+{
+  "type": "about:blank",
+  "title": "Validacion fallida",
+  "status": 400,
+  "detail": "La solicitud contiene campos invalidos.",
+  "instance": "/api/v1/orders/1fc109ec-0e69-4903-892e-7f24d9422e0e/items",
+  "errors": {
+    "items[0].quantity": "debe ser menor que o igual a 99"
+  }
+}

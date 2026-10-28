@@ -22,11 +22,14 @@ public class SignupController {
 
     private final TenantOnboardingService onboardingService;
     private final SignupRateLimiter signupRateLimiter;
+    private final ClientIp clientIp;
 
     public SignupController(TenantOnboardingService onboardingService,
-                            SignupRateLimiter signupRateLimiter) {
+                            SignupRateLimiter signupRateLimiter,
+                            ClientIp clientIp) {
         this.onboardingService = onboardingService;
         this.signupRateLimiter = signupRateLimiter;
+        this.clientIp = clientIp;
     }
 
     /**
@@ -38,7 +41,7 @@ public class SignupController {
     @ResponseStatus(HttpStatus.CREATED)
     public SignupResponse signup(@Valid @RequestBody SignupRequest request,
                                  HttpServletRequest httpRequest) {
-        signupRateLimiter.acquire(ClientIp.of(httpRequest));
+        signupRateLimiter.acquire(clientIp.of(httpRequest));
 
         Tenant tenant = onboardingService.onboard(
                 request.restaurantName(),

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   formatCurrency,
+  formatIsoDate,
   formatRoundedCurrency,
   formatShortDate,
   formatShortTime,
@@ -28,6 +29,10 @@ describe("lib/format (Formateadores de moneda, fechas y horas)", () => {
   });
 
   describe("formatShortDate y formatShortTime — Fechas y horas en español México", () => {
+    it("formatea una fecha ISO sin hora sin desplazar el día por UTC", () => {
+      expect(formatIsoDate("2026-10-20")).toBe("20/10/2026");
+    });
+
     it("formatea fechas ISO a fecha corta dd/mm/aaaa", () => {
       // 2026-10-20T12:00:00Z
       const dateFormatted = formatShortDate("2026-10-20T12:00:00Z");

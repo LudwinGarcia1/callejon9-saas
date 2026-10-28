@@ -1,8 +1,8 @@
 # CAL-69 — Normas, Estándares, Leyes y Regulaciones Aplicables
 
-> **Asignatura:** Integradora · **Fecha oficial:** 4 de noviembre de 2026 · **Fecha interna de cierre:** 28 de octubre de 2026  
-> **Docentes evaluadores:** Dr. Florencio Barrera Gutiérrez y LA Verónica Hernández González  
-> **Proyecto:** RestoHub (Plataforma SaaS Multi-restaurante) · **Equipo:** Callejón 19  
+> **Asignatura:** Integradora · **Fecha oficial:** 4 de noviembre de 2026 · **Fecha interna de cierre:** 28 de octubre de 2026\
+> **Docentes evaluadores:** Dr. Florencio Barrera Gutiérrez y LA Verónica Hernández González\
+> **Proyecto:** RestoHub (Plataforma SaaS Multi-restaurante) · **Equipo:** Callejón 19\
 
 ---
 
@@ -154,14 +154,14 @@ El sistema RestoHub adopta las características del modelo de calidad ISO/IEC 25
 
 El backend REST y la capa de servicios de RestoHub implementan contramedidas contra los principales riesgos de seguridad en APIs:
 
-1. **API1:2023 — Broken Object Level Authorization (BOLA):**  
-   * *Riesgo:* Que un usuario de un restaurante acceda a órdenes o productos de otro restaurante manipulando el `id` numérico o UUID en la URL.  
+1. **API1:2023 — Broken Object Level Authorization (BOLA):**\
+   * *Riesgo:* Que un usuario de un restaurante acceda a órdenes o productos de otro restaurante manipulando el `id` numérico o UUID en la URL.\
    * *Mitigación RestoHub:* Invariante crítica del proyecto. La base de datos aplica RLS forzado donde cada sentencia SQL se ejecuta bajo el contexto de `app.tenant_id`. Si un atacante solicita un recurso que no pertenece a su inquilino, PostgreSQL devuelve un conjunto vacío (0 filas) o rechaza la inserción, haciendo imposible el acceso cruzado.
-2. **API2:2023 — Broken Authentication:**  
+2. **API2:2023 — Broken Authentication:**\
    * *Mitigación RestoHub:* Autenticación mediante tokens JWT firmados con clave simétrica robusta (`HMAC-SHA256`). Los tokens se almacenan en cookies protegidas inaccesibles para scripts maliciosos de JavaScript (`HttpOnly`).
-3. **API4:2023 — Unrestricted Resource Consumption:**  
+3. **API4:2023 — Unrestricted Resource Consumption:**\
    * *Mitigación RestoHub:* Límite de tasa (*rate limit*) estricto en los endpoints de inicio de sesión (`/api/v1/auth/login`) y registro (`/api/v1/auth/signup`) para mitigar ataques de fuerza bruta y saturación de base de datos.
-4. **API5:2023 — Broken Function Level Authorization (BFLA):**  
+4. **API5:2023 — Broken Function Level Authorization (BFLA):**\
    * *Mitigación RestoHub:* Matriz estricta de autorización por roles (`@PreAuthorize("hasRole('ADMIN')")`). Un mesero (`WAITER`) tiene restringido a nivel método el acceso a reportes de corte de caja o configuración de sucursales.
 
 ### 5.3. WCAG 2.1 — Directrices de Accesibilidad para el Contenido Web (Nivel AA)
