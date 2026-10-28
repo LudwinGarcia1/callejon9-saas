@@ -190,6 +190,11 @@
       "path": "docs/pruebas/ut/CAL-121-alta-restaurantes-planes/evidencia-rama-original.md",
       "kind": "testing",
       "authority": "medium"
+    },
+    {
+      "path": "scripts/pruebas-demo/README.md",
+      "kind": "testing",
+      "authority": "medium"
     }
   ]
 }
