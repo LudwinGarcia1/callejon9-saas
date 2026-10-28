@@ -180,6 +180,11 @@
       "path": "docs/cal-67-pwa-plataformas-pruebas-beta.md",
       "kind": "compliance",
       "authority": "high"
+    },
+    {
+      "path": "docs/cal-69-normas-estandares-leyes.md",
+      "kind": "legal-compliance",
+      "authority": "high"
     }
   ]
 }
