@@ -4,7 +4,9 @@ import com.callejon9.sale.repository.SaleRepository;
 import com.callejon9.sale.web.dto.SalesHistoryResponse;
 import com.callejon9.shared.time.BusinessCalendar;
 import com.callejon9.shared.time.InstantRange;
+import com.callejon9.shared.web.PageResponse;
 import java.time.LocalDate;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,8 +41,13 @@ public class SaleHistoryService {
         this.analyticsRepository = analyticsRepository;
     }
 
+    /**
+     * Las filas llegan paginadas (CAL-16); el resumen y la mezcla de pago
+     * cubren el rango completo, no solo la pagina, porque son los totales que
+     * el cajero concilia.
+     */
     @Transactional(readOnly = true)
-    public SalesHistoryResponse getHistory(LocalDate from, LocalDate to) {
+    public SalesHistoryResponse getHistory(LocalDate from, LocalDate to, Pageable pageable) {
         LocalDate today = businessCalendar.today();
         LocalDate effectiveFrom = from != null ? from : (to != null ? to : today);
         LocalDate effectiveTo = to != null ? to : effectiveFrom;
@@ -48,7 +55,7 @@ public class SaleHistoryService {
         InstantRange range = businessCalendar.toInstantRange(effectiveFrom, effectiveTo);
 
         return new SalesHistoryResponse(
-                saleRepository.findHistory(range.start(), range.endExclusive()),
+                PageResponse.from(saleRepository.findHistory(range.start(), range.endExclusive(), pageable)),
                 saleRepository.summarize(range.start(), range.endExclusive()),
                 analyticsRepository.paymentMix(range.start(), range.endExclusive()));
     }

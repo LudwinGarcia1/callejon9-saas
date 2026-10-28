@@ -12,6 +12,7 @@ import com.callejon9.order.repository.OrderRepository;
 import com.callejon9.order.web.dto.OrderResponse;
 import com.callejon9.shared.error.BusinessRuleException;
 import com.callejon9.shared.error.ResourceNotFoundException;
+import com.callejon9.shared.web.InvalidPageRequestException;
 import com.callejon9.table.service.TableService;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -20,6 +21,8 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +36,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderService {
 
     private static final Logger log = LoggerFactory.getLogger(OrderService.class);
+
+    /** Ordenes que siguen en servicio: todavia no se cobran ni se cancelan. */
+    static final List<OrderStatus> OPEN_STATUSES = List.of(OrderStatus.NEW, OrderStatus.SENT, OrderStatus.READY);
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
@@ -82,12 +88,23 @@ public class OrderService {
         return new OrderWithItems(order, items);
     }
 
+    /**
+     * Una pagina de ordenes (CAL-16). {@code openOnly} deja solo las que
+     * siguen en servicio -- lo que piden mesero, caja y la app movil --, para
+     * que no tengan que traer el historial completo y filtrarlo en el cliente.
+     */
     @Transactional(readOnly = true)
-    public List<Order> listOrders(OrderStatus status) {
-        if (status != null) {
-            return orderRepository.findByStatusOrderByOpenedAtDesc(status);
+    public Page<Order> listOrders(OrderStatus status, boolean openOnly, Pageable pageable) {
+        if (status != null && openOnly) {
+            throw new InvalidPageRequestException("Usa status u open, no ambos.");
         }
-        return orderRepository.findAllByOrderByOpenedAtDesc();
+        if (openOnly) {
+            return orderRepository.findByStatusIn(OPEN_STATUSES, pageable);
+        }
+        if (status != null) {
+            return orderRepository.findByStatus(status, pageable);
+        }
+        return orderRepository.findAll(pageable);
     }
 
     @Transactional

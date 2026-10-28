@@ -80,6 +80,15 @@ export interface OrderItem {
 
 export type OrderStatus = 'NEW' | 'SENT' | 'READY' | 'PAID' | 'CANCELED';
 
+/** Página de un listado (CAL-16): PageResponse del backend. `page` empieza en 0. */
+export interface Page<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
 /** GET /api/v1/orders — resumen sin partidas (OrderSummaryResponse). */
 export interface OrderSummary {
   id: string;

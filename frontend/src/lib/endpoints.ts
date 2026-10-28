@@ -43,6 +43,7 @@ export const endpoints = {
     updateStatus: (userId: string) => `/api/v1/users/${userId}`,
   },
   orders: {
+    /** GET paginado: `?open=true` o `?status`, mas `page`, `size` (max 100) y `sort`. */
     list: () => "/api/v1/orders",
     open: () => "/api/v1/orders",
     detail: (orderId: string) => `/api/v1/orders/${orderId}`,

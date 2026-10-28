@@ -385,12 +385,14 @@ class OrderControllerTest {
 
         mockMvc.perform(get("/api/v1/orders").param("status", "NEW").cookie(cookieFor(waiter)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].status").value("NEW"));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].status").value("NEW"))
+                .andExpect(jsonPath("$.totalElements").value(1));
 
         mockMvc.perform(get("/api/v1/orders").param("status", "PAID").cookie(cookieFor(waiter)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.content.length()").value(0))
+                .andExpect(jsonPath("$.totalElements").value(0));
     }
 
     @Test
@@ -509,8 +511,9 @@ class OrderControllerTest {
         // Tenant A: la lista de ordenes nunca debe contener la orden de B.
         mockMvc.perform(get("/api/v1/orders").cookie(cookieFor(waiter)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(orderIdA.toString()));
+                .andExpect(jsonPath("$.content.length()").value(1))
+                .andExpect(jsonPath("$.content[0].id").value(orderIdA.toString()))
+                .andExpect(jsonPath("$.totalElements").value(1));
 
         // Y tampoco puede leerla por id: RLS la oculta, asi que responde 404.
         mockMvc.perform(get("/api/v1/orders/" + orderIdB).cookie(cookieFor(waiter)))

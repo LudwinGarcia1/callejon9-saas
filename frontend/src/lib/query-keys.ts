@@ -34,7 +34,10 @@ export const queryKeys = {
     all: () => ["users"] as const,
   },
   orders: {
+    /** Prefijo de todo lo de ordenes: invalidarlo refresca abiertas y detalles. */
     all: () => ["orders"] as const,
+    /** Pagina de ordenes en servicio que comparten mesero, caja y navegacion. */
+    open: () => ["orders", { open: true }] as const,
     detail: (orderId: string) => ["orders", orderId] as const,
   },
   kitchen: {
@@ -45,8 +48,9 @@ export const queryKeys = {
   },
   sales: {
     all: () => ["sales"] as const,
-    /** El rango entra en la clave: cambiar `from`/`to` debe disparar una nueva consulta. */
-    history: (from: string, to: string) => ["sales", { from, to }] as const,
+    /** El rango y la pagina entran en la clave: cambiar cualquiera dispara otra consulta. */
+    history: (from: string, to: string, page: number, size: number) =>
+      ["sales", { from, to, page, size }] as const,
   },
   cashSessions: {
     all: () => ["cash-sessions"] as const,
