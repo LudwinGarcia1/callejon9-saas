@@ -1,0 +1,9 @@
+# C03 · la API pedida por HTTP sin cifrar (¿redirige a HTTPS?)
+# 2026-10-28 14:23:57 America/Mexico_City · directo, sin sesión
+$ curl -sS -i -X GET http://app-callejon9-api-prod-3878c6.azurewebsites.net/actuator/health
+HTTP/1.1 301 Moved Permanently
+Content-Length: 0
+Date: Wed, 28 Oct 2026 20:23:56 GMT
+Location: https://app-callejon9-api-prod-3878c6.azurewebsites.net/actuator/health
+
+
