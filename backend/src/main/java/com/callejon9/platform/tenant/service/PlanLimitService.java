@@ -6,6 +6,7 @@ import com.callejon9.platform.subscription.domain.SubscriptionStatus;
 import com.callejon9.platform.subscription.repository.SubscriptionRepository;
 import com.callejon9.platform.tenant.repository.TenantRepository;
 import com.callejon9.shared.error.BusinessRuleException;
+import com.callejon9.table.repository.RestaurantTableRepository;
 import com.callejon9.user.repository.UserRepository;
 import java.util.List;
 import java.util.UUID;
@@ -20,16 +21,19 @@ public class PlanLimitService {
     private final PlanRepository planRepository;
     private final UserRepository userRepository;
     private final TenantRepository tenantRepository;
+    private final RestaurantTableRepository tableRepository;
 
     public PlanLimitService(
             SubscriptionRepository subscriptionRepository,
             PlanRepository planRepository,
             UserRepository userRepository,
-            TenantRepository tenantRepository) {
+            TenantRepository tenantRepository,
+            RestaurantTableRepository tableRepository) {
         this.subscriptionRepository = subscriptionRepository;
         this.planRepository = planRepository;
         this.userRepository = userRepository;
         this.tenantRepository = tenantRepository;
+        this.tableRepository = tableRepository;
     }
 
     /**
@@ -53,6 +57,24 @@ public class PlanLimitService {
             throw new BusinessRuleException(
                     "Alcanzaste el limite de " + plan.getMaxUsers()
                             + " usuarios del plan " + plan.getCode() + ".");
+        }
+    }
+
+    /**
+     * Serializa las altas y reactivaciones de mesas por restaurante para que
+     * dos operaciones simultáneas no superen el máximo del plan.
+     */
+    @Transactional
+    public void assertCanAddTable(UUID tenantId) {
+        tenantRepository.findByIdForUpdate(tenantId);
+
+        Plan plan = activePlanOf(tenantId);
+        long currentTables = tableRepository.countByActiveTrue();
+
+        if (currentTables >= plan.getMaxTables()) {
+            throw new BusinessRuleException(
+                    "Alcanzaste el limite de " + plan.getMaxTables()
+                            + " mesas del plan " + plan.getCode() + ".");
         }
     }
 
