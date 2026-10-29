@@ -8,6 +8,11 @@ import type { SaleHistoryRow, SalesHistoryResponse } from "@/lib/types";
 
 vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/lib/api", async (original) => ({ ...await original<typeof import("@/lib/api")>(), api: { get: vi.fn() } }));
+// El historial calcula "hoy" en la zona del restaurante de la sesion (CAL-19).
+vi.mock("@/hooks/use-session", () => ({
+  useSession: () => ({ user: { userId: "u1", fullName: "Caja", role: "CASHIER", timezone: "America/Mexico_City" },
+    isLoading: false, logout: vi.fn() }),
+}));
 
 const TOTAL_SALES = 30;
 const PAGE_SIZE = 25;

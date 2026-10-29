@@ -1772,6 +1772,54 @@
           }
         }
       }
+    },
+    "/api/v1/settings": {
+      "get": {
+        "tags": [
+          "restaurant-settings-controller"
+        ],
+        "operationId": "get",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestaurantSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "restaurant-settings-controller"
+        ],
+        "operationId": "update",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRestaurantSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestaurantSettingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -3137,6 +3185,9 @@
           },
           "restaurantName": {
             "type": "string"
+          },
+          "timezone": {
+            "type": "string"
           }
         }
       },
@@ -3218,6 +3269,31 @@
           "count": {
             "type": "integer",
             "format": "int64"
+          }
+        }
+      },
+      "RestaurantSettingsResponse": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateRestaurantSettingsRequest": {
+        "required": [
+          "timezone"
+        ],
+        "type": "object",
+        "properties": {
+          "timezone": {
+            "type": "string"
           }
         }
       },

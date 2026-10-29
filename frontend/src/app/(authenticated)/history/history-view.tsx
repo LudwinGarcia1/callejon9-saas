@@ -22,6 +22,7 @@ import { PaginationBar } from "@/components/shared/pagination-bar";
 import { QueryState } from "@/components/shared/query-state";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { TicketSummary } from "@/components/shared/ticket-summary";
+import { useSession } from "@/hooks/use-session";
 import { ApiError, api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { formatShortDate, formatShortTime, todayIsoDate } from "@/lib/format";
@@ -39,7 +40,8 @@ const SALES_PAGE_SIZE = 25;
  * ticket puntual por folio sin importar si esta dentro del rango visible.
  */
 export function HistoryView() {
-  const today = todayIsoDate();
+  const { user } = useSession();
+  const today = todayIsoDate(user?.timezone);
   const [range, setRange] = useState({ from: today, to: today });
   const [page, setPage] = useState(0);
   // Se guarda la fila, no solo su id: al cambiar de pagina la venta elegida

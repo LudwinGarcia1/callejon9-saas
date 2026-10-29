@@ -4,6 +4,7 @@ import com.callejon9.sale.repository.SaleRepository;
 import com.callejon9.sale.web.dto.SalesHistoryResponse;
 import com.callejon9.shared.time.BusinessCalendar;
 import com.callejon9.shared.time.InstantRange;
+import com.callejon9.shared.time.TenantCalendar;
 import com.callejon9.shared.web.PageResponse;
 import java.time.LocalDate;
 import org.springframework.data.domain.Pageable;
@@ -48,11 +49,12 @@ public class SaleHistoryService {
      */
     @Transactional(readOnly = true)
     public SalesHistoryResponse getHistory(LocalDate from, LocalDate to, Pageable pageable) {
-        LocalDate today = businessCalendar.today();
+        TenantCalendar calendar = businessCalendar.current();
+        LocalDate today = calendar.today();
         LocalDate effectiveFrom = from != null ? from : (to != null ? to : today);
         LocalDate effectiveTo = to != null ? to : effectiveFrom;
 
-        InstantRange range = businessCalendar.toInstantRange(effectiveFrom, effectiveTo);
+        InstantRange range = calendar.toInstantRange(effectiveFrom, effectiveTo);
 
         return new SalesHistoryResponse(
                 PageResponse.from(saleRepository.findHistory(range.start(), range.endExclusive(), pageable)),

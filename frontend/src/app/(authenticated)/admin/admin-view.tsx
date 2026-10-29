@@ -50,6 +50,7 @@ import { EditCategoryDialog } from "./edit-category-dialog";
 import { EditProductDialog } from "./edit-product-dialog";
 import { EditTableDialog } from "./edit-table-dialog";
 import { PrintTablesQrDialog } from "./print-tables-qr-dialog";
+import { RestaurantSettingsSection } from "./restaurant-settings-section";
 
 /**
  * Dashboard de administracion. No existe un endpoint de estadisticas, asi
@@ -156,7 +157,7 @@ export function AdminView() {
   return (
     <ScreenShell
       title="Administración"
-      subtitle="Resumen del restaurante, y alta de mesas, categorías, productos y usuarios."
+      subtitle="Resumen del restaurante; alta de mesas, categorías, productos y usuarios, y su zona horaria."
       actions={
         <ScreenMetric
           label="Cobrado hoy"
@@ -208,6 +209,7 @@ export function AdminView() {
           <TabsTrigger value="categories">Categorías</TabsTrigger>
           <TabsTrigger value="products">Productos</TabsTrigger>
           <TabsTrigger value="users">Usuarios</TabsTrigger>
+          <TabsTrigger value="restaurant">Restaurante</TabsTrigger>
         </TabsList>
 
         <TabsContent value="tables" className="flex flex-col gap-4">
@@ -488,6 +490,10 @@ export function AdminView() {
               </QueryState>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="restaurant" className="flex flex-col gap-4">
+          <RestaurantSettingsSection />
         </TabsContent>
       </Tabs>
 

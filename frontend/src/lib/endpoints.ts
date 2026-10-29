@@ -16,6 +16,11 @@ export const endpoints = {
   platform: {
     plans: () => "/api/v1/platform/plans",
   },
+  /** Configuracion del restaurante de la sesion; sin id en la ruta. GET y PATCH, solo ADMIN. */
+  settings: {
+    detail: () => "/api/v1/settings",
+    update: () => "/api/v1/settings",
+  },
   // El backend no expone GET por id para mesas, categorias ni productos:
   // esas colecciones se leen completas y se filtran en el cliente.
   tables: {

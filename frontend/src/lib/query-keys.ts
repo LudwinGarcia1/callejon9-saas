@@ -10,6 +10,9 @@ export const queryKeys = {
   platform: {
     plans: () => ["platform", "plans"] as const,
   },
+  settings: {
+    detail: () => ["settings"] as const,
+  },
   tables: {
     /** Sin argumento: solo mesas activas (default del backend). Con
      * `includeInactive = true`: la clave usada por la pantalla de
@@ -68,6 +71,8 @@ export const queryKeys = {
       includeInactive
         ? (["inventory", "items", { includeInactive: true }] as const)
         : (["inventory", "items"] as const),
+    /** Prefijo de todos los rangos de movimientos, para invalidarlos juntos. */
+    allMovements: () => ["inventory", "movements"] as const,
     /** El rango y el filtro de insumo son parte de la clave. */
     movements: (from: string, to: string, itemId?: string) =>
       ["inventory", "movements", { from, to, itemId: itemId ?? null }] as const,

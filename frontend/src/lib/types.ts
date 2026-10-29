@@ -248,6 +248,20 @@ export interface SessionResponse {
   tenantId: string;
   slug: string;
   restaurantName: string;
+  /** ID IANA en el que el restaurante corta sus dias (CAL-19), ej. `America/Cancun`. */
+  timezone: string;
+}
+
+/** GET/PATCH /api/v1/settings — verificado contra RestaurantSettingsResponse. Solo ADMIN. */
+export interface RestaurantSettingsResponse {
+  name: string;
+  slug: string;
+  timezone: string;
+}
+
+/** PATCH /api/v1/settings. El backend acepta solo IDs IANA geograficos. */
+export interface UpdateRestaurantSettingsRequest {
+  timezone: string;
 }
 
 // ---------------------------------------------------------------------------
