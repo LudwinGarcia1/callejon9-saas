@@ -49,6 +49,8 @@ class LoginRateLimitTest {
      */
     private static final String APP_SERVICE_HOP = "169.254.129.3";
     private static final String FRONTEND_OUTBOUND = "192.0.2.10";
+    /** app.client-ip.proxy-secret de application-test.yml. */
+    private static final String PROXY_SECRET = "secreto-de-prueba-del-proxy-de-next-32b";
 
     @Autowired private MockMvc mockMvc;
     @Autowired private TenantOnboardingService onboardingService;
@@ -198,5 +200,52 @@ class LoginRateLimitTest {
                 .andExpect(cookie().exists("access_token"));
         login(APP_SERVICE_HOP, "198.51.100.62:50000", "admin@limite.mx", PASSWORD)
                 .andExpect(status().isOk());
+    }
+
+    /**
+     * Lo que fallo en Azure despues del primer arreglo: el frontend llega a la
+     * API desde una salida que no esta en la lista de proxies de confianza.
+     * Con el secreto, la llave es la IP que reenvia el middleware de Next.
+     */
+    @Test
+    @DisplayName("CAL-169: con el secreto del frontend, cada navegador tiene su llave aunque la salida no este en la lista")
+    void proxySecretKeysOnTheBrowserWhateverTheFrontendOutbound() throws Exception {
+        String unlistedOutbound = "203.0.113.200";
+        String attacker = "198.51.100.70";
+        for (int attempt = 0; attempt < maxPerIp; attempt++) {
+            loginThroughNext(unlistedOutbound, attacker, PROXY_SECRET, "cuenta" + attempt + "@limite.mx", "Incorrecta-1")
+                    .andExpect(status().isUnauthorized());
+        }
+        loginThroughNext(unlistedOutbound, attacker, PROXY_SECRET, "otra@limite.mx", "Incorrecta-1")
+                .andExpect(status().isTooManyRequests());
+        // El mismo cliente directo a la API comparte la llave.
+        login(APP_SERVICE_HOP, attacker + ":50000", "otra@limite.mx", "Incorrecta-1")
+                .andExpect(status().isTooManyRequests());
+        // Inventar la IP sin el secreto correcto no lo libera.
+        loginThroughNext(attacker, "198.51.100.79", "secreto-inventado-de-al-menos-32-bytes",
+                "otra@limite.mx", "Incorrecta-1")
+                .andExpect(status().isTooManyRequests());
+
+        // Otro navegador por la misma salida del frontend entra con su contrasena.
+        loginThroughNext(unlistedOutbound, "198.51.100.71", PROXY_SECRET, "admin@limite.mx", PASSWORD)
+                .andExpect(status().isOk())
+                .andExpect(cookie().exists("access_token"));
+    }
+
+    /** Navegador → Next (reenvia su IP con el secreto) → App Service de la API. */
+    private ResultActions loginThroughNext(String frontendOutbound, String browser, String secret,
+                                           String email, String password) throws Exception {
+        return mockMvc.perform(post("/api/v1/auth/login")
+                .with(request -> {
+                    request.setRemoteAddr(APP_SERVICE_HOP);
+                    request.addHeader("X-Forwarded-For", browser + ":51234, " + frontendOutbound + ":40000");
+                    request.addHeader("X-Callejon9-Client-Ip", browser);
+                    request.addHeader("X-Callejon9-Proxy-Secret", secret);
+                    return request;
+                })
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"slug":"%s","email":"%s","password":"%s"}
+                        """.formatted(slug, email, password)));
     }
 }
