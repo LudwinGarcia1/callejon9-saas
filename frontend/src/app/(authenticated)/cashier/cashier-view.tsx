@@ -8,13 +8,14 @@ import { TenantBadge } from "@/components/layout/tenant-badge";
 import { Money } from "@/components/shared/money";
 import { QueryState } from "@/components/shared/query-state";
 import { statusLabel, statusTone } from "@/components/shared/status-badge";
+import { useOpenOrders } from "@/hooks/use-open-orders";
 import { useSession } from "@/hooks/use-session";
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { formatShortTime } from "@/lib/format";
 import { queryKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
-import type { OrderSummaryResponse, TableResponse } from "@/lib/types";
+import type { TableResponse } from "@/lib/types";
 import { CheckoutPanel } from "./checkout-panel";
 
 /** Una orden es cobrable cuando ya paso por el mesero: enviada a cocina o
@@ -38,17 +39,13 @@ export function CashierView() {
   const { user } = useSession();
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
-  const ordersQuery = useQuery({
-    queryKey: queryKeys.orders.all(),
-    queryFn: () => api.get<OrderSummaryResponse[]>(endpoints.orders.list()),
-    refetchInterval: ORDERS_POLL_INTERVAL_MS,
-  });
+  const ordersQuery = useOpenOrders({ refetchInterval: ORDERS_POLL_INTERVAL_MS });
   const tablesQuery = useQuery({
     queryKey: queryKeys.tables.all(),
     queryFn: () => api.get<TableResponse[]>(endpoints.tables.list()),
   });
 
-  const payableOrders = (ordersQuery.data ?? []).filter((order) =>
+  const payableOrders = (ordersQuery.orders ?? []).filter((order) =>
     PAYABLE_STATUSES.has(order.status),
   );
   const payableTotal = payableOrders.reduce((sum, order) => sum + order.total, 0);

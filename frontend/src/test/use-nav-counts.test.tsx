@@ -42,6 +42,10 @@ function NavCountsConsumer({ role }: { role: UserRole | undefined }) {
   );
 }
 
+function page<T>(content: T[]) {
+  return { content, page: 0, size: 100, totalElements: content.length, totalPages: 1 };
+}
+
 function mount(role: UserRole | undefined) {
   return render(
     <QueryClientProvider client={client}>
@@ -60,12 +64,12 @@ describe("useNavCounts", () => {
         return [{ id: "k1" }, { id: "k2" }];
       }
       if (path.includes("/orders")) {
-        return [
+        // El backend ya filtra con open=true; NEW sigue en servicio pero no se cobra.
+        return page([
           { id: "o1", status: "SENT" },
           { id: "o2", status: "READY" },
-          { id: "o3", status: "CLOSED" },
-          { id: "o4", status: "DRAFT" },
-        ];
+          { id: "o3", status: "NEW" },
+        ]);
       }
       return [];
     });
@@ -86,7 +90,7 @@ describe("useNavCounts", () => {
         return [{ id: "t1" }];
       }
       if (path.includes("/orders")) {
-        return [{ id: "o1", status: "SENT" }];
+        return page([{ id: "o1", status: "SENT" }]);
       }
       return [];
     });
@@ -124,5 +128,14 @@ describe("useNavCounts", () => {
     expect(screen.getByTestId("kitchen-count").textContent).toBe("none");
     expect(screen.getByTestId("cashier-count").textContent).toBe("none");
     expect(api.get).not.toHaveBeenCalled();
+  });
+
+  it("pide solo las órdenes abiertas, en una página del tamaño máximo (CAL-16)", async () => {
+    vi.mocked(api.get).mockImplementation(async (path: string) =>
+      path.includes("/orders") ? page([]) : []);
+
+    mount("CASHIER");
+
+    await waitFor(() => expect(api.get).toHaveBeenCalledWith("/api/v1/orders", { open: true, size: 100 }));
   });
 });

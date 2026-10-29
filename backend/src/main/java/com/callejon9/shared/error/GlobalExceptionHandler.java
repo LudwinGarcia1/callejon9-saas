@@ -1,6 +1,7 @@
 package com.callejon9.shared.error;
 
 import com.callejon9.shared.throttle.RateLimitExceededException;
+import com.callejon9.shared.web.InvalidPageRequestException;
 import com.callejon9.tenancy.NoTenantContextException;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -96,6 +97,14 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST, exception.getMessage());
         problem.setTitle("Rol invalido");
+        return problem;
+    }
+
+    @ExceptionHandler(InvalidPageRequestException.class)
+    ProblemDetail onInvalidPageRequest(InvalidPageRequestException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, exception.getMessage());
+        problem.setTitle("Paginacion invalida");
         return problem;
     }
 

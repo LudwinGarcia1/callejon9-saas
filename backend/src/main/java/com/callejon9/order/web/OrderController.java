@@ -8,9 +8,14 @@ import com.callejon9.order.web.dto.AddOrderItemsRequest;
 import com.callejon9.order.web.dto.OpenOrderRequest;
 import com.callejon9.order.web.dto.OrderResponse;
 import com.callejon9.order.web.dto.OrderSummaryResponse;
+import com.callejon9.shared.web.PageQuery;
+import com.callejon9.shared.web.PageResponse;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -27,6 +32,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/orders")
 public class OrderController {
+
+    private static final Map<String, String> SORTABLE =
+            Map.of("openedAt", "openedAt", "folio", "folio", "total", "total");
 
     private final OrderService orderService;
 
@@ -50,12 +58,22 @@ public class OrderController {
         return OrderResponse.from(orderService.getOrder(id));
     }
 
+    /**
+     * Paginado (CAL-16): {@code ?status} o {@code ?open=true}, mas
+     * {@code page}, {@code size} (1 a {@value PageQuery#MAX_SIZE}) y
+     * {@code sort} sobre {@code openedAt}, {@code folio} o {@code total}. Por
+     * defecto, la mas reciente primero.
+     */
     @GetMapping
     @PreAuthorize("hasAnyRole('WAITER','CASHIER','ADMIN')")
-    public List<OrderSummaryResponse> list(@RequestParam(required = false) OrderStatus status) {
-        return orderService.listOrders(status).stream()
-                .map(OrderSummaryResponse::from)
-                .toList();
+    public PageResponse<OrderSummaryResponse> list(
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(defaultValue = "false") boolean open,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String sort) {
+        Pageable pageable = PageQuery.of(page, size, sort, SORTABLE, Sort.by(Sort.Direction.DESC, "openedAt"));
+        return PageResponse.from(orderService.listOrders(status, open, pageable), OrderSummaryResponse::from);
     }
 
     @PostMapping("/{id}/items")
