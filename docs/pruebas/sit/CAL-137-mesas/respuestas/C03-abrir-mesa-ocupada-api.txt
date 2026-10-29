@@ -1,0 +1,20 @@
+# El mesero 2 pide abrir directo en la API la mesa que ya ocupa el mesero 1
+# 2026-10-28 14:07:55 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders
+Content-Type: application/json
+
+{
+  "tableId": "0568fb35-160c-4be4-a0cb-cc8c42962644",
+  "guestCount": 3
+}
+
+HTTP 409
+Content-Type: application/problem+json
+
+{
+  "type": "about:blank",
+  "title": "Regla de negocio",
+  "status": 409,
+  "detail": "La mesa 2 no esta disponible (OCCUPIED).",
+  "instance": "/api/v1/orders"
+}

@@ -14,6 +14,11 @@ locals {
   monitoring_settings = var.monitoring_enabled ? {
     APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.frontend[0].connection_string
   } : {}
+
+  # Read at runtime by src/middleware.ts; no rebuild needed to set or rotate it.
+  proxy_settings = var.backend_proxy_secret == "" ? {} : {
+    BACKEND_PROXY_SECRET = trimspace(var.backend_proxy_secret)
+  }
 }
 
 resource "azurerm_linux_web_app" "web" {
@@ -63,7 +68,7 @@ resource "azurerm_linux_web_app" "web" {
     # The /api/v1/* rewrite is fixed at build time; this runtime value is what
     # the server-side fetches of src/lib/api.ts use. Both must point to the same API.
     BACKEND_ORIGIN = var.backend_origin
-  }, local.monitoring_settings)
+  }, local.monitoring_settings, local.proxy_settings)
 
   logs {
     detailed_error_messages = false

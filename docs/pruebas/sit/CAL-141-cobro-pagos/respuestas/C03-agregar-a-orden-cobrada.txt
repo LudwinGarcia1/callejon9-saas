@@ -1,0 +1,24 @@
+# El mesero agrega productos a la orden ya cobrada
+# 2026-10-28 14:12:22 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders/53cf75fc-6681-49c7-8b05-3605cd565fb8/items
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": "fca14107-3ac2-4ec4-a338-348b2b5d2b43",
+      "quantity": 1
+    }
+  ]
+}
+
+HTTP 409
+Content-Type: application/problem+json
+
+{
+  "type": "about:blank",
+  "title": "Regla de negocio",
+  "status": 409,
+  "detail": "La orden ORD-261028201139 ya esta PAID y no admite mas productos.",
+  "instance": "/api/v1/orders/53cf75fc-6681-49c7-8b05-3605cd565fb8/items"
+}

@@ -1,0 +1,13 @@
+{
+  "startedAt": "2026-10-28 14:34:57",
+  "restaurantB": "sit-restaurante-b-28101434",
+  "orderB": "d217bda8-1939-4c98-a8d8-7508b561bc71",
+  "tableB": "589825be-1cba-4140-aa41-09536991dc82",
+  "getOrder": 404,
+  "openOnTableB": 404,
+  "tableBInList": false,
+  "ownOrder": 200,
+  "ownOrderStatus": "PAID",
+  "ownTableCount": 1,
+  "finishedAt": "2026-10-28 14:35:06"
+}

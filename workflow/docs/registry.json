@@ -192,6 +192,11 @@
       "authority": "medium"
     },
     {
+      "path": "scripts/pruebas-demo/README.md",
+      "kind": "testing",
+      "authority": "medium"
+    },
+    {
       "path": "docs/pruebas/uat/CAL-151-pedidos-mesero/README.md",
       "kind": "testing",
       "authority": "medium"
@@ -213,6 +218,26 @@
     },
     {
       "path": "docs/pruebas/uat/CAL-153-cocina-tiempo-real/sesion-local-pc-android.md",
+      "kind": "testing",
+      "authority": "medium"
+    },
+    {
+      "path": "docs/pruebas/uat/CAL-149-catalogo/README.md",
+      "kind": "testing",
+      "authority": "medium"
+    },
+    {
+      "path": "docs/pruebas/uat/CAL-149-catalogo/registro-aceptacion.md",
+      "kind": "testing",
+      "authority": "medium"
+    },
+    {
+      "path": "docs/pruebas/uat/CAL-156-inventario/README.md",
+      "kind": "testing",
+      "authority": "medium"
+    },
+    {
+      "path": "docs/pruebas/uat/CAL-156-inventario/registro-aceptacion.md",
       "kind": "testing",
       "authority": "medium"
     }

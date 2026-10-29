@@ -1,20 +1,9 @@
-HTTP/1.1 200 OK
-Content-Type: application/pdf
-Content-Disposition: inline; filename="ticket-TCK-2026-0091.pdf"
-Date: Mon, 26 Oct 2026 22:46:02 GMT
-Server: Kestrel
-Transfer-Encoding: chunked
+# Descarga del PDF desde «Descargar ticket en PDF» (sesión de caja)
+# 2026-10-28 14:16:40 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+GET /api/v1/tickets/564335dd-e8a5-4e8a-ad0f-5456d205308f/pdf
 
-%PDF-1.4
-%
-1 0 obj
-<< /Type /Catalog /Pages 2 0 R >>
-endobj
-2 0 obj
-<< /Type /Pages /Kids [3 0 R] /Count 1 >>
-endobj
-3 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 226 600] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
-endobj
-... [flujo binario de ticket térmico 80mm renderizado con encabezado, partidas, desglose de pagos y cambio]
-%%EOF
+HTTP 200
+Content-Type: application/pdf
+
+
+<1334 bytes; guardado como ticket-TCK-261028201211.pdf>

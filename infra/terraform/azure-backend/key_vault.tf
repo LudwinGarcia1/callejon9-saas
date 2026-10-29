@@ -15,6 +15,13 @@ resource "random_password" "db_owner" {
   special = false
 }
 
+# Shared with the frontend (BACKEND_PROXY_SECRET) so the API trusts the browser
+# IP that the Next.js middleware forwards (CAL-169).
+resource "random_password" "proxy" {
+  length  = 48
+  special = false
+}
+
 # Azure requires characters from three of four categories.
 resource "random_password" "postgres_admin" {
   length      = 32
@@ -57,6 +64,7 @@ locals {
     "db-app-password"         = random_password.db_app.result
     "db-owner-password"       = random_password.db_owner.result
     "postgres-admin-password" = random_password.postgres_admin.result
+    "proxy-secret"            = random_password.proxy.result
   }
 }
 

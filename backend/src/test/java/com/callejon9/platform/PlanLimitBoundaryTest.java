@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 @SpringBootTest
 @ActiveProfiles("test")
-@DisplayName("LÃ­mites de usuarios y mesas de cada plan en el borde")
+@DisplayName("Límites de usuarios y mesas de cada plan en el borde")
 class PlanLimitBoundaryTest {
 
     @Autowired private TenantOnboardingService onboardingService;
@@ -57,7 +57,7 @@ class PlanLimitBoundaryTest {
 
     @ParameterizedTest(name = "{0}: hasta {1} usuarios y {2} mesas")
     @CsvSource({"FREE, 3, 5", "PRO, 15, 30", "PREMIUM, 60, 120"})
-    @DisplayName("Los planes sembrados tienen los lÃ­mites que se publican en el alta")
+    @DisplayName("Los planes sembrados tienen los límites que se publican en el alta")
     void seededPlansMatchThePublishedLimits(String planCode, int maxUsers, int maxTables) {
         var plan = planRepository.findByCode(planCode).orElseThrow();
 
@@ -67,7 +67,7 @@ class PlanLimitBoundaryTest {
 
     @ParameterizedTest(name = "{0}: el usuario {1} entra y el {2} se rechaza")
     @CsvSource({"FREE, 3, 4", "PRO, 15, 16", "PREMIUM, 60, 61"})
-    @DisplayName("Usuarios: el Ãºltimo cupo del plan se permite y el siguiente se rechaza")
+    @DisplayName("Usuarios: el último cupo del plan se permite y el siguiente se rechaza")
     void userLimitAtTheBoundary(String planCode, int lastAllowed, int firstRejected) {
         Tenant tenant = onboard(planCode, "u");
 
@@ -87,7 +87,7 @@ class PlanLimitBoundaryTest {
 
     @ParameterizedTest(name = "{0}: la mesa {1} entra y la {2} se rechaza")
     @CsvSource({"FREE, 5, 6", "PRO, 30, 31", "PREMIUM, 120, 121"})
-    @DisplayName("Mesas: la Ãºltima mesa del plan se permite y la siguiente se rechaza")
+    @DisplayName("Mesas: la última mesa del plan se permite y la siguiente se rechaza")
     void tableLimitAtTheBoundary(String planCode, int lastAllowed, int firstRejected) {
         onboard(planCode, "m");
 

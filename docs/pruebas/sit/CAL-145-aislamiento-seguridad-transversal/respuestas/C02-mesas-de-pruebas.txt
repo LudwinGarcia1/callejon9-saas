@@ -1,0 +1,106 @@
+# Mesas que recibe el mesero de `pruebas`
+# 2026-10-28 14:35:02 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+GET /api/v1/tables
+
+
+HTTP 200
+Content-Type: application/json
+
+[
+  {
+    "id": "4edb1976-8287-434c-9785-7d6787883bee",
+    "number": 1,
+    "capacity": 4,
+    "status": "FREE",
+    "waiterId": null,
+    "active": true
+  },
+  {
+    "id": "0568fb35-160c-4be4-a0cb-cc8c42962644",
+    "number": 2,
+    "capacity": 4,
+    "status": "FREE",
+    "waiterId": null,
+    "active": true
+  },
+  {
+    "id": "9d7daaae-59db-472c-843f-846117635a97",
+    "number": 3,
+    "capacity": 4,
+    "status": "FREE",
+    "waiterId": null,
+    "active": true
+  },
+  {
+    "id": "d96ba4bd-ebd4-46ec-88cc-60bf5edd25c7",
+    "number": 4,
+    "capacity": 4,
+    "status": "OCCUPIED",
+    "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+    "active": true
+  },
+  {
+    "id": "17413d17-e255-4b7a-b344-dc328d544438",
+    "number": 5,
+    "capacity": 4,
+    "status": "FREE",
+    "waiterId": null,
+    "active": true
+  },
+  {
+    "id": "3ff0d061-7301-4876-9f39-dc9db04134c5",
+    "number": 6,
+    "capacity": 4,
+    "status": "FREE",
+    "waiterId": null,
+    "active": true
+  },
+  {
+    "id": "95107a75-4a4b-40c0-bd56-c8a15b1dd835",
+    "number": 7,
+    "capacity": 6,
+    "status": "FREE",
+    "waiterId": null,
+    "active": true
+  },
+  {
+    "id": "37b36beb-9f8a-4107-a57f-b13ce40be49f",
+    "number": 8,
+    "capacity": 6,
+    "status": "FREE",
+    "waiterId": null,
+    "active": true
+  },
+  {
+    "id": "4389d55d-dea4-4f77-bf4c-2cbbf3d05b55",
+    "number": 9,
+    "capacity": 6,
+    "status": "FREE",
+    "waiterId": null,
+    "active": true
+  },
+  {
+    "id": "61332054-a82c-448c-9231-b41e5d1bcbfc",
+    "number": 10,
+    "capacity": 6,
+    "status": "FREE",
+    "waiterId": null,
+    "active": true
+  },
+  {
+    "id": "b6d01957-6883-4b33-9432-039cfbe42a9f",
+    "number": 11,
+    "capacity": 8,
+    "status": "FREE",
+    "waiterId": null,
+    "active": true
+  },
+  {
+    "id": "b1e548c9-1e77-4736-9bb1-886f4a2ebfcf",
+    "number": 12,
+    "capacity": 8,
+    "status": "FREE",
+    "waiterId": null,
+    "active": true
+  }
+]

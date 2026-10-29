@@ -1,50 +1,51 @@
-HTTP/1.1 200 OK
+# Ticket por folio desde la sesión de caja
+# 2026-10-28 14:16:38 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+GET /api/v1/tickets?folio=TCK-261028201211
+
+
+HTTP 200
 Content-Type: application/json
-Date: Mon, 26 Oct 2026 22:46:00 GMT
-Server: Kestrel
-Transfer-Encoding: chunked
 
 {
-  "id": "t1a80123-0001-4000-8000-000000000091",
-  "folio": "TCK-2026-0091",
-  "orderId": "ord-00000001-0001-4000-8000-000000000010",
-  "restaurantName": "Restaurante Callejón 9",
-  "subtotal": 350.00,
-  "tipAmount": 35.00,
-  "total": 385.00,
-  "changeAmount": 15.00,
-  "cashierName": "Valeria Mercado",
-  "createdAt": "2026-10-26T22:34:11Z",
+  "id": "564335dd-e8a5-4e8a-ad0f-5456d205308f",
+  "saleId": "be65f367-c292-4ba2-bf95-b2cebbeed708",
+  "orderId": "53cf75fc-6681-49c7-8b05-3605cd565fb8",
+  "folio": "TCK-261028201211",
   "items": [
     {
-      "productName": "Orden de Tacos al Pastor",
+      "productId": "33dafe69-08e7-4c4d-b1b4-d99902472968",
+      "productName": "Guacamole con totopos",
+      "unitPrice": 95,
       "quantity": 2,
-      "unitPrice": 120.00,
-      "total": 240.00
+      "subtotal": 190
     },
     {
-      "productName": "Refresco 355ml",
-      "quantity": 2,
-      "unitPrice": 35.00,
-      "total": 70.00
-    },
-    {
-      "productName": "Agua de Horchata 500ml",
+      "productId": "620e77f4-cfb7-4aec-96d2-602da6ad398a",
+      "productName": "Margarita",
+      "unitPrice": 135,
       "quantity": 1,
-      "unitPrice": 40.00,
-      "total": 40.00
+      "subtotal": 135
     }
   ],
+  "subtotal": 325,
+  "tip": 32.5,
+  "tipPercent": 10,
+  "total": 357.5,
+  "paymentMethod": "MIXED",
+  "closedAt": "2026-10-28T20:12:11.061543Z",
   "payments": [
     {
-      "method": "CARD",
-      "amount": 200.00,
-      "receivedAmount": null
+      "method": "CASH",
+      "amount": 200,
+      "receivedAmount": 200,
+      "change": 0
     },
     {
-      "method": "CASH",
-      "amount": 185.00,
-      "receivedAmount": 200.00
+      "method": "CARD",
+      "amount": 157.5,
+      "receivedAmount": 157.5,
+      "change": 0
     }
-  ]
+  ],
+  "change": 0
 }

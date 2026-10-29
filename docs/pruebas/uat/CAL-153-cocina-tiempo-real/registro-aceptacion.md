@@ -1,16 +1,14 @@
-# CAL-153 ? Registro de aceptaci?n pendiente
+# CAL-153 — Registro de aceptación
 
-- Entorno y versiones servidas: pendiente.
-- Fecha y hora (`America/Mexico_City`): pendiente.
-- Ejecutor: pendiente.
-- Participante: P1 ? Cocinero; perfil por confirmar, sin datos personales.
-- Dispositivo y navegador: pendiente.
-- Folio(s) / datos ficticios utilizados: pendiente.
+- Estado: Ejecución declarada por el usuario el 2026-10-29; resultados por caso y aceptación pendientes.
+- Fecha/hora real y versión servida: pendientes.
+- Participante: P1 — Cocinero y mesero; perfil por completar sin datos personales.
+- Entorno coordinado: local, restaurante ficticio `demo-15-datos`.
 
-| Caso | Resultado observado | Aceptado s?/no | Observaci?n del participante | Evidencia |
-|---|---|---|---|---|
-| C01 | Pendiente | Pendiente | Pendiente | Pendiente |
-| C02 | Pendiente | Pendiente | Pendiente | Pendiente |
-| C03 | Pendiente | Pendiente | Pendiente | Pendiente |
+| Caso | Ejecución | Resultado observado | Aceptado sí/no | Captura / folio | Observaciones |
+|---|---|---|---|---|---|
+| C01 | Declarada por el usuario | Pendiente | Pendiente | No adjunta / pendiente | Pendiente |
+| C02 | Declarada por el usuario | Pendiente | Pendiente | No adjunta / pendiente | Pendiente |
+| C03 | Declarada por el usuario | Pendiente | Pendiente | No adjunta / pendiente | Pendiente |
 
-Defectos / bloqueos: pendientes de observaci?n. No se declara aprobaci?n por ausencia de datos. Revisor y veredicto: pendientes.
+Conclusión, revisor y veredicto: pendientes. No guardar firmas ni datos personales en el repositorio.

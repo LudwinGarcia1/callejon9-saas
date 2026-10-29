@@ -1,122 +1,110 @@
-# Evidencia de prueba ? CAL-153 ? UAT ? Cocina y tiempo real
+# Evidencia de prueba · CAL-153 — UAT · Cocina y tiempo real
 
-> **Estado: guion preparado; resultados y aceptaci?n pendientes.** En la conversaci?n se dieron instrucciones y se prepararon cuentas y una mesa; no se recibi? confirmaci?n de ejecuci?n completa ni capturas. No se declara esta UAT aprobada.
+> **Estado: Ejecución declarada por el usuario el 2026-10-29; resultados por caso y aceptación pendientes.** La declaración general de ejecución no confirma por sí sola que todos los criterios hayan pasado. No se recibieron capturas ni resultados específicos de cada caso.
 
-## 1. Identificaci?n
+## 1. Identificación
 
 | Campo | Valor |
 |---|---|
-| Issue | [CAL-153 ? UAT ? Cocina y tiempo real](https://linear.app/callejon19/issue/CAL-153) |
-| Padre | [CAL-117 ? UAT con usuarios por rol](https://linear.app/callejon19/issue/CAL-117) |
-| Tipo / escenario | UAT / UAT-08 |
-| Entorno preparado | Local, PC y Android; no constituye evidencia de Azure |
-| Frontend PC | `http://localhost:3000` |
-| Frontend Android | `http://192.168.1.10:3000`; confirmar IP Wi-Fi vigente |
-| API | Proxy relativo `/api/v1/*` de Next.js al backend local |
+| Issue | [CAL-153 — UAT · Cocina y tiempo real](https://linear.app/callejon19/issue/CAL-153) |
+| Padre | [CAL-117 — UAT por rol](https://linear.app/callejon19/issue/CAL-117) |
+| Entorno coordinado | Local: PC y Chrome en Android; no demuestra Azure |
 | Restaurante ficticio | `demo-15-datos` |
-| Commit realmente servido por frontend / backend | Pendiente de verificar; no inferir del HEAD del repositorio ni del nombre del JAR |
-| Navegador / dispositivo | PC y Chrome en Android; versiones y modelo pendientes |
-| Versi?n documental | v1 ? 2026-10-28 |
+| Frontend PC / Android | `http://localhost:3000` / `http://192.168.1.10:3000`; confirmar IP vigente |
+| API desde navegador | Proxy relativo `/api/v1/*` |
+| Versión realmente servida | Pendiente para frontend y backend; no inferir del HEAD ni del nombre del JAR |
+| Dispositivos | PC y Android; modelo, navegador y versiones pendientes |
+| Confirmación de ejecución | Recibida el 2026-10-29; fecha exacta de ejecución pendiente |
 
-Reglas y formato: [gu?a de pruebas](../../README.md) y [plantilla de evidencia](../../plantilla-evidencia.md). No registrar contrase?as, tokens ni cookies.
+Formato: [guía de pruebas](../../README.md) y [plantilla](../../plantilla-evidencia.md). No guardar contraseñas, cookies ni datos personales.
 
 ## 2. Responsables
 
 | Rol | Responsable |
 |---|---|
-| Asignaci?n en Linear consultada el 2026-10-28 | Valeria Mercado |
-| Ejecutor real | Pendiente de registrar |
-| Participante | P1 ? Cocinero; perfil por confirmar, sin datos personales |
+| Asignación consultada en Linear | Valeria Mercado |
+| Ejecutor | Persona usuaria de esta sesión; coordinación pendiente de completar |
+| Participante | P1 — Cocinero y mesero; perfil por confirmar sin datos personales |
 | Revisor independiente | Pendiente; distinto del ejecutor |
 
 ## 3. Fechas
 
-Hora local: `America/Mexico_City`. La fecha documental no representa ejecuci?n.
+Zona: `America/Mexico_City`. La fecha de confirmación no sustituye las fechas reales.
 
 | Actividad | Inicio planeado | Fin planeado | Inicio real | Fin real |
 |---|---|---|---|---|
-| Preparaci?n de la sesi?n | Pendiente | Pendiente | Pendiente | Pendiente |
-| Ejecuci?n de casos | Pendiente | Pendiente | Pendiente | Pendiente |
-| Re-prueba y revisi?n | Pendiente | Pendiente | Pendiente | Pendiente |
+| Preparación | Pendiente | Pendiente | Pendiente | Pendiente |
+| Ejecución | Pendiente | Pendiente | Pendiente | Pendiente |
+| Revisión y re-prueba | Pendiente | Pendiente | Pendiente | Pendiente |
 
 ## 4. Alcance y criterios
 
-| Criterio de CAL-153 | Caso |
+| Criterio literal | Caso |
 |---|---|
-| Los pedidos aparecen solos, sin recargar la p?gina. | C01 |
-| Distingue qu? pedido lleg? primero y cu?nto lleva esperando. | C02 |
+| Los pedidos aparecen solos, sin recargar la página. | C01 |
+| Distingue qué pedido llegó primero y cuánto lleva esperando. | C02 |
 | Al marcarlo como listo, el mesero lo ve. | C03 |
 
-**Fuera de alcance:** aprobar UAT sin observaci?n del participante, sustituir la app m?vil por Chrome Android, atribuir una ejecuci?n local al despliegue de Azure o presentar pruebas automatizadas como aceptaci?n del usuario.
+**Fuera de alcance:** declarar aprobación sin resultados y aceptación, sustituir la app móvil por Chrome Android o atribuir el ensayo local a Azure.
 
-## 5. Preparaci?n
+## 5. Preparación
 
-- [ ] Confirmar backend disponible, frontend accesible y versi?n servida.
-- [ ] Registrar participantes, revisor, dispositivos y fechas.
-- [ ] Usar cuentas activas del mismo restaurante con los roles necesarios.
-- [ ] Preparar datos ficticios y anotar sus folios sin borrar pedidos ajenos.
-- [ ] Mantener separadas las sesiones de PC y Android.
-- [ ] Disponer de los pedidos de CAL-151 y CAL-152 para cubrir el escenario completo.
-- [ ] Tener sesiones de Cocina y Mesero abiertas antes de los cambios.
+- Confirmar versión servida, disponibilidad de API/frontend y cuentas del mismo restaurante.
+- Registrar participantes, dispositivos, folios y horarios reales.
+- Usar datos ficticios y sesiones separadas por rol.
 
-El guion local ampliado est? en [sesion-local-pc-android.md](sesion-local-pc-android.md). La rama `feat/cal-153-uat-cocina-tiempo-real` contiene una correcci?n de refresco; este PR documental no la integra ni confirma que est? desplegada. Un fallo de refresco debe registrarse con la versi?n que realmente se sirva. No se exige WebSocket ni sonido: los criterios se refieren al resultado visible.
+El [guion local ampliado](sesion-local-pc-android.md) explica C03. La conversación coordinó web en Chrome Android: falta confirmar la cobertura desde la app móvil de CAL-152. Esta documentación no integra código de refresco ni presume su despliegue.
 
-## 6. Casos reproducibles
+## 6. Casos y resultados
 
-### C01 ? Recepci?n autom?tica en cocina
+### C01 — Recepción automática
 
-**Rol:** Cocinero. **Estado:** No ejecutado / pendiente de confirmaci?n.
+**Pasos y esperado:** Abrir cocina antes de enviar pedidos identificables de CAL-151 (web) y CAL-152 (app móvil). Anotar folios y horas. Observar recepción sin recargar. Chrome Android solo cubre web; confirmar la app móvil por separado.
 
-**Acci?n:** Abrir cocina en PC antes del env?o. Generar pedidos identificables de CAL-151 (web) y CAL-152 (app m?vil), anotar folios y horas y observar el tablero sin recargar.
+**Ejecución:** Ejecutada según declaración general; resultado específico pendiente.
 
-**Resultado esperado:** Ambos pedidos aparecen autom?ticamente con sus datos correctos. Chrome Android solo cubre web; el pedido de la app m?vil se comprueba por separado.
+**Resultado observado / folio / fecha real:** Pendiente.
 
-**Resultado obtenido:** Pendiente.
+**Evidencia real:** No adjunta. Nombre previsto: `capturas/C01-resultado.png`; ese archivo todavía no existe.
 
-**Captura prevista, todav?a no existente:** `capturas/C01-resultado.png`. Registrar folio(s), hora de inicio/fin y observaciones del participante.
+**Aceptación del participante:** Pendiente.
 
-### C02 ? Orden y tiempo de espera
+### C02 — Orden y espera
 
-**Rol:** Cocinero. **Estado:** No ejecutado / pendiente de confirmaci?n.
+**Pasos y esperado:** Con dos pedidos visibles, identificar el primero y su tiempo de espera; contrastar las horas de envío. Un solo pedido no demuestra la comparación.
 
-**Acci?n:** Con dos pedidos visibles, pedir al cocinero identificar el primero y su tiempo de espera; contrastar con las horas registradas.
+**Ejecución:** Ejecutada según declaración general; resultado específico pendiente.
 
-**Resultado esperado:** El participante distingue orden y antig?edad sin ayuda. Con un solo pedido la comparaci?n queda pendiente.
+**Resultado observado / folio / fecha real:** Pendiente.
 
-**Resultado obtenido:** Pendiente.
+**Evidencia real:** No adjunta. Nombre previsto: `capturas/C02-resultado.png`; ese archivo todavía no existe.
 
-**Captura prevista, todav?a no existente:** `capturas/C02-resultado.png`. Registrar folio(s), hora de inicio/fin y observaciones del participante.
+**Aceptación del participante:** Pendiente.
 
-### C03 ? Pedido listo visible para el mesero
+### C03 — Pedido listo
 
-**Rol:** Cocinero. **Estado:** No ejecutado / pendiente de confirmaci?n.
+**Pasos y esperado:** Dejar abierta la comanda en Android, con el mismo folio de cocina. Marcar todos los productos En preparación y después Listo. Observar sin recargar. Si solo cambia tras una recarga manual, registrar fallo de actualización automática.
 
-**Acci?n:** Mantener la comanda del mismo folio abierta y visible en el mesero. En PC, pasar todos sus productos de Pendiente a En preparaci?n y Listo. Observar el mesero sin recargar y anotar el tiempo real. Si no cambia, capturar antes de recargar; recargar despu?s solo para diagn?stico.
+**Ejecución:** Ejecutada según declaración general; resultado específico pendiente.
 
-**Resultado esperado:** El mesero ve el pedido Lista sin recarga manual. Si el cambio aparece solo tras recargar, registrar fallo de actualizaci?n autom?tica. Repetir por separado con la app m?vil.
+**Resultado observado / folio / fecha real:** Pendiente.
 
-**Resultado obtenido:** Pendiente.
+**Evidencia real:** No adjunta. Nombre previsto: `capturas/C03-resultado.png`; ese archivo todavía no existe.
 
-**Captura prevista, todav?a no existente:** `capturas/C03-resultado.png`. Registrar folio(s), hora de inicio/fin y observaciones del participante.
+**Aceptación del participante:** Pendiente.
 
-## 7. Defectos y limitaciones
+## 7. Defectos
 
-No se abren defectos ni se declaran resultados reales a partir de instrucciones. Al observar un fallo, registrar descripci?n, severidad, folio, versi?n, captura e issue correspondiente. No marcar como aprobado un paso resuelto mediante recarga manual si exig?a actualizaci?n autom?tica.
+No se recibieron descripciones de fallos de esta ejecución. Esto no equivale a ausencia de defectos. Completar observación, severidad, issue y re-prueba cuando corresponda.
 
-## 8. Resultados y aceptaci?n
+## 8. Resultado y aceptación
 
-| Caso | Resultado real | Estado | Evidencia real | Aceptado por participante |
-|---|---|---|---|---|
-| C01 | Pendiente | No ejecutado / sin confirmar | Pendiente | Pendiente |
-| C02 | Pendiente | No ejecutado / sin confirmar | Pendiente | Pendiente |
-| C03 | Pendiente | No ejecutado / sin confirmar | Pendiente | Pendiente |
+Consultar [registro-aceptacion.md](registro-aceptacion.md). El resultado global no se declara aprobado hasta completar los resultados por caso y la aceptación del participante.
 
-La hoja de aceptaci?n se prepara en [registro-aceptacion.md](registro-aceptacion.md). La documentaci?n conserva solo el perfil del participante; cualquier hoja firmada se entrega por el canal autorizado, sin datos personales en el repositorio.
+## 9. Autenticidad y límites
 
-## 9. Declaraci?n de autenticidad
+El usuario manifestó que realizó esta prueba. Se registra su declaración; el agente no observó la ejecución ni recibió capturas o valores finales. No se inventan resultados, tiempos ni aprobación.
 
-Este documento registra la preparaci?n y los resultados esperados. No contiene capturas, folios observados, aprobaci?n del participante ni declaraci?n de ejecuci?n completa. Completar con evidencia real durante la sesi?n.
+## 10. Revisión y cierre
 
-## 10. Revisi?n independiente
-
-Pendiente de revisor, fecha, hallazgos y veredicto. La publicaci?n del documento no cierra el issue ni aprueba la UAT.
+Revisor, fecha, hallazgos y veredicto pendientes. Según [workflow/workflow.md](../../../../workflow/workflow.md), Done requiere evidencia completa revisada, aprobación independiente y PR integrado en main. La publicación no cierra el issue automáticamente.

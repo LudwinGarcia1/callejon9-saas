@@ -116,6 +116,32 @@ class ProductionConfigurationGuardTest {
     }
 
     @Test
+    @DisplayName("CAL-169: un APP_PROXY_SECRET corto detiene el arranque sin aparecer en el log")
+    void shortProxySecretStopsStartup(CapturedOutput output) {
+        Map<String, Object> variables = productionVariables();
+        variables.put("APP_PROXY_SECRET", "secreto-proxy-corto");
+
+        String message = startupFailure(variables, "prod");
+
+        assertThat(message).contains("APP_PROXY_SECRET debe tener al menos 32 bytes")
+                .doesNotContain("secreto-proxy-corto");
+        assertThat(output.getAll()).doesNotContain("secreto-proxy-corto");
+    }
+
+    @Test
+    @DisplayName("CAL-169: APP_PROXY_SECRET es opcional y, si es largo, prod arranca")
+    void proxySecretIsOptional() {
+        try (ConfigurableApplicationContext context = start(productionVariables(), "prod")) {
+            assertThat(context.isActive()).isTrue();
+        }
+        Map<String, Object> variables = productionVariables();
+        variables.put("APP_PROXY_SECRET", "proxy-" + UUID.randomUUID() + "-" + UUID.randomUUID());
+        try (ConfigurableApplicationContext context = start(variables, "prod")) {
+            assertThat(context.isActive()).isTrue();
+        }
+    }
+
+    @Test
     @DisplayName("las contrasenas de desarrollo de la base detienen el arranque sin aparecer en el log")
     void developmentDatabasePasswordsStopStartup(CapturedOutput output) {
         Map<String, Object> variables = productionVariables();

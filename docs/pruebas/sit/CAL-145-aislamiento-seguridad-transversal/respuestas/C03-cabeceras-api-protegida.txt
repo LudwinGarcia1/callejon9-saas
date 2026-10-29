@@ -1,0 +1,16 @@
+# C03 · cabeceras de la API en una ruta protegida sin sesión (/api/v1/orders)
+# 2026-10-28 14:23:56 America/Mexico_City · directo, sin sesión
+$ curl -sS -i -X GET https://app-callejon9-api-prod-3878c6.azurewebsites.net/api/v1/orders
+HTTP/2 401 
+date: Wed, 28 Oct 2026 20:23:57 GMT
+cache-control: no-cache, no-store, max-age=0, must-revalidate
+expires: 0
+pragma: no-cache
+content-length: 0
+x-content-type-options: nosniff
+x-xss-protection: 0
+x-frame-options: DENY
+content-security-policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+referrer-policy: strict-origin-when-cross-origin
+
+
