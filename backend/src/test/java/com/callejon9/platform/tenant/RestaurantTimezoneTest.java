@@ -180,7 +180,8 @@ class RestaurantTimezoneTest {
                         .cookie(cookieFor(restaurant.cashier())))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        return objectMapper.readTree(body).get("sales");
+        // Desde CAL-16 las filas llegan paginadas: { sales: { content: [...], page, ... } }.
+        return objectMapper.readTree(body).get("sales").get("content");
     }
 
     @Nested

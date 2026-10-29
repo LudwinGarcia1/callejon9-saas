@@ -10,6 +10,7 @@ import { ScreenMetric, ScreenShell } from "@/components/layout/screen-shell";
 import { Money } from "@/components/shared/money";
 import { QueryState } from "@/components/shared/query-state";
 import { StatusDot, statusTone } from "@/components/shared/status-badge";
+import { useOpenOrders } from "@/hooks/use-open-orders";
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { formatShortTime } from "@/lib/format";
@@ -69,22 +70,18 @@ export function WaiterView() {
     refetchInterval: TABLES_POLL_INTERVAL_MS,
   });
 
-  const ordersQuery = useQuery({
-    queryKey: queryKeys.orders.all(),
-    queryFn: () => api.get<OrderSummaryResponse[]>(endpoints.orders.list()),
-    refetchInterval: TABLES_POLL_INTERVAL_MS,
-  });
+  const openOrders = useOpenOrders({ refetchInterval: TABLES_POLL_INTERVAL_MS });
 
   /** Orden abierta de cada mesa, para el monto de la tarjeta y para navegar. */
   const openOrderByTable = useMemo(() => {
     const index = new Map<string, OrderSummaryResponse>();
-    for (const order of ordersQuery.data ?? []) {
+    for (const order of openOrders.orders ?? []) {
       if (order.tableId && OPEN_ORDER_STATUSES.has(order.status)) {
         index.set(order.tableId, order);
       }
     }
     return index;
-  }, [ordersQuery.data]);
+  }, [openOrders.orders]);
 
   const tables = tablesQuery.data ?? [];
   const occupiedCount = tables.filter((table) => table.status === "OCCUPIED").length;

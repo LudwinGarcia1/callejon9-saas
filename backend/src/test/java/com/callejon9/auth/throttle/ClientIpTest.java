@@ -2,6 +2,7 @@ package com.callejon9.auth.throttle;
 
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
@@ -131,6 +132,89 @@ class ClientIpTest {
     @DisplayName("si toda la cadena es de confianza, el cliente es la entrada mas lejana")
     void allTrustedChainUsesTheFarthestHop() {
         assertThat(clientIp.of(request("10.0.0.5", "172.18.0.4, 10.0.0.9"))).isEqualTo("172.18.0.4");
+    }
+
+    @Nested
+    @DisplayName("CAL-169: IP reenviada por el middleware de Next con el secreto compartido")
+    class FromAuthenticatedFrontend {
+
+        private static final String SECRET = "secreto-de-prueba-de-al-menos-32-bytes";
+        /** Salida del frontend que no esta en la lista: el caso que fallo en Azure. */
+        private static final String UNLISTED_OUTBOUND = "158.23.0.99";
+
+        private final ClientIp withSecret = new ClientIp(List.of(FRONTEND_OUTBOUND), SECRET);
+
+        private MockHttpServletRequest viaFrontend(String outbound, String secret, String clientIp) {
+            MockHttpServletRequest request = request(APP_SERVICE_HOP, "203.0.113.7:51234, " + outbound + ":40000");
+            if (secret != null) {
+                request.addHeader(ClientIp.PROXY_SECRET, secret);
+            }
+            if (clientIp != null) {
+                request.addHeader(ClientIp.PROXY_CLIENT_IP, clientIp);
+            }
+            return request;
+        }
+
+        @Test
+        @DisplayName("con el secreto correcto, cada navegador tiene su llave aunque la salida no este en la lista")
+        void eachBrowserHasItsKeyWhateverTheOutboundAddress() {
+            assertThat(withSecret.of(viaFrontend(UNLISTED_OUTBOUND, SECRET, "198.51.100.20")))
+                    .isEqualTo("198.51.100.20");
+            assertThat(withSecret.of(viaFrontend(UNLISTED_OUTBOUND, SECRET, "198.51.100.21")))
+                    .isEqualTo("198.51.100.21");
+            // Sin el secreto, los dos navegadores compartirian la salida del frontend.
+            assertThat(withSecret.of(viaFrontend(UNLISTED_OUTBOUND, null, null))).isEqualTo(UNLISTED_OUTBOUND);
+        }
+
+        @Test
+        @DisplayName("un secreto incorrecto, vacio o de otra longitud se ignora junto con la IP")
+        void wrongSecretIsIgnored() {
+            for (String wrong : List.of("otro-secreto-de-al-menos-32-bytes-xx", "", SECRET + "x",
+                    SECRET.substring(1), SECRET.toUpperCase())) {
+                assertThat(withSecret.of(viaFrontend(FRONTEND_OUTBOUND, wrong, "6.6.6.6")))
+                        .as("secreto %s", wrong)
+                        .isEqualTo("203.0.113.7");
+            }
+        }
+
+        @Test
+        @DisplayName("sin secreto configurado, las cabeceras del frontend no se leen")
+        void headersAreIgnoredWithoutAConfiguredSecret() {
+            for (ClientIp unconfigured : List.of(behindFrontend, new ClientIp(List.of(FRONTEND_OUTBOUND), "  "))) {
+                assertThat(unconfigured.of(viaFrontend(FRONTEND_OUTBOUND, "", "6.6.6.6"))).isEqualTo("203.0.113.7");
+                assertThat(unconfigured.of(viaFrontend(FRONTEND_OUTBOUND, SECRET, "6.6.6.6")))
+                        .isEqualTo("203.0.113.7");
+            }
+        }
+
+        @Test
+        @DisplayName("una IP ausente, con nombre de host o mal formada cae a X-Forwarded-For")
+        void invalidForwardedClientFallsBackToTheChain() {
+            for (String invalid : List.of("", "evil.example", "localhost", "203.0.113", "1.2.3.4, 5.6.7.8")) {
+                assertThat(withSecret.of(viaFrontend(FRONTEND_OUTBOUND, SECRET, invalid)))
+                        .as("IP %s", invalid)
+                        .isEqualTo("203.0.113.7");
+            }
+            assertThat(withSecret.of(viaFrontend(FRONTEND_OUTBOUND, SECRET, null))).isEqualTo("203.0.113.7");
+        }
+
+        @Test
+        @DisplayName("acepta IPv6 y quita el puerto, igual que en X-Forwarded-For")
+        void acceptsIpv6AndStripsPorts() {
+            assertThat(withSecret.of(viaFrontend(FRONTEND_OUTBOUND, SECRET, "2001:db8::7"))).isEqualTo("2001:db8::7");
+            assertThat(withSecret.of(viaFrontend(FRONTEND_OUTBOUND, SECRET, "[2001:db8::7]:443")))
+                    .isEqualTo("2001:db8::7");
+            assertThat(withSecret.of(viaFrontend(FRONTEND_OUTBOUND, SECRET, " 198.51.100.20:51234 ")))
+                    .isEqualTo("198.51.100.20");
+        }
+
+        @Test
+        @DisplayName("el secreto configurado se compara sin espacios en los extremos")
+        void configuredSecretIsStripped() {
+            ClientIp padded = new ClientIp(List.of(), " " + SECRET + "\r\n");
+
+            assertThat(padded.of(viaFrontend(FRONTEND_OUTBOUND, SECRET, "198.51.100.20"))).isEqualTo("198.51.100.20");
+        }
     }
 
     @Test

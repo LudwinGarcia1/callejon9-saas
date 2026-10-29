@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/table";
 import { ScreenMetric, ScreenShell } from "@/components/layout/screen-shell";
 import { Money } from "@/components/shared/money";
+import { PaginationBar } from "@/components/shared/pagination-bar";
 import { QueryState } from "@/components/shared/query-state";
 import { StatusBadge } from "@/components/shared/status-badge";
 import { TicketSummary } from "@/components/shared/ticket-summary";
@@ -29,6 +30,9 @@ import { queryKeys } from "@/lib/query-keys";
 import { cn } from "@/lib/utils";
 import type { SaleHistoryRow, SalesHistoryResponse, TicketResponse } from "@/lib/types";
 
+/** Filas por pagina del historial; el resumen del rango no depende de esto. */
+const SALES_PAGE_SIZE = 25;
+
 /**
  * Pantalla de historial de ventas: una vez cobrada, una orden desaparece de
  * mesero/cocina/caja, pero debe seguir siendo consultable aqui. Muestra el
@@ -39,23 +43,31 @@ export function HistoryView() {
   const { user } = useSession();
   const today = todayIsoDate(user?.timezone);
   const [range, setRange] = useState({ from: today, to: today });
-  const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  // Se guarda la fila, no solo su id: al cambiar de pagina la venta elegida
+  // ya no esta en `sales`, y su ticket debe seguir a la vista.
+  const [selectedSale, setSelectedSale] = useState<SaleHistoryRow | null>(null);
   const [folioResult, setFolioResult] = useState<TicketResponse | null>(null);
 
   const salesQuery = useQuery({
-    queryKey: queryKeys.sales.history(range.from, range.to),
+    queryKey: queryKeys.sales.history(range.from, range.to, page, SALES_PAGE_SIZE),
     queryFn: () =>
       api.get<SalesHistoryResponse>(endpoints.sales.history(), {
         from: range.from,
         to: range.to,
+        page,
+        size: SALES_PAGE_SIZE,
       }),
+    // Al cambiar de pagina la tabla anterior sigue visible hasta que llega la
+    // nueva, en vez de volver al esqueleto y perder la seleccion de vista.
+    placeholderData: keepPreviousData,
   });
 
   const folioMutation = useMutation({
     mutationFn: (folio: string) => api.get<TicketResponse>(endpoints.tickets.byFolio(), { folio }),
     onSuccess: (ticket) => {
       setFolioResult(ticket);
-      setSelectedSaleId(null);
+      setSelectedSale(null);
     },
     onError: (error) => {
       toast.error(
@@ -66,7 +78,8 @@ export function HistoryView() {
     },
   });
 
-  const sales = salesQuery.data?.sales ?? [];
+  const salesPage = salesQuery.data?.sales;
+  const sales = salesPage?.content ?? [];
   const summary = salesQuery.data?.summary;
 
   function handleRangeSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -75,6 +88,7 @@ export function HistoryView() {
     const from = String(formData.get("from") || today);
     const to = String(formData.get("to") || today);
     setRange({ from, to });
+    setPage(0);
   }
 
   function handleFolioSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -87,8 +101,8 @@ export function HistoryView() {
     folioMutation.mutate(folio);
   }
 
-  function handleSelectSale(saleId: string) {
-    setSelectedSaleId(saleId);
+  function handleSelectSale(sale: SaleHistoryRow) {
+    setSelectedSale(sale);
     setFolioResult(null);
   }
 
@@ -175,10 +189,10 @@ export function HistoryView() {
                   {sales.map((sale) => (
                     <TableRow
                       key={sale.id}
-                      onClick={() => handleSelectSale(sale.id)}
+                      onClick={() => handleSelectSale(sale)}
                       className={cn(
                         "cursor-pointer",
-                        selectedSaleId === sale.id && "bg-accent",
+                        selectedSale?.id === sale.id && "bg-accent",
                       )}
                     >
                       <TableCell className="font-mono text-[13px]">{sale.orderFolio}</TableCell>
@@ -199,19 +213,28 @@ export function HistoryView() {
                   ))}
                 </TableBody>
               </Table>
+              {salesPage && salesPage.totalPages > 1 && (
+                <PaginationBar
+                  page={salesPage.page}
+                  totalPages={salesPage.totalPages}
+                  totalElements={salesPage.totalElements}
+                  itemLabel="ventas"
+                  onPageChange={setPage}
+                  isFetching={salesQuery.isPlaceholderData}
+                />
+              )}
             </QueryState>
           </CardContent>
         </Card>
 
-        <SaleTicketPanel saleId={selectedSaleId} sales={sales} folioResult={folioResult} />
+        <SaleTicketPanel sale={selectedSale} folioResult={folioResult} />
       </div>
     </ScreenShell>
   );
 }
 
 interface SaleTicketPanelProps {
-  saleId: string | null;
-  sales: SaleHistoryRow[];
+  sale: SaleHistoryRow | null;
   folioResult: TicketResponse | null;
 }
 
@@ -222,9 +245,8 @@ interface SaleTicketPanelProps {
  * Si en vez de eso hay un resultado de busqueda por folio, ese tiene
  * prioridad -- son dos formas independientes de llegar a un ticket.
  */
-function SaleTicketPanel({ saleId, sales, folioResult }: SaleTicketPanelProps) {
-  const selectedSale = sales.find((sale) => sale.id === saleId) ?? null;
-  const ticketId = selectedSale?.ticketId ?? null;
+function SaleTicketPanel({ sale, folioResult }: SaleTicketPanelProps) {
+  const ticketId = sale?.ticketId ?? null;
 
   const ticketQuery = useQuery({
     queryKey: queryKeys.tickets.detail(ticketId ?? ""),
@@ -245,7 +267,7 @@ function SaleTicketPanel({ saleId, sales, folioResult }: SaleTicketPanelProps) {
     );
   }
 
-  if (!saleId) {
+  if (!sale) {
     return (
       <Card>
         <CardContent className="flex h-full items-center justify-center py-12">

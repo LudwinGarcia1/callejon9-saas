@@ -131,6 +131,19 @@ export interface OrderResponse {
   items: OrderItemResponse[];
 }
 
+/**
+ * Pagina de un listado (CAL-16) — verificado contra shared/web/PageResponse.
+ * `page` empieza en 0; `totalElements` y `totalPages` cuentan solo filas del
+ * restaurante de la sesion (RLS).
+ */
+export interface PageResponse<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
 /** Igual que OrderResponse pero sin `items`, `sentToKitchenAt` ni `closedAt` (listados). */
 export type OrderSummaryResponse = Omit<
   OrderResponse,
@@ -415,9 +428,12 @@ export interface SaleHistorySummary {
   total: number;
 }
 
-/** GET /api/v1/sales — verificado contra SalesHistoryResponse. */
+/**
+ * GET /api/v1/sales — verificado contra SalesHistoryResponse. `sales` es una
+ * pagina; `summary` y `paymentMix` cubren el rango completo.
+ */
 export interface SalesHistoryResponse {
-  sales: SaleHistoryRow[];
+  sales: PageResponse<SaleHistoryRow>;
   summary: SaleHistorySummary;
   paymentMix: { method: PaymentMethod; count: number; total: number }[];
 }
