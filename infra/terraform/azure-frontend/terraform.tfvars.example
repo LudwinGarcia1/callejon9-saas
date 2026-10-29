@@ -5,3 +5,7 @@ backend_origin = "https://app-callejon9-api-prod-xxxxxx.azurewebsites.net"
 
 # F1 is free; B1 keeps the app loaded (about 13 USD a month).
 # app_service_sku = "B1"
+
+# proxy-secret from the azure-backend Key Vault (see README). Without it, every
+# web user can end up sharing the per-IP login and signup limits (CAL-169).
+# backend_proxy_secret = "<pegar desde el portapapeles>"

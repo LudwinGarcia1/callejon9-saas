@@ -106,7 +106,15 @@ terraform output -raw frontend_url
 
 Llega al backend como `APP_ALLOWED_ORIGINS`, la lista de orígenes del WebSocket `/ws`.
 
-También necesita las IP con las que este frontend llama a la API, como `trusted_proxy_addresses`:
+Para que los límites por IP del login y del alta cuenten cada navegador (CAL-169), este frontend necesita el secreto `proxy-secret` del Key Vault del backend como `backend_proxy_secret` en su `terraform.tfvars`. Cópialo sin mostrarlo en pantalla:
+
+```powershell
+az keyvault secret show --vault-name <key vault del backend> --name proxy-secret --query value -o tsv | Set-Clipboard
+```
+
+Con él, `src/middleware.ts` toma la IP del navegador de la última entrada de `X-Forwarded-For`, la que agrega el front end de App Service, y la reenvía a la API en `X-Callejon9-Client-Ip` junto con el secreto. La Web App lo recibe como `BACKEND_PROXY_SECRET` y Next lo lee al arrancar, así que cambiarlo no exige recompilar. Configúralo solo detrás de App Service: con Next expuesto directo, esa entrada la escribiría el navegador.
+
+Como respaldo, el backend también acepta las IP con las que este frontend llama a la API, como `trusted_proxy_addresses`:
 
 ```powershell
 terraform output -json outbound_ip_addresses
@@ -129,5 +137,5 @@ El último debe responder `401`, que viene del backend a través del proxy de Ne
 
 ## Riesgos y pendientes
 
-- **Límites por IP del backend.** Todas las peticiones llegan a la API desde las IP de salida de esta Web App; el backend las salta solo si están en su `trusted_proxy_addresses` (paso 6). Si la Web App cambia de plan o de región, sus IP de salida cambian y hay que actualizarlas en el backend. En `F1` esas IP son compartidas con otras apps de Azure del mismo stamp, que podrían escribir `X-Forwarded-For` como si fueran este frontend.
+- **Límites por IP del backend.** Todas las peticiones llegan a la API desde las IP de salida de esta Web App. Con `backend_proxy_secret`, la API cuenta la IP del navegador que reenvía el middleware, y esas IP no importan. Sin el secreto, el backend solo distingue navegadores si las IP de salida están en su `trusted_proxy_addresses`. Esa ruta tiene dos problemas: si la Web App cambia de plan o de región, las IP cambian, y en `F1` las comparten otras apps de Azure del mismo stamp, que podrían escribir `X-Forwarded-For` como si fueran este frontend. Si el secreto se filtra, cualquiera podría elegir la IP con la que lo cuentan los límites. En ese caso hay que regenerarlo (`terraform apply -replace=random_password.proxy` en `azure-backend`) y actualizarlo aquí.
 - **Arranque en frío con `F1`.** La primera visita tras un periodo inactivo tarda varios segundos. Para una demostración, abre la página unos minutos antes o sube a `B1`.

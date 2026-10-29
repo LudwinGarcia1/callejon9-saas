@@ -45,6 +45,9 @@ public class ProductionConfigurationGuard implements BeanFactoryPostProcessor, E
     /** HS256 exige una clave de al menos 256 bits. */
     static final int MIN_JWT_SECRET_BYTES = 32;
 
+    /** El secreto entre Next y la API autentica la IP del cliente (CAL-169). */
+    static final int MIN_PROXY_SECRET_BYTES = 32;
+
     /**
      * Secretos JWT que aparecen en el repositorio: el valor por defecto, el de
      * CI y el ejemplo de la documentacion. Cualquiera puede firmar tokens con
@@ -98,6 +101,14 @@ public class ProductionConfigurationGuard implements BeanFactoryPostProcessor, E
             problems.add("JWT_SECRET usa un valor publicado en el repositorio");
         } else if (jwtSecret.getBytes(StandardCharsets.UTF_8).length < MIN_JWT_SECRET_BYTES) {
             problems.add("JWT_SECRET debe tener al menos " + MIN_JWT_SECRET_BYTES + " bytes");
+        }
+
+        // Opcional: sin el, los limites por IP usan X-Forwarded-For. Si se define,
+        // es lo unico que impide falsificar la IP del cliente ante la API.
+        String proxySecret = environment.getProperty("app.client-ip.proxy-secret", "").strip();
+        if (!proxySecret.isEmpty()
+                && proxySecret.getBytes(StandardCharsets.UTF_8).length < MIN_PROXY_SECRET_BYTES) {
+            problems.add("APP_PROXY_SECRET debe tener al menos " + MIN_PROXY_SECRET_BYTES + " bytes");
         }
 
         checkDatabasePassword("DB_APP_PASSWORD", "spring.datasource.password", problems);

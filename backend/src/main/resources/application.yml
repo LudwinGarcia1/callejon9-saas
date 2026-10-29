@@ -73,6 +73,11 @@ app:
     # salida del App Service del frontend: sin ellas, todos los usuarios que
     # entran por la web compartirian la llave de los limites por IP.
     trusted-proxies: ${APP_TRUSTED_PROXIES:}
+    # Secreto compartido con el frontend (CAL-169). Con el, el middleware de
+    # Next reenvia la IP del navegador en X-Callejon9-Client-Ip y esa es la
+    # llave, sin depender de la IP de salida del frontend. Vacio, las cabeceras
+    # se ignoran. Debe ser el mismo valor que BACKEND_PROXY_SECRET del frontend.
+    proxy-secret: ${APP_PROXY_SECRET:}
 
   signup:
     # Freno contra altas masivas (SignupRateLimiter). Cada alta que pasa la
