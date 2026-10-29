@@ -1,6 +1,6 @@
 # Evidencia de prueba · CAL-153 — UAT · Cocina y tiempo real
 
-> **Estado: Ejecución declarada por el usuario el 2026-10-29; resultados por caso y aceptación pendientes.** La declaración general de ejecución no confirma por sí sola que todos los criterios hayan pasado. No se recibieron capturas ni resultados específicos de cada caso.
+> **Estado: Ejecución declarada por el usuario el 2026-10-29; resultados por caso y aceptación pendientes.** La declaración general de ejecución no confirma por sí sola que todos los criterios hayan pasado. Se recibió el documento Word adjunto; su contenido queda pendiente de revisión independiente.
 
 ## 1. Identificación
 
@@ -65,7 +65,7 @@ El [guion local ampliado](sesion-local-pc-android.md) explica C03. La conversaci
 
 **Resultado observado / folio / fecha real:** Pendiente.
 
-**Evidencia real:** No adjunta. Nombre previsto: `capturas/C01-resultado.png`; ese archivo todavía no existe.
+**Evidencia real:** Captura individual pendiente de indexar; consultar el Word adjunto. Nombre previsto: `capturas/C01-resultado.png`; ese archivo todavía no existe.
 
 **Aceptación del participante:** Pendiente.
 
@@ -77,7 +77,7 @@ El [guion local ampliado](sesion-local-pc-android.md) explica C03. La conversaci
 
 **Resultado observado / folio / fecha real:** Pendiente.
 
-**Evidencia real:** No adjunta. Nombre previsto: `capturas/C02-resultado.png`; ese archivo todavía no existe.
+**Evidencia real:** Captura individual pendiente de indexar; consultar el Word adjunto. Nombre previsto: `capturas/C02-resultado.png`; ese archivo todavía no existe.
 
 **Aceptación del participante:** Pendiente.
 
@@ -89,7 +89,7 @@ El [guion local ampliado](sesion-local-pc-android.md) explica C03. La conversaci
 
 **Resultado observado / folio / fecha real:** Pendiente.
 
-**Evidencia real:** No adjunta. Nombre previsto: `capturas/C03-resultado.png`; ese archivo todavía no existe.
+**Evidencia real:** Captura individual pendiente de indexar; consultar el Word adjunto. Nombre previsto: `capturas/C03-resultado.png`; ese archivo todavía no existe.
 
 **Aceptación del participante:** Pendiente.
 
@@ -103,8 +103,14 @@ Consultar [registro-aceptacion.md](registro-aceptacion.md). El resultado global 
 
 ## 9. Autenticidad y límites
 
-El usuario manifestó que realizó esta prueba. Se registra su declaración; el agente no observó la ejecución ni recibió capturas o valores finales. No se inventan resultados, tiempos ni aprobación.
+El usuario manifestó que realizó esta prueba. Se registra su declaración; el agente no observó la ejecución; el Word adjunto se conserva íntegro y queda pendiente de revisión. No se inventan resultados, tiempos ni aprobación.
 
 ## 10. Revisión y cierre
 
 Revisor, fecha, hallazgos y veredicto pendientes. Según [workflow/workflow.md](../../../../workflow/workflow.md), Done requiere evidencia completa revisada, aprobación independiente y PR integrado en main. La publicación no cierra el issue automáticamente.
+
+## Documento Word adjunto
+
+[Descargar documento de evidencia CAL-153](Evidencia_UAT_CAL-153_documentada.docx)
+
+Archivo aportado por el usuario y conservado sin modificaciones. La carga del archivo no representa una revisión aprobada ni cambia el estado del issue. Los resultados y capturas por caso deben contrastarse con este documento durante la revisión.

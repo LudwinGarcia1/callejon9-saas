@@ -240,6 +240,21 @@
       "path": "docs/pruebas/uat/CAL-156-inventario/registro-aceptacion.md",
       "kind": "testing",
       "authority": "medium"
+    },
+    {
+      "path": "docs/pruebas/uat/CAL-149-catalogo/Evidencia_UAT_CAL-149_documentada.docx",
+      "kind": "testing",
+      "authority": "medium"
+    },
+    {
+      "path": "docs/pruebas/uat/CAL-153-cocina-tiempo-real/Evidencia_UAT_CAL-153_documentada.docx",
+      "kind": "testing",
+      "authority": "medium"
+    },
+    {
+      "path": "docs/pruebas/uat/CAL-156-inventario/Evidencia_UAT_CAL-156_C01_C02.docx",
+      "kind": "testing",
+      "authority": "medium"
     }
   ]
 }
