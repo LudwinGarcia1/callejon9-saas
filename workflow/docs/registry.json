@@ -207,6 +207,11 @@
       "authority": "medium"
     },
     {
+      "path": "docs/pruebas/uat/CAL-151-pedidos-mesero/guion-participante.md",
+      "kind": "testing",
+      "authority": "medium"
+    },
+    {
       "path": "docs/pruebas/uat/CAL-153-cocina-tiempo-real/README.md",
       "kind": "testing",
       "authority": "medium"
