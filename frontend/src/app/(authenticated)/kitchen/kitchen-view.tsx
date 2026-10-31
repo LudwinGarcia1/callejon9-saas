@@ -9,6 +9,7 @@ import { ScreenShell, ScreenMetric } from "@/components/layout/screen-shell";
 import { Skeleton } from "@/components/ui/skeleton";
 import { QueryState } from "@/components/shared/query-state";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { useKitchenChannel } from "@/hooks/use-kitchen-channel";
 import { ApiError, api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { elapsedLabel, orderAge, type OrderAge } from "@/lib/kitchen-timing";
@@ -24,6 +25,8 @@ import {
 } from "@/lib/types";
 
 const KITCHEN_POLL_INTERVAL_MS = 5_000;
+/** Con el canal en tiempo real abierto, la consulta solo cubre eventos perdidos. */
+const KITCHEN_POLL_INTERVAL_LIVE_MS = 30_000;
 const CLOCK_TICK_MS = 30_000;
 
 const AGE_CARD_STYLES: Record<OrderAge, string> = {
@@ -65,10 +68,16 @@ export function KitchenView() {
     return () => clearInterval(id);
   }, []);
 
+  // Cada pedido enviado y cada cambio de estado llega por el canal; el tablero
+  // se vuelve a pedir completo en vez de mezclar el evento en la cache.
+  const { connected } = useKitchenChannel(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.kitchen.orders() });
+  });
+
   const ordersQuery = useQuery({
     queryKey: queryKeys.kitchen.orders(),
     queryFn: () => api.get<KitchenOrderResponse[]>(endpoints.kitchen.orders()),
-    refetchInterval: KITCHEN_POLL_INTERVAL_MS,
+    refetchInterval: connected ? KITCHEN_POLL_INTERVAL_LIVE_MS : KITCHEN_POLL_INTERVAL_MS,
     refetchIntervalInBackground: false,
   });
 

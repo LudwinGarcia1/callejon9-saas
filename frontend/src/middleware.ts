@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { apiRequestHeaders } from "@/lib/client-ip";
+import { endpoints } from "@/lib/endpoints";
 import { isProtectedPagePath, loginPathFor } from "@/lib/protected-pages";
 import { PATHNAME_HEADER } from "@/lib/request-headers";
 import { contentSecurityPolicy } from "@/lib/security-headers";
@@ -32,6 +33,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.next({
       request: { headers: apiRequestHeaders(request.headers, process.env.BACKEND_PROXY_SECRET) },
     });
+  }
+
+  // El handshake del canal en tiempo real no es una pagina: pasa tal cual al
+  // rewrite, sin nonce ni CSP de pagina (CAL-172).
+  if (request.nextUrl.pathname === endpoints.realtime.channel()) {
+    return NextResponse.next();
   }
 
   const nonceBytes = crypto.getRandomValues(new Uint8Array(16));
