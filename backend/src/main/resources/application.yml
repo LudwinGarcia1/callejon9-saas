@@ -64,6 +64,14 @@ app:
       max-failures-per-ip: ${AUTH_LOGIN_MAX_FAILURES_IP:20}
       window: ${AUTH_LOGIN_WINDOW:15m}
 
+  security:
+    # Spring solo emite Strict-Transport-Security cuando la peticion le llega
+    # como HTTPS. Detras de un proxy que termina TLS (App Service) la ve como
+    # HTTP y la omite. En true la emite en toda respuesta; un navegador ignora
+    # HSTS recibido por HTTP (RFC 6797, 8.1), asi que solo surte efecto por
+    # HTTPS. El perfil prod lo fija en true (CAL-183).
+    hsts-on-any-request: false
+
   client-ip:
     # Proxies cuya entrada en X-Forwarded-For se salta al buscar la IP del
     # cliente (ClientIp), ademas de la red local, en la que siempre se confia.
