@@ -260,6 +260,11 @@
       "path": "docs/pruebas/uat/CAL-156-inventario/Evidencia_UAT_CAL-156_C01_C02.docx",
       "kind": "testing",
       "authority": "medium"
+    },
+    {
+      "path": "docs/pruebas/sit/CAL-169-CAL-176-reprueba-limites-ip/README.md",
+      "kind": "testing",
+      "authority": "medium"
     }
   ]
 }
