@@ -788,6 +788,19 @@
     "reason": "CAL-5: lectura de comandas para piso/caja; escritura para piso"
   },
   {
+    "method": "DELETE",
+    "path": "/api/v1/orders/{id}/items/{itemId}",
+    "params": [],
+    "headers": [],
+    "consumes": [],
+    "produces": [],
+    "roles": [
+      "ADMIN",
+      "WAITER"
+    ],
+    "reason": "CAL-151: el piso corrige su comanda antes de enviarla a cocina; el servicio exige ser dueno de la orden"
+  },
+  {
     "method": "POST",
     "path": "/api/v1/orders/{id}/cancel",
     "params": [],

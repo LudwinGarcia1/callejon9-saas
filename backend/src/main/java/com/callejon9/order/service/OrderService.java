@@ -146,6 +146,40 @@ public class OrderService {
     }
 
     /**
+     * Quita una linea de una orden que todavia no se envia a cocina, para que
+     * el mesero corrija un error de captura sin cancelar toda la orden.
+     *
+     * <p>Solo en NEW: una vez en cocina la linea ya se esta preparando, y
+     * quitarla dejaria al tablero mostrando algo que nadie va a cobrar. El
+     * candado de la orden ({@code findForCheckout}) serializa esta operacion
+     * con el envio a cocina, asi que no hay ventana para quitar una linea que
+     * ya salio.
+     */
+    @Transactional
+    public OrderWithItems removeItem(UUID orderId, UUID itemId, OrderActor actor) {
+        Order order = requireOrder(orderId);
+        requireOwnership(order, actor);
+
+        if (order.getStatus() != OrderStatus.NEW) {
+            throw new BusinessRuleException(
+                    "La orden " + order.getFolio() + " ya no esta en NEW; "
+                            + "solo se quitan productos antes de enviarla a cocina.");
+        }
+
+        OrderItem item = orderItemRepository.findById(itemId)
+                .filter(candidate -> candidate.getOrderId().equals(orderId))
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "El producto no existe en la orden " + order.getFolio() + "."));
+        orderItemRepository.delete(item);
+        orderItemRepository.flush();
+
+        List<OrderItem> remaining = orderItemRepository.findByOrderIdOrderByOrderedAt(orderId);
+        order.setTotal(sumOf(remaining));
+        orderRepository.save(order);
+        return new OrderWithItems(order, remaining);
+    }
+
+    /**
      * Cancela una orden y libera su mesa, todo en una sola transaccion: si
      * algo falla a la mitad, nada de esto debe quedar a medias (mismo
      * criterio que {@code CheckoutService.checkout}). Las lineas de la orden
