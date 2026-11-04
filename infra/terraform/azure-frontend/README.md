@@ -104,7 +104,7 @@ En la suscripción del backend, `frontend_origin` de `azure-backend` debe ser la
 terraform output -raw frontend_url
 ```
 
-Llega al backend como `APP_ALLOWED_ORIGINS`, la lista de orígenes del WebSocket `/ws`.
+Llega al backend como `APP_ALLOWED_ORIGINS`, la lista de orígenes del WebSocket `/ws`. El navegador abre ese canal en este frontend (`wss://<frontend>/ws`) y Next lo reenvía a la API, así que el handshake llega con este origen (CAL-172). Por eso la Web App tiene `websockets_enabled = true`. En F1, Azure admite hasta 5 conexiones WebSocket simultáneas por app: alcanza para una cocina y dos o tres meseros, no para un restaurante en servicio.
 
 Para que los límites por IP del login y del alta cuenten cada navegador (CAL-169), este frontend necesita el secreto `proxy-secret` del Key Vault del backend como `backend_proxy_secret` en su `terraform.tfvars`. Cópialo sin mostrarlo en pantalla:
 

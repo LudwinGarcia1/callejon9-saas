@@ -62,6 +62,10 @@ export const endpoints = {
     orders: () => "/api/v1/kitchen/orders",
     itemStatus: (itemId: string) => `/api/v1/kitchen/items/${itemId}/status`,
   },
+  /** Handshake STOMP sobre WebSocket; `next.config.ts` lo reenvia al backend. */
+  realtime: {
+    channel: () => "/ws",
+  },
   tickets: {
     detail: (ticketId: string) => `/api/v1/tickets/${ticketId}`,
     pdf: (ticketId: string) => `/api/v1/tickets/${ticketId}/pdf`,
