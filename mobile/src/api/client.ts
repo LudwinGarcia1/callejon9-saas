@@ -35,7 +35,7 @@ export class ApiError extends Error {
   }
 }
 
-type Method = 'GET' | 'POST';
+type Method = 'GET' | 'POST' | 'PUT' | 'PATCH';
 
 interface RequestOptions {
   body?: unknown;

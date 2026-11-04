@@ -8,7 +8,7 @@ import type { Order, Product, RestaurantTable, Role } from './src/api/types';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { OrderScreen } from './src/screens/OrderScreen';
 import { ProductFormScreen } from './src/screens/ProductFormScreen';
-import { ProductsScreen } from './src/screens/ProductsScreen';
+import { ProductsScreen, type CatalogNotice } from './src/screens/ProductsScreen';
 import { ResultScreen } from './src/screens/ResultScreen';
 import { TablesScreen } from './src/screens/TablesScreen';
 import { colors } from './src/ui/theme';
@@ -29,8 +29,8 @@ type Screen =
   | { name: 'tables'; welcome: boolean }
   | { name: 'order'; table: RestaurantTable }
   | { name: 'result'; order: Order; added: boolean }
-  | { name: 'products'; created: Product | null }
-  | { name: 'productForm' };
+  | { name: 'products'; notice: CatalogNotice | null }
+  | { name: 'productForm'; product: Product | null };
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'checking' });
@@ -95,7 +95,7 @@ export default function App() {
             restaurantName={session?.restaurantName ?? null}
             welcome={screen.welcome}
             onSelectTable={(table) => setScreen({ name: 'order', table })}
-            onOpenMenu={() => setScreen({ name: 'products', created: null })}
+            onOpenMenu={() => setScreen({ name: 'products', notice: null })}
             onLogout={handleLogout}
           />
         );
@@ -118,18 +118,22 @@ export default function App() {
       case 'products':
         return (
           <ProductsScreen
-            created={screen.created}
-            // Solo ADMIN registra productos; el backend lo vuelve a exigir con @PreAuthorize.
-            canCreate={session?.role === 'ADMIN'}
+            notice={screen.notice}
+            // Solo ADMIN registra, edita y da de baja; el backend lo vuelve a exigir con @PreAuthorize.
+            canManage={session?.role === 'ADMIN'}
             onBack={() => setScreen({ name: 'tables', welcome: false })}
-            onNewProduct={() => setScreen({ name: 'productForm' })}
+            onNewProduct={() => setScreen({ name: 'productForm', product: null })}
+            onEditProduct={(product) => setScreen({ name: 'productForm', product })}
           />
         );
       case 'productForm':
         return (
           <ProductFormScreen
-            onCancel={() => setScreen({ name: 'products', created: null })}
-            onCreated={(product) => setScreen({ name: 'products', created: product })}
+            // La key reinicia el formulario al pasar de editar un producto a otro.
+            key={screen.product?.id ?? 'new'}
+            product={screen.product}
+            onCancel={() => setScreen({ name: 'products', notice: null })}
+            onSaved={(product, mode) => setScreen({ name: 'products', notice: { product, mode } })}
           />
         );
     }
