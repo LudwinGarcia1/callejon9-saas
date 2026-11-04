@@ -182,6 +182,11 @@
       "authority": "high"
     },
     {
+      "path": "docs/cal-69-normas-estandares-leyes.md",
+      "kind": "legal-compliance",
+      "authority": "high"
+    },
+    {
       "path": "docs/pruebas/ut/CAL-121-alta-restaurantes-planes/README.md",
       "kind": "testing",
       "authority": "medium"
