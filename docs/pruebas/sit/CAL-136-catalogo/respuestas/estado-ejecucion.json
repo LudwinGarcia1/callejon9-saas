@@ -1,0 +1,16 @@
+{
+  "startedAt": "2026-10-28 14:01:06",
+  "productName": "SIT CAL-136 Tostada de prueba 1401",
+  "productId": "c80c1f56-9313-4de5-a2aa-8663a34afc2b",
+  "table": 1,
+  "orderId": "885a7244-31ec-4303-b446-2c285571b7aa",
+  "c01VisibleInPicker": 1,
+  "c01InWaiterMenu": true,
+  "c02AddFromUi": 409,
+  "c02VisibleAfter": 0,
+  "c02InWaiterMenu": false,
+  "c02AddDirect": 409,
+  "c02OrderItems": 0,
+  "c02OrderTotal": 0,
+  "finishedAt": "2026-10-28 14:01:35"
+}

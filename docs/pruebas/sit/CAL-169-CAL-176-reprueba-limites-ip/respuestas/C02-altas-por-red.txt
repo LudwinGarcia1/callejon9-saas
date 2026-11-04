@@ -1,0 +1,13 @@
+# CAL-176 · fase S: altas por restohub con el slug ocupado "pruebas" (límite 5 por IP en 1 h)
+# Inicio 2026-10-30 20:04:26 America/Mexico_City
+2026-10-30 20:04:27  alta 1 · restohub -> HTTP 409 · Ya existe un restaurante con el identificador 'pruebas'.
+2026-10-30 20:04:27  alta 2 · restohub -> HTTP 409 · Ya existe un restaurante con el identificador 'pruebas'.
+2026-10-30 20:04:28  alta 3 · restohub -> HTTP 409 · Ya existe un restaurante con el identificador 'pruebas'.
+2026-10-30 20:04:28  alta 4 · restohub -> HTTP 409 · Ya existe un restaurante con el identificador 'pruebas'.
+2026-10-30 20:04:28  alta 5 · restohub -> HTTP 409 · Ya existe un restaurante con el identificador 'pruebas'.
+2026-10-30 20:04:28  alta 6 · restohub -> HTTP 429 (Retry-After 3599) · Se alcanzo el limite de registros de restaurantes desde esta conexion. Intenta de nuevo en 60 minutos.
+# Misma red, directo a la API
+2026-10-30 20:04:29  alta · directo -> HTTP 429 (Retry-After 3599) · Se alcanzo el limite de registros de restaurantes desde esta conexion. Intenta de nuevo en 60 minutos.
+# Fase T: el ejecutor informa que, desde su teléfono con datos móviles (otra red), el alta de un restaurante se completó (201). Comprobación de la laptop justo después:
+2026-10-30 20:08:24  alta · restohub -> HTTP 429 (Retry-After 3363)
+2026-10-30 20:08:24  alta · directo -> HTTP 429 (Retry-After 3363)

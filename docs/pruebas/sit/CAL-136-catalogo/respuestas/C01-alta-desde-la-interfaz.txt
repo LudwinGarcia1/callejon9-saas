@@ -1,0 +1,42 @@
+# C01 · peticiones de la interfaz · admin@pruebas.com
+# 2026-10-28 14:01:19 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/products
+Content-Type: application/json
+
+{"name":"SIT CAL-136 Tostada de prueba 1401","description":"Producto creado por la SIT de catálogo","price":79,"categoryId":"ba57a961-030c-4426-93a8-3473349a0574"}
+
+HTTP 201
+Content-Type: application/json
+
+{
+  "id": "c80c1f56-9313-4de5-a2aa-8663a34afc2b",
+  "name": "SIT CAL-136 Tostada de prueba 1401",
+  "description": "Producto creado por la SIT de catálogo",
+  "price": 79,
+  "categoryId": "ba57a961-030c-4426-93a8-3473349a0574",
+  "active": true
+}
+
+# C01 · peticiones de la interfaz · mesero@pruebas.com
+# 2026-10-28 14:01:25 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders
+Content-Type: application/json
+
+{"tableId":"4edb1976-8287-434c-9785-7d6787883bee","guestCount":2}
+
+HTTP 201
+Content-Type: application/json
+
+{
+  "id": "885a7244-31ec-4303-b446-2c285571b7aa",
+  "folio": "ORD-261028200124",
+  "tableId": "4edb1976-8287-434c-9785-7d6787883bee",
+  "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+  "guestCount": 2,
+  "status": "NEW",
+  "total": 0,
+  "openedAt": "2026-10-28T20:01:24.783783Z",
+  "sentToKitchenAt": null,
+  "closedAt": null,
+  "items": []
+}

@@ -1,0 +1,20 @@
+# Insumos que recibe el administrador tras la salida
+# 2026-10-28 14:18:09 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+GET /api/v1/inventory/items?includeInactive=true
+
+
+HTTP 200
+Content-Type: application/json
+
+[
+  {
+    "id": "64093307-dba5-47c8-85bb-32724f8042fc",
+    "name": "SIT CAL-143 Tortilla 1417",
+    "unit": "kg",
+    "stock": 7,
+    "minStock": 2,
+    "unitCost": 25,
+    "active": true,
+    "level": "OK"
+  }
+]

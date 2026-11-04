@@ -1,10 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   formatCurrency,
   formatIsoDate,
   formatRoundedCurrency,
   formatShortDate,
   formatShortTime,
+  todayIsoDate,
 } from "../lib/format";
 
 describe("lib/format (Formateadores de moneda, fechas y horas)", () => {
@@ -43,5 +44,17 @@ describe("lib/format (Formateadores de moneda, fechas y horas)", () => {
       const timeFormatted = formatShortTime("2026-10-20T14:05:00Z");
       expect(timeFormatted).toMatch(/\d{1,2}:\d{2}/);
     });
+  });
+});
+
+describe("todayIsoDate — hoy en la zona del restaurante (CAL-19)", () => {
+  afterEach(() => { vi.useRealTimers(); });
+
+  it("el mismo instante es un día distinto en CDMX y en Cancún", () => {
+    vi.useFakeTimers();
+    // 05:30 UTC = 23:30 del día anterior en CDMX (-06:00) y 00:30 en Cancún (-05:00).
+    vi.setSystemTime(new Date("2026-10-21T05:30:00Z"));
+    expect(todayIsoDate("America/Mexico_City")).toBe("2026-10-20");
+    expect(todayIsoDate("America/Cancun")).toBe("2026-10-21");
   });
 });

@@ -240,3 +240,7 @@ Todas las horas en `America/Mexico_City`, formato `AAAA-MM-DD HH:MM`.
 Declaro que esta evidencia proviene de una ejecución real en el entorno y la fecha indicados, que las salidas no fueron editadas salvo para ocultar secretos, datos personales y rutas locales, y que los casos marcados como no ejecutados no se ejecutaron.
 
 **Ejecutor:** Braulio Hernández Mejía · **Fecha:** 2026-10-22
+
+## Evidencia complementaria de la rama integrada
+
+Se conserva la evidencia previa de esta rama en [evidencia-rama-original.md](evidencia-rama-original.md). Es una ejecucion distinta de la descrita arriba; no se reemplazan sus responsables, resultados ni defectos. La integracion conserva las pruebas de ambas ramas.

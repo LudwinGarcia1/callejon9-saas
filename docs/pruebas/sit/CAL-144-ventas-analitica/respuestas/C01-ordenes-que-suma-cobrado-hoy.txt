@@ -1,0 +1,290 @@
+# Órdenes que recibe la pantalla de administración para calcular «Cobrado hoy»
+# 2026-10-28 14:21:08 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+GET /api/v1/orders
+
+
+HTTP 200
+Content-Type: application/json
+
+[
+  {
+    "id": "3ef3b8fe-2f3c-4722-a868-60ed3f7be29b",
+    "folio": "ORD-261028201148",
+    "tableId": "0568fb35-160c-4be4-a0cb-cc8c42962644",
+    "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+    "guestCount": 2,
+    "status": "CANCELED",
+    "total": 110,
+    "openedAt": "2026-10-28T20:11:48.098575Z"
+  },
+  {
+    "id": "53cf75fc-6681-49c7-8b05-3605cd565fb8",
+    "folio": "ORD-261028201139",
+    "tableId": "4edb1976-8287-434c-9785-7d6787883bee",
+    "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+    "guestCount": 2,
+    "status": "PAID",
+    "total": 325,
+    "openedAt": "2026-10-28T20:11:39.297993Z"
+  },
+  {
+    "id": "3494cb88-dc57-4c8b-8579-89f2542e1e71",
+    "folio": "ORD-261028200752",
+    "tableId": "0568fb35-160c-4be4-a0cb-cc8c42962644",
+    "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+    "guestCount": 2,
+    "status": "CANCELED",
+    "total": 0,
+    "openedAt": "2026-10-28T20:07:52.678283Z"
+  },
+  {
+    "id": "d0945e7b-97b0-45ae-bc62-3c3500d643d6",
+    "folio": "ORD-261028200744",
+    "tableId": "4edb1976-8287-434c-9785-7d6787883bee",
+    "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+    "guestCount": 2,
+    "status": "CANCELED",
+    "total": 0,
+    "openedAt": "2026-10-28T20:07:44.441546Z"
+  },
+  {
+    "id": "885a7244-31ec-4303-b446-2c285571b7aa",
+    "folio": "ORD-261028200124",
+    "tableId": "4edb1976-8287-434c-9785-7d6787883bee",
+    "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+    "guestCount": 2,
+    "status": "CANCELED",
+    "total": 0,
+    "openedAt": "2026-10-28T20:01:24.783783Z"
+  },
+  {
+    "id": "77bf484d-f679-4230-af9d-f45e8dfa793e",
+    "folio": "ORD-261023010618",
+    "tableId": "d96ba4bd-ebd4-46ec-88cc-60bf5edd25c7",
+    "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+    "guestCount": 2,
+    "status": "SENT",
+    "total": 2880,
+    "openedAt": "2026-10-23T01:06:18.363688Z"
+  },
+  {
+    "id": "d58b47b7-fc21-4fa5-82be-761b31add52f",
+    "folio": "ORD-261022235915",
+    "tableId": "9d7daaae-59db-472c-843f-846117635a97",
+    "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+    "guestCount": 2,
+    "status": "CANCELED",
+    "total": 85,
+    "openedAt": "2026-10-22T23:59:15.020325Z"
+  },
+  {
+    "id": "40da2a8e-edd1-4b46-98b5-aed193dc3510",
+    "folio": "ORD-261022235906",
+    "tableId": "0568fb35-160c-4be4-a0cb-cc8c42962644",
+    "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+    "guestCount": 2,
+    "status": "CANCELED",
+    "total": 325,
+    "openedAt": "2026-10-22T23:59:06.465671Z"
+  },
+  {
+    "id": "9e6dd003-1c48-499d-8a1b-a34c4abc9776",
+    "folio": "ORD-261022203014",
+    "tableId": "9d7daaae-59db-472c-843f-846117635a97",
+    "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+    "guestCount": 2,
+    "status": "CANCELED",
+    "total": 85,
+    "openedAt": "2026-10-22T20:30:14.815813Z"
+  },
+  {
+    "id": "b83f8b58-d3ba-4c90-ace6-b6d2f7a8e809",
+    "folio": "ORD-261022203006",
+    "tableId": "0568fb35-160c-4be4-a0cb-cc8c42962644",
+    "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+    "guestCount": 2,
+    "status": "CANCELED",
+    "total": 325,
+    "openedAt": "2026-10-22T20:30:06.017318Z"
+  },
+  {
+    "id": "85a12106-1afb-44c7-89ec-a689f667e7f4",
+    "folio": "ORD-261021203800",
+    "tableId": "b1e548c9-1e77-4736-9bb1-886f4a2ebfcf",
+    "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+    "guestCount": 5,
+    "status": "CANCELED",
+    "total": 975,
+    "openedAt": "2026-10-21T20:38:00.998180Z"
+  },
+  {
+    "id": "b908f483-0cac-4a5a-960f-49c0357324c1",
+    "folio": "ORD-261021202546",
+    "tableId": "d96ba4bd-ebd4-46ec-88cc-60bf5edd25c7",
+    "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+    "guestCount": 2,
+    "status": "CANCELED",
+    "total": 180,
+    "openedAt": "2026-10-21T20:25:46.806461Z"
+  },
+  {
+    "id": "1fc109ec-0e69-4903-892e-7f24d9422e0e",
+    "folio": "ORD-261021185004",
+    "tableId": "d96ba4bd-ebd4-46ec-88cc-60bf5edd25c7",
+    "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+    "guestCount": 2,
+    "status": "CANCELED",
+    "total": 85,
+    "openedAt": "2026-10-21T18:50:04.445167Z"
+  },
+  {
+    "id": "313c2fe8-07da-42dc-9844-b37fc908a5e2",
+    "folio": "ORD-261021184954",
+    "tableId": "9d7daaae-59db-472c-843f-846117635a97",
+    "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+    "guestCount": 2,
+    "status": "CANCELED",
+    "total": 325,
+    "openedAt": "2026-10-21T18:49:54.220391Z"
+  },
+  {
+    "id": "706b85d6-8240-4df7-919d-c983d91dc972",
+    "folio": "ORD-261021060215",
+    "tableId": "0568fb35-160c-4be4-a0cb-cc8c42962644",
+    "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+    "guestCount": 4,
+    "status": "CANCELED",
+    "total": 1095,
+    "openedAt": "2026-10-21T06:02:15.841360Z"
+  },
+  {
+    "id": "4d01bbd9-d626-432e-8082-7da1f8d536c3",
+    "folio": "ORD-261017032537",
+    "tableId": "4edb1976-8287-434c-9785-7d6787883bee",
+    "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+    "guestCount": 4,
+    "status": "CANCELED",
+    "total": 450,
+    "openedAt": "2026-10-17T03:25:37.195105Z"
+  },
+  {
+    "id": "859220ff-08e0-45df-9686-ebf33922a058",
+    "folio": "ORD-261017020626",
+    "tableId": "b1e548c9-1e77-4736-9bb1-886f4a2ebfcf",
+    "waiterId": "33d54d96-35b3-4461-b552-91d015c73b7f",
+    "guestCount": 2,
+    "status": "CANCELED",
+    "total": 615,
+    "openedAt": "2026-10-17T02:06:25.273897Z"
+  },
+  {
+    "id": "fb42aaef-ce30-46e9-b653-1663d1957c23",
+    "folio": "ORD-261017020625",
+    "tableId": "b6d01957-6883-4b33-9432-039cfbe42a9f",
+    "waiterId": "33d54d96-35b3-4461-b552-91d015c73b7f",
+    "guestCount": 2,
+    "status": "CANCELED",
+    "total": 170,
+    "openedAt": "2026-10-17T02:06:24.796257Z"
+  },
+  {
+    "id": "1b386aed-09b9-4e23-abbf-a2d50e1563ac",
+    "folio": "ORD-261017020624",
+    "tableId": "61332054-a82c-448c-9231-b41e5d1bcbfc",
+    "waiterId": "33d54d96-35b3-4461-b552-91d015c73b7f",
+    "guestCount": 2,
+    "status": "CANCELED",
+    "total": 270,
+    "openedAt": "2026-10-17T02:06:24.626378Z"
+  },
+  {
+    "id": "cbc09d52-b138-499d-ba97-7d7f3554e228",
+    "folio": "ORD-261017020623",
+    "tableId": "4389d55d-dea4-4f77-bf4c-2cbbf3d05b55",
+    "waiterId": "33d54d96-35b3-4461-b552-91d015c73b7f",
+    "guestCount": 4,
+    "status": "CANCELED",
+    "total": 360,
+    "openedAt": "2026-10-17T02:06:21.430735Z"
+  },
+  {
+    "id": "5dd9ba19-8bbe-40af-b057-1d014336adb1",
+    "folio": "ORD-261017020622",
+    "tableId": "37b36beb-9f8a-4107-a57f-b13ce40be49f",
+    "waiterId": "33d54d96-35b3-4461-b552-91d015c73b7f",
+    "guestCount": 5,
+    "status": "CANCELED",
+    "total": 740,
+    "openedAt": "2026-10-17T02:06:20.800309Z"
+  },
+  {
+    "id": "6b6fad23-614d-4117-97f1-56ec452b071e",
+    "folio": "ORD-261017020621",
+    "tableId": "95107a75-4a4b-40c0-bd56-c8a15b1dd835",
+    "waiterId": "33d54d96-35b3-4461-b552-91d015c73b7f",
+    "guestCount": 4,
+    "status": "CANCELED",
+    "total": 1020,
+    "openedAt": "2026-10-17T02:06:20.152375Z"
+  },
+  {
+    "id": "bede71e3-e393-4c4b-9996-16274d6d321b",
+    "folio": "ORD-261017020620",
+    "tableId": "3ff0d061-7301-4876-9f39-dc9db04134c5",
+    "waiterId": "33d54d96-35b3-4461-b552-91d015c73b7f",
+    "guestCount": 5,
+    "status": "CANCELED",
+    "total": 1180,
+    "openedAt": "2026-10-17T02:06:19.602041Z"
+  },
+  {
+    "id": "781db81b-83a6-4079-965d-f2c7d46291fe",
+    "folio": "ORD-261017020619",
+    "tableId": "17413d17-e255-4b7a-b344-dc328d544438",
+    "waiterId": "33d54d96-35b3-4461-b552-91d015c73b7f",
+    "guestCount": 4,
+    "status": "PAID",
+    "total": 560,
+    "openedAt": "2026-10-17T02:06:18.987447Z"
+  },
+  {
+    "id": "8cebccc3-bdc5-448c-bdc4-6c3cb773dd69",
+    "folio": "ORD-261017020618",
+    "tableId": "d96ba4bd-ebd4-46ec-88cc-60bf5edd25c7",
+    "waiterId": "33d54d96-35b3-4461-b552-91d015c73b7f",
+    "guestCount": 2,
+    "status": "PAID",
+    "total": 710,
+    "openedAt": "2026-10-17T02:06:18.207309Z"
+  },
+  {
+    "id": "90a75c44-97cd-4c2d-8a4a-a695ef46bfc4",
+    "folio": "ORD-261017020617",
+    "tableId": "9d7daaae-59db-472c-843f-846117635a97",
+    "waiterId": "33d54d96-35b3-4461-b552-91d015c73b7f",
+    "guestCount": 3,
+    "status": "PAID",
+    "total": 910,
+    "openedAt": "2026-10-17T02:06:17.292917Z"
+  },
+  {
+    "id": "7c9c7a54-1357-4f35-82c2-30f35a23417b",
+    "folio": "ORD-261017020616",
+    "tableId": "0568fb35-160c-4be4-a0cb-cc8c42962644",
+    "waiterId": "33d54d96-35b3-4461-b552-91d015c73b7f",
+    "guestCount": 3,
+    "status": "PAID",
+    "total": 470,
+    "openedAt": "2026-10-17T02:06:16.554461Z"
+  },
+  {
+    "id": "c3f6956e-83c6-443e-8ea7-3cee9a3490e4",
+    "folio": "ORD-261017020615",
+    "tableId": "4edb1976-8287-434c-9785-7d6787883bee",
+    "waiterId": "33d54d96-35b3-4461-b552-91d015c73b7f",
+    "guestCount": 4,
+    "status": "PAID",
+    "total": 625,
+    "openedAt": "2026-10-17T02:06:15.302076Z"
+  }
+]

@@ -12,6 +12,7 @@ Cliente móvil del SaaS Callejón 9. Toma el flujo del mesero —ver mesas, capt
 | Agregar a una mesa ocupada | `OrderScreen`, `ResultScreen` | `GET /api/v1/orders`, `GET /api/v1/orders/{id}`, `POST /api/v1/orders/{id}/items` |
 | Consulta del catálogo | `ProductsScreen` | `GET /api/v1/products`, `GET /api/v1/categories` |
 | Registro de productos (solo ADMIN) | `ProductFormScreen` | `POST /api/v1/products` (nombre y precio obligatorios) |
+| Edición de productos (solo ADMIN) | `ProductsScreen`, `ProductFormScreen` | `PUT /api/v1/products/{id}` (todos los campos), `PATCH /api/v1/products/{id}` (activar o desactivar), `GET /api/v1/products?includeInactive=true` |
 
 ## Dónde está cada cosa
 
@@ -19,8 +20,11 @@ Cliente móvil del SaaS Callejón 9. Toma el flujo del mesero —ver mesas, capt
 - `src/api/client.ts`: transporte único con tiempo límite, renovación de sesión y traducción de errores HTTP a mensajes.
 - `src/api/auth.ts`: login, sesión actual y logout.
 - `src/api/waiter.ts`: mesas, menú y pedidos.
-- `src/api/catalog.ts`: categorías y registro de productos.
+- `src/api/catalog.ts`: categorías, consulta, registro y edición de productos.
+- `src/validation/product.ts`: validación del formulario de producto antes de enviarlo.
 - `src/screens/`: las seis pantallas.
+
+La evidencia de la integración con la API en la nube (endpoints, seguridad y matriz de pruebas) está en [`docs/pruebas/integracion-movil-nube/`](../docs/pruebas/integracion-movil-nube/README.md).
 
 ## Seguridad
 
@@ -70,6 +74,7 @@ En ese caso el backend debe arrancar con `AUTH_COOKIE_SECURE=false` (`scripts/ru
 ## Verificación
 
 ```powershell
+pnpm test                                  # pruebas unitarias (vitest)
 pnpm exec tsc --noEmit
 pnpm exec expo export --platform android   # comprueba que el bundle compila
 ```

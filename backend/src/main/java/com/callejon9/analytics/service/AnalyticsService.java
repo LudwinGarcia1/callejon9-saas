@@ -10,9 +10,11 @@ import com.callejon9.analytics.web.dto.ProductRevenueAggregate;
 import com.callejon9.analytics.web.dto.SalesByDayRow;
 import com.callejon9.shared.time.BusinessCalendar;
 import com.callejon9.shared.time.InstantRange;
+import com.callejon9.shared.time.TenantCalendar;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,15 +54,16 @@ public class AnalyticsService {
 
     @Transactional(readOnly = true)
     public AnalyticsResponse getAnalytics(LocalDate from, LocalDate to) {
-        LocalDate today = businessCalendar.today();
+        TenantCalendar calendar = businessCalendar.current();
+        LocalDate today = calendar.today();
         LocalDate effectiveTo = to != null ? to : today;
         LocalDate effectiveFrom = from != null ? from : effectiveTo.minusDays(6);
 
-        InstantRange range = businessCalendar.toInstantRange(effectiveFrom, effectiveTo);
+        InstantRange range = calendar.toInstantRange(effectiveFrom, effectiveTo);
 
         return new AnalyticsResponse(
                 buildPareto(range),
-                buildSalesByDay(range, effectiveFrom, effectiveTo),
+                buildSalesByDay(range, effectiveFrom, effectiveTo, calendar.zone()),
                 buildPaymentMix(range));
     }
 
@@ -120,9 +123,9 @@ public class AnalyticsService {
     }
 
     /** Un renglon por dia del rango solicitado, incluyendo los que no tuvieron ninguna venta. */
-    private List<SalesByDayRow> buildSalesByDay(InstantRange range, LocalDate from, LocalDate to) {
+    private List<SalesByDayRow> buildSalesByDay(InstantRange range, LocalDate from, LocalDate to, ZoneId zone) {
         List<DailySalesProjection> daysWithSales =
-                analyticsRepository.dailySales(range.start(), range.endExclusive(), businessCalendar.zone().getId());
+                analyticsRepository.dailySales(range.start(), range.endExclusive(), zone.getId());
 
         Map<LocalDate, DailySalesProjection> byDay = new HashMap<>();
         for (DailySalesProjection row : daysWithSales) {

@@ -16,6 +16,11 @@ export const endpoints = {
   platform: {
     plans: () => "/api/v1/platform/plans",
   },
+  /** Configuracion del restaurante de la sesion; sin id en la ruta. GET y PATCH, solo ADMIN. */
+  settings: {
+    detail: () => "/api/v1/settings",
+    update: () => "/api/v1/settings",
+  },
   // El backend no expone GET por id para mesas, categorias ni productos:
   // esas colecciones se leen completas y se filtran en el cliente.
   tables: {
@@ -43,10 +48,12 @@ export const endpoints = {
     updateStatus: (userId: string) => `/api/v1/users/${userId}`,
   },
   orders: {
+    /** GET paginado: `?open=true` o `?status`, mas `page`, `size` (max 100) y `sort`. */
     list: () => "/api/v1/orders",
     open: () => "/api/v1/orders",
     detail: (orderId: string) => `/api/v1/orders/${orderId}`,
     items: (orderId: string) => `/api/v1/orders/${orderId}/items`,
+    item: (orderId: string, itemId: string) => `/api/v1/orders/${orderId}/items/${itemId}`,
     sendToKitchen: (orderId: string) => `/api/v1/orders/${orderId}/send-to-kitchen`,
     checkout: (orderId: string) => `/api/v1/orders/${orderId}/checkout`,
     cancel: (orderId: string) => `/api/v1/orders/${orderId}/cancel`,

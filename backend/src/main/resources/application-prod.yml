@@ -29,6 +29,11 @@ app:
     # HTTPS. AUTH_COOKIE_SECURE no aplica en este perfil.
     cookie-secure: true
 
+  security:
+    # Fijo, sin variable: TLS termina en el proxy y forward-headers-strategy
+    # es none, asi que la peticion nunca llega como HTTPS (CAL-183).
+    hsts-on-any-request: true
+
   realtime:
     allowed-origins: ${APP_ALLOWED_ORIGINS:}
 

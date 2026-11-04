@@ -1,0 +1,22 @@
+# Restaurante B: el administrador crea un producto
+# 2026-10-28 14:34:43 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/products
+Content-Type: application/json
+
+{
+  "name": "Producto del restaurante B",
+  "description": "SIT de aislamiento",
+  "price": 50
+}
+
+HTTP 201
+Content-Type: application/json
+
+{
+  "id": "bbce1495-e354-4f03-b1c1-558582844a1b",
+  "name": "Producto del restaurante B",
+  "description": "SIT de aislamiento",
+  "price": 50,
+  "categoryId": null,
+  "active": true
+}

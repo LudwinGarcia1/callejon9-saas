@@ -40,7 +40,7 @@ export interface Product {
   name: string;
   description: string | null;
   price: number;
-  categoryId: string;
+  categoryId: string | null;
   active: boolean;
 }
 
@@ -55,6 +55,19 @@ export interface CreateProductRequest {
   description?: string;
   price: number;
   categoryId?: string;
+}
+
+/** PUT /products/{id}: reemplaza todos los campos; lo omitido queda vacío. */
+export interface UpdateProductRequest {
+  name: string;
+  description?: string;
+  price: number;
+  categoryId?: string;
+}
+
+/** PATCH /products/{id}: alta o baja lógica. */
+export interface UpdateProductStatusRequest {
+  active: boolean;
 }
 
 export interface OpenOrderRequest {
@@ -79,6 +92,15 @@ export interface OrderItem {
 }
 
 export type OrderStatus = 'NEW' | 'SENT' | 'READY' | 'PAID' | 'CANCELED';
+
+/** Página de un listado (CAL-16): PageResponse del backend. `page` empieza en 0. */
+export interface Page<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
 
 /** GET /api/v1/orders — resumen sin partidas (OrderSummaryResponse). */
 export interface OrderSummary {

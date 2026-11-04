@@ -34,7 +34,7 @@ Para publicar el frontend hace falta una plataforma que ejecute el servidor de N
 
 - **El login no devuelve un token.** `POST /api/v1/auth/login` responde con el usuario y deja dos cookies `httpOnly`, `Secure` y `SameSite=Strict`: `access_token` (15 minutos) y `refresh_token`. El navegador las envía solo. No hay header `Authorization: Bearer`, y el token no se guarda en `localStorage` ni en JavaScript.
 - **Cuando una petición responde `401`,** se llama una sola vez a `POST /api/v1/auth/refresh`. Si responde `204`, se repite la petición original; si responde `401`, la sesión terminó y hay que volver al login.
-- **`GET /api/v1/auth/me`** devuelve el usuario, su rol y su restaurante. Sirve para restaurar la sesión al recargar la página.
+- **`GET /api/v1/auth/me`** devuelve el usuario, su rol y su restaurante. Sirve para restaurar la sesión al recargar la página, e incluye `timezone`: el ID IANA con el que el restaurante corta sus días (CAL-19).
 - **El restaurante lo decide el backend.** Sale de la cookie firmada; ninguna ruta acepta `tenant_id` del cliente.
 - **Un login incorrecto** responde `401` sin cuerpo: no indica si falló el restaurante, el correo o la contraseña.
 
@@ -51,6 +51,26 @@ Los errores siguen RFC 7807 (`application/problem+json`): `title`, `status` y `d
 | `404` | No existe en este restaurante |
 | `409` | Conflicto de estado o duplicado |
 | `429` | Demasiados intentos; trae `Retry-After` en segundos |
+
+## Paginación
+
+`GET /orders` y `GET /sales` son paginados (CAL-16). Ambos usan el mismo contrato, `PageResponse<T>`:
+
+```jsonc
+{ "content": [ /* filas */ ], "page": 0, "size": 20, "totalElements": 57, "totalPages": 3 }
+```
+
+| Parámetro | Valor | Por defecto |
+|---|---|---|
+| `page` | Desde 0 | `0` |
+| `size` | De 1 a 100 | `20` |
+| `sort` | `campo` o `campo,asc` / `campo,desc`. `/orders`: `openedAt`, `folio`, `total`. `/sales`: `createdAt`, `total` | La más reciente primero |
+
+- **Fuera de rango se rechaza:** un `size` fuera de 1–100, una página negativa o un `sort` fuera de la lista responden `400` con `title: "Paginacion invalida"`. No se recorta en silencio.
+- **Órdenes abiertas:** `GET /orders?open=true` devuelve solo `NEW`, `SENT` y `READY`; es lo que usan mesero, caja y la app móvil. `status` y `open` no se combinan (`400`).
+- **Historial de ventas:** en `/sales`, `sales` es la página; `summary` y `paymentMix` cubren el rango completo, no la página.
+- **Conteos por restaurante:** `totalElements` y `totalPages` cuentan solo filas del restaurante de la sesión (RLS).
+- **Desempate:** el orden siempre agrega `id` como desempate, así que recorrer las páginas no repite ni salta filas.
 
 `openapi.json` solo describe las respuestas exitosas. En dos rutas difiere del comportamiento real: `refresh` y `logout` responden `204`, aunque el archivo dice `200`.
 
@@ -108,13 +128,16 @@ No hay `GET` por id para mesas, categorías ni productos: se lee la colección y
 
 | Método | Ruta | Cuerpo / parámetros | Respuesta | Roles |
 |---|---|---|---|---|
-| GET | `/orders` | `?status` | `200 OrderSummaryResponse[]` | ADMIN, WAITER, CASHIER |
+| GET | `/orders` | `?status` u `?open=true`, más `page`, `size`, `sort` (ver «Paginación») | `200 PageResponse<OrderSummaryResponse>` | ADMIN, WAITER, CASHIER |
 | POST | `/orders` | `OpenOrderRequest` | `201 OrderResponse` | ADMIN, WAITER |
 | GET | `/orders/{id}` | — | `200 OrderResponse` | ADMIN, WAITER, CASHIER |
 | POST | `/orders/{id}/items` | `AddOrderItemsRequest` | `200 OrderResponse` | ADMIN, WAITER |
+| DELETE | `/orders/{id}/items/{itemId}` | — | `200 OrderResponse` | ADMIN, WAITER |
 | POST | `/orders/{id}/send-to-kitchen` | — | `200 OrderResponse` | ADMIN, WAITER |
 | POST | `/orders/{id}/cancel` | — | `200 OrderResponse` | ADMIN, WAITER |
 | POST | `/orders/{id}/checkout` | `CheckoutRequest` | `201 TicketResponse` | ADMIN, CASHIER |
+
+Quitar un producto (`DELETE …/items/{itemId}`) solo se permite mientras la orden está en `NEW`, es decir, antes de enviarla a cocina. Después responde `409`. Las reglas son las mismas que al agregar: un mesero solo toca sus propias órdenes (`403`), y un `itemId` que no pertenece a la orden da `404`. La ruta se agregó a mano a `openapi.json` el 2026-10-28 (CAL-151), con el formato del export.
 
 El checkout requiere un turno abierto para el usuario autenticado. Sin turno responde `422`; la venta queda asociada al turno al que pertenece el cajero.
 
@@ -145,8 +168,10 @@ El resumen de efectivo suma el fondo inicial, el efectivo recibido menos el camb
 | GET | `/tickets/{id}` | — | `200 TicketResponse` | ADMIN, CASHIER |
 | GET | `/tickets` | `?folio` (obligatorio) | `200 TicketResponse` | ADMIN, CASHIER |
 | GET | `/tickets/{id}/pdf` | — | `200 application/pdf` | ADMIN, CASHIER |
-| GET | `/sales` | `?from&to` | `200 SalesHistoryResponse` | ADMIN, CASHIER |
+| GET | `/sales` | `?from&to`, más `page`, `size`, `sort` (ver «Paginación») | `200 SalesHistoryResponse` (`sales` es una página) | ADMIN, CASHIER |
 | GET | `/analytics` | `?from&to` | `200 AnalyticsResponse` | ADMIN |
+
+`from` y `to` son días de calendario en la zona del restaurante (`/settings`), no en UTC. Cambiar la zona reinterpreta el historial en la siguiente consulta; los instantes guardados no se modifican.
 
 ### Inventario
 
@@ -167,6 +192,8 @@ El resumen de efectivo suma el fondo inicial, el efectivo recibido menos el camb
 | POST | `/users` | `CreateUserRequest` | `201 UserResponse` | ADMIN |
 | PATCH | `/users/{id}` | `UpdateUserStatusRequest` (alta o baja) | `200 UserResponse` | ADMIN |
 | GET | `/platform/plans` | — | `200 PlanView[]` | SUPER_ADMIN |
+| GET | `/settings` | — | `200 RestaurantSettingsResponse` | ADMIN |
+| PATCH | `/settings` | `UpdateRestaurantSettingsRequest` (`timezone`, ID IANA geográfico como `America/Cancun`) | `200 RestaurantSettingsResponse`; `400` si la zona no existe, es un offset fijo (`-05:00`, `Etc/GMT+5`) o un alias heredado (`EST`) | ADMIN |
 
 Los campos de cada `…Request` y `…Response` están en `components.schemas` de `openapi.json`. En el frontend existente, las rutas están en `frontend/src/lib/endpoints.ts` y los tipos, en `frontend/src/lib`.
 

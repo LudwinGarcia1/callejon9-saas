@@ -16,7 +16,7 @@ vi.mock("@/lib/api", async (original) => ({ ...await original<typeof import("@/l
 describe("session lifecycle", () => {
   let client: QueryClient;
   const session: SessionResponse = { userId: "user-1", fullName: "Usuario de prueba",
-    role: "WAITER", tenantId: "tenant-1", slug: "test", restaurantName: "Prueba" };
+    role: "WAITER", tenantId: "tenant-1", slug: "test", restaurantName: "Prueba", timezone: "America/Mexico_City" };
   beforeEach(() => {
     vi.resetAllMocks();
     client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });

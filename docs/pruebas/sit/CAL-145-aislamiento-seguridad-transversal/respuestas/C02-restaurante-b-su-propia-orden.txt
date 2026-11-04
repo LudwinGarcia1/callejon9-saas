@@ -1,0 +1,31 @@
+# El administrador del restaurante B pide su propia orden
+# 2026-10-28 14:35:05 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+GET /api/v1/orders/d217bda8-1939-4c98-a8d8-7508b561bc71
+
+
+HTTP 200
+Content-Type: application/json
+
+{
+  "id": "d217bda8-1939-4c98-a8d8-7508b561bc71",
+  "folio": "ORD-261028203443",
+  "tableId": "589825be-1cba-4140-aa41-09536991dc82",
+  "waiterId": "989b3c08-98d9-4ea2-aad7-9969c3ca5b25",
+  "guestCount": 1,
+  "status": "PAID",
+  "total": 50,
+  "openedAt": "2026-10-28T20:34:43.610639Z",
+  "sentToKitchenAt": null,
+  "closedAt": "2026-10-28T20:34:44.278230Z",
+  "items": [
+    {
+      "id": "e60fa7a6-3dab-43e4-a7d6-58887ee52450",
+      "productId": "bbce1495-e354-4f03-b1c1-558582844a1b",
+      "productName": "Producto del restaurante B",
+      "unitPrice": 50,
+      "quantity": 1,
+      "kitchenStatus": "PENDING",
+      "notes": null
+    }
+  ]
+}

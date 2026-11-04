@@ -1,0 +1,19 @@
+{
+  "startedAt": "2026-10-28 14:07:30",
+  "tableA": 1,
+  "tableB": 2,
+  "c01Before": "MESA 1 LIBRE 4 lugares — Lista para sentar",
+  "orderA": "d0945e7b-97b0-45ae-bc62-3c3500d643d6",
+  "c01AfterW1": "MESA 1 OCUPADA 4 lugares $0.00 02:07 p.m. · ORD-261028200744",
+  "c01AfterW2": "MESA 1 OCUPADA 4 lugares $0.00 02:07 p.m. · ORD-261028200744",
+  "c01ApiStatus": "OCCUPIED",
+  "orderB": "3494cb88-dc57-4c8b-8579-89f2542e1e71",
+  "c03FromUi": 409,
+  "c03Direct": 409,
+  "c03OrderB": "NEW",
+  "c02Cancel": 200,
+  "c02AfterW1": "MESA 1 LIBRE 4 lugares — Lista para sentar",
+  "c02AfterW2": "MESA 1 LIBRE 4 lugares — Lista para sentar",
+  "c02ApiStatus": "FREE",
+  "finishedAt": "2026-10-28 14:08:02"
+}

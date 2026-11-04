@@ -172,6 +172,36 @@ class SignupRateLimitTest {
     }
 
     @Test
+    @DisplayName("CAL-169: con el secreto del frontend, el cupo es por navegador aunque la salida no este en la lista")
+    void limitIsPerBrowserWithTheFrontendSecret() throws Exception {
+        // Salida del frontend fuera de la lista de confianza: sin el secreto,
+        // todos los navegadores compartirian este cupo.
+        String appServiceHop = "169.254.129.3";
+        String unlistedOutbound = "198.51.100.200:40000";
+        String secret = "secreto-de-prueba-del-proxy-de-next-32b";
+        for (int i = 0; i < maxPerIp; i++) {
+            mockMvc.perform(signupRequest(appServiceHop, slugPrefix + "-" + i)
+                            .header("X-Forwarded-For", "203.0.113.30:51234, " + unlistedOutbound)
+                            .header("X-Callejon9-Client-Ip", "203.0.113.30")
+                            .header("X-Callejon9-Proxy-Secret", secret))
+                    .andExpect(status().isCreated());
+        }
+        mockMvc.perform(signupRequest(appServiceHop, slugPrefix + "-extra")
+                        .header("X-Forwarded-For", "203.0.113.30:51234, " + unlistedOutbound)
+                        .header("X-Callejon9-Client-Ip", "203.0.113.30")
+                        .header("X-Callejon9-Proxy-Secret", secret))
+                .andExpect(status().isTooManyRequests());
+
+        String otherSlug = slugPrefix + "-otro";
+        mockMvc.perform(signupRequest(appServiceHop, otherSlug)
+                        .header("X-Forwarded-For", "203.0.113.31:51234, " + unlistedOutbound)
+                        .header("X-Callejon9-Client-Ip", "203.0.113.31")
+                        .header("X-Callejon9-Proxy-Secret", secret))
+                .andExpect(status().isCreated());
+        assertThat(tenantsWithSlug(otherSlug)).isEqualTo(1);
+    }
+
+    @Test
     @DisplayName("estrenar una direccion IPv6 de la misma red /64 no evade el limite")
     void rotatingIpv6AddressesInTheSameNetworkCannotEvade() throws Exception {
         for (int i = 1; i <= maxPerIp; i++) {

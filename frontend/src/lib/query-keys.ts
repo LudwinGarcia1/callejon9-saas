@@ -10,6 +10,9 @@ export const queryKeys = {
   platform: {
     plans: () => ["platform", "plans"] as const,
   },
+  settings: {
+    detail: () => ["settings"] as const,
+  },
   tables: {
     /** Sin argumento: solo mesas activas (default del backend). Con
      * `includeInactive = true`: la clave usada por la pantalla de
@@ -34,7 +37,10 @@ export const queryKeys = {
     all: () => ["users"] as const,
   },
   orders: {
+    /** Prefijo de todo lo de ordenes: invalidarlo refresca abiertas y detalles. */
     all: () => ["orders"] as const,
+    /** Pagina de ordenes en servicio que comparten mesero, caja y navegacion. */
+    open: () => ["orders", { open: true }] as const,
     detail: (orderId: string) => ["orders", orderId] as const,
   },
   kitchen: {
@@ -45,8 +51,9 @@ export const queryKeys = {
   },
   sales: {
     all: () => ["sales"] as const,
-    /** El rango entra en la clave: cambiar `from`/`to` debe disparar una nueva consulta. */
-    history: (from: string, to: string) => ["sales", { from, to }] as const,
+    /** El rango y la pagina entran en la clave: cambiar cualquiera dispara otra consulta. */
+    history: (from: string, to: string, page: number, size: number) =>
+      ["sales", { from, to, page, size }] as const,
   },
   cashSessions: {
     all: () => ["cash-sessions"] as const,
@@ -64,6 +71,8 @@ export const queryKeys = {
       includeInactive
         ? (["inventory", "items", { includeInactive: true }] as const)
         : (["inventory", "items"] as const),
+    /** Prefijo de todos los rangos de movimientos, para invalidarlos juntos. */
+    allMovements: () => ["inventory", "movements"] as const,
     /** El rango y el filtro de insumo son parte de la clave. */
     movements: (from: string, to: string, itemId?: string) =>
       ["inventory", "movements", { from, to, itemId: itemId ?? null }] as const,

@@ -152,9 +152,10 @@ Con `SPRING_PROFILES_ACTIVE=prod`, el backend se niega a arrancar, antes de cone
 - falta `DB_APP_PASSWORD` o `DB_OWNER_PASSWORD`, o es la contraseña de desarrollo de `scripts/setup-db.sql`;
 - falta `APP_ALLOWED_ORIGINS` o alguno de sus orígenes no es `https://`;
 - `app.auth.cookie-secure` se forzó a `false`;
+- `APP_PROXY_SECRET`, que es opcional, está definida con menos de 32 bytes;
 - se activa junto a `demo` o `dev`.
 
-El error enumera cada problema por el nombre de la variable, nunca por su valor. `prod` fija además `server.forward-headers-strategy=none`: la IP del cliente la resuelve `ClientIp` con su propio modelo de confianza (red local y `APP_TRUSTED_PROXIES`), y así Spring Boot no lo cambia por su cuenta al detectar una plataforma en la nube. La validación vive en `ProductionConfigurationGuard`.
+El error enumera cada problema por el nombre de la variable, nunca por su valor. `prod` fija además `server.forward-headers-strategy=none`: la IP del cliente la resuelve `ClientIp` con su propio modelo de confianza (red local, `APP_TRUSTED_PROXIES` y la IP que reenvía el frontend con `APP_PROXY_SECRET`), y así Spring Boot no lo cambia por su cuenta al detectar una plataforma en la nube. La validación vive en `ProductionConfigurationGuard`.
 
 ### 3. Frontend
 

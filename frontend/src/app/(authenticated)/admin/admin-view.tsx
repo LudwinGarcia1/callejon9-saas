@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -29,12 +29,13 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { useSession } from "@/hooks/use-session";
 import { ApiError, api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
+import { todayIsoDate } from "@/lib/format";
 import { queryKeys } from "@/lib/query-keys";
 import {
   USER_ROLE_LABELS,
   type CategoryResponse,
-  type OrderSummaryResponse,
   type ProductResponse,
+  type SalesHistoryResponse,
   type TableResponse,
   type UpdateProductStatusRequest,
   type UpdateTableStatusRequest,
@@ -49,22 +50,13 @@ import { EditCategoryDialog } from "./edit-category-dialog";
 import { EditProductDialog } from "./edit-product-dialog";
 import { EditTableDialog } from "./edit-table-dialog";
 import { PrintTablesQrDialog } from "./print-tables-qr-dialog";
-
-/** Considera "de hoy" cualquier orden abierta en el dia local del navegador. */
-function isToday(iso: string): boolean {
-  const date = new Date(iso);
-  const now = new Date();
-  return (
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate()
-  );
-}
+import { RestaurantSettingsSection } from "./restaurant-settings-section";
 
 /**
  * Dashboard de administracion. No existe un endpoint de estadisticas, asi
- * que los conteos se derivan de las mismas listas que alimentan las tablas:
- * mesas, categorias, productos y ordenes de hoy con su total.
+ * que los conteos se derivan de las mismas listas que alimentan las tablas
+ * (mesas, categorias, productos, usuarios) y lo cobrado hoy sale del resumen
+ * del historial de ventas.
  */
 export function AdminView() {
   const { user: currentUser } = useSession();
@@ -87,9 +79,13 @@ export function AdminView() {
     queryKey: queryKeys.products.all(true),
     queryFn: () => api.get<ProductResponse[]>(endpoints.products.list(), { includeInactive: true }),
   });
-  const ordersQuery = useQuery({
-    queryKey: queryKeys.orders.all(),
-    queryFn: () => api.get<OrderSummaryResponse[]>(endpoints.orders.list()),
+  // Desde CAL-16 /orders es paginado: en vez de traer todas las ordenes para
+  // sumar las de hoy, se pide solo el resumen del dia (una fila basta).
+  const today = todayIsoDate();
+  const todaySalesQuery = useQuery({
+    queryKey: queryKeys.sales.history(today, today, 0, 1),
+    queryFn: () =>
+      api.get<SalesHistoryResponse>(endpoints.sales.history(), { from: today, to: today, size: 1 }),
   });
   const usersQuery = useQuery({
     queryKey: queryKeys.users.all(),
@@ -156,23 +152,16 @@ export function AdminView() {
     },
   });
 
-  const todayOrders = useMemo(
-    () => (ordersQuery.data ?? []).filter((order) => isToday(order.openedAt)),
-    [ordersQuery.data],
-  );
-  const todayTotal = useMemo(
-    () => todayOrders.reduce((sum, order) => sum + order.total, 0),
-    [todayOrders],
-  );
+  const todaySummary = todaySalesQuery.data?.summary;
 
   return (
     <ScreenShell
       title="Administración"
-      subtitle="Resumen del restaurante, y alta de mesas, categorías, productos y usuarios."
+      subtitle="Resumen del restaurante; alta de mesas, categorías, productos y usuarios, y su zona horaria."
       actions={
         <ScreenMetric
           label="Cobrado hoy"
-          value={ordersQuery.isLoading ? "—" : <Money amount={todayTotal} />}
+          value={todaySalesQuery.isLoading ? "—" : <Money amount={todaySummary?.total ?? 0} />}
           accent
         />
       }
@@ -201,14 +190,14 @@ export function AdminView() {
         />
         <Card>
           <CardHeader>
-            <CardDescription className="eyebrow">Órdenes de hoy</CardDescription>
+            <CardDescription className="eyebrow">Ventas de hoy</CardDescription>
             <CardTitle className="text-[34px] leading-none">
-              {ordersQuery.isLoading ? "—" : todayOrders.length}
+              {todaySalesQuery.isLoading ? "—" : (todaySummary?.count ?? 0)}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Total: {ordersQuery.isLoading ? "—" : <Money amount={todayTotal} />}
+              Total: {todaySalesQuery.isLoading ? "—" : <Money amount={todaySummary?.total ?? 0} />}
             </p>
           </CardContent>
         </Card>
@@ -220,6 +209,7 @@ export function AdminView() {
           <TabsTrigger value="categories">Categorías</TabsTrigger>
           <TabsTrigger value="products">Productos</TabsTrigger>
           <TabsTrigger value="users">Usuarios</TabsTrigger>
+          <TabsTrigger value="restaurant">Restaurante</TabsTrigger>
         </TabsList>
 
         <TabsContent value="tables" className="flex flex-col gap-4">
@@ -500,6 +490,10 @@ export function AdminView() {
               </QueryState>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="restaurant" className="flex flex-col gap-4">
+          <RestaurantSettingsSection />
         </TabsContent>
       </Tabs>
 

@@ -10,16 +10,13 @@ import { TenantBadge } from "@/components/layout/tenant-badge";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { Money } from "@/components/shared/money";
 import { useNavCounts } from "@/hooks/use-nav-counts";
+import { useOpenOrders } from "@/hooks/use-open-orders";
 import { useSession } from "@/hooks/use-session";
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { NAV_ITEMS_BY_ROLE } from "@/components/layout/nav";
 import { queryKeys } from "@/lib/query-keys";
-import {
-  USER_ROLE_LABELS,
-  type OrderSummaryResponse,
-  type TableResponse,
-} from "@/lib/types";
+import { USER_ROLE_LABELS, type TableResponse } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 /** Ordenes que siguen abiertas en piso. */
@@ -119,16 +116,13 @@ function NavRail() {
 
 /** Rail de la comanda: volver a mesas y las demas mesas abiertas del turno. */
 function OrderRail({ currentOrderId }: { currentOrderId: string }) {
-  const ordersQuery = useQuery({
-    queryKey: queryKeys.orders.all(),
-    queryFn: () => api.get<OrderSummaryResponse[]>(endpoints.orders.list()),
-  });
+  const { orders: openOrders } = useOpenOrders();
   const tablesQuery = useQuery({
     queryKey: queryKeys.tables.all(),
     queryFn: () => api.get<TableResponse[]>(endpoints.tables.list()),
   });
 
-  const otherOpenOrders = (ordersQuery.data ?? []).filter(
+  const otherOpenOrders = (openOrders ?? []).filter(
     (order) => order.id !== currentOrderId && OPEN_ORDER_STATUSES.has(order.status),
   );
 

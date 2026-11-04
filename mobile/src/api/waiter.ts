@@ -4,6 +4,7 @@ import type {
   OpenOrderRequest,
   Order,
   OrderSummary,
+  Page,
   Product,
   RestaurantTable,
 } from './types';
@@ -23,9 +24,17 @@ export function fetchProducts(): Promise<Product[]> {
   return request<Product[]>('GET', '/products');
 }
 
-/** GET /api/v1/orders — órdenes del restaurante, la más reciente primero. */
-export function fetchOrders(): Promise<OrderSummary[]> {
-  return request<OrderSummary[]>('GET', '/orders');
+/** Tope de `size` en el backend (PageQuery.MAX_SIZE). */
+const OPEN_ORDERS_PAGE_SIZE = 100;
+
+/**
+ * GET /api/v1/orders?open=true — órdenes en servicio (NEW, SENT, READY), la
+ * más reciente primero. Desde CAL-16 el listado es paginado: se pide la
+ * página más grande permitida en vez de traer todo el historial.
+ */
+export async function fetchOpenOrders(): Promise<OrderSummary[]> {
+  const page = await request<Page<OrderSummary>>('GET', `/orders?open=true&size=${OPEN_ORDERS_PAGE_SIZE}`);
+  return page.content;
 }
 
 /** GET /api/v1/orders/{id} — una orden con sus partidas. */

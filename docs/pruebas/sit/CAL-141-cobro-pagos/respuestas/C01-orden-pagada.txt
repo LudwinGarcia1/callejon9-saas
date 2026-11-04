@@ -1,0 +1,40 @@
+# La orden después del cobro
+# 2026-10-28 14:12:13 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+GET /api/v1/orders/53cf75fc-6681-49c7-8b05-3605cd565fb8
+
+
+HTTP 200
+Content-Type: application/json
+
+{
+  "id": "53cf75fc-6681-49c7-8b05-3605cd565fb8",
+  "folio": "ORD-261028201139",
+  "tableId": "4edb1976-8287-434c-9785-7d6787883bee",
+  "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+  "guestCount": 2,
+  "status": "PAID",
+  "total": 325,
+  "openedAt": "2026-10-28T20:11:39.297993Z",
+  "sentToKitchenAt": "2026-10-28T20:11:44.884074Z",
+  "closedAt": "2026-10-28T20:12:11.061543Z",
+  "items": [
+    {
+      "id": "94a5168b-70e1-4137-95cf-32fd5f81ae15",
+      "productId": "33dafe69-08e7-4c4d-b1b4-d99902472968",
+      "productName": "Guacamole con totopos",
+      "unitPrice": 95,
+      "quantity": 2,
+      "kitchenStatus": "READY",
+      "notes": null
+    },
+    {
+      "id": "74444e5f-aa4f-43f8-89f4-fa37d1930d29",
+      "productId": "620e77f4-cfb7-4aec-96d2-602da6ad398a",
+      "productName": "Margarita",
+      "unitPrice": 135,
+      "quantity": 1,
+      "kitchenStatus": "READY",
+      "notes": null
+    }
+  ]
+}

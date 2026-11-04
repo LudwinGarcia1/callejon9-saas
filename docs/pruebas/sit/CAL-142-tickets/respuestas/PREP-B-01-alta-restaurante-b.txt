@@ -1,0 +1,22 @@
+# Alta pública del restaurante B
+# 2026-10-28 14:34:39 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/signup
+Content-Type: application/json
+
+{
+  "restaurantName": "SIT Restaurante B",
+  "slug": "sit-restaurante-b-28101434",
+  "adminEmail": "admin@sit-restaurante-b-28101434.test",
+  "adminFullName": "Administrador SIT B",
+  "password": "<redactado>",
+  "planCode": "FREE"
+}
+
+HTTP 201
+Content-Type: application/json
+
+{
+  "tenantId": "82c20ac9-4a3d-4680-aac7-5a2bdd28dc18",
+  "slug": "sit-restaurante-b-28101434",
+  "adminEmail": "admin@sit-restaurante-b-28101434.test"
+}

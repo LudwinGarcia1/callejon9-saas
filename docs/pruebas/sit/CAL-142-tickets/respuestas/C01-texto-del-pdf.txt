@@ -1,0 +1,20 @@
+# Texto extraído con «pdftotext -layout ticket-TCK-261028201211.pdf -»
+
+Callejon 9 pruebas
+Folio: TCK-261028201211
+Fecha: 28/10/2026 20:12 UTC
+
+
+         Producto                       Cant.            Precio            Subtotal
+Guacamole con totopos        2                  95.00             190.00
+Margarita                    1                  135.00            135.00
+
+
+Subtotal: $325.00
+Propina: $32.50
+Total: $357.50
+Metodo de pago: Mixto
+Efectivo: $200.00 | Recibido: $200.00
+Tarjeta: $157.50 | Recibido: $157.50
+Cambio: $0.00
+

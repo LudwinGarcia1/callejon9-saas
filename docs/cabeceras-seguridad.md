@@ -36,12 +36,18 @@ lo aplican cuando reciben la respuesta mediante HTTPS. Se puede desactivar para
 una ejecucion local de produccion con `SECURITY_HSTS_ENABLED=false` antes de
 compilar y arrancar. En desarrollo no se emite.
 
-Spring emite HSTS solo para peticiones reconocidas como HTTPS. Si TLS termina en
-un proxy, configura el reconocimiento de cabeceras forwarded en el despliegue
-(por ejemplo `SERVER_FORWARD_HEADERS_STRATEGY=native` con proxies de confianza
-limitados en Tomcat). El proxy debe eliminar las cabeceras forwarded del cliente y
-generar las propias. Comprueba HSTS en la URL HTTPS publica antes de dar el
-despliegue por validado; localhost HTTP no demuestra su efecto en el navegador.
+Por defecto, Spring emite HSTS solo para peticiones reconocidas como HTTPS. En
+Azure, TLS termina en App Service y la API recibe cada peticion como HTTP. Por
+eso el perfil `prod` fija `app.security.hsts-on-any-request: true`, que emite HSTS
+en toda respuesta (CAL-183). Un navegador ignora HSTS recibido por HTTP
+(RFC 6797, seccion 8.1), asi que solo surte efecto en la URL HTTPS publica.
+
+No se activa `SERVER_FORWARD_HEADERS_STRATEGY=native` para lograrlo. Ese modo
+reescribe la direccion remota de cada peticion con `X-Forwarded-For`, y `ClientIp`
+depende de la direccion real de la conexion para decidir en que proxies confia
+(CAL-169). Comprueba HSTS en la URL HTTPS publica, directa y por el frontend,
+antes de dar el despliegue por validado; localhost HTTP no demuestra su efecto en
+el navegador.
 
 ## Verificacion
 

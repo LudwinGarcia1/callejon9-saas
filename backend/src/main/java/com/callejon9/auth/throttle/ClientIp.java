@@ -3,9 +3,12 @@ package com.callejon9.auth.throttle;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -38,11 +41,22 @@ import org.springframework.stereotype.Component;
  * <p>Azure App Service escribe cada entrada como {@code ip:puerto}. El puerto
  * cambia en cada conexion, asi que se descarta: con el, un mismo cliente
  * tendria una llave distinta por peticion y el limite por IP no lo frenaria.
+ *
+ * <p>La lista de IP de salida no basta en Azure: el frontend puede salir por
+ * una direccion que no esta en ella, y en el plan F1 esas direcciones las
+ * comparten otras apps. Por eso el middleware de Next, que lee la IP del
+ * navegador de la cabecera que escribe su propio front end de App Service,
+ * la reenvia en {@code X-Callejon9-Client-Ip} junto con el secreto
+ * {@code app.client-ip.proxy-secret} (CAL-169). Si el secreto coincide, esa
+ * IP es la llave y la cadena de {@code X-Forwarded-For} no se consulta. Sin
+ * secreto configurado, o con uno que no coincide, ambas cabeceras se ignoran.
  */
 @Component
 public class ClientIp {
 
     static final String FORWARDED_FOR = "X-Forwarded-For";
+    static final String PROXY_CLIENT_IP = "X-Callejon9-Client-Ip";
+    static final String PROXY_SECRET = "X-Callejon9-Proxy-Secret";
 
     private static final Pattern IPV4 = Pattern.compile(
             "((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)\\.){3}(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)");
@@ -50,16 +64,30 @@ public class ClientIp {
     private static final Pattern IPV6 = Pattern.compile("(?=.*:)[0-9A-Fa-f:][0-9A-Fa-f:.]*");
 
     private final List<TrustedRange> trustedProxies;
+    /** Vacio cuando no hay secreto: entonces nunca se lee {@link #PROXY_CLIENT_IP}. */
+    private final byte[] proxySecret;
 
-    public ClientIp(@Value("${app.client-ip.trusted-proxies:}") List<String> trustedProxies) {
+    public ClientIp(List<String> trustedProxies) {
+        this(trustedProxies, "");
+    }
+
+    @Autowired
+    public ClientIp(@Value("${app.client-ip.trusted-proxies:}") List<String> trustedProxies,
+                    @Value("${app.client-ip.proxy-secret:}") String proxySecret) {
         this.trustedProxies = trustedProxies.stream()
                 .map(String::strip)
                 .filter(entry -> !entry.isEmpty())
                 .map(TrustedRange::parse)
                 .toList();
+        this.proxySecret = proxySecret.strip().getBytes(StandardCharsets.UTF_8);
     }
 
     public String of(HttpServletRequest request) {
+        Optional<String> fromFrontend = fromAuthenticatedFrontend(request);
+        if (fromFrontend.isPresent()) {
+            return fromFrontend.get();
+        }
+
         String remoteAddress = request.getRemoteAddr();
         String forwardedFor = request.getHeader(FORWARDED_FOR);
 
@@ -83,6 +111,25 @@ public class ClientIp {
             }
         }
         return client;
+    }
+
+    /**
+     * IP que reenvio el middleware de Next, solo si trae el secreto compartido.
+     * Se compara en tiempo constante; una IP ausente o mal formada cae a la
+     * resolucion por {@code X-Forwarded-For}.
+     */
+    private Optional<String> fromAuthenticatedFrontend(HttpServletRequest request) {
+        String presented = request.getHeader(PROXY_SECRET);
+        if (proxySecret.length == 0 || presented == null
+                || !MessageDigest.isEqual(proxySecret, presented.getBytes(StandardCharsets.UTF_8))) {
+            return Optional.empty();
+        }
+        String clientIp = request.getHeader(PROXY_CLIENT_IP);
+        if (clientIp == null) {
+            return Optional.empty();
+        }
+        String address = withoutPort(clientIp.strip());
+        return literal(address).map(ignored -> address);
     }
 
     private boolean isTrusted(InetAddress address) {

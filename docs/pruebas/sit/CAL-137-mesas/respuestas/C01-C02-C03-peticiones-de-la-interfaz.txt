@@ -1,0 +1,105 @@
+# Peticiones de la interfaz · mesero@pruebas.com
+# 2026-10-28 14:07:44 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders
+Content-Type: application/json
+
+{"tableId":"4edb1976-8287-434c-9785-7d6787883bee","guestCount":2}
+
+HTTP 201
+Content-Type: application/json
+
+{
+  "id": "d0945e7b-97b0-45ae-bc62-3c3500d643d6",
+  "folio": "ORD-261028200744",
+  "tableId": "4edb1976-8287-434c-9785-7d6787883bee",
+  "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+  "guestCount": 2,
+  "status": "NEW",
+  "total": 0,
+  "openedAt": "2026-10-28T20:07:44.441546Z",
+  "sentToKitchenAt": null,
+  "closedAt": null,
+  "items": []
+}
+
+# Peticiones de la interfaz · mesero@pruebas.com
+# 2026-10-28 14:07:52 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders
+Content-Type: application/json
+
+{"tableId":"0568fb35-160c-4be4-a0cb-cc8c42962644","guestCount":2}
+
+HTTP 201
+Content-Type: application/json
+
+{
+  "id": "3494cb88-dc57-4c8b-8579-89f2542e1e71",
+  "folio": "ORD-261028200752",
+  "tableId": "0568fb35-160c-4be4-a0cb-cc8c42962644",
+  "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+  "guestCount": 2,
+  "status": "NEW",
+  "total": 0,
+  "openedAt": "2026-10-28T20:07:52.678283Z",
+  "sentToKitchenAt": null,
+  "closedAt": null,
+  "items": []
+}
+
+# Peticiones de la interfaz · mesero2@pruebas.com
+# 2026-10-28 14:07:53 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders
+Content-Type: application/json
+
+{"tableId":"0568fb35-160c-4be4-a0cb-cc8c42962644","guestCount":3}
+
+HTTP 409
+Content-Type: application/problem+json
+
+{
+  "type": "about:blank",
+  "title": "Regla de negocio",
+  "status": 409,
+  "detail": "La mesa 2 no esta disponible (OCCUPIED).",
+  "instance": "/api/v1/orders"
+}
+
+# Peticiones de la interfaz · mesero2@pruebas.com
+# 2026-10-28 14:07:55 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders
+Content-Type: application/json
+
+{"tableId":"0568fb35-160c-4be4-a0cb-cc8c42962644","guestCount":3}
+
+HTTP 409
+Content-Type: application/problem+json
+
+{
+  "type": "about:blank",
+  "title": "Regla de negocio",
+  "status": 409,
+  "detail": "La mesa 2 no esta disponible (OCCUPIED).",
+  "instance": "/api/v1/orders"
+}
+
+# Peticiones de la interfaz · mesero@pruebas.com
+# 2026-10-28 14:07:58 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders/d0945e7b-97b0-45ae-bc62-3c3500d643d6/cancel
+
+
+HTTP 200
+Content-Type: application/json
+
+{
+  "id": "d0945e7b-97b0-45ae-bc62-3c3500d643d6",
+  "folio": "ORD-261028200744",
+  "tableId": "4edb1976-8287-434c-9785-7d6787883bee",
+  "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+  "guestCount": 2,
+  "status": "CANCELED",
+  "total": 0,
+  "openedAt": "2026-10-28T20:07:44.441546Z",
+  "sentToKitchenAt": null,
+  "closedAt": "2026-10-28T20:07:57.927862824Z",
+  "items": []
+}

@@ -6,6 +6,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -17,9 +19,9 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     @Query("select o from Order o where o.id = :id")
     Optional<Order> findForCheckout(@Param("id") UUID id);
 
-    List<Order> findAllByOrderByOpenedAtDesc();
+    Page<Order> findByStatus(OrderStatus status, Pageable pageable);
 
-    List<Order> findByStatusOrderByOpenedAtDesc(OrderStatus status);
+    Page<Order> findByStatusIn(Collection<OrderStatus> statuses, Pageable pageable);
 
     /** Tablero de cocina: las ordenes enviadas, la mas antigua primero. */
     List<Order> findByStatusOrderBySentToKitchenAtAsc(OrderStatus status);

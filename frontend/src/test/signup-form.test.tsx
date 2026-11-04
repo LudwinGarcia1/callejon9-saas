@@ -144,3 +144,14 @@ describe("formulario de alta de restaurante: envío", () => {
     expect(effects.push).not.toHaveBeenCalled();
   });
 });
+
+// Cobertura adicional de la rama CAL-121 original: validacion nativa del correo.
+describe("SignupView: validacion nativa del correo", () => {
+  it("rechaza un correo invalido y acepta uno valido", () => {
+    mount();
+    fireEvent.change(input("adminEmail"), { target: { value: "correo-invalido" } });
+    expect(input("adminEmail").checkValidity()).toBe(false);
+    fireEvent.change(input("adminEmail"), { target: { value: "admin@example.com" } });
+    expect(input("adminEmail").checkValidity()).toBe(true);
+  });
+});

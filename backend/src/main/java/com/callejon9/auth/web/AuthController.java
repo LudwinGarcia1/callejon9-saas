@@ -129,7 +129,8 @@ public class AuthController {
                 current.user().getRole().name(),
                 current.tenant().getId(),
                 current.tenant().getSlug(),
-                current.tenant().getName()));
+                current.tenant().getName(),
+                current.tenant().getTimezone()));
     }
 
     /**

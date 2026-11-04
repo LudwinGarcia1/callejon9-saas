@@ -131,6 +131,19 @@ export interface OrderResponse {
   items: OrderItemResponse[];
 }
 
+/**
+ * Pagina de un listado (CAL-16) — verificado contra shared/web/PageResponse.
+ * `page` empieza en 0; `totalElements` y `totalPages` cuentan solo filas del
+ * restaurante de la sesion (RLS).
+ */
+export interface PageResponse<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
 /** Igual que OrderResponse pero sin `items`, `sentToKitchenAt` ni `closedAt` (listados). */
 export type OrderSummaryResponse = Omit<
   OrderResponse,
@@ -235,6 +248,20 @@ export interface SessionResponse {
   tenantId: string;
   slug: string;
   restaurantName: string;
+  /** ID IANA en el que el restaurante corta sus dias (CAL-19), ej. `America/Cancun`. */
+  timezone: string;
+}
+
+/** GET/PATCH /api/v1/settings — verificado contra RestaurantSettingsResponse. Solo ADMIN. */
+export interface RestaurantSettingsResponse {
+  name: string;
+  slug: string;
+  timezone: string;
+}
+
+/** PATCH /api/v1/settings. El backend acepta solo IDs IANA geograficos. */
+export interface UpdateRestaurantSettingsRequest {
+  timezone: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -401,9 +428,12 @@ export interface SaleHistorySummary {
   total: number;
 }
 
-/** GET /api/v1/sales — verificado contra SalesHistoryResponse. */
+/**
+ * GET /api/v1/sales — verificado contra SalesHistoryResponse. `sales` es una
+ * pagina; `summary` y `paymentMix` cubren el rango completo.
+ */
 export interface SalesHistoryResponse {
-  sales: SaleHistoryRow[];
+  sales: PageResponse<SaleHistoryRow>;
   summary: SaleHistorySummary;
   paymentMix: { method: PaymentMethod; count: number; total: number }[];
 }

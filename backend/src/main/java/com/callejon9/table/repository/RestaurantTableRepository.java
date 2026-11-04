@@ -18,6 +18,9 @@ public interface RestaurantTableRepository extends JpaRepository<RestaurantTable
 
     boolean existsByNumber(int number);
 
+    /** RLS limita el conteo a las mesas visibles del restaurante activo. */
+    long countByActiveTrue();
+
     Optional<RestaurantTable> findByNumber(int number);
 
     /** Para renumerar una mesa existente sin chocar contra si misma. */

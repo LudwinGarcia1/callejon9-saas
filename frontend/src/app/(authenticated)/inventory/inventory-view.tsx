@@ -296,7 +296,8 @@ const ALL_ITEMS = "all";
  * que el historial de ventas.
  */
 function MovementsPanel({ items }: MovementsPanelProps) {
-  const today = todayIsoDate();
+  const { user } = useSession();
+  const today = todayIsoDate(user?.timezone);
   const [range, setRange] = useState({ from: today, to: today });
   const [itemId, setItemId] = useState<string>(ALL_ITEMS);
 

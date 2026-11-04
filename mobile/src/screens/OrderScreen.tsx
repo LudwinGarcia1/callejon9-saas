@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { ApiError } from '../api/client';
 import type { Order, OrderStatus, Product, RestaurantTable } from '../api/types';
-import { addOrderItems, cancelOrder, fetchOrder, fetchOrders, fetchProducts, openOrder } from '../api/waiter';
+import { addOrderItems, cancelOrder, fetchOpenOrders, fetchOrder, fetchProducts, openOrder } from '../api/waiter';
 import { Banner, Button } from '../ui/components';
 import { colors, formatMoney, radius } from '../ui/theme';
 
@@ -208,9 +208,9 @@ export function OrderScreen({ table, onBack, onSubmitted }: Props) {
   );
 }
 
-/** La orden abierta de una mesa ocupada: GET /orders y luego GET /orders/{id}. */
+/** La orden abierta de una mesa ocupada: GET /orders?open=true y luego GET /orders/{id}. */
 async function findOpenOrder(tableId: string): Promise<Order> {
-  const summary = (await fetchOrders()).find(
+  const summary = (await fetchOpenOrders()).find(
     (order) => order.tableId === tableId && OPEN_STATUSES.includes(order.status),
   );
   if (!summary) {

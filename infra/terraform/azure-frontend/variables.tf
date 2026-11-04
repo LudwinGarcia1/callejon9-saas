@@ -25,6 +25,18 @@ variable "backend_origin" {
   }
 }
 
+variable "backend_proxy_secret" {
+  description = "Secret shared with the API (proxy-secret in the azure-backend Key Vault). The middleware sends it with the browser IP so the per-IP login and signup limits count each browser (CAL-169). Empty disables it."
+  type        = string
+  default     = ""
+  sensitive   = true
+
+  validation {
+    condition     = var.backend_proxy_secret == "" || length(trimspace(var.backend_proxy_secret)) >= 32
+    error_message = "The proxy secret must be empty or at least 32 characters long."
+  }
+}
+
 variable "web_app_name" {
   description = "Web App name and therefore its public hostname, <name>.azurewebsites.net. It is global across Azure, so it must be free."
   type        = string

@@ -28,9 +28,9 @@ El agente pertenece al grupo `docker`, lo que en la práctica equivale a root en
 |---|---|---|
 | `jenkins-admin-password` | JCasC, vía el plugin Azure Key Vault con la identidad administrada | `az keyvault secret set --vault-name <vault> --name jenkins-admin-password --value <contraseña>` |
 | `tailscale-auth-key` | `provision.sh`, solo cuando el disco aún no tiene identidad de Tailscale | Clave de Tailscale *pre-approved*, de preferencia con tag; `az keyvault secret set ... --name tailscale-auth-key` |
-| `github-token` | JCasC y `github-branch-source` para consultar PRs y reportar checks de estado a GitHub (CAL-89) | Token de GitHub (PAT) con alcance `repo:status` o `repo`; `az keyvault secret set --vault-name <vault> --name github-token --value <token> --tags type=secret-text` |
+| `github-token` | JCasC y `github-branch-source` para consultar PRs y reportar checks de estado a GitHub (CAL-89) | Token de GitHub (PAT) con alcance `repo:status` o `repo`; `az keyvault secret set --vault-name <vault> --name github-token --value <token> --tags type=string` |
 
-El plugin se activa con las variables `AZURE_KEYVAULT_URL` y `AZURE_KEYVAULT_UAMI_ENABLED=true` ([documentación del plugin](https://plugins.jenkins.io/azure-keyvault/)). Los secretos con tag `type=username` (más el tag `username`) aparecen como credenciales de usuario/contraseña, y con `type=secret-text` como Secret Text.
+El plugin se activa con las variables `AZURE_KEYVAULT_URL` y `AZURE_KEYVAULT_UAMI_ENABLED=true` ([documentación del plugin](https://plugins.jenkins.io/azure-keyvault/)). Los secretos con tag `type=username` (más el tag `username`) aparecen como credenciales de usuario/contraseña, y con `type=string` como Secret Text (el plugin rechaza `secret-text` con «Unknown type»).
 
 ## Primera puesta en marcha
 

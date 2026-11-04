@@ -106,7 +106,7 @@ class PublicMenuIntegrationTest {
 
         mockMvc.perform(get("/api/v1/orders").cookie(adminA))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)));
+                .andExpect(jsonPath("$.content", hasSize(1)));
     }
 
     @Test

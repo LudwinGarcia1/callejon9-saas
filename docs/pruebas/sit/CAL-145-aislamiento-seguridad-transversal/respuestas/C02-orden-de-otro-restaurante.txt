@@ -1,0 +1,15 @@
+# El mesero de `pruebas` pide la orden del restaurante B
+# 2026-10-28 14:35:00 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+GET /api/v1/orders/d217bda8-1939-4c98-a8d8-7508b561bc71
+
+
+HTTP 404
+Content-Type: application/problem+json
+
+{
+  "type": "about:blank",
+  "title": "Recurso no encontrado",
+  "status": 404,
+  "detail": "La orden no existe.",
+  "instance": "/api/v1/orders/d217bda8-1939-4c98-a8d8-7508b561bc71"
+}

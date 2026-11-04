@@ -5,6 +5,7 @@ import { MinusIcon, PlusIcon, XIcon } from "lucide-react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Money } from "@/components/shared/money";
 import { cn } from "@/lib/utils";
@@ -13,12 +14,20 @@ import type { CategoryResponse, ProductResponse } from "@/lib/types";
 /** Sentinela para agrupar productos sin categoria asignada. */
 const NO_CATEGORY = "sin-categoria";
 
-/** Una linea del carrito local: un producto y cuantas unidades lleva. El
- * carrito es solo una vista previa; nada se envia al backend hasta que el
- * mesero confirma con "Agregar a la orden", en una sola peticion. */
+/** Mismo tope que {@code AddOrderItemRequest.notes} en el backend. */
+export const MAX_NOTE_LENGTH = 500;
+
+/** Una linea del carrito local: un producto, cuantas unidades lleva y su
+ * nota para cocina. El carrito es solo una vista previa; nada se envia al
+ * backend hasta que el mesero confirma con "Agregar a la orden", en una sola
+ * peticion. Un mismo producto puede ocupar varias lineas si llevan notas
+ * distintas (una sopa "sin crema" y otra normal), por eso cada linea tiene su
+ * propia llave y no se identifica por el producto. */
 export interface CartLine {
+  key: string;
   product: ProductResponse;
   quantity: number;
+  notes: string;
 }
 
 interface ProductPickerProps {
@@ -27,9 +36,10 @@ interface ProductPickerProps {
   isLoading: boolean;
   cart: CartLine[];
   onAddProduct: (product: ProductResponse) => void;
-  onIncrement: (productId: string) => void;
-  onDecrement: (productId: string) => void;
-  onRemove: (productId: string) => void;
+  onIncrement: (lineKey: string) => void;
+  onDecrement: (lineKey: string) => void;
+  onRemove: (lineKey: string) => void;
+  onNotesChange: (lineKey: string, notes: string) => void;
   onCommit: () => void;
   isCommitting: boolean;
   /** La orden esta PAID o CANCELED: el backend rechaza agregar productos. */
@@ -53,6 +63,7 @@ export function ProductPicker({
   onIncrement,
   onDecrement,
   onRemove,
+  onNotesChange,
   onCommit,
   isCommitting,
   disabled,
@@ -182,51 +193,62 @@ export function ProductPicker({
 
         {cart.length === 0 ? (
           <p className="text-[13px] text-muted-foreground">
-            Toca el <span aria-hidden>+</span> de un producto para agregarlo.
+            Toca el <span aria-hidden>+</span> de un producto para agregarlo. Cada producto lleva
+            su propia nota para cocina.
           </p>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3">
             {cart.map((line) => (
-              <div key={line.product.id} className="flex items-center gap-2.5">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm">{line.product.name}</p>
-                  <Money
-                    amount={line.product.price * line.quantity}
-                    className="font-mono text-xs text-muted-foreground"
-                  />
+              <div key={line.key} className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-2.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm">{line.product.name}</p>
+                    <Money
+                      amount={line.product.price * line.quantity}
+                      className="font-mono text-xs text-muted-foreground"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon-xs"
+                      onClick={() => onDecrement(line.key)}
+                      aria-label="Quitar una unidad"
+                    >
+                      <MinusIcon />
+                    </Button>
+                    <span className="w-6 text-center font-mono text-sm tabular-nums">
+                      {line.quantity}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon-xs"
+                      onClick={() => onIncrement(line.key)}
+                      aria-label="Agregar una unidad"
+                    >
+                      <PlusIcon />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-xs"
+                      onClick={() => onRemove(line.key)}
+                      aria-label="Quitar del carrito"
+                    >
+                      <XIcon />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon-xs"
-                    onClick={() => onDecrement(line.product.id)}
-                    aria-label="Quitar una unidad"
-                  >
-                    <MinusIcon />
-                  </Button>
-                  <span className="w-6 text-center font-mono text-sm tabular-nums">
-                    {line.quantity}
-                  </span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon-xs"
-                    onClick={() => onIncrement(line.product.id)}
-                    aria-label="Agregar una unidad"
-                  >
-                    <PlusIcon />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-xs"
-                    onClick={() => onRemove(line.product.id)}
-                    aria-label="Quitar del carrito"
-                  >
-                    <XIcon />
-                  </Button>
-                </div>
+                <Input
+                  value={line.notes}
+                  onChange={(event) => onNotesChange(line.key, event.target.value)}
+                  maxLength={MAX_NOTE_LENGTH}
+                  placeholder="Nota para cocina (opcional)"
+                  aria-label={`Nota para ${line.product.name}`}
+                  className="h-9 text-[13px]"
+                />
               </div>
             ))}
           </div>

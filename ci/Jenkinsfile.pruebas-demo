@@ -1,0 +1,150 @@
+// Pipeline de demostración de las pruebas UT y SIT con evidencia en docs/pruebas/.
+//
+// UT:  CAL-120 (autenticación), CAL-125 (pedidos del mesero), CAL-126 (app móvil).
+// SIT: CAL-138 (pedidos del mesero) y CAL-139 (paridad web de la app móvil), contra Azure.
+//
+// CAL-133 queda fuera a propósito: sus casos provocan logins fallidos y, mientras
+// CAL-167 siga abierto, bloquean el login de todo el entorno durante 15 minutos.
+// El caso «cocina» de CAL-139 también queda fuera porque necesita el teléfono.
+//
+// Guía de uso y requisitos (job, credencial c9-test-password): scripts/pruebas-demo/README.md
+pipeline {
+    agent {
+        label 'local-agent'
+    }
+
+    parameters {
+        booleanParam(name: 'RUN_SIT', defaultValue: true,
+            description: 'Ejecutar las SIT contra Azure. Requiere la API encendida (scripts/azure-backend-power.ps1 -Action Start).')
+        string(name: 'BASE_URL', defaultValue: 'https://restohub.azurewebsites.net',
+            description: 'Frontend publicado contra el que corren las SIT.')
+        string(name: 'API_HEALTH_URL', defaultValue: 'https://app-callejon9-api-prod-3878c6.azurewebsites.net/actuator/health',
+            description: 'Health de la API; las SIT esperan a que responda UP.')
+    }
+
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+        timestamps()
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+    }
+
+    environment {
+        CI = 'true'
+        COREPACK_ENABLE_STRICT = '0'
+        NPM_CONFIG_PM_ON_FAIL = 'ignore'
+        JAVA_HOME = '/usr/lib/jvm/temurin-21-jdk-amd64'
+        PATH = "${JAVA_HOME}/bin:${env.PATH}"
+        PLAYWRIGHT_IMAGE = 'mcr.microsoft.com/playwright:v1.56.1-noble'
+        // En la primera corrida del job Jenkins aún no registra los parámetros como
+        // variables de entorno; se fijan aquí con el mismo valor por defecto.
+        BASE_URL = "${params.BASE_URL ?: 'https://restohub.azurewebsites.net'}"
+        API_HEALTH_URL = "${params.API_HEALTH_URL ?: 'https://app-callejon9-api-prod-3878c6.azurewebsites.net/actuator/health'}"
+    }
+
+    stages {
+        stage('UT · CAL-120 y CAL-125 · backend') {
+            steps {
+                dir('backend') {
+                    sh './mvnw -B test -Dtest=ClientIpTest,RefreshTokenSessionExpiryTest,OrderServiceItemsTest,OrderRequestLimitsTest -Dsurefire.failIfNoSpecifiedTests=false'
+                }
+            }
+            post {
+                always {
+                    junit testResults: 'backend/target/surefire-reports/*.xml', allowEmptyResults: true
+                }
+            }
+        }
+
+        stage('UT · CAL-120 y CAL-125 · frontend') {
+            steps {
+                dir('frontend') {
+                    sh '''#!/usr/bin/env bash
+                        set -euo pipefail
+                        pnpm install --frozen-lockfile
+                        pnpm exec vitest run src/test/login-form.test.tsx src/test/order-cart.test.tsx \
+                            --reporter=default --reporter=junit --outputFile.junit=reports/junit-ut.xml
+                    '''
+                }
+            }
+            post {
+                always {
+                    junit testResults: 'frontend/reports/junit-ut.xml', allowEmptyResults: true
+                }
+            }
+        }
+
+        stage('UT · CAL-126 · app móvil') {
+            steps {
+                dir('mobile') {
+                    sh '''#!/usr/bin/env bash
+                        set -euo pipefail
+                        pnpm install --frozen-lockfile
+                        pnpm exec vitest run --reporter=default --reporter=junit --outputFile.junit=reports/junit-ut.xml
+                    '''
+                }
+            }
+            post {
+                always {
+                    junit testResults: 'mobile/reports/junit-ut.xml', allowEmptyResults: true
+                }
+            }
+        }
+
+        stage('SIT · API de Azure encendida') {
+            when { expression { params.RUN_SIT } }
+            steps {
+                sh '''#!/usr/bin/env bash
+                    set -euo pipefail
+                    # Un arranque en frío de App Service puede tardar varios minutos.
+                    for i in $(seq 1 30); do
+                        if curl -fsS --max-time 20 "$API_HEALTH_URL" | grep -q '"status":"UP"'; then
+                            echo "[SIT] API en UP (intento $i)"
+                            exit 0
+                        fi
+                        echo "[SIT] API aún no responde UP ($i/30)"
+                        sleep 10
+                    done
+                    echo "[SIT] La API no está encendida. Enciéndela con scripts/azure-backend-power.ps1 -Action Start y vuelve a correr el job."
+                    exit 1
+                '''
+            }
+        }
+
+        stage('SIT · CAL-138 y CAL-139') {
+            when { expression { params.RUN_SIT } }
+            steps {
+                withCredentials([string(credentialsId: 'c9-test-password', variable: 'C9_TEST_PASSWORD')]) {
+                    sh '''#!/usr/bin/env bash
+                        set -euo pipefail
+                        mkdir -p "$WORKSPACE/salida-sit"
+                        # La contraseña entra al contenedor por variable de entorno, nunca por argumento.
+                        docker run --rm --ipc=host \
+                            -e C9_TEST_PASSWORD -e BASE_URL \
+                            -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" \
+                            -v "$WORKSPACE":/repo:ro \
+                            -v "$WORKSPACE/salida-sit":/out \
+                            "$PLAYWRIGHT_IMAGE" bash /repo/scripts/pruebas-demo/run-sit.sh
+                    '''
+                }
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'salida-sit/**', allowEmptyArchive: true
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs(cleanWhenAborted: true, cleanWhenFailure: true, cleanWhenNotBuilt: true, cleanWhenSuccess: true, cleanWhenUnstable: true)
+        }
+        success {
+            echo '[Pruebas] UT de CAL-120, 125 y 126 y SIT de CAL-138 y 139 en verde.'
+        }
+        failure {
+            echo '[Pruebas] Alguna prueba falló: revisa la etapa en rojo y los artefactos de salida-sit/.'
+        }
+    }
+}

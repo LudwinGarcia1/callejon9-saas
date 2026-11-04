@@ -91,6 +91,11 @@ resource "azurerm_linux_web_app" "api" {
     # X-Forwarded-For hop. Without it here, every web user shares one key in the
     # per-IP login and signup limits (CAL-169).
     APP_TRUSTED_PROXIES = join(",", var.trusted_proxy_addresses)
+
+    # With this secret the frontend forwards the browser IP in its own header,
+    # independent of its outbound IPs. Ignored until the frontend sends it; give
+    # the same value to BACKEND_PROXY_SECRET of the frontend (CAL-169).
+    APP_PROXY_SECRET = local.key_vault_reference["proxy-secret"]
   }, local.monitoring_settings, local.swagger_settings)
 
   logs {

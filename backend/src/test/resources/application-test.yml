@@ -22,3 +22,6 @@ app:
     # IP de salida simulada del frontend (rango de documentacion 192.0.2.0/24)
     # para probar la cadena navegador -> Next -> App Service de la API.
     trusted-proxies: 192.0.2.10
+    # Secreto solo de pruebas que el middleware de Next enviaria con la IP
+    # del navegador. No se usa en ningun entorno real.
+    proxy-secret: secreto-de-prueba-del-proxy-de-next-32b

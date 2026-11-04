@@ -19,7 +19,7 @@ Módulo elegido: **alta de restaurantes** (`/signup` → `POST /api/v1/signup`).
 | Decisión | Motivo |
 |---|---|
 | Cupo de **5 altas por IP por hora** (`SIGNUP_MAX_PER_IP`, `SIGNUP_WINDOW`) | Un restaurante se registra una vez; una cadena que registra varias sucursales desde la misma oficina cabe en el cupo. |
-| La llave es la IP resuelta con `ClientIp`, la misma del login | Detrás de los proxies se usa la entrada de `X-Forwarded-For` más a la derecha que no sea un proxy de confianza (red local o `APP_TRUSTED_PROXIES`). Desde una IP que no es de confianza la cabecera se ignora, así que no se puede falsificar para evadir el límite. |
+| La llave es la IP resuelta con `ClientIp`, la misma del login | Detrás de los proxies se usa la entrada de `X-Forwarded-For` más a la derecha que no sea un proxy de confianza (red local o `APP_TRUSTED_PROXIES`). Desde una IP que no es de confianza la cabecera se ignora, así que no se puede falsificar para evadir el límite. En Azure, si llega con el secreto `APP_PROXY_SECRET`, la llave es la IP del navegador que reenvía el middleware de Next (CAL-169). |
 | Una IPv6 cuenta por su red `/64`, no por dirección | Un proveedor entrega una red `/64` completa a cada cliente, que puede estrenar una dirección en cada petición. Contar por dirección dejaba el límite sin efecto (hallazgo M1 de la revisión). Una IPv6 que encapsula una IPv4 (`::ffff:a.b.c.d`) cuenta como esa IPv4. Solo se interpretan literales, sin consultas DNS. |
 | Cuenta toda alta que pasa la validación, termine en `201` o en `409` | Si el `409` no contara, el endpoint seguiría sirviendo para enumerar restaurantes sin freno. |
 | Un `400` por formato inválido no cuenta | No llega al servicio: no crea nada ni calcula bcrypt. |

@@ -5,12 +5,9 @@ import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { queryKeys } from "@/lib/query-keys";
-import type {
-  KitchenOrderResponse,
-  OrderSummaryResponse,
-  TableResponse,
-  UserRole,
-} from "@/lib/types";
+import type { KitchenOrderResponse, TableResponse, UserRole } from "@/lib/types";
+
+import { useOpenOrders } from "./use-open-orders";
 
 /** Ordenes que caja puede cobrar: ya pasaron por el mesero. */
 const PAYABLE_STATUSES = new Set(["SENT", "READY"]);
@@ -38,11 +35,7 @@ export function useNavCounts(role: UserRole | undefined): Record<string, number 
     enabled: canReadOrders,
   });
 
-  const ordersQuery = useQuery({
-    queryKey: queryKeys.orders.all(),
-    queryFn: () => api.get<OrderSummaryResponse[]>(endpoints.orders.list()),
-    enabled: canReadOrders,
-  });
+  const { orders: openOrders } = useOpenOrders({ enabled: canReadOrders });
 
   const kitchenQuery = useQuery({
     queryKey: queryKeys.kitchen.orders(),
@@ -53,6 +46,6 @@ export function useNavCounts(role: UserRole | undefined): Record<string, number 
   return {
     "/waiter": tablesQuery.data?.length,
     "/kitchen": kitchenQuery.data?.length,
-    "/cashier": ordersQuery.data?.filter((order) => PAYABLE_STATUSES.has(order.status)).length,
+    "/cashier": openOrders?.filter((order) => PAYABLE_STATUSES.has(order.status)).length,
   };
 }

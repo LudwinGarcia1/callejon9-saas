@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+import { apiRequestHeaders } from "@/lib/client-ip";
 import { isProtectedPagePath, loginPathFor } from "@/lib/protected-pages";
 import { PATHNAME_HEADER } from "@/lib/request-headers";
 import { contentSecurityPolicy } from "@/lib/security-headers";
@@ -25,9 +26,12 @@ import { contentSecurityPolicy } from "@/lib/security-headers";
  * cabecera de peticion es la via soportada.
  */
 export function middleware(request: NextRequest) {
-  // La API conserva el rewrite y la politica emitida por Spring.
+  // La API conserva el rewrite y la politica emitida por Spring. Solo se le
+  // agrega la IP del navegador para los limites por IP (CAL-169).
   if (request.nextUrl.pathname === "/api" || request.nextUrl.pathname.startsWith("/api/")) {
-    return NextResponse.next();
+    return NextResponse.next({
+      request: { headers: apiRequestHeaders(request.headers, process.env.BACKEND_PROXY_SECRET) },
+    });
   }
 
   const nonceBytes = crypto.getRandomValues(new Uint8Array(16));

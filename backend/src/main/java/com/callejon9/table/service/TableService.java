@@ -1,10 +1,12 @@
 package com.callejon9.table.service;
 
+import com.callejon9.platform.tenant.service.PlanLimitService;
 import com.callejon9.shared.error.BusinessRuleException;
 import com.callejon9.shared.error.ResourceNotFoundException;
 import com.callejon9.table.domain.RestaurantTable;
 import com.callejon9.table.domain.TableStatus;
 import com.callejon9.table.repository.RestaurantTableRepository;
+import com.callejon9.tenancy.TenantContext;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -20,9 +22,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class TableService {
 
     private final RestaurantTableRepository tableRepository;
+    private final PlanLimitService planLimitService;
 
-    public TableService(RestaurantTableRepository tableRepository) {
+    public TableService(RestaurantTableRepository tableRepository, PlanLimitService planLimitService) {
         this.tableRepository = tableRepository;
+        this.planLimitService = planLimitService;
     }
 
     /**
@@ -45,6 +49,8 @@ public class TableService {
             throw new BusinessRuleException(
                     "Ya existe una mesa con el numero " + number + ".");
         }
+
+        planLimitService.assertCanAddTable(TenantContext.require());
 
         return tableRepository.save(RestaurantTable.builder()
                 .number(number)
@@ -165,6 +171,10 @@ public class TableService {
         if (!active && table.getStatus() == TableStatus.OCCUPIED) {
             throw new BusinessRuleException(
                     "No se puede dar de baja una mesa con comanda abierta.");
+        }
+
+        if (active && !table.isActive()) {
+            planLimitService.assertCanAddTable(TenantContext.require());
         }
 
         table.setActive(active);

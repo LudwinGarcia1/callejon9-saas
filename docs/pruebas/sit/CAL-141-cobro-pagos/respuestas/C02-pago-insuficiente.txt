@@ -1,0 +1,25 @@
+# Caja envía pagos que no cubren el total
+# 2026-10-28 14:12:04 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders/3ef3b8fe-2f3c-4722-a868-60ed3f7be29b/checkout
+Content-Type: application/json
+
+{
+  "payments": [
+    {
+      "method": "CASH",
+      "amount": 50
+    }
+  ],
+  "tipPercent": 0
+}
+
+HTTP 422
+Content-Type: application/problem+json
+
+{
+  "type": "about:blank",
+  "title": "Unprocessable Entity",
+  "status": 422,
+  "detail": "Los pagos no cubren el total de la cuenta.",
+  "instance": "/api/v1/orders/3ef3b8fe-2f3c-4722-a868-60ed3f7be29b/checkout"
+}

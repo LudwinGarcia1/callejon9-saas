@@ -1,6 +1,7 @@
 package com.callejon9.config;
 
 import com.callejon9.tenancy.TenantFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -14,15 +15,19 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy;
+import org.springframework.security.web.util.matcher.AnyRequestMatcher;
 
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
 
     private final TenantFilter tenantFilter;
+    private final boolean hstsOnAnyRequest;
 
-    public SecurityConfig(TenantFilter tenantFilter) {
+    public SecurityConfig(TenantFilter tenantFilter,
+                          @Value("${app.security.hsts-on-any-request:false}") boolean hstsOnAnyRequest) {
         this.tenantFilter = tenantFilter;
+        this.hstsOnAnyRequest = hstsOnAnyRequest;
     }
 
     /** BCrypt acepta los prefijos $2a$, $2b$ y $2y$, por lo que los hashes
@@ -46,9 +51,15 @@ public class SecurityConfig {
                         .frameOptions(frame -> frame.deny())
                         .contentTypeOptions(contentType -> {})
                         .referrerPolicy(referrer -> referrer.policy(ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-                        // Spring solo emite HSTS cuando la peticion es segura (HTTPS).
-                        .httpStrictTransportSecurity(hsts -> hsts
-                                .maxAgeInSeconds(31536000).includeSubDomains(false).preload(false)))
+                        // Por defecto Spring solo emite HSTS cuando la peticion es
+                        // segura (HTTPS). Detras de App Service nunca lo es, y prod
+                        // lo emite siempre (app.security.hsts-on-any-request).
+                        .httpStrictTransportSecurity(hsts -> {
+                            hsts.maxAgeInSeconds(31536000).includeSubDomains(false).preload(false);
+                            if (hstsOnAnyRequest) {
+                                hsts.requestMatcher(AnyRequestMatcher.INSTANCE);
+                            }
+                        }))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(e -> e.authenticationEntryPoint(
                         new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))

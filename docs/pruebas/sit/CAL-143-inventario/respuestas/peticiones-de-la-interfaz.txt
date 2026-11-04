@@ -1,0 +1,96 @@
+# Peticiones de la interfaz · admin@pruebas.com
+# 2026-10-28 14:18:02 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/inventory/items
+Content-Type: application/json
+
+{"name":"SIT CAL-143 Tortilla 1417","unit":"kg","minStock":2,"unitCost":25,"initialStock":10}
+
+HTTP 201
+Content-Type: application/json
+
+{
+  "id": "64093307-dba5-47c8-85bb-32724f8042fc",
+  "name": "SIT CAL-143 Tortilla 1417",
+  "unit": "kg",
+  "stock": 10,
+  "minStock": 2,
+  "unitCost": 25,
+  "active": true,
+  "level": "OK"
+}
+
+# Peticiones de la interfaz · cocina@pruebas.com
+# 2026-10-28 14:18:06 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/inventory/movements
+Content-Type: application/json
+
+{"inventoryItemId":"64093307-dba5-47c8-85bb-32724f8042fc","movementType":"OUT","quantity":3,"reason":"Salida para producción, SIT CAL-143"}
+
+HTTP 201
+Content-Type: application/json
+
+{
+  "id": "e7191a12-3692-4d6c-b270-d8e106f05339",
+  "inventoryItemId": "64093307-dba5-47c8-85bb-32724f8042fc",
+  "movementType": "OUT",
+  "quantity": 3,
+  "reason": "Salida para producción, SIT CAL-143",
+  "createdAt": "2026-10-28T20:18:06.386717178Z"
+}
+
+# Peticiones de la interfaz · admin@pruebas.com
+# 2026-10-28 14:18:13 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+PATCH /api/v1/inventory/items/64093307-dba5-47c8-85bb-32724f8042fc
+Content-Type: application/json
+
+{"active":false}
+
+HTTP 200
+Content-Type: application/json
+
+{
+  "id": "64093307-dba5-47c8-85bb-32724f8042fc",
+  "name": "SIT CAL-143 Tortilla 1417",
+  "unit": "kg",
+  "stock": 7,
+  "minStock": 2,
+  "unitCost": 25,
+  "active": false,
+  "level": "OK"
+}
+
+# Peticiones de la interfaz · cocina@pruebas.com
+# 2026-10-28 14:18:14 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/inventory/movements
+Content-Type: application/json
+
+{"inventoryItemId":"64093307-dba5-47c8-85bb-32724f8042fc","movementType":"OUT","quantity":1,"reason":"Intento sobre insumo dado de baja, SIT CAL-143"}
+
+HTTP 409
+Content-Type: application/problem+json
+
+{
+  "type": "about:blank",
+  "title": "Regla de negocio",
+  "status": 409,
+  "detail": "El insumo 'SIT CAL-143 Tortilla 1417' esta dado de baja. Reactivalo para poder moverlo.",
+  "instance": "/api/v1/inventory/movements"
+}
+
+# Peticiones de la interfaz · cocina@pruebas.com
+# 2026-10-28 14:18:15 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/inventory/movements
+Content-Type: application/json
+
+{"inventoryItemId":"64093307-dba5-47c8-85bb-32724f8042fc","movementType":"OUT","quantity":1,"reason":"Intento directo, SIT CAL-143"}
+
+HTTP 409
+Content-Type: application/problem+json
+
+{
+  "type": "about:blank",
+  "title": "Regla de negocio",
+  "status": 409,
+  "detail": "El insumo 'SIT CAL-143 Tortilla 1417' esta dado de baja. Reactivalo para poder moverlo.",
+  "instance": "/api/v1/inventory/movements"
+}

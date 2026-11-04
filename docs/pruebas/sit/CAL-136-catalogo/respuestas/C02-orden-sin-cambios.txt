@@ -1,0 +1,21 @@
+# La orden de prueba después de los dos intentos
+# 2026-10-28 14:01:35 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+GET /api/v1/orders/885a7244-31ec-4303-b446-2c285571b7aa
+
+
+HTTP 200
+Content-Type: application/json
+
+{
+  "id": "885a7244-31ec-4303-b446-2c285571b7aa",
+  "folio": "ORD-261028200124",
+  "tableId": "4edb1976-8287-434c-9785-7d6787883bee",
+  "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+  "guestCount": 2,
+  "status": "NEW",
+  "total": 0,
+  "openedAt": "2026-10-28T20:01:24.783783Z",
+  "sentToKitchenAt": null,
+  "closedAt": null,
+  "items": []
+}

@@ -505,7 +505,7 @@ class CheckoutControllerTest {
 
         mockMvc.perform(get("/api/v1/orders").cookie(cookieFor(cashier)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(orderId.toString()));
+                .andExpect(jsonPath("$.content[0].id").value(orderId.toString()));
     }
 
     @Test

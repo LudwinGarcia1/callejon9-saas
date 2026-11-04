@@ -1,0 +1,40 @@
+# Ventas del día con la sesión de caja
+# 2026-10-28 14:20:38 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+GET /api/v1/sales?from=2026-10-28&to=2026-10-28
+
+
+HTTP 200
+Content-Type: application/json
+
+{
+  "sales": [
+    {
+      "id": "be65f367-c292-4ba2-bf95-b2cebbeed708",
+      "orderFolio": "ORD-261028201139",
+      "tableNumber": 1,
+      "cashierName": "Cajero de turno",
+      "ticketId": "564335dd-e8a5-4e8a-ad0f-5456d205308f",
+      "paymentMethod": "MIXED",
+      "subtotal": 325,
+      "tip": 32.5,
+      "total": 357.5,
+      "createdAt": "2026-10-28T20:12:11.111264Z"
+    }
+  ],
+  "summary": {
+    "count": 1,
+    "total": 357.5
+  },
+  "paymentMix": [
+    {
+      "method": "CASH",
+      "count": 1,
+      "total": 200
+    },
+    {
+      "method": "CARD",
+      "count": 1,
+      "total": 157.5
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+# CAL-169 · fase A: logins fallidos por restohub con correos inexistentes distintos (límite 20 por IP en 15 min)
+# Inicio 2026-10-30 19:58:27 America/Mexico_City
+2026-10-30 19:58:35  intento  1 · restohub -> HTTP 401
+2026-10-30 19:58:36  intento  2 · restohub -> HTTP 401
+2026-10-30 19:58:36  intento  3 · restohub -> HTTP 401
+2026-10-30 19:58:36  intento  4 · restohub -> HTTP 401
+2026-10-30 19:58:37  intento  5 · restohub -> HTTP 401
+2026-10-30 19:58:37  intento  6 · restohub -> HTTP 401
+2026-10-30 19:58:37  intento  7 · restohub -> HTTP 401
+2026-10-30 19:58:38  intento  8 · restohub -> HTTP 401
+2026-10-30 19:58:38  intento  9 · restohub -> HTTP 401
+2026-10-30 19:58:38  intento 10 · restohub -> HTTP 401
+2026-10-30 19:58:38  intento 11 · restohub -> HTTP 401
+2026-10-30 19:58:39  intento 12 · restohub -> HTTP 401
+2026-10-30 19:58:39  intento 13 · restohub -> HTTP 401
+2026-10-30 19:58:39  intento 14 · restohub -> HTTP 401
+2026-10-30 19:58:39  intento 15 · restohub -> HTTP 401
+2026-10-30 19:58:40  intento 16 · restohub -> HTTP 401
+2026-10-30 19:58:40  intento 17 · restohub -> HTTP 401
+2026-10-30 19:58:40  intento 18 · restohub -> HTTP 401
+2026-10-30 19:58:41  intento 19 · restohub -> HTTP 401
+2026-10-30 19:58:41  intento 20 · restohub -> HTTP 401
+2026-10-30 19:58:41  intento 21 · restohub -> HTTP 429 (Retry-After 895) · Demasiados intentos fallidos. Intenta de nuevo en 15 minutos.
+# Fase B: misma red, directo a la API, con otro correo inexistente
+2026-10-30 19:58:41  directo -> HTTP 429 (Retry-After 894) · Demasiados intentos fallidos. Intenta de nuevo en 15 minutos.
+# Fase C: el ejecutor informa que entró desde su teléfono con datos móviles (otra red) con mesero@pruebas.com, sin bloqueo. Comprobación de la laptop justo después:
+2026-10-30 20:04:26  login · restohub -> HTTP 429 (Retry-After 550)
+2026-10-30 20:04:26  login · directo -> HTTP 429 (Retry-After 550)

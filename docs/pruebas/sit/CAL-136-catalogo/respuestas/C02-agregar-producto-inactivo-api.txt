@@ -1,0 +1,24 @@
+# El mesero envía el producto dado de baja directo a la API, sin pasar por el menú
+# 2026-10-28 14:01:34 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders/885a7244-31ec-4303-b446-2c285571b7aa/items
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": "c80c1f56-9313-4de5-a2aa-8663a34afc2b",
+      "quantity": 1
+    }
+  ]
+}
+
+HTTP 409
+Content-Type: application/problem+json
+
+{
+  "type": "about:blank",
+  "title": "Regla de negocio",
+  "status": 409,
+  "detail": "El producto SIT CAL-136 Tostada de prueba 1401 esta inactivo.",
+  "instance": "/api/v1/orders/885a7244-31ec-4303-b446-2c285571b7aa/items"
+}

@@ -1,0 +1,22 @@
+# Cocina envía directo a la API una salida sobre el insumo dado de baja
+# 2026-10-28 14:18:15 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/inventory/movements
+Content-Type: application/json
+
+{
+  "inventoryItemId": "64093307-dba5-47c8-85bb-32724f8042fc",
+  "movementType": "OUT",
+  "quantity": 1,
+  "reason": "Intento directo, SIT CAL-143"
+}
+
+HTTP 409
+Content-Type: application/problem+json
+
+{
+  "type": "about:blank",
+  "title": "Regla de negocio",
+  "status": 409,
+  "detail": "El insumo 'SIT CAL-143 Tortilla 1417' esta dado de baja. Reactivalo para poder moverlo.",
+  "instance": "/api/v1/inventory/movements"
+}

@@ -1,0 +1,20 @@
+# El mesero de `pruebas` intenta abrir una orden sobre la mesa del restaurante B
+# 2026-10-28 14:35:02 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/orders
+Content-Type: application/json
+
+{
+  "tableId": "589825be-1cba-4140-aa41-09536991dc82",
+  "guestCount": 1
+}
+
+HTTP 404
+Content-Type: application/problem+json
+
+{
+  "type": "about:blank",
+  "title": "Recurso no encontrado",
+  "status": 404,
+  "detail": "La mesa no existe.",
+  "instance": "/api/v1/orders"
+}

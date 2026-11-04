@@ -30,8 +30,11 @@ describe("query cache boundaries", () => {
   });
 
   it("changes cache identity when date ranges or inventory filters change", () => {
-    expect(queryKeys.sales.history("2026-10-01", "2026-10-08"))
-      .not.toEqual(queryKeys.sales.history("2026-10-02", "2026-10-08"));
+    expect(queryKeys.sales.history("2026-10-01", "2026-10-08", 0, 25))
+      .not.toEqual(queryKeys.sales.history("2026-10-02", "2026-10-08", 0, 25));
+    expect(queryKeys.sales.history("2026-10-01", "2026-10-08", 0, 25))
+      .not.toEqual(queryKeys.sales.history("2026-10-01", "2026-10-08", 1, 25));
+    expect(queryKeys.sales.history("2026-10-01", "2026-10-08", 0, 25)[0]).toBe(queryKeys.sales.all()[0]);
     expect(queryKeys.analytics.summary("2026-10-01", "2026-10-08"))
       .not.toEqual(queryKeys.analytics.summary("2026-10-01", "2026-10-09"));
     expect(queryKeys.inventory.movements("a", "b", "item-1"))

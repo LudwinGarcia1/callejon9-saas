@@ -36,10 +36,8 @@ spring:
           time_zone: UTC
 
 app:
-  # Zona horaria del negocio. Define que instantes delimitan "un dia" en el
-  # historial de ventas. Resolverlo en UTC vaciaba la pantalla a partir de las
-  # 18:00 locales, justo durante el servicio de la noche.
-  timezone: America/Mexico_City
+  # La zona horaria que delimita "un dia" ya no es global: cada restaurante
+  # la guarda en tenants.timezone (V15, CAL-19). Ver BusinessCalendar.
 
   jwt:
     secret: ${JWT_SECRET:dev-only-secret-change-me-min-32-bytes-long!!}
@@ -66,6 +64,14 @@ app:
       max-failures-per-ip: ${AUTH_LOGIN_MAX_FAILURES_IP:20}
       window: ${AUTH_LOGIN_WINDOW:15m}
 
+  security:
+    # Spring solo emite Strict-Transport-Security cuando la peticion le llega
+    # como HTTPS. Detras de un proxy que termina TLS (App Service) la ve como
+    # HTTP y la omite. En true la emite en toda respuesta; un navegador ignora
+    # HSTS recibido por HTTP (RFC 6797, 8.1), asi que solo surte efecto por
+    # HTTPS. El perfil prod lo fija en true (CAL-183).
+    hsts-on-any-request: false
+
   client-ip:
     # Proxies cuya entrada en X-Forwarded-For se salta al buscar la IP del
     # cliente (ClientIp), ademas de la red local, en la que siempre se confia.
@@ -73,6 +79,11 @@ app:
     # salida del App Service del frontend: sin ellas, todos los usuarios que
     # entran por la web compartirian la llave de los limites por IP.
     trusted-proxies: ${APP_TRUSTED_PROXIES:}
+    # Secreto compartido con el frontend (CAL-169). Con el, el middleware de
+    # Next reenvia la IP del navegador en X-Callejon9-Client-Ip y esa es la
+    # llave, sin depender de la IP de salida del frontend. Vacio, las cabeceras
+    # se ignoran. Debe ser el mismo valor que BACKEND_PROXY_SECRET del frontend.
+    proxy-secret: ${APP_PROXY_SECRET:}
 
   signup:
     # Freno contra altas masivas (SignupRateLimiter). Cada alta que pasa la

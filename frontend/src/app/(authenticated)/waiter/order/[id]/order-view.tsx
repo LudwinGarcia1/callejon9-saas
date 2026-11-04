@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { XIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -58,6 +59,7 @@ export function OrderView({ orderId }: OrderViewProps) {
   const { user } = useSession();
   const queryClient = useQueryClient();
   const [cart, setCart] = useState<CartLine[]>([]);
+  const nextLineKey = useRef(0);
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
 
   const orderQuery = useQuery({
@@ -80,10 +82,14 @@ export function OrderView({ orderId }: OrderViewProps) {
   const addItemsMutation = useMutation({
     mutationFn: (lines: CartLine[]) =>
       api.post<OrderResponse>(endpoints.orders.items(orderId), {
-        items: lines.map((line) => ({
-          productId: line.product.id,
-          quantity: line.quantity,
-        })),
+        items: lines.map((line) => {
+          const notes = line.notes.trim();
+          return {
+            productId: line.product.id,
+            quantity: line.quantity,
+            ...(notes ? { notes } : {}),
+          };
+        }),
       } satisfies AddOrderItemsRequest),
     onSuccess: (order) => {
       // El endpoint ya devuelve la orden completa (200): se guarda tal cual,
@@ -97,6 +103,22 @@ export function OrderView({ orderId }: OrderViewProps) {
       toast.error(
         error instanceof ApiError ? error.message : "No se pudieron agregar los productos.",
       );
+    },
+  });
+
+  /** Quita una linea ya agregada mientras la orden sigue en NEW: corrige un
+   * error de captura sin cancelar toda la orden. Como agregar, el endpoint
+   * devuelve la orden completa con el total recalculado. */
+  const removeItemMutation = useMutation({
+    mutationFn: (itemId: string) =>
+      api.del<OrderResponse>(endpoints.orders.item(orderId, itemId)),
+    onSuccess: (order) => {
+      queryClient.setQueryData(queryKeys.orders.detail(orderId), order);
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all() });
+      toast.success("Producto quitado de la orden.");
+    },
+    onError: (error) => {
+      toast.error(error instanceof ApiError ? error.message : "No se pudo quitar el producto.");
     },
   });
 
@@ -135,34 +157,43 @@ export function OrderView({ orderId }: OrderViewProps) {
     },
   });
 
+  /** Volver a tocar un producto suma una unidad a su linea sin nota. Si todas
+   * sus lineas ya llevan nota, abre una nueva: la unidad extra no hereda una
+   * indicacion que el comensal no pidio. */
   function addProductToCart(product: ProductResponse) {
     setCart((previous) => {
-      const existing = previous.find((line) => line.product.id === product.id);
-      if (existing) {
+      const plain = previous.find(
+        (line) => line.product.id === product.id && line.notes.trim() === "",
+      );
+      if (plain) {
         return previous.map((line) =>
-          line.product.id === product.id
+          line.key === plain.key
             ? { ...line, quantity: Math.min(line.quantity + 1, MAX_LINE_QUANTITY) }
             : line,
         );
       }
-      return [...previous, { product, quantity: 1 }];
+      nextLineKey.current += 1;
+      return [
+        ...previous,
+        { key: `${product.id}-${nextLineKey.current}`, product, quantity: 1, notes: "" },
+      ];
     });
   }
 
-  function incrementLine(productId: string) {
+  function incrementLine(lineKey: string) {
     setCart((previous) =>
       previous.map((line) =>
-        line.product.id === productId
+        line.key === lineKey
           ? { ...line, quantity: Math.min(line.quantity + 1, MAX_LINE_QUANTITY) }
           : line,
       ),
     );
   }
 
-  function decrementLine(productId: string) {
+  function decrementLine(lineKey: string) {
     setCart((previous) =>
       previous.flatMap((line) => {
-        if (line.product.id !== productId) {
+        if (line.key !== lineKey) {
           return [line];
         }
         if (line.quantity <= 1) {
@@ -173,8 +204,14 @@ export function OrderView({ orderId }: OrderViewProps) {
     );
   }
 
-  function removeLine(productId: string) {
-    setCart((previous) => previous.filter((line) => line.product.id !== productId));
+  function removeLine(lineKey: string) {
+    setCart((previous) => previous.filter((line) => line.key !== lineKey));
+  }
+
+  function changeLineNotes(lineKey: string, notes: string) {
+    setCart((previous) =>
+      previous.map((line) => (line.key === lineKey ? { ...line, notes } : line)),
+    );
   }
 
   const order = orderQuery.data;
@@ -245,8 +282,26 @@ export function OrderView({ orderId }: OrderViewProps) {
                         amount={item.unitPrice * item.quantity}
                         className="w-24 text-right text-[15px]"
                       />
+                      {order.status === "NEW" && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          disabled={removeItemMutation.isPending}
+                          onClick={() => removeItemMutation.mutate(item.id)}
+                          aria-label={`Quitar ${item.productName} de la orden`}
+                        >
+                          <XIcon />
+                        </Button>
+                      )}
                     </div>
                   ))}
+                  {order.status === "NEW" && (
+                    <p className="mt-2.5 text-xs text-muted-foreground">
+                      Antes de enviar a cocina puedes quitar un producto con la{" "}
+                      <span aria-hidden>×</span> de su línea.
+                    </p>
+                  )}
                 </>
               )}
 
@@ -296,6 +351,7 @@ export function OrderView({ orderId }: OrderViewProps) {
             onIncrement={incrementLine}
             onDecrement={decrementLine}
             onRemove={removeLine}
+            onNotesChange={changeLineNotes}
             onCommit={() => addItemsMutation.mutate(cart)}
             isCommitting={addItemsMutation.isPending}
             disabled={order.status === "PAID" || order.status === "CANCELED"}

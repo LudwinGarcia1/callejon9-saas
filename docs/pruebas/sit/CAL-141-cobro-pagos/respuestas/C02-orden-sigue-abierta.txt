@@ -1,0 +1,31 @@
+# La orden después del rechazo
+# 2026-10-28 14:12:05 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+GET /api/v1/orders/3ef3b8fe-2f3c-4722-a868-60ed3f7be29b
+
+
+HTTP 200
+Content-Type: application/json
+
+{
+  "id": "3ef3b8fe-2f3c-4722-a868-60ed3f7be29b",
+  "folio": "ORD-261028201148",
+  "tableId": "0568fb35-160c-4be4-a0cb-cc8c42962644",
+  "waiterId": "d2eb44bd-506d-4660-9d9e-2d3f67a13b2d",
+  "guestCount": 2,
+  "status": "SENT",
+  "total": 110,
+  "openedAt": "2026-10-28T20:11:48.098575Z",
+  "sentToKitchenAt": "2026-10-28T20:11:53.365286Z",
+  "closedAt": null,
+  "items": [
+    {
+      "id": "0c13a246-ba75-4cd7-884f-3479436c2805",
+      "productId": "fca14107-3ac2-4ec4-a338-348b2b5d2b43",
+      "productName": "Queso fundido",
+      "unitPrice": 110,
+      "quantity": 1,
+      "kitchenStatus": "PENDING",
+      "notes": null
+    }
+  ]
+}

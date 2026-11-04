@@ -6,12 +6,15 @@
 #
 # Uso: bash scripts/verify-images.sh
 # En Git Bash de Windows: MSYS_NO_PATHCONV=1 bash scripts/verify-images.sh
+# VERIFY_TAG cambia la etiqueta de las imagenes (por defecto, verify). Jenkins
+# la fija por build para que dos builds simultaneos no compartan imagenes.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
 ref="${VCS_REF:-$(git rev-parse --short HEAD)}"
-backend=callejon9-backend:verify
-frontend=callejon9-frontend:verify
+tag="${VERIFY_TAG:-verify}"
+backend=callejon9-backend:$tag
+frontend=callejon9-frontend:$tag
 
 fail() {
     echo "ERROR: $*" >&2

@@ -189,23 +189,23 @@ class SalesControllerTest {
 
         mockMvc.perform(get("/api/v1/sales").cookie(cookieFor(cashier)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.sales.length()").value(2))
+                .andExpect(jsonPath("$.sales.content.length()").value(2))
                 // Mas reciente primero: la segunda venta (Agua) aparece antes que la primera (Taco).
-                .andExpect(jsonPath("$.sales[0].id").value(second.ticket().get("saleId").asText()))
-                .andExpect(jsonPath("$.sales[0].ticketId").value(second.ticket().get("id").asText()))
-                .andExpect(jsonPath("$.sales[0].orderFolio").value(second.orderFolio()))
-                .andExpect(jsonPath("$.sales[0].tableNumber").value(table.getNumber()))
-                .andExpect(jsonPath("$.sales[0].cashierName").value("Cajero Historial"))
-                .andExpect(jsonPath("$.sales[0].paymentMethod").value("CARD"))
-                .andExpect(jsonPath("$.sales[0].subtotal").value(30.00))
-                .andExpect(jsonPath("$.sales[0].tip").value(0.00))
-                .andExpect(jsonPath("$.sales[0].total").value(30.00))
-                .andExpect(jsonPath("$.sales[1].id").value(first.ticket().get("saleId").asText()))
-                .andExpect(jsonPath("$.sales[1].ticketId").value(first.ticket().get("id").asText()))
-                .andExpect(jsonPath("$.sales[1].orderFolio").value(first.orderFolio()))
-                .andExpect(jsonPath("$.sales[1].subtotal").value(25.00))
-                .andExpect(jsonPath("$.sales[1].tip").value(2.50))
-                .andExpect(jsonPath("$.sales[1].total").value(27.50));
+                .andExpect(jsonPath("$.sales.content[0].id").value(second.ticket().get("saleId").asText()))
+                .andExpect(jsonPath("$.sales.content[0].ticketId").value(second.ticket().get("id").asText()))
+                .andExpect(jsonPath("$.sales.content[0].orderFolio").value(second.orderFolio()))
+                .andExpect(jsonPath("$.sales.content[0].tableNumber").value(table.getNumber()))
+                .andExpect(jsonPath("$.sales.content[0].cashierName").value("Cajero Historial"))
+                .andExpect(jsonPath("$.sales.content[0].paymentMethod").value("CARD"))
+                .andExpect(jsonPath("$.sales.content[0].subtotal").value(30.00))
+                .andExpect(jsonPath("$.sales.content[0].tip").value(0.00))
+                .andExpect(jsonPath("$.sales.content[0].total").value(30.00))
+                .andExpect(jsonPath("$.sales.content[1].id").value(first.ticket().get("saleId").asText()))
+                .andExpect(jsonPath("$.sales.content[1].ticketId").value(first.ticket().get("id").asText()))
+                .andExpect(jsonPath("$.sales.content[1].orderFolio").value(first.orderFolio()))
+                .andExpect(jsonPath("$.sales.content[1].subtotal").value(25.00))
+                .andExpect(jsonPath("$.sales.content[1].tip").value(2.50))
+                .andExpect(jsonPath("$.sales.content[1].total").value(27.50));
     }
 
     /**
@@ -247,8 +247,8 @@ class SalesControllerTest {
                         .param("to", targetDay.toString())
                         .cookie(cookieFor(cashier)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.sales.length()").value(1))
-                .andExpect(jsonPath("$.sales[0].id").value(dinnerSaleId.toString()))
+                .andExpect(jsonPath("$.sales.content.length()").value(1))
+                .andExpect(jsonPath("$.sales.content[0].id").value(dinnerSaleId.toString()))
                 .andExpect(jsonPath("$.summary.count").value(1));
     }
 
@@ -274,8 +274,8 @@ class SalesControllerTest {
                         .param("to", targetDay.toString())
                         .cookie(cookieFor(cashier)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.sales.length()").value(1))
-                .andExpect(jsonPath("$.sales[0].id").value(firstMinuteSaleId.toString()));
+                .andExpect(jsonPath("$.sales.content.length()").value(1))
+                .andExpect(jsonPath("$.sales.content[0].id").value(firstMinuteSaleId.toString()));
     }
 
     @Test
@@ -296,16 +296,16 @@ class SalesControllerTest {
                         .param("to", tenDaysAgo.toString())
                         .cookie(cookieFor(cashier)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.sales.length()").value(1))
-                .andExpect(jsonPath("$.sales[0].id").value(oldSaleId.toString()))
+                .andExpect(jsonPath("$.sales.content.length()").value(1))
+                .andExpect(jsonPath("$.sales.content[0].id").value(oldSaleId.toString()))
                 .andExpect(jsonPath("$.summary.count").value(1))
                 .andExpect(jsonPath("$.summary.total").value(25.00));
 
         // Sin parametros (hoy) solo debe traer la venta de hoy, no la vieja.
         mockMvc.perform(get("/api/v1/sales").cookie(cookieFor(cashier)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.sales.length()").value(1))
-                .andExpect(jsonPath("$.sales[0].id")
+                .andExpect(jsonPath("$.sales.content.length()").value(1))
+                .andExpect(jsonPath("$.sales.content[0].id")
                         .value(today.ticket().get("saleId").asText()));
     }
 
@@ -322,9 +322,51 @@ class SalesControllerTest {
         // 19.99 + 10.01 + (19.99*2) = 69.98
         mockMvc.perform(get("/api/v1/sales").cookie(cookieFor(cashier)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.sales.length()").value(3))
+                .andExpect(jsonPath("$.sales.content.length()").value(3))
                 .andExpect(jsonPath("$.summary.count").value(3))
                 .andExpect(jsonPath("$.summary.total").value(69.98));
+    }
+
+    @Test
+    @DisplayName("las filas se paginan y el resumen sigue cubriendo el rango completo (CAL-16)")
+    void rowsArePagedButSummaryCoversTheWholeRange() throws Exception {
+        Product taco = createProduct("Taco", "25.00");
+        Product agua = createProduct("Agua", "10.00");
+        Product torta = createProduct("Torta", "40.00");
+        checkout(waiter, cashier, table, taco, 1, "CASH", 0);
+        checkout(waiter, cashier, table, agua, 1, "CARD", 0);
+        checkout(waiter, cashier, table, torta, 1, "CASH", 0);
+
+        mockMvc.perform(get("/api/v1/sales").param("size", "2").cookie(cookieFor(cashier)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sales.content.length()").value(2))
+                .andExpect(jsonPath("$.sales.page").value(0))
+                .andExpect(jsonPath("$.sales.size").value(2))
+                .andExpect(jsonPath("$.sales.totalElements").value(3))
+                .andExpect(jsonPath("$.sales.totalPages").value(2))
+                .andExpect(jsonPath("$.summary.count").value(3))
+                .andExpect(jsonPath("$.summary.total").value(75.00));
+
+        mockMvc.perform(get("/api/v1/sales").param("size", "2").param("page", "1").cookie(cookieFor(cashier)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sales.content.length()").value(1))
+                .andExpect(jsonPath("$.summary.count").value(3));
+
+        mockMvc.perform(get("/api/v1/sales").param("sort", "total,asc").cookie(cookieFor(cashier)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.sales.content[0].total").value(10.00))
+                .andExpect(jsonPath("$.sales.content[2].total").value(40.00));
+    }
+
+    @Test
+    @DisplayName("sort fuera de la allowlist o size excesivo responden 400 con Problem Detail")
+    void rejectsInvalidPageParameters() throws Exception {
+        mockMvc.perform(get("/api/v1/sales").param("sort", "cashierName").cookie(cookieFor(cashier)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Paginacion invalida"));
+        mockMvc.perform(get("/api/v1/sales").param("size", "500").cookie(cookieFor(cashier)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Paginacion invalida"));
     }
 
     @Test
@@ -360,14 +402,15 @@ class SalesControllerTest {
         // Tenant A: solo su propia venta, nunca la de B.
         mockMvc.perform(get("/api/v1/sales").cookie(cookieFor(cashier)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.sales.length()").value(1))
+                .andExpect(jsonPath("$.sales.content.length()").value(1))
+                .andExpect(jsonPath("$.sales.totalElements").value(1))
                 .andExpect(jsonPath("$.summary.count").value(1))
                 .andExpect(jsonPath("$.summary.total").value(25.00));
 
         // Tenant B: solo la suya.
         mockMvc.perform(get("/api/v1/sales").cookie(cookieFor(cashierB)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.sales.length()").value(1))
+                .andExpect(jsonPath("$.sales.content.length()").value(1))
                 .andExpect(jsonPath("$.summary.count").value(1))
                 .andExpect(jsonPath("$.summary.total").value(40.00));
     }

@@ -1,0 +1,21 @@
+# Restaurante B: el administrador crea la mesa 1
+# 2026-10-28 14:34:43 America/Mexico_City · por el proxy https://restohub.azurewebsites.net
+POST /api/v1/tables
+Content-Type: application/json
+
+{
+  "number": 1,
+  "capacity": 4
+}
+
+HTTP 201
+Content-Type: application/json
+
+{
+  "id": "589825be-1cba-4140-aa41-09536991dc82",
+  "number": 1,
+  "capacity": 4,
+  "status": "FREE",
+  "waiterId": null,
+  "active": true
+}
