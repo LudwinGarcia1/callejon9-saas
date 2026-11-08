@@ -165,7 +165,7 @@ export function OrderScreen({ table, onBack, onSubmitted }: Props) {
           data={products}
           keyExtractor={(product) => product.id}
           contentContainerStyle={styles.list}
-          ListHeaderComponent={existing ? <Text style={styles.meta}>Agregar más productos</Text> : null}
+          ListHeaderComponent={existing ? <Text style={styles.meta}>Agregar más productos</Text> : undefined}
           ListEmptyComponent={<Text style={styles.meta}>No hay productos activos en el menú.</Text>}
           renderItem={({ item }) => (
             <View style={styles.product}>

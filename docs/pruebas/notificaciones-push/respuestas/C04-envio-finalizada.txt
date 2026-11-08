@@ -1,0 +1,20 @@
+Mensaje preparado:
+{
+  "to": "ExponentPushToken[VBTS…]",
+  "title": "Actualización de solicitud",
+  "body": "Tu solicitud ha finalizado",
+  "data": {
+    "eventType": "STATUS_CHANGED",
+    "status": "COMPLETED",
+    "requestId": "SOL-001"
+  },
+  "sound": "default",
+  "priority": "high",
+  "channelId": "solicitudes",
+  "ttl": 3600
+}
+
+Ticket de envío: {"status":"ok","id":"01a1bd20-5204-7719-8ee3-6e66d71fe7da"}
+
+Consultando el recibo en 5 s…
+Recibo: {"status":"ok"}

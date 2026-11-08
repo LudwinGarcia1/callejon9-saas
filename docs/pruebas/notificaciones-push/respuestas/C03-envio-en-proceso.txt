@@ -1,0 +1,17 @@
+Mensaje preparado:
+{
+  "to": "ExponentPushToken[VBTS…]",
+  "title": "Actualización de solicitud",
+  "body": "Tu solicitud se encuentra en proceso",
+  "data": {
+    "eventType": "STATUS_CHANGED",
+    "status": "IN_PROGRESS",
+    "requestId": "SOL-001"
+  },
+  "sound": "default",
+  "priority": "high",
+  "channelId": "solicitudes",
+  "ttl": 3600
+}
+
+Ticket de envío: {"status":"ok","id":"01a1bd1f-dc20-720c-ab4c-2d3e6040b7ca"}

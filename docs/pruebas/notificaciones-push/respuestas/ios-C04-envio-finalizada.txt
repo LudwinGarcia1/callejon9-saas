@@ -1,0 +1,20 @@
+Mensaje preparado:
+{
+  "to": "ExponentPushToken[TDX4…]",
+  "title": "Actualización de solicitud",
+  "body": "Tu solicitud ha finalizado",
+  "data": {
+    "eventType": "STATUS_CHANGED",
+    "status": "COMPLETED",
+    "requestId": "SOL-001"
+  },
+  "sound": "default",
+  "priority": "high",
+  "channelId": "solicitudes",
+  "ttl": 3600
+}
+
+Ticket de envío: {"status":"ok","id":"01a1bd49-83ad-70c6-83fe-d53f4a424c06"}
+
+Consultando el recibo en 5 s…
+Recibo: {"status":"ok"}

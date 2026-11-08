@@ -12,6 +12,7 @@ Cliente móvil del SaaS Callejón 9. Toma el flujo del mesero —ver mesas, capt
 | Agregar a una mesa ocupada | `OrderScreen`, `ResultScreen` | `GET /api/v1/orders`, `GET /api/v1/orders/{id}`, `POST /api/v1/orders/{id}/items` |
 | Consulta del catálogo | `ProductsScreen` | `GET /api/v1/products`, `GET /api/v1/categories` |
 | Registro de productos (solo ADMIN) | `ProductFormScreen` | `POST /api/v1/products` (nombre y precio obligatorios) |
+| Notificaciones push | `NotificationsScreen` (Avisos) | Expo Push Service: permiso, token y recepción; envío con `pnpm push:send` |
 | Edición de productos (solo ADMIN) | `ProductsScreen`, `ProductFormScreen` | `PUT /api/v1/products/{id}` (todos los campos), `PATCH /api/v1/products/{id}` (activar o desactivar), `GET /api/v1/products?includeInactive=true` |
 
 ## Dónde está cada cosa
@@ -22,7 +23,11 @@ Cliente móvil del SaaS Callejón 9. Toma el flujo del mesero —ver mesas, capt
 - `src/api/waiter.ts`: mesas, menú y pedidos.
 - `src/api/catalog.ts`: categorías, consulta, registro y edición de productos.
 - `src/validation/product.ts`: validación del formulario de producto antes de enviarlo.
-- `src/screens/`: las seis pantallas.
+- `src/notifications/`: contrato de los mensajes push (`messages.ts`) y registro, recepción y toque (`push.ts`).
+- `scripts/send-push.mts`: servicio remoto mínimo que envía una notificación de solicitud.
+- `src/screens/`: las siete pantallas.
+
+La práctica de notificaciones push (servicio elegido, función del token, configuración, seguridad y pruebas) está en [`docs/pruebas/notificaciones-push/`](../docs/pruebas/notificaciones-push/README.md). Recibir push remotos exige una development build en un teléfono físico: Expo Go en Android ya no los admite.
 
 La evidencia de la integración con la API en la nube (endpoints, seguridad y matriz de pruebas) está en [`docs/pruebas/integracion-movil-nube/`](../docs/pruebas/integracion-movil-nube/README.md).
 
@@ -39,7 +44,7 @@ La evidencia de la integración con la API en la nube (endpoints, seguridad y ma
 
 ## Ejecutar
 
-Requisitos: Node 20+, pnpm y la app **Expo Go** en el teléfono.
+Requisitos: Node 20+, pnpm y la app **Expo Go** (SDK 58) en el teléfono. Para recibir notificaciones push en Android hace falta una development build (`pnpm android`); en iPhone basta Expo Go. Ver [`docs/pruebas/notificaciones-push/`](../docs/pruebas/notificaciones-push/README.md#5-cómo-reproducir).
 
 ```powershell
 cd mobile
