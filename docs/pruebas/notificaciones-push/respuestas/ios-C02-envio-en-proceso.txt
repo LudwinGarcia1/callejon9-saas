@@ -1,0 +1,20 @@
+Mensaje preparado:
+{
+  "to": "ExponentPushToken[TDX4…]",
+  "title": "Actualización de solicitud",
+  "body": "Tu solicitud se encuentra en proceso",
+  "data": {
+    "eventType": "STATUS_CHANGED",
+    "status": "IN_PROGRESS",
+    "requestId": "SOL-001"
+  },
+  "sound": "default",
+  "priority": "high",
+  "channelId": "solicitudes",
+  "ttl": 3600
+}
+
+Ticket de envío: {"status":"ok","id":"01a1bd43-a82d-77ce-95f7-3c563cee5d43"}
+
+Consultando el recibo en 5 s…
+Recibo: {"status":"ok"}

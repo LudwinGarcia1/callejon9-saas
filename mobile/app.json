@@ -7,7 +7,8 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.callejon9.meseros"
     },
     "android": {
       "adaptiveIcon": {
@@ -16,10 +17,27 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.callejon9.meseros"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-status-bar",
+      [
+        "expo-notifications",
+        {
+          "color": "#2B2723",
+          "defaultChannel": "solicitudes"
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "37ff45b9-0a51-48db-99e4-769ab41458e3"
+      }
+    },
+    "owner": "octavioduarte"
   }
 }

@@ -40,3 +40,7 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Credenciales de Firebase / FCM
+google-services.json
+GoogleService-Info.plist
