@@ -13,6 +13,8 @@ resource "azurerm_service_plan" "backend" {
 }
 
 locals {
+  free_tier = var.app_service_sku == "F1"
+
   key_vault_reference = {
     for name, secret in azurerm_key_vault_secret.backend :
     name => "@Microsoft.KeyVault(SecretUri=${secret.versionless_id})"
@@ -49,8 +51,9 @@ resource "azurerm_linux_web_app" "api" {
 
   site_config {
     # Flyway and Spring Boot take tens of seconds to start; an unloaded app would
-    # repeat that on the first request after every idle period.
-    always_on           = true
+    # repeat that on the first request after every idle period. F1 does not
+    # allow Always On: Azure rejects the update if it is set.
+    always_on           = !local.free_tier
     minimum_tls_version = "1.2"
     ftps_state          = "Disabled"
     http2_enabled       = true

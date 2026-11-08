@@ -142,6 +142,11 @@
       "authority": "high"
     },
     {
+      "path": "workflow/decisions/2026-10-30-canal-tiempo-real-mismo-origen.md",
+      "kind": "decision",
+      "authority": "high"
+    },
+    {
       "path": "docs/cal-11-entorno-docker-compose.md",
       "kind": "operations",
       "authority": "high"

@@ -42,6 +42,9 @@ resource "azurerm_linux_web_app" "web" {
     minimum_tls_version = "1.2"
     ftps_state          = "Disabled"
     http2_enabled       = true
+    # Next proxies the /ws upgrade to the API (CAL-172). F1 allows 5
+    # concurrent WebSocket connections per app.
+    websockets_enabled = true
 
     # The package is the Next.js standalone output built by
     # scripts/deploy-frontend-azure.ps1. App Service sets HOSTNAME to the
