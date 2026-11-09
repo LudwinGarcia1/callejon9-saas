@@ -12,4 +12,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface TicketRepository extends JpaRepository<Ticket, UUID> {
 
     Optional<Ticket> findByFolio(String folio);
+
+    Optional<Ticket> findByOrderId(UUID orderId);
 }

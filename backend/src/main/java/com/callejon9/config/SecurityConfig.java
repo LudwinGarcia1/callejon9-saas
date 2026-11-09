@@ -72,6 +72,8 @@ public class SecurityConfig {
                                 "/api/v1/signup").permitAll()
                         // Rutas publicas de menu digital y auto-pedido por QR
                         .requestMatchers("/api/v1/public/**").permitAll()
+                        // Webhooks externos (ej. Mercado Pago)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/webhooks/**").permitAll()
                         // Probes del orquestador: dos rutas exactas y solo GET.
                         // El resto de /actuator/health/** conserva sesion.
                         .requestMatchers(HttpMethod.GET, "/actuator/health/liveness",

@@ -106,8 +106,11 @@ public class CheckoutService {
         var payments = PaymentAllocation.allocate(requestedPayments, total);
         PaymentMethod paymentMethod = payments.size() == 1 ? payments.getFirst().method() : PaymentMethod.MIXED;
 
-        var cashSession = cashSessionRepository.findOpenForCashierForUpdate(cashierId)
-                .orElseThrow(CashSessionRequiredException::new);
+        com.callejon9.cashier.domain.CashSession cashSession = null;
+        if (cashierId != null) {
+            cashSession = cashSessionRepository.findOpenForCashierForUpdate(cashierId)
+                    .orElseThrow(CashSessionRequiredException::new);
+        }
 
         Instant now = Instant.now();
 
@@ -115,7 +118,7 @@ public class CheckoutService {
                 .orderId(order.getId())
                 .tableId(order.getTableId())
                 .cashierId(cashierId)
-                .cashSessionId(cashSession.getId())
+                .cashSessionId(cashSession != null ? cashSession.getId() : null)
                 .status(SaleStatus.COMPLETED)
                 .paymentMethod(paymentMethod)
                 .subtotal(subtotal)
@@ -125,8 +128,13 @@ public class CheckoutService {
 
         for (var payment : payments) {
             paymentRepository.save(com.callejon9.sale.domain.Payment.builder()
-                    .saleId(sale.getId()).provider("MANUAL").method(payment.method())
-                    .amount(payment.amount()).receivedAmount(payment.receivedAmount()).status("COMPLETED").build());
+                    .saleId(sale.getId())
+                    .provider(payment.method() == PaymentMethod.MERCADOPAGO ? "MERCADOPAGO" : "MANUAL")
+                    .method(payment.method())
+                    .amount(payment.amount())
+                    .receivedAmount(payment.receivedAmount())
+                    .status("COMPLETED")
+                    .build());
         }
         paymentRepository.flush();
 
@@ -141,6 +149,90 @@ public class CheckoutService {
                 .subtotal(subtotal)
                 .tip(tip)
                 .tipPercent(tipPercent.setScale(2, RoundingMode.HALF_UP))
+                .total(total)
+                .paymentMethod(paymentMethod)
+                .closedAt(now)
+                .build());
+
+        order.setStatus(OrderStatus.PAID);
+        order.setClosedAt(now);
+        orderRepository.save(order);
+
+        if (order.getTableId() != null) {
+            tableService.free(order.getTableId());
+        }
+
+        return ticket;
+    }
+
+    @Transactional
+    public Ticket checkoutMercadoPago(UUID orderId, BigDecimal tipPercent, String providerPaymentId) {
+        Order order = orderRepository.findForCheckout(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("La orden " + orderId + " no existe."));
+
+        if (order.getStatus() == OrderStatus.PAID) {
+            return ticketRepository.findByOrderId(orderId)
+                    .orElseThrow(() -> new BusinessRuleException("La orden " + order.getFolio() + " ya esta pagada pero no tiene ticket."));
+        }
+
+        if (order.getStatus() == OrderStatus.CANCELED) {
+            throw new BusinessRuleException("La orden " + order.getFolio() + " esta cancelada y no admite cobro.");
+        }
+
+        List<OrderItem> items = orderItemRepository.findByOrderIdOrderByOrderedAt(orderId);
+        if (items.isEmpty()) {
+            throw new BusinessRuleException("La orden " + order.getFolio() + " no tiene productos que cobrar.");
+        }
+
+        BigDecimal effectiveTipPercent = tipPercent != null ? tipPercent : BigDecimal.ZERO;
+        List<TicketItemSnapshot> snapshot = items.stream().map(this::toSnapshot).toList();
+
+        BigDecimal subtotal = snapshot.stream()
+                .map(TicketItemSnapshot::subtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal tip = subtotal.multiply(effectiveTipPercent)
+                .divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP)
+                .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal total = subtotal.add(tip).setScale(2, RoundingMode.HALF_UP);
+
+        PaymentMethod paymentMethod = PaymentMethod.MERCADOPAGO;
+        var paymentSnapshot = List.of(new com.callejon9.ticket.domain.TicketPaymentSnapshot(paymentMethod, total, total, BigDecimal.ZERO));
+
+        Instant now = Instant.now();
+
+        Sale sale = saleRepository.save(Sale.builder()
+                .orderId(order.getId())
+                .tableId(order.getTableId())
+                .cashierId(null)
+                .cashSessionId(null)
+                .status(SaleStatus.COMPLETED)
+                .paymentMethod(paymentMethod)
+                .subtotal(subtotal)
+                .tip(tip)
+                .total(total)
+                .build());
+
+        paymentRepository.save(com.callejon9.sale.domain.Payment.builder()
+                .saleId(sale.getId())
+                .provider("MERCADOPAGO")
+                .method(paymentMethod)
+                .amount(total)
+                .receivedAmount(total)
+                .status("COMPLETED")
+                .build());
+        paymentRepository.flush();
+
+        Ticket ticket = ticketRepository.save(Ticket.builder()
+                .saleId(sale.getId())
+                .orderId(order.getId())
+                .folio(folioGenerator.next(TICKET_FOLIO_PREFIX))
+                .itemsSnapshot(snapshot)
+                .paymentsSnapshot(paymentSnapshot)
+                .change(BigDecimal.ZERO)
+                .subtotal(subtotal)
+                .tip(tip)
+                .tipPercent(effectiveTipPercent.setScale(2, RoundingMode.HALF_UP))
                 .total(total)
                 .paymentMethod(paymentMethod)
                 .closedAt(now)

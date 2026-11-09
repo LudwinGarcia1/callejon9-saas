@@ -56,6 +56,9 @@ export const endpoints = {
     item: (orderId: string, itemId: string) => `/api/v1/orders/${orderId}/items/${itemId}`,
     sendToKitchen: (orderId: string) => `/api/v1/orders/${orderId}/send-to-kitchen`,
     checkout: (orderId: string) => `/api/v1/orders/${orderId}/checkout`,
+    mercadopagoPreference: (orderId: string) => `/api/v1/orders/${orderId}/mercadopago/preference`,
+    paymentStatus: (orderId: string) => `/api/v1/orders/${orderId}/payment-status`,
+    mercadopagoSimulate: (orderId: string) => `/api/v1/orders/${orderId}/mercadopago/simulate-approval`,
     cancel: (orderId: string) => `/api/v1/orders/${orderId}/cancel`,
   },
   kitchen: {
@@ -100,5 +103,13 @@ export const endpoints = {
       `/api/v1/public/${slug}/tables/${tableNumber}/orders`,
     callWaiter: (slug: string, tableNumber: string | number) =>
       `/api/v1/public/${slug}/tables/${tableNumber}/call-waiter`,
+    tableOrder: (slug: string, tableNumber: string | number) =>
+      `/api/v1/public/${slug}/tables/${tableNumber}/order`,
+    mercadopagoPreference: (slug: string, tableNumber: string | number) =>
+      `/api/v1/public/${slug}/tables/${tableNumber}/mercadopago/preference`,
+    paymentStatus: (slug: string, tableNumber: string | number) =>
+      `/api/v1/public/${slug}/tables/${tableNumber}/payment-status`,
+    mercadopagoSimulate: (slug: string, tableNumber: string | number) =>
+      `/api/v1/public/${slug}/tables/${tableNumber}/mercadopago/simulate-approval`,
   },
 };
