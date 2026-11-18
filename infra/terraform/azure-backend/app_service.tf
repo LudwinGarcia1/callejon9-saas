@@ -14,7 +14,9 @@ resource "azurerm_service_plan" "backend" {
 
 locals {
   key_vault_reference = {
-    for name, secret in azurerm_key_vault_secret.backend :
+    for name, secret in merge(azurerm_key_vault_secret.backend, {
+      "platform-admin-password" = azurerm_key_vault_secret.platform_admin
+    }) :
     name => "@Microsoft.KeyVault(SecretUri=${secret.versionless_id})"
   }
 
@@ -81,6 +83,10 @@ resource "azurerm_linux_web_app" "api" {
     DB_APP_PASSWORD   = local.key_vault_reference["db-app-password"]
     DB_OWNER_PASSWORD = local.key_vault_reference["db-owner-password"]
     JWT_SECRET        = local.key_vault_reference["jwt-secret"]
+
+    # Replaces the published super-administrator password that V6 seeds; prod does
+    # not start while the database keeps it without this variable (CAL-109).
+    PLATFORM_ADMIN_PASSWORD = local.key_vault_reference["platform-admin-password"]
 
     # Ignored while the prod profile is active: it pins Secure cookies. Kept so
     # the cookies stay secure if the profile is ever changed.

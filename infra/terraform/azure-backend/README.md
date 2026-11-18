@@ -304,6 +304,23 @@ az webapp restart --ids $id
 
 Sin este paso, Flyway falla al arrancar con `password authentication failed for user "callejon9_owner"`.
 
+### Importar `platform-admin-password`
+
+Solo para el ambiente del 2026-10-16, donde el secreto se creó a mano antes de CAL-109. En un ambiente nuevo, el `apply` lo crea con un valor aleatorio y no hace falta este paso. Ese valor es la contraseña del super-administrador desde el primer arranque.
+
+Antes del primer `apply` con CAL-109, adopta el secreto existente para que Terraform no intente crearlo:
+
+```powershell
+$kv = terraform output -raw key_vault_name
+$id = az keyvault secret show --vault-name $kv --name platform-admin-password --query id -o tsv
+terraform import azurerm_key_vault_secret.platform_admin $id
+terraform plan
+```
+
+El ID es la URI versionada del secreto, no su valor, así que el import no expone la contraseña. `azurerm_key_vault_secret.platform_admin` ignora cambios de `value`: el `plan` debe mostrar solo la creación de `random_password.platform_admin`, cuyo valor no se usa en este ambiente, y la variable nueva `PLATFORM_ADMIN_PASSWORD` de la Web App. Si el secreto se creó sin tipo de contenido, también aparece `content_type` → `text/plain`: crea una versión nueva con el mismo valor. Si muestra un cambio de valor o el reemplazo del secreto, detente.
+
+Tras el despliegue, el arranque no modifica la base: el hash de producción ya no es el publicado. Compruébalo con `/actuator/health` en `200` y con el mismo hash antes y después. Para rotar esta contraseña, cámbiala desde la aplicación y actualiza el secreto con `az keyvault secret set`; Terraform no la reemplaza.
+
 ### Si un apply se interrumpe
 
 Si un `terraform apply` se corta a la mitad, el estado puede quedar bloqueado. Puede pasar porque se cerró la terminal o porque el proceso se quedó sin memoria.
@@ -327,6 +344,7 @@ Si el corte dejó en Azure algo que el estado no registra, el siguiente `apply` 
 | `APP_ALLOWED_ORIGINS` | `frontend_origin` | Orígenes del WebSocket `/ws` |
 | `APP_TRUSTED_PROXIES` | `trusted_proxy_addresses`, separadas por comas | IP de salida del frontend. `ClientIp` las salta en `X-Forwarded-For` para que los límites por IP del login y del alta cuenten por navegador (CAL-169) |
 | `APP_PROXY_SECRET` | Referencia `@Microsoft.KeyVault(...)` a `proxy-secret` | Secreto compartido con el frontend. Si el middleware de Next lo envía, `ClientIp` usa la IP del navegador que reenvía en `X-Callejon9-Client-Ip`, sin depender de las IP de salida del frontend. Sin él, esa cabecera se ignora (CAL-169) |
+| `PLATFORM_ADMIN_PASSWORD` | Referencia `@Microsoft.KeyVault(...)` a `platform-admin-password` | Reemplaza al arrancar la contraseña publicada del super-administrador que siembra `V6`. Sin ella, `prod` no arranca mientras la base la conserve. Una contraseña ya rotada no se toca (CAL-109) |
 | `SERVER_PORT` | `80` | Puerto en el que App Service enruta a Java SE |
 | `JAVA_OPTS` | `-XX:+UseG1GC -XX:MaxRAMPercentage=75.0` | Mismas opciones que `JAVA_TOOL_OPTIONS` en `backend/Dockerfile` |
 | `SPRINGDOC_APIDOCS_ENABLED`, `SPRINGDOC_SWAGGERUI_ENABLED` | `true` | Solo con `swagger_enabled = true`. Encienden OpenAPI y Swagger UI, que `prod` apaga |
@@ -348,7 +366,7 @@ Corre `terraform fmt -check` y `terraform validate` en todos los roots, incluido
   2. Copia el valor al portapapeles sin mostrarlo: `az keyvault secret show --vault-name <key vault> --name proxy-secret --query value -o tsv | Set-Clipboard`.
   3. El responsable del frontend lo pega como `backend_proxy_secret` en el `terraform.tfvars` de `azure-frontend` (o como la variable `BACKEND_PROXY_SECRET` de su Web App) y aplica. No hace falta recompilar.
   4. Repite la re-prueba por el frontend con dos clientes en redes distintas.
-- **Contraseña del super-administrador.** La de `V6__seed_platform_admin.sql` está publicada en el README; se cambia tras el primer despliegue, con una migración nueva o desde la aplicación, nunca reescribiendo `V6`. En el despliegue del 2026-10-16 se cambió directamente en la base, y la contraseña nueva está en Key Vault como `platform-admin-password`, un secreto creado fuera de Terraform. `V6` la sigue sembrando en cualquier base nueva, así que el pendiente sigue abierto para los demás ambientes.
+- **Contraseña del super-administrador (resuelto en CAL-109).** `V6__seed_platform_admin.sql` sigue sembrando la contraseña publicada en cualquier base nueva, pero el perfil `prod` ya no opera con ella. `PlatformAdminPasswordGuard` revisa la cuenta al arrancar, después de Flyway y antes de abrir el puerto. Si conserva el hash publicado, lo reemplaza con `PLATFORM_ADMIN_PASSWORD`; sin la variable, el arranque se detiene. Si la contraseña ya es otra, no la toca. Terraform administra el secreto `platform-admin-password` y la variable. En el ambiente del 2026-10-16 el secreto existía desde antes: hay que importarlo una vez con [Importar `platform-admin-password`](#importar-platform-admin-password).
 - **Valores verificados en el primer despliegue (2026-10-16):** el stack `JAVA|21-java21` que genera `application_stack` y el puerto 80 de Java SE, que Tomcat abrió en el arranque.
 
 ## Riesgos aceptados
