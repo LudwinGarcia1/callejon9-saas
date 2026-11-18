@@ -34,6 +34,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -176,6 +177,28 @@ class WaiterOrderSecurityTest {
                     .andExpect(status().isForbidden());
 
             assertThat(reload(orderId).getStatus()).isEqualTo(OrderStatus.NEW);
+        }
+
+        @Test
+        @DisplayName("CAL-151: el mesero B no puede quitar lineas de la orden del mesero A")
+        void anotherWaiterCannotRemoveItems() throws Exception {
+            UUID orderId = openOrderAs(waiterA);
+            addItemAs(waiterA, orderId);
+            UUID itemId;
+            TenantContext.set(tenant.getId());
+            try {
+                itemId = transactionTemplate.execute(status ->
+                        orderItemRepository.findByOrderIdOrderByOrderedAt(orderId).get(0).getId());
+            } finally {
+                TenantContext.clear();
+            }
+
+            mockMvc.perform(delete("/api/v1/orders/" + orderId + "/items/" + itemId)
+                            .cookie(cookieFor(waiterB)))
+                    .andExpect(status().isForbidden());
+
+            assertThat(itemCount(orderId)).isEqualTo(1);
+            assertThat(reload(orderId).getTotal()).isEqualByComparingTo(product.getPrice());
         }
 
         @Test

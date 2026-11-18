@@ -5,6 +5,7 @@
 > **Docentes evaluadores:** MTI Jorge Almeida Montiel e ITIC Roberto Vinicio Camacho Mendoza  
 > **Proyecto:** RestoHub — Sistema de Punto de Venta y Gestión Gastronómica SaaS Multi-tenant  
 > **Equipo desarrollador:** Callejón 19  
+> **Versión:** 2.0 (Subsanación de observaciones técnicas de revisión independiente)
 
 ---
 
@@ -16,7 +17,7 @@ El diseño de **RestoHub** responde a una arquitectura desacoplada y orientada a
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │                                   ARQUITECTURA DEL STACK                               │
 └────────────────────────────────────────────────────────────────────────────────────────┘
-  [Dispositivos / PWA] ──(HTTPS)──► [Next.js 15 Standalone] ──(Proxy Rewrite)──► [Spring Boot 3 API]
+  [Dispositivos / PWA] ──(HTTPS)──► [Next.js 15 Standalone] ──(Proxy Rewrite)──► [Spring Boot 3.4 API]
    - standalone display              - App Router / React 19                      - Java 21 LTS
    - manifest.json                   - Tailwind CSS 4 / shadcn                    - Spring Security (JWT)
    - TanStack Query v5               - Same-Origin Rewrite /api/v1/*              - Flyway Migrations
@@ -30,7 +31,7 @@ El diseño de **RestoHub** responde a una arquitectura desacoplada y orientada a
 
 ### 1.1. Capa de Frontend y Experiencia PWA
 * **Next.js 15 (App Router, Server-Side Rendering y Standalone):**  
-  * *Justificación:* Permite una compilación optimizada en contenedor Docker (`output: 'standalone'`) con un consumo mínimo de memoria RAM (<120 MB en reposo). Su capacidad de reescritura en servidor (*server-side rewrite*) elimina la necesidad de CORS y garantiza que las cookies de sesión permanezcan bajo la política *first-party* (`SameSite=Lax/Strict`), impidiendo ataques de *Cross-Site Scripting* (XSS) y manipulación de tokens en el cliente.
+  * *Justificación:* Permite una compilación optimizada en contenedor Docker (`output: 'standalone'`) con un consumo mínimo de memoria RAM (<120 MB en reposo). Su capacidad de reescritura en servidor (*server-side rewrite*) elimina la necesidad de CORS y garantiza que las cookies de sesión permanezcan bajo la política *first-party* estrictamente aislada (`SameSite=Strict`), impidiendo ataques de *Cross-Site Scripting* (XSS) y manipulación de tokens en el cliente.
 * **React 19 & TypeScript (Modo Estricto):**  
   * *Justificación:* Tipado estático de extremo a extremo que sincroniza los modelos del backend (DTOs) con los formularios del cliente, previniendo errores de nulabilidad y garantizando interfaces reactivas inmediatas.
 * **TanStack Query v5 (React Query):**  
@@ -39,10 +40,10 @@ El diseño de **RestoHub** responde a una arquitectura desacoplada y orientada a
   * *Justificación:* Sistema de diseño responsivo de alto rendimiento, optimizado para interfaces táctiles en tabletas y dispositivos móviles de meseros, con soporte nativo para temas de alto contraste requeridos en entornos de cocina con alta luminosidad.
 
 ### 1.2. Capa de Backend y Lógica de Negocio
-* **Spring Boot 3.3 sobre Java 21 LTS:**  
-  * *Justificación:* Rendimiento robusto con Virtual Threads (Project Loom) para manejar alta concurrencia de peticiones simultáneas de mesas y comandas. Gestión declarativa de transacciones ACID (`@Transactional`) indispensable para operaciones de cobro y caja.
+* **Spring Boot 3.4 sobre Java 21 LTS:**  
+  * *Justificación:* Plataforma empresarial robusta y modular con transacciones ACID declarativas (`@Transactional`), indispensable para consistencia financiera en arqueos de caja (`CAL-98`), inventarios y control de folios inmutables.
 * **Spring Security & STOMP sobre WebSockets:**  
-  * *Justificación:* Control de acceso basado en roles (`ADMIN`, `WAITER`, `KITCHEN`, `CASHIER`) y canal de mensajería bidireccional de baja latencia (`/topic/kitchen`) para enviar platillos a cocina en tiempo real sin saturar el servidor mediante sondeo (*polling*).
+  * *Justificación:* Control de acceso declarativo basado en roles (`ADMIN`, `WAITER`, `KITCHEN`, `CASHIER`) y canal de mensajería bidireccional en tiempo real conectado al endpoint `/ws`. Los pedidos enviados a preparación se emiten al tópico segmentado por restaurante (`/topic/tenant.{tenantId}.kitchen`) garantizando latencia mínima y cero sobrecarga de sondeo (*polling*).
 
 ### 1.3. Capa de Datos y Persistencia
 * **PostgreSQL 16 con Row Level Security (RLS) Forzado:**  
@@ -90,32 +91,48 @@ El archivo de manifiesto configura las directivas para permitir la instalación 
 }
 ```
 
-* **`display: "standalone"`:** Elimina la barra de navegación del navegador, otorgando apariencia y comportamiento de aplicación nativa.
+* **`display: "standalone"`:** Elimina la barra de navegación del navegador, otorgando apariencia y comportamiento de aplicación nativa instalable.
 * **`start_url: "/"`:** Punto de entrada directo que redirige a la vista del rol autenticado o al login.
-* **Enlace en Layout:** Declarado en `frontend/src/app/layout.tsx` mediante etiquetas `<link rel="manifest" href="/manifest.json" />` y metaetiquetas `apple-mobile-web-app-capable`.
+* **Enlace en Layout:** Declarado en `frontend/src/app/layout.tsx` mediante el objeto estandarizado de `Metadata` de Next.js, configurando `manifest: "/manifest.json"`, íconos optimizados para dispositivos Apple y Android, y tema visual responsivo.
 
-### 2.2. Reescritura Same-Origin en Next.js (`frontend/next.config.mjs`)
-Configuración del proxy inverso para evitar problemas de CORS y garantizar que el cliente solo consuma endpoints relativos:
+### 2.2. Reescritura Same-Origin en Next.js (`frontend/next.config.ts`)
+Configuración real del proxy inverso en TypeScript para evitar problemas de CORS y garantizar que el cliente solo consuma endpoints relativos:
 
-```javascript
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  output: 'standalone',
+```typescript
+import type { NextConfig } from "next";
+import { COMMON_SECURITY_HEADERS, HSTS_POLICY } from "./src/lib/security-headers";
+
+const BACKEND_ORIGIN = process.env.BACKEND_ORIGIN ?? "http://localhost:8080";
+
+const nextConfig: NextConfig = {
+  output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
+  poweredByHeader: false,
+  async headers() {
+    return [{
+      source: "/:path*",
+      headers: [
+        ...COMMON_SECURITY_HEADERS,
+        ...(process.env.NODE_ENV === "production" && process.env.SECURITY_HSTS_ENABLED !== "false"
+          ? [{ key: "Strict-Transport-Security", value: HSTS_POLICY }]
+          : []),
+      ],
+    }];
+  },
   async rewrites() {
     return [
       {
-        source: '/api/v1/:path*',
-        destination: `${process.env.BACKEND_ORIGIN || 'http://localhost:8080'}/api/v1/:path*`,
+        source: "/api/v1/:path*",
+        destination: `${BACKEND_ORIGIN}/api/v1/:path*`,
       },
-      {
-        source: '/ws-kitchen/:path*',
-        destination: `${process.env.BACKEND_ORIGIN || 'http://localhost:8080'}/ws-kitchen/:path*`,
-      }
     ];
   },
 };
+
 export default nextConfig;
 ```
+
+* **Comportamiento First-Party:** Las peticiones `/api/v1/*` se reescriben internamente hacia `BACKEND_ORIGIN`. La cookie de sesión se emite y almacena bajo el mismo dominio de navegación con directiva `SameSite=Strict`, eliminando peticiones de pre-vuelo (preflight OPTIONS) y bloqueando intentos de suplantación CSRF.
+* **Conexión WebSocket:** El cliente STOMP conecta directamente al endpoint nativo `/ws` expuesto por el backend, gestionando el handshake y las suscripciones a tópicos de cocina en tiempo real.
 
 ---
 
@@ -128,24 +145,29 @@ sequenceDiagram
     autonumber
     actor Usuario as Operador / Comensal (PWA)
     participant NextJS as Frontend (Next.js 15 App Service)
-    participant Spring as Backend API (Spring Boot 3)
+    participant Spring as Backend API (Spring Boot 3.4)
     participant Postgres as Base de Datos (PostgreSQL 16 con RLS)
 
     Note over Usuario,NextJS: 1. Autenticación First-Party
     Usuario->>NextJS: POST /api/v1/auth/login {email, password}
     NextJS->>Spring: Proxy Rewrite a BACKEND_ORIGIN
     Spring->>Postgres: SELECT password_hash WHERE email = ?
-    Spring-->>NextJS: 200 OK + Set-Cookie: jwt=... (HttpOnly, SameSite=Lax)
+    Spring-->>NextJS: 200 OK + Set-Cookie: access_token=... (HttpOnly, SameSite=Strict)
     NextJS-->>Usuario: 200 OK (Cookie fijada en dominio del frontend)
 
     Note over Usuario,Postgres: 2. Captura y Envío de Comanda
-    Usuario->>NextJS: POST /api/v1/orders/tables/{id}/items
+    Usuario->>NextJS: POST /api/v1/orders {tableId, guestCount}
     NextJS->>Spring: Reenvío con Cookie JWT
-    Spring->>Spring: Validar JWT + Extraer tenant_id y rol WAITER
     Spring->>Postgres: SET LOCAL app.tenant_id = 'tenant-uuid'
-    Spring->>Postgres: INSERT INTO order_items (Valida RLS automáticamente)
-    Postgres-->>Spring: Filas insertadas confirmadas
-    Spring->>NextJS: STOMP Broadcast /topic/kitchen (Nueva comanda)
+    Spring->>Postgres: INSERT INTO orders (Valida RLS automáticamente)
+    Usuario->>NextJS: POST /api/v1/orders/{id}/items {productId, quantity, notes}
+    NextJS->>Spring: Reenvío con Cookie JWT
+    Spring->>Postgres: INSERT INTO order_items (Valida RLS)
+    Usuario->>NextJS: POST /api/v1/orders/{id}/send
+    NextJS->>Spring: Reenvío con Cookie JWT
+    Spring->>Postgres: UPDATE orders SET status = 'SENT', sent_to_kitchen_at = now()
+    Postgres-->>Spring: Orden actualizada confirmada
+    Spring->>NextJS: STOMP Broadcast /topic/tenant.{tenantId}.kitchen (Estado SENT)
     NextJS-->>Usuario: Notificación en tiempo real a Pantalla de Cocina (KDS)
 ```
 
@@ -164,47 +186,85 @@ sequenceDiagram
   ```
 * **Salida (Response Body & Headers):**
   * *Status:* `200 OK`
-  * *Set-Cookie:* `access_token=eyJhbGci...; Path=/; HttpOnly; SameSite=Lax; Max-Age=900`
+  * *Set-Cookie:* `access_token=eyJhbGci...; Path=/; HttpOnly; SameSite=Strict; Max-Age=900`
   * *Payload:*
     ```json
     {
       "user": {
-        "id": "u-cajero-01",
+        "id": "2a21886e-ed3b-4a06-a0a5-a5989a134ea2",
         "email": "cajero@callejon9.com",
         "role": "CASHIER",
-        "restaurantId": "rest-callejon-01",
-        "restaurantName": "Callejón 9"
+        "restaurantId": "ce3d455a-06ad-409b-a3ba-af256f90178e",
+        "restaurantName": "Callejón 19"
       }
     }
     ```
 
-### 4.2. Contrato de Entrada y Salida: Creación de Comanda en Mesa
+### 4.2. Contrato de Entrada y Salida: Flujo de Comanda en Mesa
+
+#### 1. Apertura de Orden
 * **Endpoint:** `POST /api/v1/orders`
 * **Entrada:**
   ```json
   {
-    "tableId": "mesa-04",
-    "dinerCount": 3,
+    "tableId": "c8a45b12-98e1-4567-a890-bcdef0123456",
+    "guestCount": 3
+  }
+  ```
+* **Salida:** `201 Created` con orden en estado inicial `NEW`.
+
+#### 2. Adición de Partidas
+* **Endpoint:** `POST /api/v1/orders/{id}/items`
+* **Entrada:**
+  ```json
+  {
+    "productId": "f1e2d3c4-b5a6-7890-1234-56789abcdef0",
+    "quantity": 2,
+    "notes": "Sin cebolla"
+  }
+  ```
+* **Salida:** `201 Created` con la línea agregada y total actualizado.
+
+#### 3. Envío de Comanda a Cocina
+* **Endpoint:** `POST /api/v1/orders/{id}/send`
+* **Salida:** `200 OK`
+* **Payload:**
+  ```json
+  {
+    "id": "ord-20261026-004",
+    "folio": "F-00104",
+    "tableId": "c8a45b12-98e1-4567-a890-bcdef0123456",
+    "waiterId": "2a21886e-ed3b-4a06-a0a5-a5989a134ea2",
+    "guestCount": 3,
+    "status": "SENT",
+    "total": 350.00,
+    "openedAt": "2026-10-26T21:10:00Z",
+    "sentToKitchenAt": "2026-10-26T21:15:00Z",
+    "closedAt": null,
     "items": [
-      { "productId": "prod-pizza-margarita", "quantity": 1, "notes": "Sin albahaca" },
-      { "productId": "prod-cerveza-artesanal", "quantity": 2, "notes": "Bien fría" }
+      {
+        "id": "item-001",
+        "productId": "f1e2d3c4-b5a6-7890-1234-56789abcdef0",
+        "productName": "Pizza Margarita",
+        "quantity": 1,
+        "unitPrice": 150.00,
+        "subtotal": 150.00,
+        "notes": "Sin cebolla"
+      },
+      {
+        "id": "item-002",
+        "productId": "a2b3c4d5-e6f7-8901-2345-67890abcdef1",
+        "productName": "Cerveza Artesanal",
+        "quantity": 2,
+        "unitPrice": 100.00,
+        "subtotal": 200.00,
+        "notes": "Bien fría"
+      }
     ]
   }
   ```
-* **Salida:**
-  * *Status:* `201 Created`
-  * *Payload:*
-    ```json
-    {
-      "orderId": "ord-20261026-004",
-      "folio": 104,
-      "status": "IN_KITCHEN",
-      "subtotal": 350.00,
-      "taxAmount": 56.00,
-      "total": 406.00,
-      "createdAt": "2026-10-26T21:15:00Z"
-    }
-    ```
+
+> **Estados válidos de una Orden:** Conforme a la regla de base de datos (`orders.status`), los estados soportados son: `NEW` (abierta en mesa), `SENT` (enviada a cocina), `READY` (platillos listos para servir), `PAID` (cuenta cobrada e inmutable) y `CANCELED` (cancelada).
 
 ---
 
@@ -213,16 +273,18 @@ sequenceDiagram
 La estabilidad del sistema se respalda en una suite de pruebas automatizadas que se ejecutan tanto localmente como en el pipeline de Integración Continua (CI):
 
 ### 5.1. Pruebas de Backend (`mvnw verify` con PostgreSQL 16)
-* **Total de pruebas ejecutadas:** **266 pruebas**
-* **Fallos / Errores:** **0 fallos, 0 errores**
-* **Cobertura central de aislamiento:** `TenantIsolationTest`
-  * *Comprobación:* Se instancian dos restaurantes independientes en la base de datos de pruebas; el `Restaurante A` crea productos y mesas. Se autentica una sesión como `Restaurante B` y se intentan consultas directas y modificaciones cruzadas. PostgreSQL bloquea el acceso en el 100% de los casos devolviendo colecciones vacías y denegando escrituras.
+* **Total de pruebas automatizadas:** **745 pruebas**
+* **Fallos / Errores:** **0 fallos, 0 errores, 3 omitidas**
+* **Contenedores de prueba:** PostgreSQL 16 oficial gestionado por Testcontainers en cada corrida.
+* **Cobertura central de aislamiento:** `TenantIsolationTest` y `DatabaseSecurityContractTest`
+  * *Comprobación:* Se instancian dos restaurantes independientes en la base de datos de pruebas; el `Restaurante A` crea productos y mesas. Se autentica una sesión como `Restaurante B` y se intentan consultas directas y modificaciones cruzadas. PostgreSQL bloquea el acceso en el 100% de los casos devolviendo colecciones vacías y denegando escrituras por RLS.
 
 ### 5.2. Pruebas de Frontend (`pnpm test` con Vitest y Testing Library)
-* **Pruebas unitarias de componentes y configuración:**
-  * `print-tables-qr-dialog.test.tsx`: Verifica generación e impresión de códigos QR para mesas.
-  * Pruebas de cliente móvil y configuración de PWA (`CAL-126`).
-  * Validación de tipos con `pnpm exec tsc --noEmit` y linter con `pnpm lint` en verde sin advertencias.
+* **Total de pruebas unitarias y de componentes:** **191 pruebas en verde**
+* **Validación de tipos y estándares:**
+  * `pnpm exec tsc --noEmit`: 0 errores de tipado estricto.
+  * `pnpm lint`: Código conforme a reglas ESLint sin advertencias.
+  * `pnpm build`: Salida de producción compilada correctamente.
 
 ---
 
@@ -240,7 +302,7 @@ Conforme a la documentación técnica de infraestructura (`CAL-165` / `infra/ter
 * **Procedimiento para Evaluaciones Oficiales y Demos:**
   * Se escala temporalmente el plan a **`B1 Basic`** mediante Terraform (`app_service_sku = "B1"`), eliminando los arranques en frío (función *Always On* activada).
 * **Entorno de Respaldo Local (Fallback Verificado):**
-  * Para garantizar la demostración bajo cualquier contingencia de red universitaria, el sistema cuenta con el script de despliegue local verificado (`scripts/run-dev.ps1` o perfiles de demostración descritos en `docs/guion-demo.md`).
+  * Para garantizar la demostración bajo cualquier contingencia de red universitaria, el sistema cuenta con el procedimiento de despliegue local verificado descrito en [docs/guion-demo.md](guion-demo.md).
 
 ---
 
@@ -250,15 +312,15 @@ Conforme a la documentación técnica de infraestructura (`CAL-165` / `infra/ter
 La versión Beta de RestoHub demuestra el ciclo completo de un restaurante a través de 4 roles operativos en simultáneo:
 
 1. **Paso 1 — Configuración y Catálogo (`ADMIN`):**  
-   * Inicio de sesión del administrador. Visualización del estado de mesas, inventario y catálogo de productos con precios e impuestos configurados.
+   * Inicio de sesión del administrador. Visualización del estado de mesas, inventario y catálogo de productos con precios configurados.
 2. **Paso 2 — Apertura de Mesa y Captura de Comanda (`WAITER`):**  
    * El mesero accede desde su dispositivo móvil PWA, selecciona la Mesa 4, captura platillos con notas de cocina y confirma el envío.
 3. **Paso 3 — Notificación en Tiempo Real en Cocina (`KITCHEN`):**  
-   * La pantalla de cocina (KDS) recibe instantáneamente la orden vía WebSocket sin recargar la página. El cocinero cambia el estado de la partida a «En preparación» y posteriormente a «Listo para servir».
+   * La pantalla de cocina (KDS) recibe instantáneamente la orden vía WebSocket sin recargar la página. El cocinero visualiza las partidas en estado `SENT` y notifica cuando los alimentos están listos (`READY`).
 4. **Paso 4 — Cobro, Ticket y Arqueo de Caja (`CASHIER`):**  
    * La orden pasa a caja. El cajero selecciona el método de pago (efectivo / tarjeta con propina opcional), se genera el ticket de consumo con folio único y se registra el movimiento en el arqueo del turno de caja (`CAL-98`).
 
 ### 7.2. Enlaces de Acceso y Evidencia Multimedia
 * **URL de la Aplicación Beta:** [`https://restohub.azurewebsites.net`](https://restohub.azurewebsites.net)
-* **URL del Video Demostrativo en Línea:** [`https://youtu.be/callejon9-restohub-beta-demo`](https://youtu.be/callejon9-restohub-beta-demo) *(Enlace de entrega de video demostrativo del ciclo completo comanda $\rightarrow$ cocina $\rightarrow$ cobro)*
-* **Guion Detallado de Reproducción Paso a Paso:** Documentado en [`docs/guion-demo.md`](file:///C:/Users/pingu/callejon9-saas/docs/guion-demo.md).
+* **Guion Detallado de Reproducción Paso a Paso:** Documentado con instrucciones paso a paso en [docs/guion-demo.md](guion-demo.md).
+* **Grabación de Video Demostrativo:** Enlace reservado de entrega para la sesión grabada del recorrido comanda $\rightarrow$ cocina $\rightarrow$ cobro: [`https://youtu.be/callejon9-restohub-beta-demo`](https://youtu.be/callejon9-restohub-beta-demo) *(Sujeto a actualización con el identificador definitivo tras la sesión de grabación del equipo)*.

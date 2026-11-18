@@ -15,13 +15,15 @@ vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/hooks/use-session", () => ({
   useSession: () => ({ user: { userId: "u1", fullName: "Mesero de piso", role: session.role }, isLoading: false, logout: vi.fn() }),
 }));
-vi.mock("@/lib/api", async (original) => ({ ...await original<typeof import("@/lib/api")>(), api: { get: vi.fn(), post: vi.fn() } }));
+vi.mock("@/lib/api", async (original) => ({ ...await original<typeof import("@/lib/api")>(), api: { get: vi.fn(), post: vi.fn(), del: vi.fn() } }));
 // El selector real agrupa por categoría; aquí basta con exponer sus acciones sobre un producto.
 vi.mock("@/app/(authenticated)/waiter/order/[id]/product-picker", () => ({
   ProductPicker: (props: ComponentProps<typeof ProductPicker>) => <section>
     <button onClick={() => props.onAddProduct({ id: "p-flan", name: "Flan napolitano", price: 75, active: true, categoryId: null, description: null })}>Agregar flan</button>
-    <button onClick={() => props.onIncrement("p-flan")}>Más flan</button>
+    <button onClick={() => props.onIncrement(props.cart.find((line) => line.product.id === "p-flan")?.key ?? "")}>Más flan</button>
+    <button onClick={() => props.onNotesChange(props.cart[0]?.key ?? "", "  sin crema  ")}>Nota a la primera línea</button>
     <p>Cantidad: {props.cart.find((line) => line.product.id === "p-flan")?.quantity ?? 0}</p>
+    <p>Líneas: {props.cart.length}</p>
     <button disabled={props.cart.length === 0} onClick={props.onCommit}>Agregar a la orden</button>
   </section>,
 }));
@@ -74,6 +76,55 @@ describe("carrito de la orden: tope de 99 por línea", () => {
     await waitFor(() => expect(api.post).toHaveBeenCalledWith("/api/v1/orders/o1/items",
       { items: [{ productId: "p-flan", quantity: 99 }] }));
   }, 20_000);
+});
+
+describe("notas por producto (CAL-151)", () => {
+  it("la nota viaja recortada con su línea y una unidad más del mismo producto abre otra línea sin nota", async () => {
+    vi.mocked(api.post).mockResolvedValue(orderWith("NEW"));
+    mount("NEW");
+    const add = await screen.findByRole("button", { name: "Agregar flan" });
+    fireEvent.click(add);
+    fireEvent.click(screen.getByRole("button", { name: "Nota a la primera línea" }));
+    fireEvent.click(add);
+    expect(screen.getByText("Líneas: 2")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Agregar a la orden" }));
+    await waitFor(() => expect(api.post).toHaveBeenCalledWith("/api/v1/orders/o1/items", {
+      items: [
+        { productId: "p-flan", quantity: 1, notes: "sin crema" },
+        { productId: "p-flan", quantity: 1 },
+      ],
+    }));
+  });
+
+  it("sin nota, volver a tocar el producto suma a la misma línea", async () => {
+    mount("NEW");
+    const add = await screen.findByRole("button", { name: "Agregar flan" });
+    fireEvent.click(add);
+    fireEvent.click(add);
+    expect(screen.getByText("Líneas: 1")).toBeTruthy();
+    expect(screen.getByText("Cantidad: 2")).toBeTruthy();
+  });
+});
+
+describe("quitar un producto ya agregado (CAL-151)", () => {
+  it("con la orden en Nueva quita la línea y muestra el total que devuelve la API", async () => {
+    const emptied = { ...orderWith("NEW"), total: 0, items: [] };
+    vi.mocked(api.del).mockResolvedValue(emptied);
+    mount("NEW");
+    // Tras quitar, la API ya devuelve la orden sin la línea; el refetch que
+    // dispara la invalidación debe ver lo mismo.
+    vi.mocked(api.get).mockImplementation(async (path: string) => (path.includes("/orders/o1") ? emptied : []));
+    fireEvent.click(await screen.findByRole("button", { name: "Quitar Sopa de tortilla de la orden" }));
+    await waitFor(() => expect(api.del).toHaveBeenCalledWith("/api/v1/orders/o1/items/i1"));
+    await screen.findByText("Comanda vacía");
+  });
+
+  it.each<OrderStatus>(["SENT", "READY", "PAID", "CANCELED"])("con la orden %s no se ofrece quitar", async (status) => {
+    mount(status, "ADMIN");
+    await screen.findByText("ORD-261021185004", { exact: false });
+    expect(screen.queryByRole("button", { name: "Quitar Sopa de tortilla de la orden" })).toBeNull();
+  });
 });
 
 describe("cancelación según el rol (CAL-113)", () => {

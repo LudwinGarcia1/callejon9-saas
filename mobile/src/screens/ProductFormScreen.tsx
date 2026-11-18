@@ -9,42 +9,32 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { createProduct, fetchCategories } from '../api/catalog';
+import { createProduct, fetchCategories, updateProduct } from '../api/catalog';
 import { ApiError } from '../api/client';
 import type { Category, Product } from '../api/types';
 import { Banner, Button } from '../ui/components';
 import { colors, radius } from '../ui/theme';
+import { DESCRIPTION_MAX, NAME_MAX, validateProduct, type Field, type FieldErrors } from '../validation/product';
 
-type Field = 'name' | 'price' | 'description';
-type FieldErrors = Partial<Record<Field, string>>;
-
-const NAME_MAX = 160;
-const DESCRIPTION_MAX = 500;
-/** numeric(10,2) en PostgreSQL: hasta 8 enteros y 2 decimales. */
-const PRICE_PATTERN = /^\d{1,8}([.,]\d{1,2})?$/;
-
-/** Mismas reglas que CreateProductRequest en el backend, para avisar antes de enviar. */
-function validate(name: string, price: string, description: string): FieldErrors {
-  const errors: FieldErrors = {};
-  if (!name) errors.name = 'El nombre es obligatorio.';
-  else if (name.length > NAME_MAX) errors.name = `Máximo ${NAME_MAX} caracteres.`;
-  if (!price) errors.price = 'El precio es obligatorio.';
-  else if (!PRICE_PATTERN.test(price)) errors.price = 'Escribe un precio válido, p. ej. 45 o 45.50.';
-  if (description.length > DESCRIPTION_MAX) errors.description = `Máximo ${DESCRIPTION_MAX} caracteres.`;
-  return errors;
-}
+export type SaveMode = 'created' | 'updated';
 
 interface Props {
+  /** Producto a editar. Sin él, el formulario registra uno nuevo. */
+  product?: Product | null;
   onCancel: () => void;
-  onCreated: (product: Product) => void;
+  onSaved: (product: Product, mode: SaveMode) => void;
 }
 
-/** Registro de información: formulario que envía POST /api/v1/products. */
-export function ProductFormScreen({ onCancel, onCreated }: Props) {
-  const [name, setName] = useState('');
-  const [price, setPrice] = useState('');
-  const [description, setDescription] = useState('');
-  const [categoryId, setCategoryId] = useState<string | null>(null);
+/**
+ * Registro y actualización: sin `product` envía POST /api/v1/products; con
+ * `product` envía PUT /api/v1/products/{id} con todos los campos.
+ */
+export function ProductFormScreen({ product, onCancel, onSaved }: Props) {
+  const editing = Boolean(product);
+  const [name, setName] = useState(product?.name ?? '');
+  const [price, setPrice] = useState(product ? String(product.price) : '');
+  const [description, setDescription] = useState(product?.description ?? '');
+  const [categoryId, setCategoryId] = useState<string | null>(product?.categoryId ?? null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesError, setCategoriesError] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -67,20 +57,24 @@ export function ProductFormScreen({ onCancel, onCreated }: Props) {
 
   async function handleSubmit() {
     const values = { name: name.trim(), price: price.trim(), description: description.trim() };
-    const errors = validate(values.name, values.price, values.description);
+    const errors = validateProduct(values.name, values.price, values.description);
     setFieldErrors(errors);
     setError(null);
     if (Object.keys(errors).length > 0) return;
 
     setSubmitting(true);
     try {
-      const product = await createProduct({
+      const body = {
         name: values.name,
         price: Number(values.price.replace(',', '.')),
         description: values.description || undefined,
         categoryId: categoryId ?? undefined,
-      });
-      onCreated(product);
+      };
+      if (product) {
+        onSaved(await updateProduct(product.id, body), 'updated');
+      } else {
+        onSaved(await createProduct(body), 'created');
+      }
     } catch (cause) {
       if (cause instanceof ApiError) {
         setError(cause.message);
@@ -99,13 +93,13 @@ export function ProductFormScreen({ onCancel, onCreated }: Props) {
           <Pressable accessibilityRole="button" onPress={onCancel} hitSlop={8} disabled={submitting}>
             <Text style={styles.back}>‹ Menú</Text>
           </Pressable>
-          <Text style={styles.title}>Nuevo producto</Text>
+          <Text style={styles.title}>{editing ? 'Editar producto' : 'Nuevo producto'}</Text>
           <Text style={styles.meta}>Los campos con * son obligatorios.</Text>
         </View>
 
         <View style={styles.card}>
           {error ? (
-            <Banner tone="error" title="El producto no se registró">
+            <Banner tone="error" title={editing ? 'Los cambios no se guardaron' : 'El producto no se registró'}>
               {error}
             </Banner>
           ) : null}
@@ -174,7 +168,7 @@ export function ProductFormScreen({ onCancel, onCreated }: Props) {
             />
           </Labeled>
 
-          <Button label="Registrar producto" onPress={handleSubmit} loading={submitting} />
+          <Button label={editing ? 'Guardar cambios' : 'Registrar producto'} onPress={handleSubmit} loading={submitting} />
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

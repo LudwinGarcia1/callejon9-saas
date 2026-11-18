@@ -1,0 +1,20 @@
+Mensaje preparado:
+{
+  "to": "ExponentPushToken[VBTS…]",
+  "title": "Solicitud registrada",
+  "body": "Tu solicitud fue registrada correctamente",
+  "data": {
+    "eventType": "REGISTERED",
+    "status": "REGISTERED",
+    "requestId": "SOL-001"
+  },
+  "sound": "default",
+  "priority": "high",
+  "channelId": "solicitudes",
+  "ttl": 3600
+}
+
+Ticket de envío: {"status":"ok","id":"01a1bd1f-2c54-7169-a1bd-ff6293198514"}
+
+Consultando el recibo en 5 s…
+Recibo: {"status":"ok"}

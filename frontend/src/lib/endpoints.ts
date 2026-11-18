@@ -53,6 +53,7 @@ export const endpoints = {
     open: () => "/api/v1/orders",
     detail: (orderId: string) => `/api/v1/orders/${orderId}`,
     items: (orderId: string) => `/api/v1/orders/${orderId}/items`,
+    item: (orderId: string, itemId: string) => `/api/v1/orders/${orderId}/items/${itemId}`,
     sendToKitchen: (orderId: string) => `/api/v1/orders/${orderId}/send-to-kitchen`,
     checkout: (orderId: string) => `/api/v1/orders/${orderId}/checkout`,
     cancel: (orderId: string) => `/api/v1/orders/${orderId}/cancel`,

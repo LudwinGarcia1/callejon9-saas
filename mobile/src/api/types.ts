@@ -40,7 +40,7 @@ export interface Product {
   name: string;
   description: string | null;
   price: number;
-  categoryId: string;
+  categoryId: string | null;
   active: boolean;
 }
 
@@ -55,6 +55,19 @@ export interface CreateProductRequest {
   description?: string;
   price: number;
   categoryId?: string;
+}
+
+/** PUT /products/{id}: reemplaza todos los campos; lo omitido queda vacío. */
+export interface UpdateProductRequest {
+  name: string;
+  description?: string;
+  price: number;
+  categoryId?: string;
+}
+
+/** PATCH /products/{id}: alta o baja lógica. */
+export interface UpdateProductStatusRequest {
+  active: boolean;
 }
 
 export interface OpenOrderRequest {

@@ -7,6 +7,7 @@ import {
   Text,
   TextInput,
   View,
+  type TextInputInstance,
 } from 'react-native';
 import { login } from '../api/auth';
 import { ApiError } from '../api/client';
@@ -45,8 +46,8 @@ export function LoginScreen({ notice, onAuthenticated }: Props) {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [error, setError] = useState<string | null>(CONFIG_ERROR);
   const [submitting, setSubmitting] = useState(false);
-  const emailRef = useRef<TextInput>(null);
-  const passwordRef = useRef<TextInput>(null);
+  const emailRef = useRef<TextInputInstance>(null);
+  const passwordRef = useRef<TextInputInstance>(null);
 
   async function handleSubmit() {
     const credentials = { slug: slug.trim().toLowerCase(), email: email.trim().toLowerCase(), password };

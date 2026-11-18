@@ -1,0 +1,16 @@
+POST https://exp.host/--/api/v2/push/send
+[
+  {
+    "to": "ExponentPushToken[VBTS…]",
+    "title": "Solicitud alterada",
+    "body": "Mensaje con datos no válidos",
+    "channelId": "solicitudes",
+    "data": {
+      "status": "DELETED",
+      "requestId": "<script>alert(1)</script>",
+      "url": "https://malicioso.example"
+    }
+  }
+]
+Respuesta:
+{"data":[{"status":"ok","id":"01a1bd21-c16f-732b-ad6d-0ba57cb95a82"}]}

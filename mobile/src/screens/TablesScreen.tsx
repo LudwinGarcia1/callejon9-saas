@@ -19,11 +19,12 @@ interface Props {
   welcome: boolean;
   onSelectTable: (table: RestaurantTable) => void;
   onOpenMenu: () => void;
+  onOpenNotifications: () => void;
   onLogout: () => void;
 }
 
 /** Parte 1 — consumo de datos: GET /api/v1/tables y despliegue en lista. */
-export function TablesScreen({ userName, restaurantName, welcome, onSelectTable, onOpenMenu, onLogout }: Props) {
+export function TablesScreen({ userName, restaurantName, welcome, onSelectTable, onOpenMenu, onOpenNotifications, onLogout }: Props) {
   const [tables, setTables] = useState<RestaurantTable[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -62,6 +63,9 @@ export function TablesScreen({ userName, restaurantName, welcome, onSelectTable,
         </View>
         <Pressable accessibilityRole="button" onPress={onOpenMenu} hitSlop={8} style={styles.logout}>
           <Text style={styles.logoutLabel}>Menú</Text>
+        </Pressable>
+        <Pressable accessibilityRole="button" onPress={onOpenNotifications} hitSlop={8} style={styles.logout}>
+          <Text style={styles.logoutLabel}>Avisos</Text>
         </Pressable>
         <Pressable accessibilityRole="button" onPress={onLogout} hitSlop={8} style={styles.logout}>
           <Text style={styles.logoutLabel}>Salir</Text>
