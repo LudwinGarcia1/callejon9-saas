@@ -15,8 +15,8 @@ interface QueryStateProps {
 
 /**
  * Envoltorio comun para los tres estados de una consulta: cargando, con
- * error o vacia. Un 401 nunca llega a renderizarse aqui — lo intercepta el
- * QueryClient en providers.tsx antes, redirigiendo a login. Un 403 si se
+ * error o vacia. Un 401 se pinta como carga: lo maneja el QueryClient en
+ * providers.tsx, que redirige a login. Un 403 si se
  * muestra localmente como "sin permiso", porque significa rol equivocado o
  * falta de contexto de tenant, no sesion perdida.
  */
@@ -28,7 +28,11 @@ export function QueryState({
   skeleton,
   children,
 }: QueryStateProps) {
-  if (isLoading) {
+  // Un 401 ya va camino al login (providers.tsx): mientras llega, la forma de
+  // la pantalla y no un error que no le dice nada al usuario (CAL-194).
+  const redirectingToLogin = error instanceof ApiError && error.status === 401;
+
+  if (isLoading || redirectingToLogin) {
     return (
       skeleton ?? (
         <div className="flex flex-col gap-2">

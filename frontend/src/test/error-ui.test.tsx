@@ -35,3 +35,9 @@ it("distinguishes permission, unknown error, loading, empty and successful state
   rerender(<QueryState isLoading={false}>Datos</QueryState>);
   expect(screen.getByText("Datos")).toBeDefined();
 });
+it("CAL-194: a 401 renders the loading shape while the redirect to login happens, not an error", () => {
+  render(<QueryState isLoading={false} error={new ApiError({}, 401)} skeleton={<p>Cargando</p>}>Datos</QueryState>);
+  expect(screen.getByText("Cargando")).toBeDefined();
+  expect(screen.queryByText("Ocurrio un error al comunicarse con el servidor.")).toBeNull();
+  expect(screen.queryByText("Datos")).toBeNull();
+});
