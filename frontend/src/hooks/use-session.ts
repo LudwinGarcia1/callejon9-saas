@@ -41,6 +41,7 @@ export function useSession() {
   return {
     user: sessionQuery.data,
     isLoading: sessionQuery.isLoading,
+    error: sessionQuery.error,
     logout: logoutMutation.mutate,
   };
 }
