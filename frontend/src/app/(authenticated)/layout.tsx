@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { AppTopbar } from "@/components/layout/app-topbar";
+import { PageAccess } from "@/components/layout/page-access";
 import { ThemePreferenceContext } from "@/hooks/use-theme-preference";
 import { useSession } from "@/hooks/use-session";
 import { identityStyle, resolveIdentity } from "@/lib/tenant-theme";
@@ -106,7 +107,9 @@ export default function AuthenticatedLayout({
       >
         <AppSidebar />
         <AppTopbar />
-        <main className="flex min-w-0 flex-1 flex-col">{children}</main>
+        <main className="flex min-w-0 flex-1 flex-col">
+          <PageAccess>{children}</PageAccess>
+        </main>
       </div>
     </ThemePreferenceContext.Provider>
   );
