@@ -34,9 +34,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Los casos negativos, que no necesitan base, estan en
  * {@link ProductionConfigurationGuardTest}.
  */
+// La base de la suite conserva la contrasena publicada del super-administrador
+// (V6), y prod no arranca con ella sin PLATFORM_ADMIN_PASSWORD (CAL-109). Este
+// contexto la reemplaza al arrancar; PlatformAdminPasswordGuardTest prepara y
+// restaura el hash en cada uno de sus casos, asi que el orden no importa.
 @SpringBootTest(properties = {
         "app.jwt.secret=prueba-de-perfil-prod-con-un-secreto-de-mas-de-32-bytes",
-        "app.realtime.allowed-origins=https://callejon9.example"})
+        "app.realtime.allowed-origins=https://callejon9.example",
+        "app.platform-admin.password=prueba-de-perfil-prod-super-admin"})
 @AutoConfigureMockMvc
 @ActiveProfiles({"test", "prod"})
 @DisabledIfSystemProperty(named = "test.database.mode", matches = "external")

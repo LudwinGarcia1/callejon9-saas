@@ -128,6 +128,32 @@ class ProductionConfigurationGuardTest {
         assertThat(output.getAll()).doesNotContain("secreto-proxy-corto");
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"Callejon9Demo!", "Callejon9Demo! ", "corta-de-15-car"})
+    @DisplayName("CAL-109: una PLATFORM_ADMIN_PASSWORD publicada o corta detiene el arranque sin aparecer en el log")
+    void invalidPlatformAdminPasswordStopsStartup(String password, CapturedOutput output) {
+        Map<String, Object> variables = productionVariables();
+        variables.put("PLATFORM_ADMIN_PASSWORD", password);
+
+        String message = startupFailure(variables, "prod");
+
+        assertThat(message).contains("PLATFORM_ADMIN_PASSWORD").doesNotContain(password.strip());
+        assertThat(output.getAll()).doesNotContain(password.strip());
+    }
+
+    @Test
+    @DisplayName("CAL-109: PLATFORM_ADMIN_PASSWORD es opcional y, con 16 caracteres o mas, prod arranca")
+    void platformAdminPasswordIsOptional() {
+        try (ConfigurableApplicationContext context = start(productionVariables(), "prod")) {
+            assertThat(context.isActive()).isTrue();
+        }
+        Map<String, Object> variables = productionVariables();
+        variables.put("PLATFORM_ADMIN_PASSWORD", "admin-" + UUID.randomUUID());
+        try (ConfigurableApplicationContext context = start(variables, "prod")) {
+            assertThat(context.isActive()).isTrue();
+        }
+    }
+
     @Test
     @DisplayName("CAL-169: APP_PROXY_SECRET es opcional y, si es largo, prod arranca")
     void proxySecretIsOptional() {

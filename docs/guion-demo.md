@@ -66,6 +66,8 @@ Antes del primer cobro, inicia sesión como `CASHIER` y abre su turno en `/cash-
 | `parrilla-norte` | `maria@parrillanorte.com` | `Secreto123!` | `ADMIN` |
 | `platform` | `super@callejon9.com` | `Callejon9Demo!` | `SUPER_ADMIN` |
 
+Estas credenciales son solo para la demo en local. En producción la cuenta de plataforma no conserva `Callejon9Demo!`: el perfil `prod` se niega a arrancar con ella y la reemplaza con `PLATFORM_ADMIN_PASSWORD` (CAL-109).
+
 ---
 
 ## El recorrido

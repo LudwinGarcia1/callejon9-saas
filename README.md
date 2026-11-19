@@ -153,9 +153,12 @@ Con `SPRING_PROFILES_ACTIVE=prod`, el backend se niega a arrancar, antes de cone
 - falta `APP_ALLOWED_ORIGINS` o alguno de sus orígenes no es `https://`;
 - `app.auth.cookie-secure` se forzó a `false`;
 - `APP_PROXY_SECRET`, que es opcional, está definida con menos de 32 bytes;
+- `PLATFORM_ADMIN_PASSWORD`, que es opcional, está definida con menos de 16 caracteres o es la contraseña publicada del super-administrador;
 - se activa junto a `demo` o `dev`.
 
 El error enumera cada problema por el nombre de la variable, nunca por su valor. `prod` fija además `server.forward-headers-strategy=none`: la IP del cliente la resuelve `ClientIp` con su propio modelo de confianza (red local, `APP_TRUSTED_PROXIES` y la IP que reenvía el frontend con `APP_PROXY_SECRET`), y así Spring Boot no lo cambia por su cuenta al detectar una plataforma en la nube. La validación vive en `ProductionConfigurationGuard`.
+
+Ya conectado a la base, y antes de abrir el puerto, `PlatformAdminPasswordGuard` revisa la cuenta `super@callejon9.com` que siembra `V6`. Si conserva la contraseña publicada, la reemplaza con `PLATFORM_ADMIN_PASSWORD`; si la variable no está definida, detiene el arranque. Una contraseña distinta no se toca (CAL-109).
 
 ### 3. Frontend
 
@@ -176,6 +179,8 @@ Para una demostración conviene usar `pnpm build` seguido de `pnpm start` en lug
 | Restaurante (slug) | Correo | Contraseña | Rol |
 |---|---|---|---|
 | `platform` | `super@callejon9.com` | `Callejon9Demo!` | `SUPER_ADMIN` |
+
+Esta contraseña está publicada y sirve solo para desarrollo y la demo local. La siembra `V6__seed_platform_admin.sql` en cualquier base nueva. Con el perfil `prod`, la aplicación no arranca mientras la cuenta la conserve: la reemplaza al arrancar con `PLATFORM_ADMIN_PASSWORD` (16 caracteres o más) o se detiene con un mensaje que nombra esa variable. Si la contraseña ya es otra, no la toca (CAL-109). En Azure la variable llega desde Key Vault; ver `infra/terraform/azure-backend/README.md`.
 
 El inquilino `platform` no es un restaurante: es un registro técnico al que pertenece quien administra la plataforma. Existe porque `users.tenant_id` es `NOT NULL` y el login resuelve el inquilino por slug antes de buscar al usuario — precisamente para que un correo válido en un restaurante no sirva para entrar a otro. Hacer la columna nulable habría debilitado el aislamiento justo donde más importa.
 
