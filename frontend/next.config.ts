@@ -45,6 +45,13 @@ const nextConfig: NextConfig = {
         source: "/api/v1/:path*",
         destination: `${BACKEND_ORIGIN}/api/v1/:path*`,
       },
+      // Canal en tiempo real (CAL-172). Next reenvia tambien el upgrade de
+      // WebSocket, asi que la cookie SameSite=Strict llega al handshake igual
+      // que a /api/v1/*. El backend valida el Origin contra APP_ALLOWED_ORIGINS.
+      {
+        source: "/ws",
+        destination: `${BACKEND_ORIGIN}/ws`,
+      },
     ];
   },
 };

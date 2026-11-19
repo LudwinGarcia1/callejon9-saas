@@ -134,6 +134,8 @@ Las cookies llevan el atributo `Secure` salvo que `AUTH_COOKIE_SECURE=false`. `s
 
 El WebSocket `/ws` solo acepta el handshake desde los orígenes de `APP_ALLOWED_ORIGINS` (separados por coma, sin comodines). Por omisión es `http://localhost:3000`; en cualquier otro entorno debe ser el dominio público del frontend. Con la lista vacía o con `*`, el backend no arranca.
 
+El navegador no abre `/ws` en el host de la API, sino en el del frontend. `next.config.ts` reenvía ese handshake al backend igual que `/api/v1/*`, así que la cookie `SameSite=Strict` llega sola y el token nunca pasa por JavaScript (CAL-172). El tablero de cocina y la vista de orden del mesero se suscriben al tópico de su restaurante y, con cada evento, vuelven a pedir sus datos. La consulta periódica se queda como respaldo: cada 30 s con el canal abierto, y cada 5 s (cocina) o 10 s (orden en cocina) cuando el canal no está disponible. En Azure, el App Service del frontend necesita WebSockets activados (`websockets_enabled` en `infra/terraform/azure-frontend`).
+
 #### Perfiles
 
 `application.yml` trae valores por defecto para que el proyecto corra en local sin preparar nada. Esos valores (secreto JWT, contraseñas de `callejon9_app` y `callejon9_owner`) están publicados en el repositorio, así que solo sirven en una máquina de desarrollo.
