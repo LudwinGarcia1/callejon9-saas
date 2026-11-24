@@ -1,3402 +1,3057 @@
 {
-  "openapi": "3.1.0",
-  "info": {
-    "title": "Callejon 9 SaaS API",
-    "description": "API multi-tenant para gestion de restaurantes. El aislamiento entre restaurantes lo impone PostgreSQL mediante Row Level Security.",
-    "version": "v1"
+  "openapi" : "3.1.0",
+  "info" : {
+    "description" : "API multi-tenant para gestion de restaurantes. El aislamiento entre restaurantes lo impone PostgreSQL mediante Row Level Security.",
+    "title" : "Callejon 9 SaaS API",
+    "version" : "v1"
   },
-  "servers": [
-    {
-      "url": "/",
-      "description": "Mismo origen que la pagina: Swagger UI del backend o el servidor del frontend"
-    }
-  ],
-  "security": [
-    {
-      "cookieAuth": []
-    }
-  ],
-  "paths": {
-    "/api/v1/tables/{id}": {
-      "put": {
-        "tags": [
-          "table-controller"
-        ],
-        "operationId": "update",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+  "servers" : [ {
+    "url" : "/",
+    "description" : "Mismo origen que la pagina: Swagger UI del backend o el servidor del frontend"
+  } ],
+  "security" : [ {
+    "cookieAuth" : [ ]
+  } ],
+  "paths" : {
+    "/api/v1/analytics" : {
+      "get" : {
+        "operationId" : "analytics",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
           }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateTableRequest"
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AnalyticsResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "analytics-controller" ]
+      }
+    },
+    "/api/v1/auth/login" : {
+      "post" : {
+        "operationId" : "login",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LoginRequest"
               }
             }
           },
-          "required": true
+          "required" : true
         },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/TableResponse"
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LoginResponse"
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
+        },
+        "tags" : [ "auth-controller" ]
+      }
+    },
+    "/api/v1/auth/logout" : {
+      "post" : {
+        "operationId" : "logout",
+        "parameters" : [ {
+          "in" : "cookie",
+          "name" : "refresh_token",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "auth-controller" ]
+      }
+    },
+    "/api/v1/auth/me" : {
+      "get" : {
+        "operationId" : "me",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MeResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "auth-controller" ]
+      }
+    },
+    "/api/v1/auth/refresh" : {
+      "post" : {
+        "operationId" : "refresh",
+        "parameters" : [ {
+          "in" : "cookie",
+          "name" : "refresh_token",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "auth-controller" ]
+      }
+    },
+    "/api/v1/cash-sessions" : {
+      "get" : {
+        "operationId" : "list_7",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CashSessionListResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "cash-session-controller" ]
       },
-      "patch": {
-        "tags": [
-          "table-controller"
-        ],
-        "operationId": "patch",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateTableActiveRequest"
+      "post" : {
+        "operationId" : "open_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OpenCashSessionRequest"
               }
             }
           },
-          "required": true
+          "required" : true
         },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/TableResponse"
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CashSessionResponse"
                 }
               }
-            }
+            },
+            "description" : "Created"
           }
-        }
+        },
+        "tags" : [ "cash-session-controller" ]
       }
     },
-    "/api/v1/products/{id}": {
-      "put": {
-        "tags": [
-          "product-controller"
-        ],
-        "operationId": "update_1",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+    "/api/v1/cash-sessions/{id}" : {
+      "get" : {
+        "operationId" : "get_3",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
           }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateProductRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProductResponse"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CashSessionResponse"
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
-      },
-      "patch": {
-        "tags": [
-          "product-controller"
-        ],
-        "operationId": "patch_1",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateProductStatusRequest"
-              }
-            }
-          },
-          "required": true
         },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProductResponse"
-                }
-              }
-            }
-          }
-        }
+        "tags" : [ "cash-session-controller" ]
       }
     },
-    "/api/v1/inventory/items/{id}": {
-      "put": {
-        "tags": [
-          "inventory-item-controller"
-        ],
-        "operationId": "update_2",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+    "/api/v1/cash-sessions/{id}/close" : {
+      "post" : {
+        "operationId" : "closeOwn",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
           }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateInventoryItemRequest"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CloseCashSessionRequest"
               }
             }
           },
-          "required": true
+          "required" : true
         },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/InventoryItemResponse"
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CashSessionResponse"
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
-      },
-      "patch": {
-        "tags": [
-          "inventory-item-controller"
-        ],
-        "operationId": "patch_2",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateInventoryItemStatusRequest"
-              }
-            }
-          },
-          "required": true
         },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/InventoryItemResponse"
-                }
-              }
-            }
-          }
-        }
+        "tags" : [ "cash-session-controller" ]
       }
     },
-    "/api/v1/categories/{id}": {
-      "put": {
-        "tags": [
-          "category-controller"
-        ],
-        "operationId": "update_3",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+    "/api/v1/cash-sessions/{id}/force-close" : {
+      "post" : {
+        "operationId" : "forceClose",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
           }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateCategoryRequest"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CloseCashSessionRequest"
               }
             }
           },
-          "required": true
+          "required" : true
         },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/CategoryResponse"
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CashSessionResponse"
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
+        },
+        "tags" : [ "cash-session-controller" ]
       }
     },
-    "/api/v1/users": {
-      "get": {
-        "tags": [
-          "user-controller"
-        ],
-        "operationId": "list",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserResponse"
+    "/api/v1/cash-sessions/{id}/movements" : {
+      "post" : {
+        "operationId" : "addMovement",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CashMovementRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CashSessionResponse"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "tags" : [ "cash-session-controller" ]
+      }
+    },
+    "/api/v1/categories" : {
+      "get" : {
+        "operationId" : "list_6",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CategoryResponse"
                   }
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
+        },
+        "tags" : [ "category-controller" ]
       },
-      "post": {
-        "tags": [
-          "user-controller"
-        ],
-        "operationId": "create",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateUserRequest"
+      "post" : {
+        "operationId" : "create_4",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateCategoryRequest"
               }
             }
           },
-          "required": true
+          "required" : true
         },
-        "responses": {
-          "201": {
-            "description": "Created",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CategoryResponse"
                 }
               }
-            }
+            },
+            "description" : "Created"
           }
-        }
+        },
+        "tags" : [ "category-controller" ]
       }
     },
-    "/api/v1/tables": {
-      "get": {
-        "tags": [
-          "table-controller"
-        ],
-        "operationId": "list_1",
-        "parameters": [
-          {
-            "name": "includeInactive",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
+    "/api/v1/categories/{id}" : {
+      "put" : {
+        "operationId" : "update_3",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/TableResponse"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateCategoryRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CategoryResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "category-controller" ]
+      }
+    },
+    "/api/v1/inventory/items" : {
+      "get" : {
+        "operationId" : "list_5",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "includeInactive",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/InventoryItemResponse"
                   }
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
+        },
+        "tags" : [ "inventory-item-controller" ]
       },
-      "post": {
-        "tags": [
-          "table-controller"
-        ],
-        "operationId": "create_1",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateTableRequest"
+      "post" : {
+        "operationId" : "create_3",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateInventoryItemRequest"
               }
             }
           },
-          "required": true
+          "required" : true
         },
-        "responses": {
-          "201": {
-            "description": "Created",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/TableResponse"
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventoryItemResponse"
                 }
               }
-            }
+            },
+            "description" : "Created"
           }
-        }
+        },
+        "tags" : [ "inventory-item-controller" ]
       }
     },
-    "/api/v1/tables/{id}/status": {
-      "post": {
-        "tags": [
-          "table-controller"
-        ],
-        "operationId": "changeStatus",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+    "/api/v1/inventory/items/{id}" : {
+      "patch" : {
+        "operationId" : "patch_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
           }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateTableStatusRequest"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateInventoryItemStatusRequest"
               }
             }
           },
-          "required": true
+          "required" : true
         },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/TableResponse"
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventoryItemResponse"
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
-      }
-    },
-    "/api/v1/signup": {
-      "post": {
-        "tags": [
-          "signup-controller"
-        ],
-        "operationId": "signup",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SignupRequest"
+        },
+        "tags" : [ "inventory-item-controller" ]
+      },
+      "put" : {
+        "operationId" : "update_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateInventoryItemRequest"
               }
             }
           },
-          "required": true
+          "required" : true
         },
-        "responses": {
-          "201": {
-            "description": "Created",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/SignupResponse"
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InventoryItemResponse"
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
-      }
-    },
-    "/api/v1/public/{slug}/tables/{tableNumber}/orders": {
-      "post": {
-        "tags": [
-          "public-menu-controller"
-        ],
-        "operationId": "createTableOrder",
-        "parameters": [
-          {
-            "name": "slug",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "tableNumber",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AddOrderItemsRequest"
-              }
-            }
-          },
-          "required": true
         },
-        "responses": {
-          "201": {
-            "description": "Created",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrderResponse"
-                }
-              }
-            }
-          }
-        }
+        "tags" : [ "inventory-item-controller" ]
       }
     },
-    "/api/v1/public/{slug}/tables/{tableNumber}/call-waiter": {
-      "post": {
-        "tags": [
-          "public-menu-controller"
-        ],
-        "operationId": "callWaiter",
-        "parameters": [
-          {
-            "name": "slug",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "tableNumber",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
+    "/api/v1/inventory/movements" : {
+      "get" : {
+        "operationId" : "list_4",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": {
-                    "type": "object"
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "itemId",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/InventoryMovementRow"
                   }
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
-      }
-    },
-    "/api/v1/products": {
-      "get": {
-        "tags": [
-          "product-controller"
-        ],
-        "operationId": "list_2",
-        "parameters": [
-          {
-            "name": "categoryId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
+        },
+        "tags" : [ "inventory-movement-controller" ]
+      },
+      "post" : {
+        "operationId" : "register",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RegisterMovementRequest"
+              }
             }
           },
-          {
-            "name": "includeInactive",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RegisteredMovementResponse"
+                }
+              }
+            },
+            "description" : "Created"
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/ProductResponse"
+        },
+        "tags" : [ "inventory-movement-controller" ]
+      }
+    },
+    "/api/v1/kitchen/items/{itemId}/status" : {
+      "post" : {
+        "operationId" : "advanceItemStatus",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "itemId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateKitchenItemStatusRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/KitchenItemResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "kitchen-controller" ]
+      }
+    },
+    "/api/v1/kitchen/orders" : {
+      "get" : {
+        "operationId" : "listSentOrders",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/KitchenOrderResponse"
                   }
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
+        },
+        "tags" : [ "kitchen-controller" ]
+      }
+    },
+    "/api/v1/orders" : {
+      "get" : {
+        "operationId" : "list_3",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "status",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "NEW", "SENT", "READY", "PAID", "CANCELED" ]
+          }
+        }, {
+          "in" : "query",
+          "name" : "open",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageResponseOrderSummaryResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "order-controller" ]
       },
-      "post": {
-        "tags": [
-          "product-controller"
-        ],
-        "operationId": "create_2",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateProductRequest"
+      "post" : {
+        "operationId" : "open",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OpenOrderRequest"
               }
             }
           },
-          "required": true
+          "required" : true
         },
-        "responses": {
-          "201": {
-            "description": "Created",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProductResponse"
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderResponse"
                 }
               }
-            }
+            },
+            "description" : "Created"
           }
-        }
-      }
-    },
-    "/api/v1/orders": {
-      "get": {
-        "tags": [
-          "order-controller"
-        ],
-        "operationId": "list_3",
-        "parameters": [
-          {
-            "name": "status",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "NEW",
-                "SENT",
-                "READY",
-                "PAID",
-                "CANCELED"
-              ]
-            }
-          },
-          {
-            "name": "open",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "minimum": 0
-            }
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "minimum": 1,
-              "maximum": 100
-            }
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/PageResponseOrderSummaryResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "order-controller"
-        ],
-        "operationId": "open",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OpenOrderRequest"
-              }
-            }
-          },
-          "required": true
         },
-        "responses": {
-          "201": {
-            "description": "Created",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrderResponse"
-                }
-              }
-            }
-          }
-        }
+        "tags" : [ "order-controller" ]
       }
     },
-    "/api/v1/orders/{id}/send-to-kitchen": {
-      "post": {
-        "tags": [
-          "order-controller"
-        ],
-        "operationId": "sendToKitchen",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+    "/api/v1/orders/{id}" : {
+      "get" : {
+        "operationId" : "get_2",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrderResponse"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderResponse"
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
-      }
-    },
-    "/api/v1/orders/{id}/items": {
-      "post": {
-        "tags": [
-          "order-controller"
-        ],
-        "operationId": "addItems",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AddOrderItemsRequest"
-              }
-            }
-          },
-          "required": true
         },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrderResponse"
-                }
-              }
-            }
-          }
-        }
+        "tags" : [ "order-controller" ]
       }
     },
-    "/api/v1/orders/{id}/items/{itemId}": {
-      "delete": {
-        "tags": [
-          "order-controller"
-        ],
-        "operationId": "removeItem",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "itemId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+    "/api/v1/orders/{id}/cancel" : {
+      "post" : {
+        "operationId" : "cancel",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrderResponse"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderResponse"
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
-      }
-    },
-    "/api/v1/orders/{id}/checkout": {
-      "post": {
-        "tags": [
-          "checkout-controller"
-        ],
-        "operationId": "checkout",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CheckoutRequest"
-              }
-            }
-          },
-          "required": true
         },
-        "responses": {
-          "201": {
-            "description": "Created",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/TicketResponse"
-                }
-              }
-            }
-          }
-        }
+        "tags" : [ "order-controller" ]
       }
     },
-    "/api/v1/orders/{id}/cancel": {
-      "post": {
-        "tags": [
-          "order-controller"
-        ],
-        "operationId": "cancel",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+    "/api/v1/orders/{id}/checkout" : {
+      "post" : {
+        "operationId" : "checkout",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrderResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/kitchen/items/{itemId}/status": {
-      "post": {
-        "tags": [
-          "kitchen-controller"
-        ],
-        "operationId": "advanceItemStatus",
-        "parameters": [
-          {
-            "name": "itemId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateKitchenItemStatusRequest"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CheckoutRequest"
               }
             }
           },
-          "required": true
+          "required" : true
         },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/KitchenItemResponse"
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TicketResponse"
                 }
               }
-            }
+            },
+            "description" : "Created"
           }
-        }
+        },
+        "tags" : [ "checkout-controller" ]
       }
     },
-    "/api/v1/inventory/movements": {
-      "get": {
-        "tags": [
-          "inventory-movement-controller"
-        ],
-        "operationId": "list_4",
-        "parameters": [
-          {
-            "name": "from",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
-          },
-          {
-            "name": "itemId",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+    "/api/v1/orders/{id}/items" : {
+      "post" : {
+        "operationId" : "addItems",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/InventoryMovementRow"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AddOrderItemsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "order-controller" ]
+      }
+    },
+    "/api/v1/orders/{id}/items/{itemId}" : {
+      "delete" : {
+        "operationId" : "removeItem",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "in" : "path",
+          "name" : "itemId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "order-controller" ]
+      }
+    },
+    "/api/v1/orders/{id}/send-to-kitchen" : {
+      "post" : {
+        "operationId" : "sendToKitchen",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "order-controller" ]
+      }
+    },
+    "/api/v1/platform/plans" : {
+      "get" : {
+        "operationId" : "list_8",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PlanView"
                   }
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
-      },
-      "post": {
-        "tags": [
-          "inventory-movement-controller"
-        ],
-        "operationId": "register",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterMovementRequest"
-              }
-            }
-          },
-          "required": true
         },
-        "responses": {
-          "201": {
-            "description": "Created",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/RegisteredMovementResponse"
-                }
-              }
-            }
-          }
-        }
+        "tags" : [ "plan-controller" ]
       }
     },
-    "/api/v1/inventory/items": {
-      "get": {
-        "tags": [
-          "inventory-item-controller"
-        ],
-        "operationId": "list_5",
-        "parameters": [
-          {
-            "name": "includeInactive",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
+    "/api/v1/products" : {
+      "get" : {
+        "operationId" : "list_2",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "categoryId",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
           }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/InventoryItemResponse"
+        }, {
+          "in" : "query",
+          "name" : "includeInactive",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProductResponse"
                   }
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
+        },
+        "tags" : [ "product-controller" ]
       },
-      "post": {
-        "tags": [
-          "inventory-item-controller"
-        ],
-        "operationId": "create_3",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateInventoryItemRequest"
+      "post" : {
+        "operationId" : "create_2",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateProductRequest"
               }
             }
           },
-          "required": true
+          "required" : true
         },
-        "responses": {
-          "201": {
-            "description": "Created",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/InventoryItemResponse"
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductResponse"
                 }
               }
-            }
+            },
+            "description" : "Created"
           }
-        }
+        },
+        "tags" : [ "product-controller" ]
       }
     },
-    "/api/v1/categories": {
-      "get": {
-        "tags": [
-          "category-controller"
-        ],
-        "operationId": "list_6",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CategoryResponse"
+    "/api/v1/products/{id}" : {
+      "patch" : {
+        "operationId" : "patch_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateProductStatusRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "product-controller" ]
+      },
+      "put" : {
+        "operationId" : "update_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateProductRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "product-controller" ]
+      }
+    },
+    "/api/v1/public/{slug}/catalog" : {
+      "get" : {
+        "operationId" : "getCatalog",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "slug",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PublicCatalogResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "public-menu-controller" ]
+      }
+    },
+    "/api/v1/public/{slug}/tables/{tableNumber}/call-waiter" : {
+      "post" : {
+        "operationId" : "callWaiter",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "slug",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "tableNumber",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "object",
+                  "additionalProperties" : {
+                    "type" : "object"
                   }
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
+        },
+        "tags" : [ "public-menu-controller" ]
+      }
+    },
+    "/api/v1/public/{slug}/tables/{tableNumber}/orders" : {
+      "post" : {
+        "operationId" : "createTableOrder",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "slug",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "tableNumber",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AddOrderItemsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderResponse"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "tags" : [ "public-menu-controller" ]
+      }
+    },
+    "/api/v1/sales" : {
+      "get" : {
+        "operationId" : "history",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "from",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "to",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "in" : "query",
+          "name" : "page",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "in" : "query",
+          "name" : "size",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "in" : "query",
+          "name" : "sort",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SalesHistoryResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "sales-controller" ]
+      }
+    },
+    "/api/v1/settings" : {
+      "get" : {
+        "operationId" : "get",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RestaurantSettingsResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "restaurant-settings-controller" ]
       },
-      "post": {
-        "tags": [
-          "category-controller"
-        ],
-        "operationId": "create_4",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateCategoryRequest"
+      "patch" : {
+        "operationId" : "update_4",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateRestaurantSettingsRequest"
               }
             }
           },
-          "required": true
+          "required" : true
         },
-        "responses": {
-          "201": {
-            "description": "Created",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/CategoryResponse"
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RestaurantSettingsResponse"
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
-      }
-    },
-    "/api/v1/cash-sessions": {
-      "get": {
-        "tags": [
-          "cash-session-controller"
-        ],
-        "operationId": "list_7",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/CashSessionListResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "cash-session-controller"
-        ],
-        "operationId": "open_1",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/OpenCashSessionRequest"
-              }
-            }
-          },
-          "required": true
         },
-        "responses": {
-          "201": {
-            "description": "Created",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/CashSessionResponse"
-                }
-              }
-            }
-          }
-        }
+        "tags" : [ "restaurant-settings-controller" ]
       }
     },
-    "/api/v1/cash-sessions/{id}/movements": {
-      "post": {
-        "tags": [
-          "cash-session-controller"
-        ],
-        "operationId": "addMovement",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CashMovementRequest"
+    "/api/v1/signup" : {
+      "post" : {
+        "operationId" : "signup",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SignupRequest"
               }
             }
           },
-          "required": true
+          "required" : true
         },
-        "responses": {
-          "201": {
-            "description": "Created",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/CashSessionResponse"
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SignupResponse"
                 }
               }
-            }
+            },
+            "description" : "Created"
           }
-        }
-      }
-    },
-    "/api/v1/cash-sessions/{id}/force-close": {
-      "post": {
-        "tags": [
-          "cash-session-controller"
-        ],
-        "operationId": "forceClose",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CloseCashSessionRequest"
-              }
-            }
-          },
-          "required": true
         },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/CashSessionResponse"
-                }
-              }
-            }
-          }
-        }
+        "tags" : [ "signup-controller" ]
       }
     },
-    "/api/v1/cash-sessions/{id}/close": {
-      "post": {
-        "tags": [
-          "cash-session-controller"
-        ],
-        "operationId": "closeOwn",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
+    "/api/v1/tables" : {
+      "get" : {
+        "operationId" : "list_1",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "includeInactive",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
           }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CloseCashSessionRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/CashSessionResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/refresh": {
-      "post": {
-        "tags": [
-          "auth-controller"
-        ],
-        "operationId": "refresh",
-        "parameters": [
-          {
-            "name": "refresh_token",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/auth/logout": {
-      "post": {
-        "tags": [
-          "auth-controller"
-        ],
-        "operationId": "logout",
-        "parameters": [
-          {
-            "name": "refresh_token",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK"
-          }
-        }
-      }
-    },
-    "/api/v1/auth/login": {
-      "post": {
-        "tags": [
-          "auth-controller"
-        ],
-        "operationId": "login",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoginResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/users/{id}": {
-      "patch": {
-        "tags": [
-          "user-controller"
-        ],
-        "operationId": "patch_3",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateUserStatusRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/UserResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/tickets": {
-      "get": {
-        "tags": [
-          "ticket-controller"
-        ],
-        "operationId": "getByFolio",
-        "parameters": [
-          {
-            "name": "folio",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/TicketResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/tickets/{id}": {
-      "get": {
-        "tags": [
-          "ticket-controller"
-        ],
-        "operationId": "get",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/TicketResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/tickets/{id}/pdf": {
-      "get": {
-        "tags": [
-          "ticket-controller"
-        ],
-        "operationId": "pdf",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/pdf": {
-                "schema": {
-                  "type": "string",
-                  "format": "byte"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/sales": {
-      "get": {
-        "tags": [
-          "sales-controller"
-        ],
-        "operationId": "history",
-        "parameters": [
-          {
-            "name": "from",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "minimum": 0
-            }
-          },
-          {
-            "name": "size",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "minimum": 1,
-              "maximum": 100
-            }
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/SalesHistoryResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/public/{slug}/catalog": {
-      "get": {
-        "tags": [
-          "public-menu-controller"
-        ],
-        "operationId": "getCatalog",
-        "parameters": [
-          {
-            "name": "slug",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/PublicCatalogResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/platform/plans": {
-      "get": {
-        "tags": [
-          "plan-controller"
-        ],
-        "operationId": "list_8",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PlanView"
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/TableResponse"
                   }
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
-      }
-    },
-    "/api/v1/orders/{id}": {
-      "get": {
-        "tags": [
-          "order-controller"
-        ],
-        "operationId": "get_1",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrderResponse"
-                }
+        },
+        "tags" : [ "table-controller" ]
+      },
+      "post" : {
+        "operationId" : "create_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateTableRequest"
               }
             }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TableResponse"
+                }
+              }
+            },
+            "description" : "Created"
           }
-        }
+        },
+        "tags" : [ "table-controller" ]
       }
     },
-    "/api/v1/kitchen/orders": {
-      "get": {
-        "tags": [
-          "kitchen-controller"
-        ],
-        "operationId": "listSentOrders",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/KitchenOrderResponse"
+    "/api/v1/tables/{id}" : {
+      "patch" : {
+        "operationId" : "patch",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateTableActiveRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TableResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "table-controller" ]
+      },
+      "put" : {
+        "operationId" : "update",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateTableRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TableResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "table-controller" ]
+      }
+    },
+    "/api/v1/tables/{id}/status" : {
+      "post" : {
+        "operationId" : "changeStatus",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateTableStatusRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TableResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "table-controller" ]
+      }
+    },
+    "/api/v1/tickets" : {
+      "get" : {
+        "operationId" : "getByFolio",
+        "parameters" : [ {
+          "in" : "query",
+          "name" : "folio",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TicketResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "ticket-controller" ]
+      }
+    },
+    "/api/v1/tickets/{id}" : {
+      "get" : {
+        "operationId" : "get_1",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TicketResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "ticket-controller" ]
+      }
+    },
+    "/api/v1/tickets/{id}/pdf" : {
+      "get" : {
+        "operationId" : "pdf",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "application/pdf" : {
+                "schema" : {
+                  "type" : "string",
+                  "format" : "byte"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "ticket-controller" ]
+      }
+    },
+    "/api/v1/users" : {
+      "get" : {
+        "operationId" : "list",
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/UserResponse"
                   }
                 }
               }
-            }
+            },
+            "description" : "OK"
           }
-        }
-      }
-    },
-    "/api/v1/cash-sessions/{id}": {
-      "get": {
-        "tags": [
-          "cash-session-controller"
-        ],
-        "operationId": "get_2",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/CashSessionResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/me": {
-      "get": {
-        "tags": [
-          "auth-controller"
-        ],
-        "operationId": "me",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/MeResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/analytics": {
-      "get": {
-        "tags": [
-          "analytics-controller"
-        ],
-        "operationId": "analytics",
-        "parameters": [
-          {
-            "name": "from",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
-          },
-          {
-            "name": "to",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "format": "date"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/AnalyticsResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/settings": {
-      "get": {
-        "tags": [
-          "restaurant-settings-controller"
-        ],
-        "operationId": "get",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/RestaurantSettingsResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "restaurant-settings-controller"
-        ],
-        "operationId": "update",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateRestaurantSettingsRequest"
-              }
-            }
-          },
-          "required": true
         },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/RestaurantSettingsResponse"
-                }
+        "tags" : [ "user-controller" ]
+      },
+      "post" : {
+        "operationId" : "create",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateUserRequest"
               }
             }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserResponse"
+                }
+              }
+            },
+            "description" : "Created"
           }
-        }
+        },
+        "tags" : [ "user-controller" ]
+      }
+    },
+    "/api/v1/users/{id}" : {
+      "patch" : {
+        "operationId" : "patch_3",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateUserStatusRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "user-controller" ]
       }
     }
   },
-  "components": {
-    "schemas": {
-      "UpdateTableRequest": {
-        "type": "object",
-        "properties": {
-          "number": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 1
+  "components" : {
+    "schemas" : {
+      "AddOrderItemRequest" : {
+        "type" : "object",
+        "properties" : {
+          "notes" : {
+            "type" : "string",
+            "maxLength" : 500,
+            "minLength" : 0
           },
-          "capacity": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 1
+          "productId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "quantity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 99,
+            "minimum" : 1
           }
         },
-        "required": [
-          "capacity",
-          "number"
-        ]
+        "required" : [ "productId", "quantity" ]
       },
-      "TableResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "number": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "capacity": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "status": {
-            "type": "string"
-          },
-          "waiterId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "active": {
-            "type": "boolean"
-          }
-        }
-      },
-      "UpdateProductRequest": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "maxLength": 160,
-            "minLength": 0
-          },
-          "description": {
-            "type": "string"
-          },
-          "price": {
-            "type": "number",
-            "minimum": 0
-          },
-          "categoryId": {
-            "type": "string",
-            "format": "uuid"
-          }
-        },
-        "required": [
-          "price"
-        ]
-      },
-      "ProductResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "price": {
-            "type": "number"
-          },
-          "categoryId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "active": {
-            "type": "boolean"
-          }
-        }
-      },
-      "UpdateInventoryItemRequest": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "maxLength": 160,
-            "minLength": 0
-          },
-          "unit": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 0
-          },
-          "minStock": {
-            "type": "number"
-          },
-          "unitCost": {
-            "type": "number"
-          }
-        }
-      },
-      "InventoryItemResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          },
-          "unit": {
-            "type": "string"
-          },
-          "stock": {
-            "type": "number"
-          },
-          "minStock": {
-            "type": "number"
-          },
-          "unitCost": {
-            "type": "number"
-          },
-          "active": {
-            "type": "boolean"
-          },
-          "level": {
-            "type": "string",
-            "enum": [
-              "OK",
-              "LOW",
-              "NEGATIVE"
-            ]
-          }
-        }
-      },
-      "UpdateCategoryRequest": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "maxLength": 120,
-            "minLength": 0
-          },
-          "sortOrder": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 0
-          }
-        },
-        "required": [
-          "sortOrder"
-        ]
-      },
-      "CategoryResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          },
-          "sortOrder": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "CreateUserRequest": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string",
-            "maxLength": 180,
-            "minLength": 0
-          },
-          "fullName": {
-            "type": "string",
-            "maxLength": 160,
-            "minLength": 0
-          },
-          "role": {
-            "type": "string",
-            "enum": [
-              "SUPER_ADMIN",
-              "ADMIN",
-              "WAITER",
-              "KITCHEN",
-              "CASHIER"
-            ]
-          },
-          "password": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "role"
-        ]
-      },
-      "UserResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "email": {
-            "type": "string"
-          },
-          "fullName": {
-            "type": "string"
-          },
-          "role": {
-            "type": "string",
-            "enum": [
-              "SUPER_ADMIN",
-              "ADMIN",
-              "WAITER",
-              "KITCHEN",
-              "CASHIER"
-            ]
-          },
-          "active": {
-            "type": "boolean"
-          }
-        }
-      },
-      "CreateTableRequest": {
-        "type": "object",
-        "properties": {
-          "number": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 1
-          },
-          "capacity": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 1
-          }
-        },
-        "required": [
-          "capacity",
-          "number"
-        ]
-      },
-      "UpdateTableStatusRequest": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": [
-              "FREE",
-              "OCCUPIED",
-              "RESERVED",
-              "CLEANING"
-            ]
-          }
-        },
-        "required": [
-          "status"
-        ]
-      },
-      "SignupRequest": {
-        "type": "object",
-        "properties": {
-          "restaurantName": {
-            "type": "string",
-            "maxLength": 160,
-            "minLength": 0
-          },
-          "slug": {
-            "type": "string",
-            "minLength": 1,
-            "pattern": "^[a-z0-9-]{3,80}$"
-          },
-          "adminEmail": {
-            "type": "string",
-            "maxLength": 180,
-            "minLength": 0
-          },
-          "adminFullName": {
-            "type": "string",
-            "maxLength": 160,
-            "minLength": 0
-          },
-          "password": {
-            "type": "string",
-            "minLength": 1
-          },
-          "planCode": {
-            "type": "string",
-            "minLength": 1
-          }
-        }
-      },
-      "SignupResponse": {
-        "type": "object",
-        "properties": {
-          "tenantId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "slug": {
-            "type": "string"
-          },
-          "adminEmail": {
-            "type": "string"
-          }
-        }
-      },
-      "AddOrderItemRequest": {
-        "type": "object",
-        "properties": {
-          "productId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "quantity": {
-            "type": "integer",
-            "format": "int32",
-            "maximum": 99,
-            "minimum": 1
-          },
-          "notes": {
-            "type": "string",
-            "maxLength": 500,
-            "minLength": 0
-          }
-        },
-        "required": [
-          "productId",
-          "quantity"
-        ]
-      },
-      "AddOrderItemsRequest": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AddOrderItemRequest"
+      "AddOrderItemsRequest" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AddOrderItemRequest"
             },
-            "maxItems": 50,
-            "minItems": 0
+            "maxItems" : 50,
+            "minItems" : 0
           }
         }
       },
-      "OrderItemResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
+      "AnalyticsResponse" : {
+        "type" : "object",
+        "properties" : {
+          "pareto" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ParetoRow"
+            }
           },
-          "productId": {
-            "type": "string",
-            "format": "uuid"
+          "paymentMix" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PaymentMixRow"
+            }
           },
-          "productName": {
-            "type": "string"
-          },
-          "unitPrice": {
-            "type": "number"
-          },
-          "quantity": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "kitchenStatus": {
-            "type": "string"
-          },
-          "notes": {
-            "type": "string"
-          }
-        }
-      },
-      "OrderResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "folio": {
-            "type": "string"
-          },
-          "tableId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "waiterId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "guestCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "status": {
-            "type": "string"
-          },
-          "total": {
-            "type": "number"
-          },
-          "openedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "sentToKitchenAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "closedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OrderItemResponse"
+          "salesByDay" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SalesByDayRow"
             }
           }
         }
       },
-      "CreateProductRequest": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "maxLength": 160,
-            "minLength": 0
+      "CashMovementRequest" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "number",
+            "minimum" : 0.01
           },
-          "description": {
-            "type": "string"
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 250,
+            "minLength" : 0
           },
-          "price": {
-            "type": "number",
-            "minimum": 0
-          },
-          "categoryId": {
-            "type": "string",
-            "format": "uuid"
+          "type" : {
+            "type" : "string",
+            "enum" : [ "DEPOSIT", "WITHDRAWAL" ]
           }
         },
-        "required": [
-          "price"
-        ]
+        "required" : [ "amount", "type" ]
       },
-      "OpenOrderRequest": {
-        "type": "object",
-        "properties": {
-          "tableId": {
-            "type": "string",
-            "format": "uuid"
+      "CashMovementResponse" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "number"
           },
-          "guestCount": {
-            "type": "integer",
-            "format": "int32",
-            "maximum": 50,
-            "minimum": 1
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "recordedBy" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "DEPOSIT", "WITHDRAWAL" ]
           }
-        },
-        "required": [
-          "guestCount",
-          "tableId"
-        ]
+        }
       },
-      "CheckoutRequest": {
-        "type": "object",
-        "properties": {
-          "paymentMethod": {
-            "type": "string",
-            "enum": [
-              "CASH",
-              "CARD",
-              "TRANSFER",
-              "MIXED",
-              "MERCADOPAGO"
-            ]
+      "CashPaymentMethodSummary" : {
+        "type" : "object",
+        "properties" : {
+          "appliedAmount" : {
+            "type" : "number"
           },
-          "tipPercent": {
-            "type": "number",
-            "maximum": 100,
-            "minimum": 0
+          "changeAmount" : {
+            "type" : "number"
           },
-          "payments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PaymentRequest"
+          "method" : {
+            "type" : "string",
+            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ]
+          },
+          "paymentCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "receivedAmount" : {
+            "type" : "number"
+          }
+        }
+      },
+      "CashSessionListItem" : {
+        "type" : "object",
+        "properties" : {
+          "cashierId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "cashierName" : {
+            "type" : "string"
+          },
+          "closedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "closureReason" : {
+            "type" : "string"
+          },
+          "countedCash" : {
+            "type" : "number"
+          },
+          "difference" : {
+            "type" : "number"
+          },
+          "expectedCash" : {
+            "type" : "number"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "openedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "openingFund" : {
+            "type" : "number"
+          }
+        }
+      },
+      "CashSessionListResponse" : {
+        "type" : "object",
+        "properties" : {
+          "sessions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CashSessionListItem"
+            }
+          }
+        }
+      },
+      "CashSessionResponse" : {
+        "type" : "object",
+        "properties" : {
+          "cashierId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "cashierName" : {
+            "type" : "string"
+          },
+          "closedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "closedBy" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "closureReason" : {
+            "type" : "string"
+          },
+          "countedCash" : {
+            "type" : "number"
+          },
+          "difference" : {
+            "type" : "number"
+          },
+          "expectedCash" : {
+            "type" : "number"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "movements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CashMovementResponse"
+            }
+          },
+          "openedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "openingFund" : {
+            "type" : "number"
+          },
+          "paymentSummary" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CashPaymentMethodSummary"
+            }
+          }
+        }
+      },
+      "CategoryResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "sortOrder" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "CheckoutRequest" : {
+        "type" : "object",
+        "properties" : {
+          "paymentMethod" : {
+            "type" : "string",
+            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ]
+          },
+          "payments" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PaymentRequest"
             },
-            "maxItems": 50,
-            "minItems": 1
+            "maxItems" : 50,
+            "minItems" : 1
+          },
+          "tipPercent" : {
+            "type" : "number",
+            "maximum" : 100,
+            "minimum" : 0
           }
         },
-        "required": [
-          "tipPercent"
-        ]
+        "required" : [ "tipPercent" ]
       },
-      "PaymentRequest": {
-        "type": "object",
-        "properties": {
-          "method": {
-            "type": "string",
-            "enum": [
-              "CASH",
-              "CARD",
-              "TRANSFER",
-              "MIXED",
-              "MERCADOPAGO"
-            ]
+      "CloseCashSessionRequest" : {
+        "type" : "object",
+        "properties" : {
+          "countedCash" : {
+            "type" : "number",
+            "minimum" : 0.00
           },
-          "amount": {
-            "type": "number",
-            "minimum": 0.01
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 250,
+            "minLength" : 0
           }
         },
-        "required": [
-          "amount",
-          "method"
-        ]
+        "required" : [ "countedCash" ]
       },
-      "TicketItemSnapshot": {
-        "type": "object",
-        "properties": {
-          "productId": {
-            "type": "string",
-            "format": "uuid"
+      "CreateCategoryRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
           },
-          "productName": {
-            "type": "string"
-          },
-          "unitPrice": {
-            "type": "number"
-          },
-          "quantity": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "subtotal": {
-            "type": "number"
+          "sortOrder" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 0
           }
         }
       },
-      "TicketPaymentSnapshot": {
-        "type": "object",
-        "properties": {
-          "method": {
-            "type": "string",
-            "enum": [
-              "CASH",
-              "CARD",
-              "TRANSFER",
-              "MIXED",
-              "MERCADOPAGO"
-            ]
+      "CreateInventoryItemRequest" : {
+        "type" : "object",
+        "properties" : {
+          "initialStock" : {
+            "type" : "number"
           },
-          "amount": {
-            "type": "number"
+          "minStock" : {
+            "type" : "number"
           },
-          "receivedAmount": {
-            "type": "number"
+          "name" : {
+            "type" : "string",
+            "maxLength" : 160,
+            "minLength" : 0
           },
-          "change": {
-            "type": "number"
+          "unit" : {
+            "type" : "string",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "unitCost" : {
+            "type" : "number"
           }
         }
       },
-      "TicketResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
+      "CreateProductRequest" : {
+        "type" : "object",
+        "properties" : {
+          "categoryId" : {
+            "type" : "string",
+            "format" : "uuid"
           },
-          "saleId": {
-            "type": "string",
-            "format": "uuid"
+          "description" : {
+            "type" : "string"
           },
-          "orderId": {
-            "type": "string",
-            "format": "uuid"
+          "name" : {
+            "type" : "string",
+            "maxLength" : 160,
+            "minLength" : 0
           },
-          "folio": {
-            "type": "string"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TicketItemSnapshot"
-            }
-          },
-          "subtotal": {
-            "type": "number"
-          },
-          "tip": {
-            "type": "number"
-          },
-          "tipPercent": {
-            "type": "number"
-          },
-          "total": {
-            "type": "number"
-          },
-          "paymentMethod": {
-            "type": "string"
-          },
-          "closedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "payments": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TicketPaymentSnapshot"
-            }
-          },
-          "change": {
-            "type": "number"
-          }
-        }
-      },
-      "UpdateKitchenItemStatusRequest": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "string",
-            "enum": [
-              "PENDING",
-              "IN_PREPARATION",
-              "READY",
-              "DELIVERED"
-            ]
+          "price" : {
+            "type" : "number",
+            "minimum" : 0.00
           }
         },
-        "required": [
-          "status"
-        ]
+        "required" : [ "price" ]
       },
-      "KitchenItemResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
+      "CreateTableRequest" : {
+        "type" : "object",
+        "properties" : {
+          "capacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 1
           },
-          "orderId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "productId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "productName": {
-            "type": "string"
-          },
-          "quantity": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "kitchenStatus": {
-            "type": "string"
-          },
-          "notes": {
-            "type": "string"
-          }
-        }
-      },
-      "RegisterMovementRequest": {
-        "type": "object",
-        "properties": {
-          "inventoryItemId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "movementType": {
-            "type": "string",
-            "enum": [
-              "IN",
-              "OUT",
-              "ADJUSTMENT",
-              "WASTE"
-            ]
-          },
-          "quantity": {
-            "type": "number"
-          },
-          "countedStock": {
-            "type": "number"
-          },
-          "reason": {
-            "type": "string",
-            "maxLength": 150,
-            "minLength": 0
+          "number" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 1
           }
         },
-        "required": [
-          "inventoryItemId",
-          "movementType"
-        ]
+        "required" : [ "capacity", "number" ]
       },
-      "RegisteredMovementResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
+      "CreateUserRequest" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string",
+            "maxLength" : 180,
+            "minLength" : 0
           },
-          "inventoryItemId": {
-            "type": "string",
-            "format": "uuid"
+          "fullName" : {
+            "type" : "string",
+            "maxLength" : 160,
+            "minLength" : 0
           },
-          "movementType": {
-            "type": "string",
-            "enum": [
-              "IN",
-              "OUT",
-              "ADJUSTMENT",
-              "WASTE"
-            ]
+          "password" : {
+            "type" : "string",
+            "minLength" : 1
           },
-          "quantity": {
-            "type": "number"
-          },
-          "reason": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "CreateInventoryItemRequest": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "maxLength": 160,
-            "minLength": 0
-          },
-          "unit": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 0
-          },
-          "minStock": {
-            "type": "number"
-          },
-          "unitCost": {
-            "type": "number"
-          },
-          "initialStock": {
-            "type": "number"
-          }
-        }
-      },
-      "CreateCategoryRequest": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "maxLength": 120,
-            "minLength": 0
-          },
-          "sortOrder": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 0
-          }
-        }
-      },
-      "OpenCashSessionRequest": {
-        "type": "object",
-        "properties": {
-          "openingFund": {
-            "type": "number",
-            "minimum": 0
+          "role" : {
+            "type" : "string",
+            "enum" : [ "SUPER_ADMIN", "ADMIN", "WAITER", "KITCHEN", "CASHIER" ]
           }
         },
-        "required": [
-          "openingFund"
-        ]
+        "required" : [ "role" ]
       },
-      "CashMovementResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
+      "InventoryItemResponse" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
           },
-          "type": {
-            "type": "string",
-            "enum": [
-              "DEPOSIT",
-              "WITHDRAWAL"
-            ]
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
           },
-          "amount": {
-            "type": "number"
+          "level" : {
+            "type" : "string",
+            "enum" : [ "OK", "LOW", "NEGATIVE" ]
           },
-          "reason": {
-            "type": "string"
+          "minStock" : {
+            "type" : "number"
           },
-          "recordedBy": {
-            "type": "string",
-            "format": "uuid"
+          "name" : {
+            "type" : "string"
           },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
+          "stock" : {
+            "type" : "number"
+          },
+          "unit" : {
+            "type" : "string"
+          },
+          "unitCost" : {
+            "type" : "number"
           }
         }
       },
-      "CashPaymentMethodSummary": {
-        "type": "object",
-        "properties": {
-          "method": {
-            "type": "string",
-            "enum": [
-              "CASH",
-              "CARD",
-              "TRANSFER",
-              "MIXED",
-              "MERCADOPAGO"
-            ]
+      "InventoryMovementRow" : {
+        "type" : "object",
+        "properties" : {
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
           },
-          "paymentCount": {
-            "type": "integer",
-            "format": "int64"
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
           },
-          "appliedAmount": {
-            "type": "number"
+          "inventoryItemId" : {
+            "type" : "string",
+            "format" : "uuid"
           },
-          "receivedAmount": {
-            "type": "number"
+          "itemName" : {
+            "type" : "string"
           },
-          "changeAmount": {
-            "type": "number"
+          "movementType" : {
+            "type" : "string",
+            "enum" : [ "IN", "OUT", "ADJUSTMENT", "WASTE" ]
+          },
+          "quantity" : {
+            "type" : "number"
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "signedQuantity" : {
+            "type" : "number"
+          },
+          "unit" : {
+            "type" : "string"
+          },
+          "userName" : {
+            "type" : "string"
           }
         }
       },
-      "CashSessionResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
+      "KitchenItemResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
           },
-          "cashierId": {
-            "type": "string",
-            "format": "uuid"
+          "kitchenStatus" : {
+            "type" : "string"
           },
-          "cashierName": {
-            "type": "string"
+          "notes" : {
+            "type" : "string"
           },
-          "openingFund": {
-            "type": "number"
+          "orderId" : {
+            "type" : "string",
+            "format" : "uuid"
           },
-          "openedAt": {
-            "type": "string",
-            "format": "date-time"
+          "productId" : {
+            "type" : "string",
+            "format" : "uuid"
           },
-          "closedAt": {
-            "type": "string",
-            "format": "date-time"
+          "productName" : {
+            "type" : "string"
           },
-          "closedBy": {
-            "type": "string",
-            "format": "uuid"
+          "quantity" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "KitchenOrderResponse" : {
+        "type" : "object",
+        "properties" : {
+          "folio" : {
+            "type" : "string"
           },
-          "expectedCash": {
-            "type": "number"
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
           },
-          "countedCash": {
-            "type": "number"
-          },
-          "difference": {
-            "type": "number"
-          },
-          "closureReason": {
-            "type": "string"
-          },
-          "paymentSummary": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CashPaymentMethodSummary"
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/KitchenItemResponse"
             }
           },
-          "movements": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CashMovementResponse"
-            }
+          "sentToKitchenAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "tableId" : {
+            "type" : "string",
+            "format" : "uuid"
           }
         }
       },
-      "CashMovementRequest": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "enum": [
-              "DEPOSIT",
-              "WITHDRAWAL"
-            ]
+      "LoginRequest" : {
+        "type" : "object",
+        "properties" : {
+          "email" : {
+            "type" : "string",
+            "maxLength" : 180,
+            "minLength" : 0
           },
-          "amount": {
-            "type": "number",
-            "minimum": 0.01
+          "password" : {
+            "type" : "string",
+            "maxLength" : 100,
+            "minLength" : 0
           },
-          "reason": {
-            "type": "string",
-            "maxLength": 250,
-            "minLength": 0
+          "slug" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^[a-z0-9-]{3,80}$"
+          }
+        }
+      },
+      "LoginResponse" : {
+        "type" : "object",
+        "properties" : {
+          "fullName" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string"
+          },
+          "twoFactorRequired" : {
+            "type" : "boolean"
+          },
+          "userId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }
+      },
+      "MeResponse" : {
+        "type" : "object",
+        "properties" : {
+          "fullName" : {
+            "type" : "string"
+          },
+          "restaurantName" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string"
+          },
+          "slug" : {
+            "type" : "string"
+          },
+          "tenantId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "timezone" : {
+            "type" : "string"
+          },
+          "userId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }
+      },
+      "OpenCashSessionRequest" : {
+        "type" : "object",
+        "properties" : {
+          "openingFund" : {
+            "type" : "number",
+            "minimum" : 0.00
           }
         },
-        "required": [
-          "amount",
-          "type"
-        ]
+        "required" : [ "openingFund" ]
       },
-      "CloseCashSessionRequest": {
-        "type": "object",
-        "properties": {
-          "countedCash": {
-            "type": "number",
-            "minimum": 0
+      "OpenOrderRequest" : {
+        "type" : "object",
+        "properties" : {
+          "guestCount" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 50,
+            "minimum" : 1
           },
-          "reason": {
-            "type": "string",
-            "maxLength": 250,
-            "minLength": 0
+          "tableId" : {
+            "type" : "string",
+            "format" : "uuid"
           }
         },
-        "required": [
-          "countedCash"
-        ]
+        "required" : [ "guestCount", "tableId" ]
       },
-      "LoginRequest": {
-        "type": "object",
-        "properties": {
-          "slug": {
-            "type": "string",
-            "minLength": 1,
-            "pattern": "^[a-z0-9-]{3,80}$"
+      "OrderItemResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
           },
-          "email": {
-            "type": "string",
-            "maxLength": 180,
-            "minLength": 0
+          "kitchenStatus" : {
+            "type" : "string"
           },
-          "password": {
-            "type": "string",
-            "maxLength": 100,
-            "minLength": 0
+          "notes" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "quantity" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "unitPrice" : {
+            "type" : "number"
           }
         }
       },
-      "LoginResponse": {
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "string",
-            "format": "uuid"
+      "OrderResponse" : {
+        "type" : "object",
+        "properties" : {
+          "closedAt" : {
+            "type" : "string",
+            "format" : "date-time"
           },
-          "fullName": {
-            "type": "string"
+          "folio" : {
+            "type" : "string"
           },
-          "role": {
-            "type": "string"
+          "guestCount" : {
+            "type" : "integer",
+            "format" : "int32"
           },
-          "twoFactorRequired": {
-            "type": "boolean"
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OrderItemResponse"
+            }
+          },
+          "openedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "sentToKitchenAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "tableId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "total" : {
+            "type" : "number"
+          },
+          "waiterId" : {
+            "type" : "string",
+            "format" : "uuid"
           }
         }
       },
-      "UpdateUserStatusRequest": {
-        "type": "object",
-        "properties": {
-          "active": {
-            "type": "boolean"
+      "OrderSummaryResponse" : {
+        "type" : "object",
+        "properties" : {
+          "folio" : {
+            "type" : "string"
+          },
+          "guestCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "openedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "tableId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "total" : {
+            "type" : "number"
+          },
+          "waiterId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }
+      },
+      "PageResponseOrderSummaryResponse" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OrderSummaryResponse"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "PageResponseSaleHistoryRow" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SaleHistoryRow"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }
+      },
+      "ParetoRow" : {
+        "type" : "object",
+        "properties" : {
+          "cumulativeShare" : {
+            "type" : "number"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "revenue" : {
+            "type" : "number"
+          },
+          "revenueShare" : {
+            "type" : "number"
+          }
+        }
+      },
+      "PaymentMixAggregate" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "method" : {
+            "type" : "string",
+            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ]
+          },
+          "total" : {
+            "type" : "number"
+          }
+        }
+      },
+      "PaymentMixRow" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "method" : {
+            "type" : "string",
+            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ]
+          },
+          "share" : {
+            "type" : "number"
+          },
+          "total" : {
+            "type" : "number"
+          }
+        }
+      },
+      "PaymentRequest" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "number",
+            "minimum" : 0.01
+          },
+          "method" : {
+            "type" : "string",
+            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ]
           }
         },
-        "required": [
-          "active"
-        ]
+        "required" : [ "amount", "method" ]
       },
-      "UpdateTableActiveRequest": {
-        "type": "object",
-        "properties": {
-          "active": {
-            "type": "boolean"
+      "PlanView" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "maxTables" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "maxUsers" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "priceMonthly" : {
+            "type" : "number"
+          }
+        }
+      },
+      "ProductResponse" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "categoryId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "price" : {
+            "type" : "number"
+          }
+        }
+      },
+      "PublicCatalogResponse" : {
+        "type" : "object",
+        "properties" : {
+          "categories" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CategoryResponse"
+            }
+          },
+          "products" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProductResponse"
+            }
+          },
+          "restaurantName" : {
+            "type" : "string"
+          },
+          "slug" : {
+            "type" : "string"
+          }
+        }
+      },
+      "RegisterMovementRequest" : {
+        "type" : "object",
+        "properties" : {
+          "countedStock" : {
+            "type" : "number"
+          },
+          "inventoryItemId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "movementType" : {
+            "type" : "string",
+            "enum" : [ "IN", "OUT", "ADJUSTMENT", "WASTE" ]
+          },
+          "quantity" : {
+            "type" : "number"
+          },
+          "reason" : {
+            "type" : "string",
+            "maxLength" : 150,
+            "minLength" : 0
           }
         },
-        "required": [
-          "active"
-        ]
+        "required" : [ "inventoryItemId", "movementType" ]
       },
-      "UpdateProductStatusRequest": {
-        "type": "object",
-        "properties": {
-          "active": {
-            "type": "boolean"
+      "RegisteredMovementResponse" : {
+        "type" : "object",
+        "properties" : {
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "inventoryItemId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "movementType" : {
+            "type" : "string",
+            "enum" : [ "IN", "OUT", "ADJUSTMENT", "WASTE" ]
+          },
+          "quantity" : {
+            "type" : "number"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        }
+      },
+      "RestaurantSettingsResponse" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "slug" : {
+            "type" : "string"
+          },
+          "timezone" : {
+            "type" : "string"
+          }
+        }
+      },
+      "SaleHistoryRow" : {
+        "type" : "object",
+        "properties" : {
+          "cashierName" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "orderFolio" : {
+            "type" : "string"
+          },
+          "paymentMethod" : {
+            "type" : "string",
+            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ]
+          },
+          "subtotal" : {
+            "type" : "number"
+          },
+          "tableNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "ticketId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "tip" : {
+            "type" : "number"
+          },
+          "total" : {
+            "type" : "number"
+          }
+        }
+      },
+      "SaleHistorySummary" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "total" : {
+            "type" : "number"
+          }
+        }
+      },
+      "SalesByDayRow" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "day" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "total" : {
+            "type" : "number"
+          }
+        }
+      },
+      "SalesHistoryResponse" : {
+        "type" : "object",
+        "properties" : {
+          "paymentMix" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PaymentMixAggregate"
+            }
+          },
+          "sales" : {
+            "$ref" : "#/components/schemas/PageResponseSaleHistoryRow"
+          },
+          "summary" : {
+            "$ref" : "#/components/schemas/SaleHistorySummary"
+          }
+        }
+      },
+      "SignupRequest" : {
+        "type" : "object",
+        "properties" : {
+          "adminEmail" : {
+            "type" : "string",
+            "maxLength" : 180,
+            "minLength" : 0
+          },
+          "adminFullName" : {
+            "type" : "string",
+            "maxLength" : 160,
+            "minLength" : 0
+          },
+          "password" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "planCode" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "restaurantName" : {
+            "type" : "string",
+            "maxLength" : 160,
+            "minLength" : 0
+          },
+          "slug" : {
+            "type" : "string",
+            "minLength" : 1,
+            "pattern" : "^[a-z0-9-]{3,80}$"
+          }
+        }
+      },
+      "SignupResponse" : {
+        "type" : "object",
+        "properties" : {
+          "adminEmail" : {
+            "type" : "string"
+          },
+          "slug" : {
+            "type" : "string"
+          },
+          "tenantId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }
+      },
+      "TableResponse" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "capacity" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "number" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "waiterId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }
+      },
+      "TicketItemSnapshot" : {
+        "type" : "object",
+        "properties" : {
+          "productId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "quantity" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "subtotal" : {
+            "type" : "number"
+          },
+          "unitPrice" : {
+            "type" : "number"
+          }
+        }
+      },
+      "TicketPaymentSnapshot" : {
+        "type" : "object",
+        "properties" : {
+          "amount" : {
+            "type" : "number"
+          },
+          "change" : {
+            "type" : "number"
+          },
+          "method" : {
+            "type" : "string",
+            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ]
+          },
+          "receivedAmount" : {
+            "type" : "number"
+          }
+        }
+      },
+      "TicketResponse" : {
+        "type" : "object",
+        "properties" : {
+          "change" : {
+            "type" : "number"
+          },
+          "closedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "folio" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TicketItemSnapshot"
+            }
+          },
+          "orderId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "paymentMethod" : {
+            "type" : "string"
+          },
+          "payments" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TicketPaymentSnapshot"
+            }
+          },
+          "saleId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "subtotal" : {
+            "type" : "number"
+          },
+          "tip" : {
+            "type" : "number"
+          },
+          "tipPercent" : {
+            "type" : "number"
+          },
+          "total" : {
+            "type" : "number"
+          }
+        }
+      },
+      "UpdateCategoryRequest" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "maxLength" : 120,
+            "minLength" : 0
+          },
+          "sortOrder" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 0
           }
         },
-        "required": [
-          "active"
-        ]
+        "required" : [ "sortOrder" ]
       },
-      "UpdateInventoryItemStatusRequest": {
-        "type": "object",
-        "properties": {
-          "active": {
-            "type": "boolean"
+      "UpdateInventoryItemRequest" : {
+        "type" : "object",
+        "properties" : {
+          "minStock" : {
+            "type" : "number"
+          },
+          "name" : {
+            "type" : "string",
+            "maxLength" : 160,
+            "minLength" : 0
+          },
+          "unit" : {
+            "type" : "string",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "unitCost" : {
+            "type" : "number"
+          }
+        }
+      },
+      "UpdateInventoryItemStatusRequest" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
           }
         },
-        "required": [
-          "active"
-        ]
+        "required" : [ "active" ]
       },
-      "PaymentMixAggregate": {
-        "type": "object",
-        "properties": {
-          "method": {
-            "type": "string",
-            "enum": [
-              "CASH",
-              "CARD",
-              "TRANSFER",
-              "MIXED",
-              "MERCADOPAGO"
-            ]
+      "UpdateKitchenItemStatusRequest" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "IN_PREPARATION", "READY", "DELIVERED" ]
+          }
+        },
+        "required" : [ "status" ]
+      },
+      "UpdateProductRequest" : {
+        "type" : "object",
+        "properties" : {
+          "categoryId" : {
+            "type" : "string",
+            "format" : "uuid"
           },
-          "count": {
-            "type": "integer",
-            "format": "int64"
+          "description" : {
+            "type" : "string"
           },
-          "total": {
-            "type": "number"
+          "name" : {
+            "type" : "string",
+            "maxLength" : 160,
+            "minLength" : 0
+          },
+          "price" : {
+            "type" : "number",
+            "minimum" : 0.00
+          }
+        },
+        "required" : [ "price" ]
+      },
+      "UpdateProductStatusRequest" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "active" ]
+      },
+      "UpdateRestaurantSettingsRequest" : {
+        "type" : "object",
+        "properties" : {
+          "timezone" : {
+            "type" : "string",
+            "minLength" : 1
           }
         }
       },
-      "SaleHistoryRow": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "orderFolio": {
-            "type": "string"
-          },
-          "tableNumber": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "cashierName": {
-            "type": "string"
-          },
-          "ticketId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "paymentMethod": {
-            "type": "string",
-            "enum": [
-              "CASH",
-              "CARD",
-              "TRANSFER",
-              "MIXED",
-              "MERCADOPAGO"
-            ]
-          },
-          "subtotal": {
-            "type": "number"
-          },
-          "tip": {
-            "type": "number"
-          },
-          "total": {
-            "type": "number"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
+      "UpdateTableActiveRequest" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
           }
-        }
+        },
+        "required" : [ "active" ]
       },
-      "SaleHistorySummary": {
-        "type": "object",
-        "properties": {
-          "count": {
-            "type": "integer",
-            "format": "int64"
+      "UpdateTableRequest" : {
+        "type" : "object",
+        "properties" : {
+          "capacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 1
           },
-          "total": {
-            "type": "number"
+          "number" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 1
           }
-        }
+        },
+        "required" : [ "capacity", "number" ]
       },
-      "SalesHistoryResponse": {
-        "type": "object",
-        "properties": {
-          "sales": {
-            "$ref": "#/components/schemas/PageResponseSaleHistoryRow"
-          },
-          "summary": {
-            "$ref": "#/components/schemas/SaleHistorySummary"
-          },
-          "paymentMix": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PaymentMixAggregate"
-            }
+      "UpdateTableStatusRequest" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "string",
+            "enum" : [ "FREE", "OCCUPIED", "RESERVED", "CLEANING" ]
           }
-        }
+        },
+        "required" : [ "status" ]
       },
-      "PublicCatalogResponse": {
-        "type": "object",
-        "properties": {
-          "restaurantName": {
-            "type": "string"
-          },
-          "slug": {
-            "type": "string"
-          },
-          "categories": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CategoryResponse"
-            }
-          },
-          "products": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ProductResponse"
-            }
+      "UpdateUserStatusRequest" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
           }
-        }
+        },
+        "required" : [ "active" ]
       },
-      "PlanView": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
+      "UserResponse" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
           },
-          "name": {
-            "type": "string"
+          "email" : {
+            "type" : "string"
           },
-          "priceMonthly": {
-            "type": "number"
+          "fullName" : {
+            "type" : "string"
           },
-          "maxUsers": {
-            "type": "integer",
-            "format": "int32"
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
           },
-          "maxTables": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "OrderSummaryResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "folio": {
-            "type": "string"
-          },
-          "tableId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "waiterId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "guestCount": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "status": {
-            "type": "string"
-          },
-          "total": {
-            "type": "number"
-          },
-          "openedAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        }
-      },
-      "KitchenOrderResponse": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "folio": {
-            "type": "string"
-          },
-          "tableId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "status": {
-            "type": "string"
-          },
-          "sentToKitchenAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/KitchenItemResponse"
-            }
-          }
-        }
-      },
-      "InventoryMovementRow": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "inventoryItemId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "itemName": {
-            "type": "string"
-          },
-          "unit": {
-            "type": "string"
-          },
-          "movementType": {
-            "type": "string",
-            "enum": [
-              "IN",
-              "OUT",
-              "ADJUSTMENT",
-              "WASTE"
-            ]
-          },
-          "quantity": {
-            "type": "number"
-          },
-          "reason": {
-            "type": "string"
-          },
-          "userName": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "signedQuantity": {
-            "type": "number"
-          }
-        }
-      },
-      "CashSessionListItem": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "cashierId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "cashierName": {
-            "type": "string"
-          },
-          "openingFund": {
-            "type": "number"
-          },
-          "openedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "closedAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "expectedCash": {
-            "type": "number"
-          },
-          "countedCash": {
-            "type": "number"
-          },
-          "difference": {
-            "type": "number"
-          },
-          "closureReason": {
-            "type": "string"
-          }
-        }
-      },
-      "CashSessionListResponse": {
-        "type": "object",
-        "properties": {
-          "sessions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CashSessionListItem"
-            }
-          }
-        }
-      },
-      "MeResponse": {
-        "type": "object",
-        "properties": {
-          "userId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "fullName": {
-            "type": "string"
-          },
-          "role": {
-            "type": "string"
-          },
-          "tenantId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "slug": {
-            "type": "string"
-          },
-          "restaurantName": {
-            "type": "string"
-          },
-          "timezone": {
-            "type": "string"
-          }
-        }
-      },
-      "AnalyticsResponse": {
-        "type": "object",
-        "properties": {
-          "pareto": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ParetoRow"
-            }
-          },
-          "salesByDay": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SalesByDayRow"
-            }
-          },
-          "paymentMix": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PaymentMixRow"
-            }
-          }
-        }
-      },
-      "ParetoRow": {
-        "type": "object",
-        "properties": {
-          "productName": {
-            "type": "string"
-          },
-          "revenue": {
-            "type": "number"
-          },
-          "revenueShare": {
-            "type": "number"
-          },
-          "cumulativeShare": {
-            "type": "number"
-          }
-        }
-      },
-      "PaymentMixRow": {
-        "type": "object",
-        "properties": {
-          "method": {
-            "type": "string",
-            "enum": [
-              "CASH",
-              "CARD",
-              "TRANSFER",
-              "MIXED",
-              "MERCADOPAGO"
-            ]
-          },
-          "count": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "total": {
-            "type": "number"
-          },
-          "share": {
-            "type": "number"
-          }
-        }
-      },
-      "SalesByDayRow": {
-        "type": "object",
-        "properties": {
-          "day": {
-            "type": "string",
-            "format": "date"
-          },
-          "total": {
-            "type": "number"
-          },
-          "count": {
-            "type": "integer",
-            "format": "int64"
-          }
-        }
-      },
-      "RestaurantSettingsResponse": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "slug": {
-            "type": "string"
-          },
-          "timezone": {
-            "type": "string"
-          }
-        }
-      },
-      "UpdateRestaurantSettingsRequest": {
-        "required": [
-          "timezone"
-        ],
-        "type": "object",
-        "properties": {
-          "timezone": {
-            "type": "string"
-          }
-        }
-      },
-      "PageResponseOrderSummaryResponse": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OrderSummaryResponse"
-            }
-          },
-          "page": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "size": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
-          }
-        }
-      },
-      "PageResponseSaleHistoryRow": {
-        "type": "object",
-        "properties": {
-          "content": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SaleHistoryRow"
-            }
-          },
-          "page": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "size": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "totalElements": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "totalPages": {
-            "type": "integer",
-            "format": "int32"
+          "role" : {
+            "type" : "string",
+            "enum" : [ "SUPER_ADMIN", "ADMIN", "WAITER", "KITCHEN", "CASHIER" ]
           }
         }
       }
     },
-    "securitySchemes": {
-      "cookieAuth": {
-        "type": "apiKey",
-        "name": "access_token",
-        "in": "cookie"
+    "securitySchemes" : {
+      "cookieAuth" : {
+        "in" : "cookie",
+        "name" : "access_token",
+        "type" : "apiKey"
       }
     }
   }
