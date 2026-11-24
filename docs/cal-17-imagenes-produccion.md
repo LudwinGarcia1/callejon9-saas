@@ -127,3 +127,11 @@ Frontend, en dependencias transitivas de Next:
 
 * Publicar las imágenes en un registro y escanearlas ahí: CAL-50.
 * La IP del cliente que llega al backend la puede elegir el navegador con `X-Forwarded-For`: CAL-106. Lo encontramos durante esta entrega, pero ya existía en `main`.
+
+## Migración a Spring Boot 3.5 (CAL-107)
+
+La actualización usa [Spring Boot 3.5.16, última publicación OSS de la serie 3.5](https://spring.io/blog/2026/06/25/spring-boot-3-5-16-available-now/), con Java 21. El [BOM oficial](https://central.sonatype.com/artifact/org.springframework.boot/spring-boot-dependencies/3.5.16) incorpora Spring Security 6.5.11, posterior a la corrección de CVE-2026-22732 en 6.5.9, y Spring Framework 6.2.19. Se conserva Tomcat 10.1.61 porque el BOM gestiona 10.1.55.
+
+Se revisaron las [notas de migración de Spring Boot 3.5](https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.5-Release-Notes) en las áreas de configuración, Actuator y dependencias gestionadas. Las verificaciones de regresión son las pruebas de cabeceras HTTP, sondas y persistencia sobre PostgreSQL real que ejecuta Maven verify. Se mantienen las excepciones de XsltView y SSE con fragmentos de vista mientras el proyecto siga en Spring Framework 6 y no use esas funciones.
+
+El escaneo histórico corresponde a la imagen anterior. Para confirmar los hallazgos remediados, se debe reconstruir la imagen del backend del commit candidato y repetir el escaneo Trivy con el procedimiento de este documento.

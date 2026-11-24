@@ -52,7 +52,7 @@ Ese cuarto punto no es teórico: la migración `V6` tuvo que publicar el inquili
            │ /api/v1/*  reescrito por Next hacia :8080
            │ (mismo origen: no hace falta CORS)
 ┌──────────▼──────────────────┐
-│  Spring Boot 3.4 · Java 21  │
+│  Spring Boot 3.5 · Java 21  │
 │    Controller  → solo HTTP
 │    Service     → negocio, @Transactional
 │    Repository  → Spring Data JPA
