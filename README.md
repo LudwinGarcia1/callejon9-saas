@@ -218,6 +218,25 @@ También se puede definir `TEST_DATABASE_MODE=external` y `TEST_DATABASE_URL`
 no desactiva Testcontainers. El modo por defecto falla si Docker no está
 disponible; no omite las pruebas ni cambia silenciosamente a la base local.
 
+Para comprobar el formato de los archivos Java de producción y pruebas, ejecuta desde
+`backend` con Java 21:
+
+```powershell
+.\mvnw.cmd -B spotless:check
+```
+
+Si el comando señala diferencias, corrígelas con `.\mvnw.cmd -B spotless:apply`
+y revisa el diff. Spotless aplica el estilo AOSP de Google Java Format y comprueba
+el formato desde la fase `validate`. Jenkins lo ejecuta como parte de `verify`.
+
+SpotBugs y FindSecBugs analizan el bytecode en `verify`. El umbral es medio y un
+hallazgo bloqueante hace fallar la compilación. Para revisar el informe con la
+clase y la línea del hallazgo, consulta `backend/target/spotbugsXml.xml` tras
+ejecutar el análisis. Ante un falso positivo, limita la excepción al patrón y al
+símbolo afectado en `backend/spotbugs-exclude.xml`, con justificación, responsable
+y fecha de revisión.
+
+
 CI y Jenkins pueden ejecutar `./mvnw -B verify` con acceso a Docker, sin servicio
 PostgreSQL adicional. La primera ejecución descarga la imagen y dependencias.
 
