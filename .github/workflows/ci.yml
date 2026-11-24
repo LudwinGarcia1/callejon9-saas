@@ -109,3 +109,17 @@ jobs:
         env:
           VCS_REF: ${{ github.sha }}
         run: bash scripts/verify-images.sh
+
+      - name: Scan backend image with Trivy
+        run: |
+          docker save callejon9-backend:verify -o "$RUNNER_TEMP/callejon9-backend.tar"
+          docker run --rm -v "$RUNNER_TEMP:/scan:ro" aquasec/trivy:0.76.0 image \
+            --input /scan/callejon9-backend.tar --scanners vuln --severity HIGH,CRITICAL \
+            --format json > trivy-backend.json
+          jq -r '.Results[]? | .Vulnerabilities[]? | [.VulnerabilityID, .PkgName, .InstalledVersion, .Severity] | @tsv' trivy-backend.json
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-backend
+          path: trivy-backend.json
