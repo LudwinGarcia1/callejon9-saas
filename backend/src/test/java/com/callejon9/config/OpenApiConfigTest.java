@@ -1,5 +1,7 @@
 package com.callejon9.config;
 
+import com.fasterxml.jackson.databind.cfg.JsonNodeFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,13 +20,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(properties = {
-        "springdoc.writer-with-default-pretty-printer=true",
-        "springdoc.writer-with-order-by-keys=true"
-})
+@SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class OpenApiConfigTest {
+    private static final JsonMapper CONTRACT_JSON = JsonMapper.builder()
+            .enable(JsonNodeFeature.WRITE_PROPERTIES_SORTED)
+            .build();
+
     @Autowired private MockMvc mockMvc;
 
     @Test
@@ -47,7 +50,9 @@ class OpenApiConfigTest {
         Path generated = Path.of("target", "openapi.json");
         Path versioned = Path.of("..", "docs", "api", "openapi.json");
         Files.createDirectories(generated.getParent());
-        Files.writeString(generated, document.replace("\r\n", "\n").stripTrailing() + "\n");
+        String canonical = CONTRACT_JSON.writerWithDefaultPrettyPrinter()
+                .writeValueAsString(CONTRACT_JSON.readTree(document));
+        Files.writeString(generated, canonical.replace("\r\n", "\n") + "\n");
 
         if (Boolean.getBoolean("openapi.update")) {
             Files.copy(generated, versioned, StandardCopyOption.REPLACE_EXISTING);

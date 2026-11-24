@@ -1,17 +1,1410 @@
 {
-  "openapi" : "3.1.0",
+  "components" : {
+    "schemas" : {
+      "AddOrderItemRequest" : {
+        "properties" : {
+          "notes" : {
+            "maxLength" : 500,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "productId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "quantity" : {
+            "format" : "int32",
+            "maximum" : 99,
+            "minimum" : 1,
+            "type" : "integer"
+          }
+        },
+        "required" : [ "productId", "quantity" ],
+        "type" : "object"
+      },
+      "AddOrderItemsRequest" : {
+        "properties" : {
+          "items" : {
+            "items" : {
+              "$ref" : "#/components/schemas/AddOrderItemRequest"
+            },
+            "maxItems" : 50,
+            "minItems" : 0,
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "AnalyticsResponse" : {
+        "properties" : {
+          "pareto" : {
+            "items" : {
+              "$ref" : "#/components/schemas/ParetoRow"
+            },
+            "type" : "array"
+          },
+          "paymentMix" : {
+            "items" : {
+              "$ref" : "#/components/schemas/PaymentMixRow"
+            },
+            "type" : "array"
+          },
+          "salesByDay" : {
+            "items" : {
+              "$ref" : "#/components/schemas/SalesByDayRow"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "CashMovementRequest" : {
+        "properties" : {
+          "amount" : {
+            "minimum" : 0.01,
+            "type" : "number"
+          },
+          "reason" : {
+            "maxLength" : 250,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "type" : {
+            "enum" : [ "DEPOSIT", "WITHDRAWAL" ],
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "type" ],
+        "type" : "object"
+      },
+      "CashMovementResponse" : {
+        "properties" : {
+          "amount" : {
+            "type" : "number"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "recordedBy" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "type" : {
+            "enum" : [ "DEPOSIT", "WITHDRAWAL" ],
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "CashPaymentMethodSummary" : {
+        "properties" : {
+          "appliedAmount" : {
+            "type" : "number"
+          },
+          "changeAmount" : {
+            "type" : "number"
+          },
+          "method" : {
+            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ],
+            "type" : "string"
+          },
+          "paymentCount" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "receivedAmount" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "CashSessionListItem" : {
+        "properties" : {
+          "cashierId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "cashierName" : {
+            "type" : "string"
+          },
+          "closedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "closureReason" : {
+            "type" : "string"
+          },
+          "countedCash" : {
+            "type" : "number"
+          },
+          "difference" : {
+            "type" : "number"
+          },
+          "expectedCash" : {
+            "type" : "number"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "openedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "openingFund" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "CashSessionListResponse" : {
+        "properties" : {
+          "sessions" : {
+            "items" : {
+              "$ref" : "#/components/schemas/CashSessionListItem"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "CashSessionResponse" : {
+        "properties" : {
+          "cashierId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "cashierName" : {
+            "type" : "string"
+          },
+          "closedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "closedBy" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "closureReason" : {
+            "type" : "string"
+          },
+          "countedCash" : {
+            "type" : "number"
+          },
+          "difference" : {
+            "type" : "number"
+          },
+          "expectedCash" : {
+            "type" : "number"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "movements" : {
+            "items" : {
+              "$ref" : "#/components/schemas/CashMovementResponse"
+            },
+            "type" : "array"
+          },
+          "openedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "openingFund" : {
+            "type" : "number"
+          },
+          "paymentSummary" : {
+            "items" : {
+              "$ref" : "#/components/schemas/CashPaymentMethodSummary"
+            },
+            "type" : "array"
+          }
+        },
+        "type" : "object"
+      },
+      "CategoryResponse" : {
+        "properties" : {
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "sortOrder" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "CheckoutRequest" : {
+        "properties" : {
+          "paymentMethod" : {
+            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ],
+            "type" : "string"
+          },
+          "payments" : {
+            "items" : {
+              "$ref" : "#/components/schemas/PaymentRequest"
+            },
+            "maxItems" : 50,
+            "minItems" : 1,
+            "type" : "array"
+          },
+          "tipPercent" : {
+            "maximum" : 100,
+            "minimum" : 0,
+            "type" : "number"
+          }
+        },
+        "required" : [ "tipPercent" ],
+        "type" : "object"
+      },
+      "CloseCashSessionRequest" : {
+        "properties" : {
+          "countedCash" : {
+            "minimum" : 0.0,
+            "type" : "number"
+          },
+          "reason" : {
+            "maxLength" : 250,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "countedCash" ],
+        "type" : "object"
+      },
+      "CreateCategoryRequest" : {
+        "properties" : {
+          "name" : {
+            "maxLength" : 120,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "sortOrder" : {
+            "format" : "int32",
+            "minimum" : 0,
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "CreateInventoryItemRequest" : {
+        "properties" : {
+          "initialStock" : {
+            "type" : "number"
+          },
+          "minStock" : {
+            "type" : "number"
+          },
+          "name" : {
+            "maxLength" : 160,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "unit" : {
+            "maxLength" : 20,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "unitCost" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "CreateProductRequest" : {
+        "properties" : {
+          "categoryId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "name" : {
+            "maxLength" : 160,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "price" : {
+            "minimum" : 0.0,
+            "type" : "number"
+          }
+        },
+        "required" : [ "price" ],
+        "type" : "object"
+      },
+      "CreateTableRequest" : {
+        "properties" : {
+          "capacity" : {
+            "format" : "int32",
+            "minimum" : 1,
+            "type" : "integer"
+          },
+          "number" : {
+            "format" : "int32",
+            "minimum" : 1,
+            "type" : "integer"
+          }
+        },
+        "required" : [ "capacity", "number" ],
+        "type" : "object"
+      },
+      "CreateUserRequest" : {
+        "properties" : {
+          "email" : {
+            "maxLength" : 180,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "fullName" : {
+            "maxLength" : 160,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "password" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "role" : {
+            "enum" : [ "SUPER_ADMIN", "ADMIN", "WAITER", "KITCHEN", "CASHIER" ],
+            "type" : "string"
+          }
+        },
+        "required" : [ "role" ],
+        "type" : "object"
+      },
+      "InventoryItemResponse" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "level" : {
+            "enum" : [ "OK", "LOW", "NEGATIVE" ],
+            "type" : "string"
+          },
+          "minStock" : {
+            "type" : "number"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "stock" : {
+            "type" : "number"
+          },
+          "unit" : {
+            "type" : "string"
+          },
+          "unitCost" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "InventoryMovementRow" : {
+        "properties" : {
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "inventoryItemId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "itemName" : {
+            "type" : "string"
+          },
+          "movementType" : {
+            "enum" : [ "IN", "OUT", "ADJUSTMENT", "WASTE" ],
+            "type" : "string"
+          },
+          "quantity" : {
+            "type" : "number"
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "signedQuantity" : {
+            "type" : "number"
+          },
+          "unit" : {
+            "type" : "string"
+          },
+          "userName" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "KitchenItemResponse" : {
+        "properties" : {
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "kitchenStatus" : {
+            "type" : "string"
+          },
+          "notes" : {
+            "type" : "string"
+          },
+          "orderId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "productId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "quantity" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "KitchenOrderResponse" : {
+        "properties" : {
+          "folio" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "items" : {
+            "items" : {
+              "$ref" : "#/components/schemas/KitchenItemResponse"
+            },
+            "type" : "array"
+          },
+          "sentToKitchenAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "tableId" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "LoginRequest" : {
+        "properties" : {
+          "email" : {
+            "maxLength" : 180,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "password" : {
+            "maxLength" : 100,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "slug" : {
+            "minLength" : 1,
+            "pattern" : "^[a-z0-9-]{3,80}$",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "LoginResponse" : {
+        "properties" : {
+          "fullName" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string"
+          },
+          "twoFactorRequired" : {
+            "type" : "boolean"
+          },
+          "userId" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "MeResponse" : {
+        "properties" : {
+          "fullName" : {
+            "type" : "string"
+          },
+          "restaurantName" : {
+            "type" : "string"
+          },
+          "role" : {
+            "type" : "string"
+          },
+          "slug" : {
+            "type" : "string"
+          },
+          "tenantId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "timezone" : {
+            "type" : "string"
+          },
+          "userId" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "OpenCashSessionRequest" : {
+        "properties" : {
+          "openingFund" : {
+            "minimum" : 0.0,
+            "type" : "number"
+          }
+        },
+        "required" : [ "openingFund" ],
+        "type" : "object"
+      },
+      "OpenOrderRequest" : {
+        "properties" : {
+          "guestCount" : {
+            "format" : "int32",
+            "maximum" : 50,
+            "minimum" : 1,
+            "type" : "integer"
+          },
+          "tableId" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "required" : [ "guestCount", "tableId" ],
+        "type" : "object"
+      },
+      "OrderItemResponse" : {
+        "properties" : {
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "kitchenStatus" : {
+            "type" : "string"
+          },
+          "notes" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "quantity" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "unitPrice" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "OrderResponse" : {
+        "properties" : {
+          "closedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "folio" : {
+            "type" : "string"
+          },
+          "guestCount" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "items" : {
+            "items" : {
+              "$ref" : "#/components/schemas/OrderItemResponse"
+            },
+            "type" : "array"
+          },
+          "openedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "sentToKitchenAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "tableId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "total" : {
+            "type" : "number"
+          },
+          "waiterId" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "OrderSummaryResponse" : {
+        "properties" : {
+          "folio" : {
+            "type" : "string"
+          },
+          "guestCount" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "openedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "tableId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "total" : {
+            "type" : "number"
+          },
+          "waiterId" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "PageResponseOrderSummaryResponse" : {
+        "properties" : {
+          "content" : {
+            "items" : {
+              "$ref" : "#/components/schemas/OrderSummaryResponse"
+            },
+            "type" : "array"
+          },
+          "page" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "size" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "totalElements" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "totalPages" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "PageResponseSaleHistoryRow" : {
+        "properties" : {
+          "content" : {
+            "items" : {
+              "$ref" : "#/components/schemas/SaleHistoryRow"
+            },
+            "type" : "array"
+          },
+          "page" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "size" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "totalElements" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "totalPages" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        },
+        "type" : "object"
+      },
+      "ParetoRow" : {
+        "properties" : {
+          "cumulativeShare" : {
+            "type" : "number"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "revenue" : {
+            "type" : "number"
+          },
+          "revenueShare" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "PaymentMixAggregate" : {
+        "properties" : {
+          "count" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "method" : {
+            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ],
+            "type" : "string"
+          },
+          "total" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "PaymentMixRow" : {
+        "properties" : {
+          "count" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "method" : {
+            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ],
+            "type" : "string"
+          },
+          "share" : {
+            "type" : "number"
+          },
+          "total" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "PaymentRequest" : {
+        "properties" : {
+          "amount" : {
+            "minimum" : 0.01,
+            "type" : "number"
+          },
+          "method" : {
+            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ],
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "method" ],
+        "type" : "object"
+      },
+      "PlanView" : {
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "maxTables" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "maxUsers" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "priceMonthly" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "ProductResponse" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "categoryId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "price" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "PublicCatalogResponse" : {
+        "properties" : {
+          "categories" : {
+            "items" : {
+              "$ref" : "#/components/schemas/CategoryResponse"
+            },
+            "type" : "array"
+          },
+          "products" : {
+            "items" : {
+              "$ref" : "#/components/schemas/ProductResponse"
+            },
+            "type" : "array"
+          },
+          "restaurantName" : {
+            "type" : "string"
+          },
+          "slug" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "RegisterMovementRequest" : {
+        "properties" : {
+          "countedStock" : {
+            "type" : "number"
+          },
+          "inventoryItemId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "movementType" : {
+            "enum" : [ "IN", "OUT", "ADJUSTMENT", "WASTE" ],
+            "type" : "string"
+          },
+          "quantity" : {
+            "type" : "number"
+          },
+          "reason" : {
+            "maxLength" : 150,
+            "minLength" : 0,
+            "type" : "string"
+          }
+        },
+        "required" : [ "inventoryItemId", "movementType" ],
+        "type" : "object"
+      },
+      "RegisteredMovementResponse" : {
+        "properties" : {
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "inventoryItemId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "movementType" : {
+            "enum" : [ "IN", "OUT", "ADJUSTMENT", "WASTE" ],
+            "type" : "string"
+          },
+          "quantity" : {
+            "type" : "number"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "RestaurantSettingsResponse" : {
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "slug" : {
+            "type" : "string"
+          },
+          "timezone" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "SaleHistoryRow" : {
+        "properties" : {
+          "cashierName" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "orderFolio" : {
+            "type" : "string"
+          },
+          "paymentMethod" : {
+            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ],
+            "type" : "string"
+          },
+          "subtotal" : {
+            "type" : "number"
+          },
+          "tableNumber" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "ticketId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "tip" : {
+            "type" : "number"
+          },
+          "total" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "SaleHistorySummary" : {
+        "properties" : {
+          "count" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "total" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "SalesByDayRow" : {
+        "properties" : {
+          "count" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "day" : {
+            "format" : "date",
+            "type" : "string"
+          },
+          "total" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "SalesHistoryResponse" : {
+        "properties" : {
+          "paymentMix" : {
+            "items" : {
+              "$ref" : "#/components/schemas/PaymentMixAggregate"
+            },
+            "type" : "array"
+          },
+          "sales" : {
+            "$ref" : "#/components/schemas/PageResponseSaleHistoryRow"
+          },
+          "summary" : {
+            "$ref" : "#/components/schemas/SaleHistorySummary"
+          }
+        },
+        "type" : "object"
+      },
+      "SignupRequest" : {
+        "properties" : {
+          "adminEmail" : {
+            "maxLength" : 180,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "adminFullName" : {
+            "maxLength" : 160,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "password" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "planCode" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "restaurantName" : {
+            "maxLength" : 160,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "slug" : {
+            "minLength" : 1,
+            "pattern" : "^[a-z0-9-]{3,80}$",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "SignupResponse" : {
+        "properties" : {
+          "adminEmail" : {
+            "type" : "string"
+          },
+          "slug" : {
+            "type" : "string"
+          },
+          "tenantId" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "TableResponse" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "capacity" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "number" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "waiterId" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "TicketItemSnapshot" : {
+        "properties" : {
+          "productId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "productName" : {
+            "type" : "string"
+          },
+          "quantity" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "subtotal" : {
+            "type" : "number"
+          },
+          "unitPrice" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "TicketPaymentSnapshot" : {
+        "properties" : {
+          "amount" : {
+            "type" : "number"
+          },
+          "change" : {
+            "type" : "number"
+          },
+          "method" : {
+            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ],
+            "type" : "string"
+          },
+          "receivedAmount" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "TicketResponse" : {
+        "properties" : {
+          "change" : {
+            "type" : "number"
+          },
+          "closedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "folio" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "items" : {
+            "items" : {
+              "$ref" : "#/components/schemas/TicketItemSnapshot"
+            },
+            "type" : "array"
+          },
+          "orderId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "paymentMethod" : {
+            "type" : "string"
+          },
+          "payments" : {
+            "items" : {
+              "$ref" : "#/components/schemas/TicketPaymentSnapshot"
+            },
+            "type" : "array"
+          },
+          "saleId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "subtotal" : {
+            "type" : "number"
+          },
+          "tip" : {
+            "type" : "number"
+          },
+          "tipPercent" : {
+            "type" : "number"
+          },
+          "total" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "UpdateCategoryRequest" : {
+        "properties" : {
+          "name" : {
+            "maxLength" : 120,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "sortOrder" : {
+            "format" : "int32",
+            "minimum" : 0,
+            "type" : "integer"
+          }
+        },
+        "required" : [ "sortOrder" ],
+        "type" : "object"
+      },
+      "UpdateInventoryItemRequest" : {
+        "properties" : {
+          "minStock" : {
+            "type" : "number"
+          },
+          "name" : {
+            "maxLength" : 160,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "unit" : {
+            "maxLength" : 20,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "unitCost" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "UpdateInventoryItemStatusRequest" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "active" ],
+        "type" : "object"
+      },
+      "UpdateKitchenItemStatusRequest" : {
+        "properties" : {
+          "status" : {
+            "enum" : [ "PENDING", "IN_PREPARATION", "READY", "DELIVERED" ],
+            "type" : "string"
+          }
+        },
+        "required" : [ "status" ],
+        "type" : "object"
+      },
+      "UpdateProductRequest" : {
+        "properties" : {
+          "categoryId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "name" : {
+            "maxLength" : 160,
+            "minLength" : 0,
+            "type" : "string"
+          },
+          "price" : {
+            "minimum" : 0.0,
+            "type" : "number"
+          }
+        },
+        "required" : [ "price" ],
+        "type" : "object"
+      },
+      "UpdateProductStatusRequest" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "active" ],
+        "type" : "object"
+      },
+      "UpdateRestaurantSettingsRequest" : {
+        "properties" : {
+          "timezone" : {
+            "minLength" : 1,
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "UpdateTableActiveRequest" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "active" ],
+        "type" : "object"
+      },
+      "UpdateTableRequest" : {
+        "properties" : {
+          "capacity" : {
+            "format" : "int32",
+            "minimum" : 1,
+            "type" : "integer"
+          },
+          "number" : {
+            "format" : "int32",
+            "minimum" : 1,
+            "type" : "integer"
+          }
+        },
+        "required" : [ "capacity", "number" ],
+        "type" : "object"
+      },
+      "UpdateTableStatusRequest" : {
+        "properties" : {
+          "status" : {
+            "enum" : [ "FREE", "OCCUPIED", "RESERVED", "CLEANING" ],
+            "type" : "string"
+          }
+        },
+        "required" : [ "status" ],
+        "type" : "object"
+      },
+      "UpdateUserStatusRequest" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "active" ],
+        "type" : "object"
+      },
+      "UserResponse" : {
+        "properties" : {
+          "active" : {
+            "type" : "boolean"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "fullName" : {
+            "type" : "string"
+          },
+          "id" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "role" : {
+            "enum" : [ "SUPER_ADMIN", "ADMIN", "WAITER", "KITCHEN", "CASHIER" ],
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      }
+    },
+    "securitySchemes" : {
+      "cookieAuth" : {
+        "in" : "cookie",
+        "name" : "access_token",
+        "type" : "apiKey"
+      }
+    }
+  },
   "info" : {
     "description" : "API multi-tenant para gestion de restaurantes. El aislamiento entre restaurantes lo impone PostgreSQL mediante Row Level Security.",
     "title" : "Callejon 9 SaaS API",
     "version" : "v1"
   },
-  "servers" : [ {
-    "url" : "/",
-    "description" : "Mismo origen que la pagina: Swagger UI del backend o el servidor del frontend"
-  } ],
-  "security" : [ {
-    "cookieAuth" : [ ]
-  } ],
+  "openapi" : "3.1.0",
   "paths" : {
     "/api/v1/analytics" : {
       "get" : {
@@ -21,16 +1414,16 @@
           "name" : "from",
           "required" : false,
           "schema" : {
-            "type" : "string",
-            "format" : "date"
+            "format" : "date",
+            "type" : "string"
           }
         }, {
           "in" : "query",
           "name" : "to",
           "required" : false,
           "schema" : {
-            "type" : "string",
-            "format" : "date"
+            "format" : "date",
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -184,8 +1577,8 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -211,8 +1604,8 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "requestBody" : {
@@ -248,8 +1641,8 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "requestBody" : {
@@ -285,8 +1678,8 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "requestBody" : {
@@ -322,10 +1715,10 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "type" : "array",
                   "items" : {
                     "$ref" : "#/components/schemas/CategoryResponse"
-                  }
+                  },
+                  "type" : "array"
                 }
               }
             },
@@ -369,8 +1762,8 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "requestBody" : {
@@ -406,8 +1799,8 @@
           "name" : "includeInactive",
           "required" : false,
           "schema" : {
-            "type" : "boolean",
-            "default" : false
+            "default" : false,
+            "type" : "boolean"
           }
         } ],
         "responses" : {
@@ -415,10 +1808,10 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "type" : "array",
                   "items" : {
                     "$ref" : "#/components/schemas/InventoryItemResponse"
-                  }
+                  },
+                  "type" : "array"
                 }
               }
             },
@@ -462,8 +1855,8 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "requestBody" : {
@@ -497,8 +1890,8 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "requestBody" : {
@@ -534,24 +1927,24 @@
           "name" : "from",
           "required" : false,
           "schema" : {
-            "type" : "string",
-            "format" : "date"
+            "format" : "date",
+            "type" : "string"
           }
         }, {
           "in" : "query",
           "name" : "to",
           "required" : false,
           "schema" : {
-            "type" : "string",
-            "format" : "date"
+            "format" : "date",
+            "type" : "string"
           }
         }, {
           "in" : "query",
           "name" : "itemId",
           "required" : false,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -559,10 +1952,10 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "type" : "array",
                   "items" : {
                     "$ref" : "#/components/schemas/InventoryMovementRow"
-                  }
+                  },
+                  "type" : "array"
                 }
               }
             },
@@ -606,8 +1999,8 @@
           "name" : "itemId",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "requestBody" : {
@@ -643,10 +2036,10 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "type" : "array",
                   "items" : {
                     "$ref" : "#/components/schemas/KitchenOrderResponse"
-                  }
+                  },
+                  "type" : "array"
                 }
               }
             },
@@ -664,32 +2057,32 @@
           "name" : "status",
           "required" : false,
           "schema" : {
-            "type" : "string",
-            "enum" : [ "NEW", "SENT", "READY", "PAID", "CANCELED" ]
+            "enum" : [ "NEW", "SENT", "READY", "PAID", "CANCELED" ],
+            "type" : "string"
           }
         }, {
           "in" : "query",
           "name" : "open",
           "required" : false,
           "schema" : {
-            "type" : "boolean",
-            "default" : false
+            "default" : false,
+            "type" : "boolean"
           }
         }, {
           "in" : "query",
           "name" : "page",
           "required" : false,
           "schema" : {
-            "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "type" : "integer"
           }
         }, {
           "in" : "query",
           "name" : "size",
           "required" : false,
           "schema" : {
-            "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "type" : "integer"
           }
         }, {
           "in" : "query",
@@ -748,8 +2141,8 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -775,8 +2168,8 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -802,8 +2195,8 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "requestBody" : {
@@ -839,8 +2232,8 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "requestBody" : {
@@ -876,16 +2269,16 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         }, {
           "in" : "path",
           "name" : "itemId",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -911,8 +2304,8 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -938,10 +2331,10 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "type" : "array",
                   "items" : {
                     "$ref" : "#/components/schemas/PlanView"
-                  }
+                  },
+                  "type" : "array"
                 }
               }
             },
@@ -959,16 +2352,16 @@
           "name" : "categoryId",
           "required" : false,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         }, {
           "in" : "query",
           "name" : "includeInactive",
           "required" : false,
           "schema" : {
-            "type" : "boolean",
-            "default" : false
+            "default" : false,
+            "type" : "boolean"
           }
         } ],
         "responses" : {
@@ -976,10 +2369,10 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "type" : "array",
                   "items" : {
                     "$ref" : "#/components/schemas/ProductResponse"
-                  }
+                  },
+                  "type" : "array"
                 }
               }
             },
@@ -1023,8 +2416,8 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "requestBody" : {
@@ -1058,8 +2451,8 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "requestBody" : {
@@ -1128,8 +2521,8 @@
           "name" : "tableNumber",
           "required" : true,
           "schema" : {
-            "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "type" : "integer"
           }
         } ],
         "responses" : {
@@ -1137,10 +2530,10 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "type" : "object",
                   "additionalProperties" : {
                     "type" : "object"
-                  }
+                  },
+                  "type" : "object"
                 }
               }
             },
@@ -1165,8 +2558,8 @@
           "name" : "tableNumber",
           "required" : true,
           "schema" : {
-            "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "type" : "integer"
           }
         } ],
         "requestBody" : {
@@ -1202,32 +2595,32 @@
           "name" : "from",
           "required" : false,
           "schema" : {
-            "type" : "string",
-            "format" : "date"
+            "format" : "date",
+            "type" : "string"
           }
         }, {
           "in" : "query",
           "name" : "to",
           "required" : false,
           "schema" : {
-            "type" : "string",
-            "format" : "date"
+            "format" : "date",
+            "type" : "string"
           }
         }, {
           "in" : "query",
           "name" : "page",
           "required" : false,
           "schema" : {
-            "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "type" : "integer"
           }
         }, {
           "in" : "query",
           "name" : "size",
           "required" : false,
           "schema" : {
-            "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "type" : "integer"
           }
         }, {
           "in" : "query",
@@ -1332,8 +2725,8 @@
           "name" : "includeInactive",
           "required" : false,
           "schema" : {
-            "type" : "boolean",
-            "default" : false
+            "default" : false,
+            "type" : "boolean"
           }
         } ],
         "responses" : {
@@ -1341,10 +2734,10 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "type" : "array",
                   "items" : {
                     "$ref" : "#/components/schemas/TableResponse"
-                  }
+                  },
+                  "type" : "array"
                 }
               }
             },
@@ -1388,8 +2781,8 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "requestBody" : {
@@ -1423,8 +2816,8 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "requestBody" : {
@@ -1460,8 +2853,8 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "requestBody" : {
@@ -1523,8 +2916,8 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -1550,8 +2943,8 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -1559,8 +2952,8 @@
             "content" : {
               "application/pdf" : {
                 "schema" : {
-                  "type" : "string",
-                  "format" : "byte"
+                  "format" : "byte",
+                  "type" : "string"
                 }
               }
             },
@@ -1578,10 +2971,10 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "type" : "array",
                   "items" : {
                     "$ref" : "#/components/schemas/UserResponse"
-                  }
+                  },
+                  "type" : "array"
                 }
               }
             },
@@ -1625,8 +3018,8 @@
           "name" : "id",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "type" : "string"
           }
         } ],
         "requestBody" : {
@@ -1655,1404 +3048,11 @@
       }
     }
   },
-  "components" : {
-    "schemas" : {
-      "AddOrderItemRequest" : {
-        "type" : "object",
-        "properties" : {
-          "notes" : {
-            "type" : "string",
-            "maxLength" : 500,
-            "minLength" : 0
-          },
-          "productId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "quantity" : {
-            "type" : "integer",
-            "format" : "int32",
-            "maximum" : 99,
-            "minimum" : 1
-          }
-        },
-        "required" : [ "productId", "quantity" ]
-      },
-      "AddOrderItemsRequest" : {
-        "type" : "object",
-        "properties" : {
-          "items" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/AddOrderItemRequest"
-            },
-            "maxItems" : 50,
-            "minItems" : 0
-          }
-        }
-      },
-      "AnalyticsResponse" : {
-        "type" : "object",
-        "properties" : {
-          "pareto" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/ParetoRow"
-            }
-          },
-          "paymentMix" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/PaymentMixRow"
-            }
-          },
-          "salesByDay" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/SalesByDayRow"
-            }
-          }
-        }
-      },
-      "CashMovementRequest" : {
-        "type" : "object",
-        "properties" : {
-          "amount" : {
-            "type" : "number",
-            "minimum" : 0.01
-          },
-          "reason" : {
-            "type" : "string",
-            "maxLength" : 250,
-            "minLength" : 0
-          },
-          "type" : {
-            "type" : "string",
-            "enum" : [ "DEPOSIT", "WITHDRAWAL" ]
-          }
-        },
-        "required" : [ "amount", "type" ]
-      },
-      "CashMovementResponse" : {
-        "type" : "object",
-        "properties" : {
-          "amount" : {
-            "type" : "number"
-          },
-          "createdAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "reason" : {
-            "type" : "string"
-          },
-          "recordedBy" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "type" : {
-            "type" : "string",
-            "enum" : [ "DEPOSIT", "WITHDRAWAL" ]
-          }
-        }
-      },
-      "CashPaymentMethodSummary" : {
-        "type" : "object",
-        "properties" : {
-          "appliedAmount" : {
-            "type" : "number"
-          },
-          "changeAmount" : {
-            "type" : "number"
-          },
-          "method" : {
-            "type" : "string",
-            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ]
-          },
-          "paymentCount" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "receivedAmount" : {
-            "type" : "number"
-          }
-        }
-      },
-      "CashSessionListItem" : {
-        "type" : "object",
-        "properties" : {
-          "cashierId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "cashierName" : {
-            "type" : "string"
-          },
-          "closedAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "closureReason" : {
-            "type" : "string"
-          },
-          "countedCash" : {
-            "type" : "number"
-          },
-          "difference" : {
-            "type" : "number"
-          },
-          "expectedCash" : {
-            "type" : "number"
-          },
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "openedAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "openingFund" : {
-            "type" : "number"
-          }
-        }
-      },
-      "CashSessionListResponse" : {
-        "type" : "object",
-        "properties" : {
-          "sessions" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/CashSessionListItem"
-            }
-          }
-        }
-      },
-      "CashSessionResponse" : {
-        "type" : "object",
-        "properties" : {
-          "cashierId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "cashierName" : {
-            "type" : "string"
-          },
-          "closedAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "closedBy" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "closureReason" : {
-            "type" : "string"
-          },
-          "countedCash" : {
-            "type" : "number"
-          },
-          "difference" : {
-            "type" : "number"
-          },
-          "expectedCash" : {
-            "type" : "number"
-          },
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "movements" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/CashMovementResponse"
-            }
-          },
-          "openedAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "openingFund" : {
-            "type" : "number"
-          },
-          "paymentSummary" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/CashPaymentMethodSummary"
-            }
-          }
-        }
-      },
-      "CategoryResponse" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "sortOrder" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        }
-      },
-      "CheckoutRequest" : {
-        "type" : "object",
-        "properties" : {
-          "paymentMethod" : {
-            "type" : "string",
-            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ]
-          },
-          "payments" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/PaymentRequest"
-            },
-            "maxItems" : 50,
-            "minItems" : 1
-          },
-          "tipPercent" : {
-            "type" : "number",
-            "maximum" : 100,
-            "minimum" : 0
-          }
-        },
-        "required" : [ "tipPercent" ]
-      },
-      "CloseCashSessionRequest" : {
-        "type" : "object",
-        "properties" : {
-          "countedCash" : {
-            "type" : "number",
-            "minimum" : 0.00
-          },
-          "reason" : {
-            "type" : "string",
-            "maxLength" : 250,
-            "minLength" : 0
-          }
-        },
-        "required" : [ "countedCash" ]
-      },
-      "CreateCategoryRequest" : {
-        "type" : "object",
-        "properties" : {
-          "name" : {
-            "type" : "string",
-            "maxLength" : 120,
-            "minLength" : 0
-          },
-          "sortOrder" : {
-            "type" : "integer",
-            "format" : "int32",
-            "minimum" : 0
-          }
-        }
-      },
-      "CreateInventoryItemRequest" : {
-        "type" : "object",
-        "properties" : {
-          "initialStock" : {
-            "type" : "number"
-          },
-          "minStock" : {
-            "type" : "number"
-          },
-          "name" : {
-            "type" : "string",
-            "maxLength" : 160,
-            "minLength" : 0
-          },
-          "unit" : {
-            "type" : "string",
-            "maxLength" : 20,
-            "minLength" : 0
-          },
-          "unitCost" : {
-            "type" : "number"
-          }
-        }
-      },
-      "CreateProductRequest" : {
-        "type" : "object",
-        "properties" : {
-          "categoryId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "name" : {
-            "type" : "string",
-            "maxLength" : 160,
-            "minLength" : 0
-          },
-          "price" : {
-            "type" : "number",
-            "minimum" : 0.00
-          }
-        },
-        "required" : [ "price" ]
-      },
-      "CreateTableRequest" : {
-        "type" : "object",
-        "properties" : {
-          "capacity" : {
-            "type" : "integer",
-            "format" : "int32",
-            "minimum" : 1
-          },
-          "number" : {
-            "type" : "integer",
-            "format" : "int32",
-            "minimum" : 1
-          }
-        },
-        "required" : [ "capacity", "number" ]
-      },
-      "CreateUserRequest" : {
-        "type" : "object",
-        "properties" : {
-          "email" : {
-            "type" : "string",
-            "maxLength" : 180,
-            "minLength" : 0
-          },
-          "fullName" : {
-            "type" : "string",
-            "maxLength" : 160,
-            "minLength" : 0
-          },
-          "password" : {
-            "type" : "string",
-            "minLength" : 1
-          },
-          "role" : {
-            "type" : "string",
-            "enum" : [ "SUPER_ADMIN", "ADMIN", "WAITER", "KITCHEN", "CASHIER" ]
-          }
-        },
-        "required" : [ "role" ]
-      },
-      "InventoryItemResponse" : {
-        "type" : "object",
-        "properties" : {
-          "active" : {
-            "type" : "boolean"
-          },
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "level" : {
-            "type" : "string",
-            "enum" : [ "OK", "LOW", "NEGATIVE" ]
-          },
-          "minStock" : {
-            "type" : "number"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "stock" : {
-            "type" : "number"
-          },
-          "unit" : {
-            "type" : "string"
-          },
-          "unitCost" : {
-            "type" : "number"
-          }
-        }
-      },
-      "InventoryMovementRow" : {
-        "type" : "object",
-        "properties" : {
-          "createdAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "inventoryItemId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "itemName" : {
-            "type" : "string"
-          },
-          "movementType" : {
-            "type" : "string",
-            "enum" : [ "IN", "OUT", "ADJUSTMENT", "WASTE" ]
-          },
-          "quantity" : {
-            "type" : "number"
-          },
-          "reason" : {
-            "type" : "string"
-          },
-          "signedQuantity" : {
-            "type" : "number"
-          },
-          "unit" : {
-            "type" : "string"
-          },
-          "userName" : {
-            "type" : "string"
-          }
-        }
-      },
-      "KitchenItemResponse" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "kitchenStatus" : {
-            "type" : "string"
-          },
-          "notes" : {
-            "type" : "string"
-          },
-          "orderId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "productId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "productName" : {
-            "type" : "string"
-          },
-          "quantity" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        }
-      },
-      "KitchenOrderResponse" : {
-        "type" : "object",
-        "properties" : {
-          "folio" : {
-            "type" : "string"
-          },
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "items" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/KitchenItemResponse"
-            }
-          },
-          "sentToKitchenAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "status" : {
-            "type" : "string"
-          },
-          "tableId" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        }
-      },
-      "LoginRequest" : {
-        "type" : "object",
-        "properties" : {
-          "email" : {
-            "type" : "string",
-            "maxLength" : 180,
-            "minLength" : 0
-          },
-          "password" : {
-            "type" : "string",
-            "maxLength" : 100,
-            "minLength" : 0
-          },
-          "slug" : {
-            "type" : "string",
-            "minLength" : 1,
-            "pattern" : "^[a-z0-9-]{3,80}$"
-          }
-        }
-      },
-      "LoginResponse" : {
-        "type" : "object",
-        "properties" : {
-          "fullName" : {
-            "type" : "string"
-          },
-          "role" : {
-            "type" : "string"
-          },
-          "twoFactorRequired" : {
-            "type" : "boolean"
-          },
-          "userId" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        }
-      },
-      "MeResponse" : {
-        "type" : "object",
-        "properties" : {
-          "fullName" : {
-            "type" : "string"
-          },
-          "restaurantName" : {
-            "type" : "string"
-          },
-          "role" : {
-            "type" : "string"
-          },
-          "slug" : {
-            "type" : "string"
-          },
-          "tenantId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "timezone" : {
-            "type" : "string"
-          },
-          "userId" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        }
-      },
-      "OpenCashSessionRequest" : {
-        "type" : "object",
-        "properties" : {
-          "openingFund" : {
-            "type" : "number",
-            "minimum" : 0.00
-          }
-        },
-        "required" : [ "openingFund" ]
-      },
-      "OpenOrderRequest" : {
-        "type" : "object",
-        "properties" : {
-          "guestCount" : {
-            "type" : "integer",
-            "format" : "int32",
-            "maximum" : 50,
-            "minimum" : 1
-          },
-          "tableId" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        },
-        "required" : [ "guestCount", "tableId" ]
-      },
-      "OrderItemResponse" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "kitchenStatus" : {
-            "type" : "string"
-          },
-          "notes" : {
-            "type" : "string"
-          },
-          "productId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "productName" : {
-            "type" : "string"
-          },
-          "quantity" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "unitPrice" : {
-            "type" : "number"
-          }
-        }
-      },
-      "OrderResponse" : {
-        "type" : "object",
-        "properties" : {
-          "closedAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "folio" : {
-            "type" : "string"
-          },
-          "guestCount" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "items" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/OrderItemResponse"
-            }
-          },
-          "openedAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "sentToKitchenAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "status" : {
-            "type" : "string"
-          },
-          "tableId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "total" : {
-            "type" : "number"
-          },
-          "waiterId" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        }
-      },
-      "OrderSummaryResponse" : {
-        "type" : "object",
-        "properties" : {
-          "folio" : {
-            "type" : "string"
-          },
-          "guestCount" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "openedAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "status" : {
-            "type" : "string"
-          },
-          "tableId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "total" : {
-            "type" : "number"
-          },
-          "waiterId" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        }
-      },
-      "PageResponseOrderSummaryResponse" : {
-        "type" : "object",
-        "properties" : {
-          "content" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/OrderSummaryResponse"
-            }
-          },
-          "page" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "size" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        }
-      },
-      "PageResponseSaleHistoryRow" : {
-        "type" : "object",
-        "properties" : {
-          "content" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/SaleHistoryRow"
-            }
-          },
-          "page" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "size" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        }
-      },
-      "ParetoRow" : {
-        "type" : "object",
-        "properties" : {
-          "cumulativeShare" : {
-            "type" : "number"
-          },
-          "productName" : {
-            "type" : "string"
-          },
-          "revenue" : {
-            "type" : "number"
-          },
-          "revenueShare" : {
-            "type" : "number"
-          }
-        }
-      },
-      "PaymentMixAggregate" : {
-        "type" : "object",
-        "properties" : {
-          "count" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "method" : {
-            "type" : "string",
-            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ]
-          },
-          "total" : {
-            "type" : "number"
-          }
-        }
-      },
-      "PaymentMixRow" : {
-        "type" : "object",
-        "properties" : {
-          "count" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "method" : {
-            "type" : "string",
-            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ]
-          },
-          "share" : {
-            "type" : "number"
-          },
-          "total" : {
-            "type" : "number"
-          }
-        }
-      },
-      "PaymentRequest" : {
-        "type" : "object",
-        "properties" : {
-          "amount" : {
-            "type" : "number",
-            "minimum" : 0.01
-          },
-          "method" : {
-            "type" : "string",
-            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ]
-          }
-        },
-        "required" : [ "amount", "method" ]
-      },
-      "PlanView" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "string"
-          },
-          "maxTables" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "maxUsers" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "priceMonthly" : {
-            "type" : "number"
-          }
-        }
-      },
-      "ProductResponse" : {
-        "type" : "object",
-        "properties" : {
-          "active" : {
-            "type" : "boolean"
-          },
-          "categoryId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "price" : {
-            "type" : "number"
-          }
-        }
-      },
-      "PublicCatalogResponse" : {
-        "type" : "object",
-        "properties" : {
-          "categories" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/CategoryResponse"
-            }
-          },
-          "products" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/ProductResponse"
-            }
-          },
-          "restaurantName" : {
-            "type" : "string"
-          },
-          "slug" : {
-            "type" : "string"
-          }
-        }
-      },
-      "RegisterMovementRequest" : {
-        "type" : "object",
-        "properties" : {
-          "countedStock" : {
-            "type" : "number"
-          },
-          "inventoryItemId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "movementType" : {
-            "type" : "string",
-            "enum" : [ "IN", "OUT", "ADJUSTMENT", "WASTE" ]
-          },
-          "quantity" : {
-            "type" : "number"
-          },
-          "reason" : {
-            "type" : "string",
-            "maxLength" : 150,
-            "minLength" : 0
-          }
-        },
-        "required" : [ "inventoryItemId", "movementType" ]
-      },
-      "RegisteredMovementResponse" : {
-        "type" : "object",
-        "properties" : {
-          "createdAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "inventoryItemId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "movementType" : {
-            "type" : "string",
-            "enum" : [ "IN", "OUT", "ADJUSTMENT", "WASTE" ]
-          },
-          "quantity" : {
-            "type" : "number"
-          },
-          "reason" : {
-            "type" : "string"
-          }
-        }
-      },
-      "RestaurantSettingsResponse" : {
-        "type" : "object",
-        "properties" : {
-          "name" : {
-            "type" : "string"
-          },
-          "slug" : {
-            "type" : "string"
-          },
-          "timezone" : {
-            "type" : "string"
-          }
-        }
-      },
-      "SaleHistoryRow" : {
-        "type" : "object",
-        "properties" : {
-          "cashierName" : {
-            "type" : "string"
-          },
-          "createdAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "orderFolio" : {
-            "type" : "string"
-          },
-          "paymentMethod" : {
-            "type" : "string",
-            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ]
-          },
-          "subtotal" : {
-            "type" : "number"
-          },
-          "tableNumber" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "ticketId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "tip" : {
-            "type" : "number"
-          },
-          "total" : {
-            "type" : "number"
-          }
-        }
-      },
-      "SaleHistorySummary" : {
-        "type" : "object",
-        "properties" : {
-          "count" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "total" : {
-            "type" : "number"
-          }
-        }
-      },
-      "SalesByDayRow" : {
-        "type" : "object",
-        "properties" : {
-          "count" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "day" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "total" : {
-            "type" : "number"
-          }
-        }
-      },
-      "SalesHistoryResponse" : {
-        "type" : "object",
-        "properties" : {
-          "paymentMix" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/PaymentMixAggregate"
-            }
-          },
-          "sales" : {
-            "$ref" : "#/components/schemas/PageResponseSaleHistoryRow"
-          },
-          "summary" : {
-            "$ref" : "#/components/schemas/SaleHistorySummary"
-          }
-        }
-      },
-      "SignupRequest" : {
-        "type" : "object",
-        "properties" : {
-          "adminEmail" : {
-            "type" : "string",
-            "maxLength" : 180,
-            "minLength" : 0
-          },
-          "adminFullName" : {
-            "type" : "string",
-            "maxLength" : 160,
-            "minLength" : 0
-          },
-          "password" : {
-            "type" : "string",
-            "minLength" : 1
-          },
-          "planCode" : {
-            "type" : "string",
-            "minLength" : 1
-          },
-          "restaurantName" : {
-            "type" : "string",
-            "maxLength" : 160,
-            "minLength" : 0
-          },
-          "slug" : {
-            "type" : "string",
-            "minLength" : 1,
-            "pattern" : "^[a-z0-9-]{3,80}$"
-          }
-        }
-      },
-      "SignupResponse" : {
-        "type" : "object",
-        "properties" : {
-          "adminEmail" : {
-            "type" : "string"
-          },
-          "slug" : {
-            "type" : "string"
-          },
-          "tenantId" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        }
-      },
-      "TableResponse" : {
-        "type" : "object",
-        "properties" : {
-          "active" : {
-            "type" : "boolean"
-          },
-          "capacity" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "number" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "status" : {
-            "type" : "string"
-          },
-          "waiterId" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        }
-      },
-      "TicketItemSnapshot" : {
-        "type" : "object",
-        "properties" : {
-          "productId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "productName" : {
-            "type" : "string"
-          },
-          "quantity" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "subtotal" : {
-            "type" : "number"
-          },
-          "unitPrice" : {
-            "type" : "number"
-          }
-        }
-      },
-      "TicketPaymentSnapshot" : {
-        "type" : "object",
-        "properties" : {
-          "amount" : {
-            "type" : "number"
-          },
-          "change" : {
-            "type" : "number"
-          },
-          "method" : {
-            "type" : "string",
-            "enum" : [ "CASH", "CARD", "TRANSFER", "MIXED", "MERCADOPAGO" ]
-          },
-          "receivedAmount" : {
-            "type" : "number"
-          }
-        }
-      },
-      "TicketResponse" : {
-        "type" : "object",
-        "properties" : {
-          "change" : {
-            "type" : "number"
-          },
-          "closedAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "folio" : {
-            "type" : "string"
-          },
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "items" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/TicketItemSnapshot"
-            }
-          },
-          "orderId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "paymentMethod" : {
-            "type" : "string"
-          },
-          "payments" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/TicketPaymentSnapshot"
-            }
-          },
-          "saleId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "subtotal" : {
-            "type" : "number"
-          },
-          "tip" : {
-            "type" : "number"
-          },
-          "tipPercent" : {
-            "type" : "number"
-          },
-          "total" : {
-            "type" : "number"
-          }
-        }
-      },
-      "UpdateCategoryRequest" : {
-        "type" : "object",
-        "properties" : {
-          "name" : {
-            "type" : "string",
-            "maxLength" : 120,
-            "minLength" : 0
-          },
-          "sortOrder" : {
-            "type" : "integer",
-            "format" : "int32",
-            "minimum" : 0
-          }
-        },
-        "required" : [ "sortOrder" ]
-      },
-      "UpdateInventoryItemRequest" : {
-        "type" : "object",
-        "properties" : {
-          "minStock" : {
-            "type" : "number"
-          },
-          "name" : {
-            "type" : "string",
-            "maxLength" : 160,
-            "minLength" : 0
-          },
-          "unit" : {
-            "type" : "string",
-            "maxLength" : 20,
-            "minLength" : 0
-          },
-          "unitCost" : {
-            "type" : "number"
-          }
-        }
-      },
-      "UpdateInventoryItemStatusRequest" : {
-        "type" : "object",
-        "properties" : {
-          "active" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "active" ]
-      },
-      "UpdateKitchenItemStatusRequest" : {
-        "type" : "object",
-        "properties" : {
-          "status" : {
-            "type" : "string",
-            "enum" : [ "PENDING", "IN_PREPARATION", "READY", "DELIVERED" ]
-          }
-        },
-        "required" : [ "status" ]
-      },
-      "UpdateProductRequest" : {
-        "type" : "object",
-        "properties" : {
-          "categoryId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "name" : {
-            "type" : "string",
-            "maxLength" : 160,
-            "minLength" : 0
-          },
-          "price" : {
-            "type" : "number",
-            "minimum" : 0.00
-          }
-        },
-        "required" : [ "price" ]
-      },
-      "UpdateProductStatusRequest" : {
-        "type" : "object",
-        "properties" : {
-          "active" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "active" ]
-      },
-      "UpdateRestaurantSettingsRequest" : {
-        "type" : "object",
-        "properties" : {
-          "timezone" : {
-            "type" : "string",
-            "minLength" : 1
-          }
-        }
-      },
-      "UpdateTableActiveRequest" : {
-        "type" : "object",
-        "properties" : {
-          "active" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "active" ]
-      },
-      "UpdateTableRequest" : {
-        "type" : "object",
-        "properties" : {
-          "capacity" : {
-            "type" : "integer",
-            "format" : "int32",
-            "minimum" : 1
-          },
-          "number" : {
-            "type" : "integer",
-            "format" : "int32",
-            "minimum" : 1
-          }
-        },
-        "required" : [ "capacity", "number" ]
-      },
-      "UpdateTableStatusRequest" : {
-        "type" : "object",
-        "properties" : {
-          "status" : {
-            "type" : "string",
-            "enum" : [ "FREE", "OCCUPIED", "RESERVED", "CLEANING" ]
-          }
-        },
-        "required" : [ "status" ]
-      },
-      "UpdateUserStatusRequest" : {
-        "type" : "object",
-        "properties" : {
-          "active" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "active" ]
-      },
-      "UserResponse" : {
-        "type" : "object",
-        "properties" : {
-          "active" : {
-            "type" : "boolean"
-          },
-          "email" : {
-            "type" : "string"
-          },
-          "fullName" : {
-            "type" : "string"
-          },
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "role" : {
-            "type" : "string",
-            "enum" : [ "SUPER_ADMIN", "ADMIN", "WAITER", "KITCHEN", "CASHIER" ]
-          }
-        }
-      }
-    },
-    "securitySchemes" : {
-      "cookieAuth" : {
-        "in" : "cookie",
-        "name" : "access_token",
-        "type" : "apiKey"
-      }
-    }
-  }
+  "security" : [ {
+    "cookieAuth" : [ ]
+  } ],
+  "servers" : [ {
+    "description" : "Mismo origen que la pagina: Swagger UI del backend o el servidor del frontend",
+    "url" : "/"
+  } ]
 }
