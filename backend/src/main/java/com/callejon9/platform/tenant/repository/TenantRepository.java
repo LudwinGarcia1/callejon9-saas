@@ -15,18 +15,19 @@ public interface TenantRepository extends JpaRepository<Tenant, UUID> {
 
     boolean existsBySlug(String slug);
 
-    /** Solo la zona horaria: el calendario la consulta en cada peticion y no necesita la entidad. */
+    /**
+     * Solo la zona horaria: el calendario la consulta en cada peticion y no necesita la entidad.
+     */
     @Query("select t.timezone from Tenant t where t.id = :id")
     Optional<String> findTimezoneById(@Param("id") UUID id);
 
     /**
-     * Igual que {@code findById}, pero con {@code SELECT ... FOR UPDATE}: serializa
-     * operaciones "leer conteo, decidir, escribir" que corren sobre el mismo tenant
-     * (ver {@code UserService.setActive} y {@code PlanLimitService.assertCanAddUser}).
-     * Sin este lock, dos peticiones concurrentes leen ambas el conteo previo a
-     * cualquier escritura y las dos pasan la validacion, aunque juntas la violen.
-     * {@code tenants} no tiene RLS -- es el catalogo de control-plane -- asi que
-     * bloquear esta fila no requiere ningun tenant activo en {@link
+     * Igual que {@code findById}, pero con {@code SELECT ... FOR UPDATE}: serializa operaciones
+     * "leer conteo, decidir, escribir" que corren sobre el mismo tenant (ver {@code
+     * UserService.setActive} y {@code PlanLimitService.assertCanAddUser}). Sin este lock, dos
+     * peticiones concurrentes leen ambas el conteo previo a cualquier escritura y las dos pasan la
+     * validacion, aunque juntas la violen. {@code tenants} no tiene RLS -- es el catalogo de
+     * control-plane -- asi que bloquear esta fila no requiere ningun tenant activo en {@link
      * com.callejon9.tenancy.TenantContext}.
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)

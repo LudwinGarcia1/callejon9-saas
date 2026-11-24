@@ -17,19 +17,19 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Genera folios con el formato {@code ORD-yyMMddHHmmss} o {@code TCK-yyMMddHHmmss} en UTC.
  *
- * <p>En un entorno multi-instancia (por ejemplo, varias tareas ECS en ejecucion concurrente),
- * la generacion en memoria de una sola JVM no puede prevenir colisiones si dos instancias
- * reciben solicitudes en el mismo segundo para el mismo restaurante.
+ * <p>En un entorno multi-instancia (por ejemplo, varias tareas ECS en ejecucion concurrente), la
+ * generacion en memoria de una sola JVM no puede prevenir colisiones si dos instancias reciben
+ * solicitudes en el mismo segundo para el mismo restaurante.
  *
- * <p>Esta implementacion utiliza PostgreSQL como fuente de verdad mediante la tabla
- * {@code tenant_folio_sequences}. Una operacion atomica {@code INSERT ... ON CONFLICT DO UPDATE}
- * con {@code GREATEST(tenant_folio_sequences.last_issued_epoch_second + 1, EXCLUDED.last_issued_epoch_second)}
- * garantiza que cada folio asignado sea estrictamente mayor al anterior y unico por restaurante,
- * sin carreras entre instancias.
+ * <p>Esta implementacion utiliza PostgreSQL como fuente de verdad mediante la tabla {@code
+ * tenant_folio_sequences}. Una operacion atomica {@code INSERT ... ON CONFLICT DO UPDATE} con
+ * {@code GREATEST(tenant_folio_sequences.last_issued_epoch_second + 1,
+ * EXCLUDED.last_issued_epoch_second)} garantiza que cada folio asignado sea estrictamente mayor al
+ * anterior y unico por restaurante, sin carreras entre instancias.
  *
  * <p>Si no hay conexion a base de datos o contexto de tenant (por ejemplo, en pruebas unitarias
- * puras sin contexto de Spring), recurre a un generador en memoria con {@link AtomicLong}
- * para preservar compatibilidad.
+ * puras sin contexto de Spring), recurre a un generador en memoria con {@link AtomicLong} para
+ * preservar compatibilidad.
  */
 @Component
 public class FolioGenerator {
@@ -79,20 +79,21 @@ public class FolioGenerator {
         }
 
         long now = clock.instant().getEpochSecond();
-        Long issued = jdbcTemplate.queryForObject(
-                """
-                INSERT INTO tenant_folio_sequences (tenant_id, prefix, last_issued_epoch_second, updated_at)
-                VALUES (?, ?, ?, now())
-                ON CONFLICT (tenant_id, prefix)
-                DO UPDATE SET
-                    last_issued_epoch_second = GREATEST(tenant_folio_sequences.last_issued_epoch_second + 1, EXCLUDED.last_issued_epoch_second),
-                    updated_at = now()
-                RETURNING last_issued_epoch_second
-                """,
-                Long.class,
-                tenantId,
-                prefix,
-                now);
+        Long issued =
+                jdbcTemplate.queryForObject(
+                        """
+                        INSERT INTO tenant_folio_sequences (tenant_id, prefix, last_issued_epoch_second, updated_at)
+                        VALUES (?, ?, ?, now())
+                        ON CONFLICT (tenant_id, prefix)
+                        DO UPDATE SET
+                            last_issued_epoch_second = GREATEST(tenant_folio_sequences.last_issued_epoch_second + 1, EXCLUDED.last_issued_epoch_second),
+                            updated_at = now()
+                        RETURNING last_issued_epoch_second
+                        """,
+                        Long.class,
+                        tenantId,
+                        prefix,
+                        now);
 
         long epochSecond = Objects.requireNonNullElse(issued, now);
         return prefix + FORMAT.format(Instant.ofEpochSecond(epochSecond));

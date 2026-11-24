@@ -26,21 +26,24 @@ public class SalesController {
         this.saleHistoryService = saleHistoryService;
     }
 
-    private static final Map<String, String> SORTABLE = Map.of("createdAt", "createdAt", "total", "total");
+    private static final Map<String, String> SORTABLE =
+            Map.of("createdAt", "createdAt", "total", "total");
 
     /**
-     * {@code page}, {@code size} (1 a {@value PageQuery#MAX_SIZE}) y
-     * {@code sort} sobre {@code createdAt} o {@code total}; por defecto, la
-     * venta mas reciente primero.
+     * {@code page}, {@code size} (1 a {@value PageQuery#MAX_SIZE}) y {@code sort} sobre {@code
+     * createdAt} o {@code total}; por defecto, la venta mas reciente primero.
      */
     @GetMapping
     public SalesHistoryResponse history(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate to,
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
             @RequestParam(required = false) String sort) {
-        Pageable pageable = PageQuery.of(page, size, sort, SORTABLE, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable =
+                PageQuery.of(page, size, sort, SORTABLE, Sort.by(Sort.Direction.DESC, "createdAt"));
         return saleHistoryService.getHistory(from, to, pageable);
     }
 }

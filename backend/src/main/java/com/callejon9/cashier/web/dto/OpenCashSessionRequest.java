@@ -6,5 +6,4 @@ import jakarta.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
 public record OpenCashSessionRequest(
-        @NotNull @DecimalMin("0.00") @Digits(integer = 8, fraction = 2) BigDecimal openingFund) {
-}
+        @NotNull @DecimalMin("0.00") @Digits(integer = 8, fraction = 2) BigDecimal openingFund) {}

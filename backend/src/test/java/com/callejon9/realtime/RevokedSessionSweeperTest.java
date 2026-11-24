@@ -1,5 +1,7 @@
 package com.callejon9.realtime;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.callejon9.support.TestSessions;
 import com.callejon9.tenancy.TenantContext;
 import com.callejon9.user.domain.User;
@@ -28,21 +30,20 @@ import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 /**
- * Revocar una sesion corta sus conexiones en tiempo real, no solo el
- * siguiente handshake. Corre sobre un servidor real con un ciclo de revision
- * de un segundo: si la tarea programada no estuviera conectada, ninguna
- * conexion se cerraria y las pruebas fallarian por tiempo.
+ * Revocar una sesion corta sus conexiones en tiempo real, no solo el siguiente handshake. Corre
+ * sobre un servidor real con un ciclo de revision de un segundo: si la tarea programada no
+ * estuviera conectada, ninguna conexion se cerraria y las pruebas fallarian por tiempo.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = "app.realtime.session-check-interval=PT1S")
 @ActiveProfiles("test")
 @DisplayName("Cierre de conexiones WebSocket de sesiones revocadas")
 class RevokedSessionSweeperTest {
 
     private static final String SLUG_PREFIX = "realtime-revocacion";
+
     /** Holgura sobre el ciclo de 1 s para maquinas lentas. */
     private static final long CLOSE_DEADLINE_MS = 6_000;
 
@@ -74,8 +75,12 @@ class RevokedSessionSweeperTest {
 
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.COOKIE, "access_token=" + sharedScreen);
-        var logout = restTemplate.exchange("/api/v1/auth/logout", HttpMethod.POST,
-                new HttpEntity<>(headers), Void.class);
+        var logout =
+                restTemplate.exchange(
+                        "/api/v1/auth/logout",
+                        HttpMethod.POST,
+                        new HttpEntity<>(headers),
+                        Void.class);
         assertThat(logout.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
 
         awaitDisconnection(revoked);
@@ -83,21 +88,29 @@ class RevokedSessionSweeperTest {
         // Al menos dos ciclos mas: las otras sesiones siguen conectadas.
         Thread.sleep(2_500);
         assertThat(sameUserOtherSession.isConnected())
-                .as("otra sesion del mismo usuario no se toca").isTrue();
+                .as("otra sesion del mismo usuario no se toca")
+                .isTrue();
         assertThat(otherUser.isConnected())
-                .as("las sesiones de otros usuarios no se tocan").isTrue();
+                .as("las sesiones de otros usuarios no se tocan")
+                .isTrue();
     }
 
     @Test
-    @DisplayName("una revocacion hecha en otra instancia (solo en la base) tambien corta la conexion")
+    @DisplayName(
+            "una revocacion hecha en otra instancia (solo en la base) tambien corta la conexion")
     void revocationWrittenByAnotherInstanceIsDetected() throws Exception {
         User admin = testSessions.newUser(SLUG_PREFIX, UserRole.ADMIN);
         StompSession connection = connect(testSessions.accessTokenFor(admin));
 
         // Otra instancia no avisa a esta: solo deja la sesion revocada en la base.
-        TenantContext.callAs(admin.getTenantId(), () -> transactionTemplate.execute(status ->
-                jdbcTemplate.update("UPDATE refresh_tokens SET revoked_at = now() "
-                        + "WHERE user_id = ? AND revoked_at IS NULL", admin.getId())));
+        TenantContext.callAs(
+                admin.getTenantId(),
+                () ->
+                        transactionTemplate.execute(status ->
+                                jdbcTemplate.update(
+                                        "UPDATE refresh_tokens SET revoked_at = now() "
+                                                + "WHERE user_id = ? AND revoked_at IS NULL",
+                                        admin.getId())));
 
         awaitDisconnection(connection);
     }
@@ -131,10 +144,13 @@ class RevokedSessionSweeperTest {
         handshakeHeaders.add(HttpHeaders.COOKIE, "access_token=" + accessToken);
 
         CompletableFuture<StompSession> connected = new CompletableFuture<>();
-        stompClient.connectAsync("ws://localhost:" + port + "/ws", handshakeHeaders,
+        stompClient.connectAsync(
+                "ws://localhost:" + port + "/ws",
+                handshakeHeaders,
                 new StompSessionHandlerAdapter() {
                     @Override
-                    public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
+                    public void afterConnected(
+                            StompSession session, StompHeaders connectedHeaders) {
                         connected.complete(session);
                     }
                 });

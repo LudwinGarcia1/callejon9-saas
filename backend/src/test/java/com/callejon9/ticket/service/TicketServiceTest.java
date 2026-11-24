@@ -1,5 +1,10 @@
 package com.callejon9.ticket.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.repository.TenantRepository;
 import com.callejon9.shared.error.ResourceNotFoundException;
@@ -19,26 +24,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UT · TicketService")
 class TicketServiceTest {
 
     private static final UUID TENANT_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
 
-    @Mock
-    private TicketRepository ticketRepository;
+    @Mock private TicketRepository ticketRepository;
 
-    @Mock
-    private TenantRepository tenantRepository;
+    @Mock private TenantRepository tenantRepository;
 
-    @Mock
-    private TicketPdfGenerator pdfGenerator;
+    @Mock private TicketPdfGenerator pdfGenerator;
 
     private TicketService ticketService;
 
@@ -61,12 +57,13 @@ class TicketServiceTest {
         @DisplayName("Retorna el ticket cuando existe")
         void returnsTicketWhenExists() {
             UUID ticketId = UUID.randomUUID();
-            Ticket ticket = Ticket.builder()
-                    .folio("TCK-2026-0001")
-                    .closedAt(Instant.now())
-                    .subtotal(BigDecimal.valueOf(250.00))
-                    .total(BigDecimal.valueOf(250.00))
-                    .build();
+            Ticket ticket =
+                    Ticket.builder()
+                            .folio("TCK-2026-0001")
+                            .closedAt(Instant.now())
+                            .subtotal(BigDecimal.valueOf(250.00))
+                            .total(BigDecimal.valueOf(250.00))
+                            .build();
             ticket.setId(ticketId);
             ticket.setTenantId(TENANT_ID);
 
@@ -101,12 +98,13 @@ class TicketServiceTest {
         void returnsTicketWhenFolioExists() {
             String folio = "TCK-2026-1020";
             UUID ticketId = UUID.randomUUID();
-            Ticket ticket = Ticket.builder()
-                    .folio(folio)
-                    .closedAt(Instant.now())
-                    .subtotal(BigDecimal.valueOf(180.00))
-                    .total(BigDecimal.valueOf(180.00))
-                    .build();
+            Ticket ticket =
+                    Ticket.builder()
+                            .folio(folio)
+                            .closedAt(Instant.now())
+                            .subtotal(BigDecimal.valueOf(180.00))
+                            .total(BigDecimal.valueOf(180.00))
+                            .build();
             ticket.setId(ticketId);
             ticket.setTenantId(TENANT_ID);
 
@@ -120,7 +118,8 @@ class TicketServiceTest {
         }
 
         @Test
-        @DisplayName("Lanza ResourceNotFoundException si el folio no existe o es de otro restaurante (RLS)")
+        @DisplayName(
+                "Lanza ResourceNotFoundException si el folio no existe o es de otro restaurante (RLS)")
         void throwsNotFoundWhenFolioDoesNotExist() {
             String folio = "TCK-UNKNOWN-999";
             when(ticketRepository.findByFolio(folio)).thenReturn(Optional.empty());
@@ -139,20 +138,22 @@ class TicketServiceTest {
         @DisplayName("Genera PDF exitosamente asociando el nombre comercial del restaurante")
         void generatesPdfWithRestaurantName() {
             UUID ticketId = UUID.randomUUID();
-            Ticket ticket = Ticket.builder()
-                    .folio("TCK-2026-0002")
-                    .closedAt(Instant.now())
-                    .subtotal(BigDecimal.valueOf(500.00))
-                    .total(BigDecimal.valueOf(500.00))
-                    .build();
+            Ticket ticket =
+                    Ticket.builder()
+                            .folio("TCK-2026-0002")
+                            .closedAt(Instant.now())
+                            .subtotal(BigDecimal.valueOf(500.00))
+                            .total(BigDecimal.valueOf(500.00))
+                            .build();
             ticket.setId(ticketId);
             ticket.setTenantId(TENANT_ID);
 
-            Tenant tenant = Tenant.builder()
-                    .name("Restaurante Callejón 9")
-                    .slug("callejon9")
-                    .active(true)
-                    .build();
+            Tenant tenant =
+                    Tenant.builder()
+                            .name("Restaurante Callejón 9")
+                            .slug("callejon9")
+                            .active(true)
+                            .build();
             tenant.setId(TENANT_ID);
 
             byte[] expectedBytes = "%PDF-1.4 dummy".getBytes();
@@ -171,18 +172,19 @@ class TicketServiceTest {
         @DisplayName("Genera PDF con nombre vacío si el inquilino no tiene nombre configurado")
         void generatesPdfWithEmptyNameWhenTenantNotFound() {
             UUID ticketId = UUID.randomUUID();
-            Ticket ticket = Ticket.builder()
-                    .folio("TCK-2026-0003")
-                    .closedAt(Instant.now())
-                    .subtotal(BigDecimal.valueOf(300.00))
-                    .total(BigDecimal.valueOf(300.00))
-                    .build();
+            Ticket ticket =
+                    Ticket.builder()
+                            .folio("TCK-2026-0003")
+                            .closedAt(Instant.now())
+                            .subtotal(BigDecimal.valueOf(300.00))
+                            .total(BigDecimal.valueOf(300.00))
+                            .build();
             ticket.setId(ticketId);
             ticket.setTenantId(TENANT_ID);
 
             when(ticketRepository.findById(ticketId)).thenReturn(Optional.of(ticket));
             when(tenantRepository.findById(TENANT_ID)).thenReturn(Optional.empty());
-            when(pdfGenerator.generate(ticket, "")).thenReturn(new byte[]{1, 2, 3});
+            when(pdfGenerator.generate(ticket, "")).thenReturn(new byte[] {1, 2, 3});
 
             byte[] pdfResult = ticketService.generatePdf(ticketId);
 

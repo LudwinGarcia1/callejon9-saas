@@ -6,8 +6,8 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 
 /**
- * Calendario de un restaurante ya resuelto: su zona y el reloj. Se obtiene
- * con {@link BusinessCalendar#current()}.
+ * Calendario de un restaurante ya resuelto: su zona y el reloj. Se obtiene con {@link
+ * BusinessCalendar#current()}.
  */
 public record TenantCalendar(ZoneId zone, Clock clock) {
 
@@ -16,13 +16,11 @@ public record TenantCalendar(ZoneId zone, Clock clock) {
     }
 
     /**
-     * Convierte un rango de dias de calendario [from, to] (ambos inclusive, en
-     * la zona del restaurante) al rango de instantes [start, endExclusive) que
-     * corresponde a esos mismos dias.
+     * Convierte un rango de dias de calendario [from, to] (ambos inclusive, en la zona del
+     * restaurante) al rango de instantes [start, endExclusive) que corresponde a esos mismos dias.
      *
-     * atStartOfDay(ZoneId) resuelve el horario de verano por su cuenta. Con un
-     * ZoneOffset fijo el rango quedaria corrido una hora la noche en que el
-     * pais cambia la hora.
+     * <p>atStartOfDay(ZoneId) resuelve el horario de verano por su cuenta. Con un ZoneOffset fijo
+     * el rango quedaria corrido una hora la noche en que el pais cambia la hora.
      */
     public InstantRange toInstantRange(LocalDate from, LocalDate to) {
         Instant start = from.atStartOfDay(zone).toInstant();

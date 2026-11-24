@@ -1,5 +1,10 @@
 package com.callejon9.auth;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.callejon9.auth.service.JwtService;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
@@ -28,15 +33,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 /**
- * El logout invalida el access token en el servidor, no solo en el navegador.
- * Cada prueba usa un JWT que todavia no expira: si la API lo acepta despues
- * de revocar la sesion, el logout seria solo cosmetico.
+ * El logout invalida el access token en el servidor, no solo en el navegador. Cada prueba usa un
+ * JWT que todavia no expira: si la API lo acepta despues de revocar la sesion, el logout seria solo
+ * cosmetico.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -58,14 +58,21 @@ class SessionRevocationTest {
 
     @BeforeEach
     void seed() {
-        tenant = onboardingService.onboard("Revocacion Test", "revocacion-test",
-                "admin@revocacion.com", "Admin", "Secreto123!", "FREE");
+        tenant =
+                onboardingService.onboard(
+                        "Revocacion Test",
+                        "revocacion-test",
+                        "admin@revocacion.com",
+                        "Admin",
+                        "Secreto123!",
+                        "FREE");
     }
 
     @AfterEach
     void cleanUp() {
         TenantContext.clear();
-        jdbcTemplate.update("DELETE FROM tenants WHERE slug IN ('revocacion-test','revocacion-otro')");
+        jdbcTemplate.update(
+                "DELETE FROM tenants WHERE slug IN ('revocacion-test','revocacion-otro')");
     }
 
     @Test
@@ -80,7 +87,8 @@ class SessionRevocationTest {
     }
 
     @Test
-    @DisplayName("un logout que solo envia access_token (Swagger, app movil) tambien revoca la sesion")
+    @DisplayName(
+            "un logout que solo envia access_token (Swagger, app movil) tambien revoca la sesion")
     void logoutWithOnlyTheAccessCookieRevokesTheSession() throws Exception {
         Session session = login("revocacion-test", "admin@revocacion.com");
 
@@ -93,7 +101,8 @@ class SessionRevocationTest {
     }
 
     @Test
-    @DisplayName("un segundo logout con el access token ya revocado responde 401: no queda sesion que cerrar")
+    @DisplayName(
+            "un segundo logout con el access token ya revocado responde 401: no queda sesion que cerrar")
     void logoutWithARevokedAccessTokenIsUnauthorized() throws Exception {
         Session session = login("revocacion-test", "admin@revocacion.com");
         logout(session);
@@ -120,7 +129,8 @@ class SessionRevocationTest {
     }
 
     @Test
-    @DisplayName("si se detecta reutilizacion del refresh, los access tokens de la sesion dejan de servir")
+    @DisplayName(
+            "si se detecta reutilizacion del refresh, los access tokens de la sesion dejan de servir")
     void replayDetectionCutsTheAccessTokensToo() throws Exception {
         Session first = login("revocacion-test", "admin@revocacion.com");
         Session rotated = refresh(first.refresh());
@@ -150,8 +160,9 @@ class SessionRevocationTest {
 
         TenantContext.set(tenant.getId());
         try {
-            transactionTemplate.executeWithoutResult(status -> jdbcTemplate.update(
-                    "UPDATE refresh_tokens SET expires_at = now() - interval '1 second'"));
+            transactionTemplate.executeWithoutResult(status ->
+                    jdbcTemplate.update(
+                            "UPDATE refresh_tokens SET expires_at = now() - interval '1 second'"));
         } finally {
             TenantContext.clear();
         }
@@ -162,8 +173,13 @@ class SessionRevocationTest {
     @Test
     @DisplayName("un sid inventado o de otro restaurante no autentica: RLS oculta la sesion ajena")
     void foreignOrUnknownSessionIdIsRejected() throws Exception {
-        onboardingService.onboard("Revocacion Otro", "revocacion-otro",
-                "admin@revocacion-otro.com", "Otro", "Secreto123!", "FREE");
+        onboardingService.onboard(
+                "Revocacion Otro",
+                "revocacion-otro",
+                "admin@revocacion-otro.com",
+                "Otro",
+                "Secreto123!",
+                "FREE");
         Session own = login("revocacion-test", "admin@revocacion.com");
         Session foreign = login("revocacion-otro", "admin@revocacion-otro.com");
 
@@ -192,32 +208,39 @@ class SessionRevocationTest {
 
     // ---------------------------------------------------------------------
 
-    private record Session(String access, String refresh) {
-    }
+    private record Session(String access, String refresh) {}
 
     private Session login(String slug, String email) throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/v1/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"slug":"%s","email":"%s","password":"Secreto123!"}
-                                """.formatted(slug, email)))
-                .andExpect(status().isOk())
-                .andReturn();
+        MvcResult result =
+                mockMvc.perform(
+                                post("/api/v1/auth/login")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                """
+                                                {"slug":"%s","email":"%s","password":"Secreto123!"}
+                                                """
+                                                        .formatted(slug, email)))
+                        .andExpect(status().isOk())
+                        .andReturn();
         return sessionFrom(result);
     }
 
     private Session refresh(String refreshToken) throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/v1/auth/refresh")
-                        .cookie(new Cookie(REFRESH, refreshToken)))
-                .andExpect(status().isNoContent())
-                .andReturn();
+        MvcResult result =
+                mockMvc.perform(
+                                post("/api/v1/auth/refresh")
+                                        .cookie(new Cookie(REFRESH, refreshToken)))
+                        .andExpect(status().isNoContent())
+                        .andReturn();
         return sessionFrom(result);
     }
 
     private void logout(Session session) throws Exception {
-        mockMvc.perform(post("/api/v1/auth/logout")
-                        .cookie(new Cookie(ACCESS, session.access()),
-                                new Cookie(REFRESH, session.refresh())))
+        mockMvc.perform(
+                        post("/api/v1/auth/logout")
+                                .cookie(
+                                        new Cookie(ACCESS, session.access()),
+                                        new Cookie(REFRESH, session.refresh())))
                 .andExpect(status().isNoContent());
     }
 
@@ -243,9 +266,14 @@ class SessionRevocationTest {
     }
 
     private static User sampleUser(JwtService.TokenClaims claims) {
-        User user = User.builder()
-                .email("x@x.com").passwordHash("x").fullName("X")
-                .role(UserRole.ADMIN).active(true).build();
+        User user =
+                User.builder()
+                        .email("x@x.com")
+                        .passwordHash("x")
+                        .fullName("X")
+                        .role(UserRole.ADMIN)
+                        .active(true)
+                        .build();
         user.setId(claims.userId());
         user.setTenantId(claims.tenantId());
         return user;

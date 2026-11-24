@@ -1,13 +1,13 @@
 package com.callejon9.order;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.callejon9.order.service.FolioGenerator;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("FolioGenerator")
 class FolioGeneratorTest {

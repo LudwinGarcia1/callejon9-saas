@@ -1,5 +1,12 @@
 package com.callejon9.table;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
 import com.callejon9.support.TestSessions;
@@ -22,13 +29,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -46,23 +46,29 @@ class TableControllerTest {
     private User admin;
 
     /**
-     * El administrador que el onboarding si persiste. Hace falta para abrir
-     * comandas: {@code restaurant_tables.waiter_id} tiene una FK contra
-     * {@code users}, y un usuario de mentira la viola. Para el CRUD de mesas
-     * basta {@link #admin}, que solo existe para firmar el JWT.
+     * El administrador que el onboarding si persiste. Hace falta para abrir comandas: {@code
+     * restaurant_tables.waiter_id} tiene una FK contra {@code users}, y un usuario de mentira la
+     * viola. Para el CRUD de mesas basta {@link #admin}, que solo existe para firmar el JWT.
      */
     private User persistedAdmin;
 
     @BeforeEach
     void seed() {
-        tenant = onboardingService.onboard("Mesas Test", "mesas-test",
-                "admin@mesas.com", "Admin", "Secreto123!", "FREE");
+        tenant =
+                onboardingService.onboard(
+                        "Mesas Test",
+                        "mesas-test",
+                        "admin@mesas.com",
+                        "Admin",
+                        "Secreto123!",
+                        "FREE");
         admin = userWithRole(tenant.getId(), UserRole.ADMIN);
 
         TenantContext.set(tenant.getId());
         try {
-            persistedAdmin = transactionTemplate.execute(
-                    status -> userRepository.findByEmail("admin@mesas.com").orElseThrow());
+            persistedAdmin =
+                    transactionTemplate.execute(
+                            status -> userRepository.findByEmail("admin@mesas.com").orElseThrow());
         } finally {
             TenantContext.clear();
         }
@@ -83,24 +89,35 @@ class TableControllerTest {
     }
 
     private UUID createTable(int number, int capacity) throws Exception {
-        String body = mockMvc.perform(post("/api/v1/tables")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"number\":" + number + ",\"capacity\":" + capacity + "}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        String body =
+                mockMvc.perform(
+                                post("/api/v1/tables")
+                                        .cookie(cookieFor(admin))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                "{\"number\":"
+                                                        + number
+                                                        + ",\"capacity\":"
+                                                        + capacity
+                                                        + "}"))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
         return UUID.fromString(body.replaceAll(".*\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
     }
 
     @Test
     @DisplayName("ADMIN puede crear una mesa")
     void adminCanCreateATable() throws Exception {
-        mockMvc.perform(post("/api/v1/tables")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"number":1,"capacity":4}
-                                """))
+        mockMvc.perform(
+                        post("/api/v1/tables")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"number":1,"capacity":4}
+                                        """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.number").value(1))
                 .andExpect(jsonPath("$.status").value("FREE"));
@@ -109,20 +126,24 @@ class TableControllerTest {
     @Test
     @DisplayName("un numero de mesa duplicado da 409")
     void duplicateTableNumberIsRejected() throws Exception {
-        mockMvc.perform(post("/api/v1/tables")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"number":5,"capacity":2}
-                                """))
+        mockMvc.perform(
+                        post("/api/v1/tables")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"number":5,"capacity":2}
+                                        """))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/api/v1/tables")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"number":5,"capacity":6}
-                                """))
+        mockMvc.perform(
+                        post("/api/v1/tables")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"number":5,"capacity":6}
+                                        """))
                 .andExpect(status().isConflict());
     }
 
@@ -131,24 +152,28 @@ class TableControllerTest {
     void waiterCannotCreateTables() throws Exception {
         User waiter = userWithRole(tenant.getId(), UserRole.WAITER);
 
-        mockMvc.perform(post("/api/v1/tables")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"number":9,"capacity":4}
-                                """))
+        mockMvc.perform(
+                        post("/api/v1/tables")
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"number":9,"capacity":4}
+                                        """))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     @DisplayName("GET /tables lista las mesas activas con su estado")
     void listReturnsActiveTables() throws Exception {
-        mockMvc.perform(post("/api/v1/tables")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"number":3,"capacity":4}
-                                """))
+        mockMvc.perform(
+                        post("/api/v1/tables")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"number":3,"capacity":4}
+                                        """))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(get("/api/v1/tables").cookie(cookieFor(admin)))
@@ -162,10 +187,11 @@ class TableControllerTest {
     void adminCanUpdateATable() throws Exception {
         UUID tableId = createTable(7, 4);
 
-        mockMvc.perform(put("/api/v1/tables/" + tableId)
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"number\":8,\"capacity\":6}"))
+        mockMvc.perform(
+                        put("/api/v1/tables/" + tableId)
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"number\":8,\"capacity\":6}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.number").value(8))
                 .andExpect(jsonPath("$.capacity").value(6));
@@ -177,20 +203,22 @@ class TableControllerTest {
         createTable(1, 4);
         UUID secondTableId = createTable(2, 4);
 
-        mockMvc.perform(put("/api/v1/tables/" + secondTableId)
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"number\":1,\"capacity\":4}"))
+        mockMvc.perform(
+                        put("/api/v1/tables/" + secondTableId)
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"number\":1,\"capacity\":4}"))
                 .andExpect(status().isConflict());
     }
 
     @Test
     @DisplayName("editar una mesa que no existe da 404")
     void updatingANonexistentTableGives404() throws Exception {
-        mockMvc.perform(put("/api/v1/tables/" + UUID.randomUUID())
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"number\":1,\"capacity\":4}"))
+        mockMvc.perform(
+                        put("/api/v1/tables/" + UUID.randomUUID())
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"number\":1,\"capacity\":4}"))
                 .andExpect(status().isNotFound());
     }
 
@@ -199,10 +227,11 @@ class TableControllerTest {
     void patchDeactivatesATableAndItDisappearsFromTheListing() throws Exception {
         UUID tableId = createTable(9, 4);
 
-        mockMvc.perform(patch("/api/v1/tables/" + tableId)
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":false}"))
+        mockMvc.perform(
+                        patch("/api/v1/tables/" + tableId)
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":false}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(false));
 
@@ -216,18 +245,21 @@ class TableControllerTest {
     void listWithIncludeInactiveIncludesInactiveTables() throws Exception {
         UUID tableId = createTable(11, 4);
 
-        mockMvc.perform(patch("/api/v1/tables/" + tableId)
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":false}"))
+        mockMvc.perform(
+                        patch("/api/v1/tables/" + tableId)
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":false}"))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/v1/tables").cookie(cookieFor(admin)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
 
-        mockMvc.perform(get("/api/v1/tables").param("includeInactive", "true")
-                        .cookie(cookieFor(admin)))
+        mockMvc.perform(
+                        get("/api/v1/tables")
+                                .param("includeInactive", "true")
+                                .cookie(cookieFor(admin)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].number").value(11))
@@ -239,16 +271,18 @@ class TableControllerTest {
     void reactivatingATableMakesItReappearInTheDefaultListing() throws Exception {
         UUID tableId = createTable(12, 4);
 
-        mockMvc.perform(patch("/api/v1/tables/" + tableId)
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":false}"))
+        mockMvc.perform(
+                        patch("/api/v1/tables/" + tableId)
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":false}"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(patch("/api/v1/tables/" + tableId)
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":true}"))
+        mockMvc.perform(
+                        patch("/api/v1/tables/" + tableId)
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":true}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(true));
 
@@ -264,16 +298,18 @@ class TableControllerTest {
         UUID tableId = createTable(4, 4);
         User waiter = userWithRole(tenant.getId(), UserRole.WAITER);
 
-        mockMvc.perform(put("/api/v1/tables/" + tableId)
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"number\":10,\"capacity\":4}"))
+        mockMvc.perform(
+                        put("/api/v1/tables/" + tableId)
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"number\":10,\"capacity\":4}"))
                 .andExpect(status().isForbidden());
 
-        mockMvc.perform(patch("/api/v1/tables/" + tableId)
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":false}"))
+        mockMvc.perform(
+                        patch("/api/v1/tables/" + tableId)
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":false}"))
                 .andExpect(status().isForbidden());
     }
 
@@ -288,18 +324,20 @@ class TableControllerTest {
 
     private void setStatus(UUID tableId, User user, String status, int expectedHttpStatus)
             throws Exception {
-        mockMvc.perform(post("/api/v1/tables/" + tableId + "/status")
-                        .cookie(cookieFor(user))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"status\":\"" + status + "\"}"))
+        mockMvc.perform(
+                        post("/api/v1/tables/" + tableId + "/status")
+                                .cookie(cookieFor(user))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"status\":\"" + status + "\"}"))
                 .andExpect(status().is(expectedHttpStatus));
     }
 
     private void openOrderOn(UUID tableId) throws Exception {
-        mockMvc.perform(post("/api/v1/orders")
-                        .cookie(cookieFor(persistedAdmin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tableId\":\"" + tableId + "\",\"guestCount\":2}"))
+        mockMvc.perform(
+                        post("/api/v1/orders")
+                                .cookie(cookieFor(persistedAdmin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"tableId\":\"" + tableId + "\",\"guestCount\":2}"))
                 .andExpect(status().isCreated());
     }
 
@@ -308,12 +346,14 @@ class TableControllerTest {
     void adminCanReserveAFreeTable() throws Exception {
         UUID tableId = createTable(20, 4);
 
-        mockMvc.perform(post("/api/v1/tables/" + tableId + "/status")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"status":"RESERVED"}
-                                """))
+        mockMvc.perform(
+                        post("/api/v1/tables/" + tableId + "/status")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"status":"RESERVED"}
+                                        """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("RESERVED"));
     }
@@ -324,10 +364,11 @@ class TableControllerTest {
         UUID tableId = createTable(21, 4);
         setStatus(tableId, admin, "RESERVED", 200);
 
-        mockMvc.perform(post("/api/v1/tables/" + tableId + "/status")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"status\":\"CLEANING\"}"))
+        mockMvc.perform(
+                        post("/api/v1/tables/" + tableId + "/status")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"status\":\"CLEANING\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CLEANING"));
     }
@@ -338,10 +379,11 @@ class TableControllerTest {
         UUID tableId = createTable(22, 4);
         setStatus(tableId, admin, "CLEANING", 200);
 
-        mockMvc.perform(post("/api/v1/tables/" + tableId + "/status")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"status\":\"FREE\"}"))
+        mockMvc.perform(
+                        post("/api/v1/tables/" + tableId + "/status")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"status\":\"FREE\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("FREE"));
     }
@@ -385,10 +427,11 @@ class TableControllerTest {
     @DisplayName("cambiar el estado de una mesa dada de baja da 409")
     void changingTheStatusOfAnInactiveTableIsRejected() throws Exception {
         UUID tableId = createTable(27, 4);
-        mockMvc.perform(patch("/api/v1/tables/" + tableId)
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":false}"))
+        mockMvc.perform(
+                        patch("/api/v1/tables/" + tableId)
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":false}"))
                 .andExpect(status().isOk());
 
         setStatus(tableId, admin, "RESERVED", 409);
@@ -400,10 +443,11 @@ class TableControllerTest {
         UUID tableId = createTable(28, 4);
         setStatus(tableId, admin, "RESERVED", 200);
 
-        mockMvc.perform(post("/api/v1/orders")
-                        .cookie(cookieFor(persistedAdmin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tableId\":\"" + tableId + "\",\"guestCount\":2}"))
+        mockMvc.perform(
+                        post("/api/v1/orders")
+                                .cookie(cookieFor(persistedAdmin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"tableId\":\"" + tableId + "\",\"guestCount\":2}"))
                 .andExpect(status().isConflict());
 
         setStatus(tableId, admin, "FREE", 200);

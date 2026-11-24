@@ -1,5 +1,8 @@
 package com.callejon9.realtime;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.callejon9.support.TestSessions;
 import com.callejon9.tenancy.TenantFilter;
 import com.callejon9.user.domain.UserRole;
@@ -17,14 +20,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 /**
- * Lista de origenes del handshake de /ws contra un Tomcat real. El upgrade a
- * WebSocket no ocurre en MockMvc, asi que la prueba habla HTTP crudo por un
- * socket y lee solo la linea de estado: 101 si el handshake se acepto, 403 si
- * el origen se rechazo.
+ * Lista de origenes del handshake de /ws contra un Tomcat real. El upgrade a WebSocket no ocurre en
+ * MockMvc, asi que la prueba habla HTTP crudo por un socket y lee solo la linea de estado: 101 si
+ * el handshake se acepto, 403 si el origen se rechazo.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -42,24 +41,33 @@ class WebSocketOriginTest {
     }
 
     /**
-     * El handshake verifica que la sesion siga vigente en el servidor, asi que
-     * un JWT firmado a mano no basta: se abre una sesion real.
+     * El handshake verifica que la sesion siga vigente en el servidor, asi que un JWT firmado a
+     * mano no basta: se abre una sesion real.
      */
     private String validToken() {
         return testSessions.accessTokenForNewUser(SLUG_PREFIX, UserRole.ADMIN);
     }
 
-    /** Devuelve el codigo de estado de la respuesta al handshake; {@code origin} nulo omite la cabecera. */
+    /**
+     * Devuelve el codigo de estado de la respuesta al handshake; {@code origin} nulo omite la
+     * cabecera.
+     */
     private int handshake(String origin) throws IOException {
-        StringBuilder request = new StringBuilder()
-                .append("GET /ws HTTP/1.1\r\n")
-                .append("Host: localhost:").append(port).append("\r\n")
-                .append("Upgrade: websocket\r\n")
-                .append("Connection: Upgrade\r\n")
-                .append("Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n")
-                .append("Sec-WebSocket-Version: 13\r\n")
-                .append("Cookie: ").append(TenantFilter.ACCESS_TOKEN_COOKIE).append('=')
-                .append(validToken()).append("\r\n");
+        StringBuilder request =
+                new StringBuilder()
+                        .append("GET /ws HTTP/1.1\r\n")
+                        .append("Host: localhost:")
+                        .append(port)
+                        .append("\r\n")
+                        .append("Upgrade: websocket\r\n")
+                        .append("Connection: Upgrade\r\n")
+                        .append("Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n")
+                        .append("Sec-WebSocket-Version: 13\r\n")
+                        .append("Cookie: ")
+                        .append(TenantFilter.ACCESS_TOKEN_COOKIE)
+                        .append('=')
+                        .append(validToken())
+                        .append("\r\n");
         if (origin != null) {
             request.append("Origin: ").append(origin).append("\r\n");
         }
@@ -70,8 +78,11 @@ class WebSocketOriginTest {
             OutputStream out = socket.getOutputStream();
             out.write(request.toString().getBytes(StandardCharsets.US_ASCII));
             out.flush();
-            String statusLine = new BufferedReader(
-                    new InputStreamReader(socket.getInputStream(), StandardCharsets.US_ASCII)).readLine();
+            String statusLine =
+                    new BufferedReader(
+                                    new InputStreamReader(
+                                            socket.getInputStream(), StandardCharsets.US_ASCII))
+                            .readLine();
             return Integer.parseInt(statusLine.split(" ")[1]);
         }
     }
@@ -105,11 +116,14 @@ class WebSocketOriginTest {
     void configurationRejectsWildcards() {
         assertThatThrownBy(() -> WebSocketConfig.requireExplicitOrigins(new String[] {"*"}))
                 .isInstanceOf(IllegalStateException.class);
-        assertThatThrownBy(() -> WebSocketConfig.requireExplicitOrigins(new String[] {"https://*.example"}))
+        assertThatThrownBy(() ->
+                        WebSocketConfig.requireExplicitOrigins(new String[] {"https://*.example"}))
                 .isInstanceOf(IllegalStateException.class);
         assertThatThrownBy(() -> WebSocketConfig.requireExplicitOrigins(new String[] {}))
                 .isInstanceOf(IllegalStateException.class);
-        assertThat(WebSocketConfig.requireExplicitOrigins(new String[] {"https://app.callejon9.mx"}))
+        assertThat(
+                        WebSocketConfig.requireExplicitOrigins(
+                                new String[] {"https://app.callejon9.mx"}))
                 .containsExactly("https://app.callejon9.mx");
     }
 }

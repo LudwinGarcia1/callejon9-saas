@@ -22,9 +22,17 @@ public record OrderResponse(
     public static OrderResponse from(OrderWithItems orderWithItems) {
         var order = orderWithItems.order();
         var items = orderWithItems.items().stream().map(OrderItemResponse::from).toList();
-        return new OrderResponse(order.getId(), order.getFolio(), order.getTableId(),
-                order.getWaiterId(), order.getGuestCount(), order.getStatus().name(),
-                order.getTotal(), order.getOpenedAt(), order.getSentToKitchenAt(),
-                order.getClosedAt(), items);
+        return new OrderResponse(
+                order.getId(),
+                order.getFolio(),
+                order.getTableId(),
+                order.getWaiterId(),
+                order.getGuestCount(),
+                order.getStatus().name(),
+                order.getTotal(),
+                order.getOpenedAt(),
+                order.getSentToKitchenAt(),
+                order.getClosedAt(),
+                items);
     }
 }

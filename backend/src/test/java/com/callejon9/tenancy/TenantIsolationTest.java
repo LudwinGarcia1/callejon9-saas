@@ -1,5 +1,8 @@
 package com.callejon9.tenancy;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
@@ -13,26 +16,21 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 /**
- * Evidencia central del proyecto: el aislamiento entre restaurantes lo impone
- * PostgreSQL, no la aplicacion.
+ * Evidencia central del proyecto: el aislamiento entre restaurantes lo impone PostgreSQL, no la
+ * aplicacion.
  *
- * Todas las escrituras pasan por el rol callejon9_app, que no es dueno de las
- * tablas y por lo tanto queda sujeto a las politicas RLS.
+ * <p>Todas las escrituras pasan por el rol callejon9_app, que no es dueno de las tablas y por lo
+ * tanto queda sujeto a las politicas RLS.
  */
 @SpringBootTest
 @ActiveProfiles("test")
 @DisplayName("Aislamiento multi-tenant impuesto por RLS")
 class TenantIsolationTest {
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
-    @Autowired
-    private TransactionTemplate transactionTemplate;
+    @Autowired private TransactionTemplate transactionTemplate;
 
     private UUID tenantA;
     private UUID tenantB;
@@ -44,12 +42,14 @@ class TenantIsolationTest {
     @BeforeEach
     void seedTenants() {
         // La tabla tenants es control plane: no tiene RLS, se puede escribir sin contexto.
-        tenantA = jdbcTemplate.queryForObject(
-                "INSERT INTO tenants (name, slug) VALUES ('Tenant A', 'tenant-a') RETURNING id",
-                UUID.class);
-        tenantB = jdbcTemplate.queryForObject(
-                "INSERT INTO tenants (name, slug) VALUES ('Tenant B', 'tenant-b') RETURNING id",
-                UUID.class);
+        tenantA =
+                jdbcTemplate.queryForObject(
+                        "INSERT INTO tenants (name, slug) VALUES ('Tenant A', 'tenant-a') RETURNING id",
+                        UUID.class);
+        tenantB =
+                jdbcTemplate.queryForObject(
+                        "INSERT INTO tenants (name, slug) VALUES ('Tenant B', 'tenant-b') RETURNING id",
+                        UUID.class);
 
         cashierA = insertUserAs(tenantA, "a@demo.com", "Usuario A");
         cashierB = insertUserAs(tenantB, "b@demo.com", "Usuario B");
@@ -68,10 +68,16 @@ class TenantIsolationTest {
     private UUID insertUserAs(UUID tenantId, String email, String name) {
         TenantContext.set(tenantId);
         try {
-            return transactionTemplate.execute(status -> jdbcTemplate.queryForObject("""
-                    INSERT INTO users (tenant_id, email, password_hash, full_name, role)
-                    VALUES (?, ?, 'x', ?, 'ADMIN') RETURNING id
-                    """, UUID.class, tenantId, email, name));
+            return transactionTemplate.execute(status ->
+                    jdbcTemplate.queryForObject(
+                            """
+                            INSERT INTO users (tenant_id, email, password_hash, full_name, role)
+                            VALUES (?, ?, 'x', ?, 'ADMIN') RETURNING id
+                            """,
+                            UUID.class,
+                            tenantId,
+                            email,
+                            name));
         } finally {
             TenantContext.clear();
         }
@@ -80,10 +86,15 @@ class TenantIsolationTest {
     private UUID insertCashSessionAs(UUID tenantId, UUID cashierId) {
         TenantContext.set(tenantId);
         try {
-            return transactionTemplate.execute(status -> jdbcTemplate.queryForObject("""
-                    INSERT INTO cash_sessions (tenant_id, cashier_id, opening_fund)
-                    VALUES (?, ?, 100) RETURNING id
-                    """, UUID.class, tenantId, cashierId));
+            return transactionTemplate.execute(status ->
+                    jdbcTemplate.queryForObject(
+                            """
+                            INSERT INTO cash_sessions (tenant_id, cashier_id, opening_fund)
+                            VALUES (?, ?, 100) RETURNING id
+                            """,
+                            UUID.class,
+                            tenantId,
+                            cashierId));
         } finally {
             TenantContext.clear();
         }
@@ -93,7 +104,8 @@ class TenantIsolationTest {
         TenantContext.set(tenantId);
         try {
             return transactionTemplate.execute(status ->
-                    jdbcTemplate.queryForList("SELECT email FROM users ORDER BY email", String.class));
+                    jdbcTemplate.queryForList(
+                            "SELECT email FROM users ORDER BY email", String.class));
         } finally {
             TenantContext.clear();
         }
@@ -111,8 +123,9 @@ class TenantIsolationTest {
     void withoutTenantContextNoRowsAreVisible() {
         TenantContext.clear();
 
-        List<String> emails = transactionTemplate.execute(status ->
-                jdbcTemplate.queryForList("SELECT email FROM users", String.class));
+        List<String> emails =
+                transactionTemplate.execute(status ->
+                        jdbcTemplate.queryForList("SELECT email FROM users", String.class));
 
         assertThat(emails).isEmpty();
     }
@@ -121,9 +134,11 @@ class TenantIsolationTest {
     @DisplayName("un tenant no puede actualizar filas de otro")
     void aTenantCannotUpdateAnotherTenantsRows() {
         TenantContext.set(tenantA);
-        int updated = transactionTemplate.execute(status ->
-                jdbcTemplate.update("UPDATE users SET full_name = 'Hackeado' WHERE email = ?",
-                        "b@demo.com"));
+        int updated =
+                transactionTemplate.execute(status ->
+                        jdbcTemplate.update(
+                                "UPDATE users SET full_name = 'Hackeado' WHERE email = ?",
+                                "b@demo.com"));
         TenantContext.clear();
 
         assertThat(updated).isZero();
@@ -134,8 +149,9 @@ class TenantIsolationTest {
     @DisplayName("un tenant no puede borrar filas de otro")
     void aTenantCannotDeleteAnotherTenantsRows() {
         TenantContext.set(tenantA);
-        int deleted = transactionTemplate.execute(status ->
-                jdbcTemplate.update("DELETE FROM users WHERE email = ?", "b@demo.com"));
+        int deleted =
+                transactionTemplate.execute(status ->
+                        jdbcTemplate.update("DELETE FROM users WHERE email = ?", "b@demo.com"));
         TenantContext.clear();
 
         assertThat(deleted).isZero();
@@ -150,13 +166,17 @@ class TenantIsolationTest {
         // El seed ya demuestra que el rol puede insertar en su propio tenant.
         // El INSERT cruzado debe fallar por privilegios (42501), independientemente
         // del idioma del servidor PostgreSQL o del wrapper de Spring.
-        assertThatThrownBy(() -> transactionTemplate.executeWithoutResult(status ->
-                jdbcTemplate.update("""
-                        INSERT INTO users (tenant_id, email, password_hash, full_name, role)
-                        VALUES (?, 'intruso@demo.com', 'x', 'Intruso', 'ADMIN')
-                        """, tenantB)))
+        assertThatThrownBy(() ->
+                        transactionTemplate.executeWithoutResult(status ->
+                                jdbcTemplate.update(
+                                        """
+                                        INSERT INTO users (tenant_id, email, password_hash, full_name, role)
+                                        VALUES (?, 'intruso@demo.com', 'x', 'Intruso', 'ADMIN')
+                                        """,
+                                        tenantB)))
                 .rootCause()
-                .isInstanceOfSatisfying(SQLException.class,
+                .isInstanceOfSatisfying(
+                        SQLException.class,
                         cause -> assertThat(cause.getSQLState()).isEqualTo("42501"));
 
         TenantContext.clear();
@@ -164,7 +184,8 @@ class TenantIsolationTest {
     }
 
     @Test
-    @DisplayName("sesiones y movimientos de caja quedan aislados y sus llaves impiden referencias cruzadas")
+    @DisplayName(
+            "sesiones y movimientos de caja quedan aislados y sus llaves impiden referencias cruzadas")
     void cashSessionsAndMovementsAreTenantScoped() {
         assertThat(readCountAs(tenantA, "cash_sessions", sessionA)).isEqualTo(1);
         assertThat(readCountAs(tenantA, "cash_sessions", sessionB)).isZero();
@@ -173,21 +194,34 @@ class TenantIsolationTest {
 
         TenantContext.set(tenantA);
         try {
-            assertThatThrownBy(() -> transactionTemplate.executeWithoutResult(status ->
-                    jdbcTemplate.update("""
-                            INSERT INTO cash_sessions (tenant_id, cashier_id, opening_fund)
-                            VALUES (?, ?, 100)
-                            """, tenantA, cashierB)))
-                    .rootCause().isInstanceOfSatisfying(SQLException.class,
+            assertThatThrownBy(() ->
+                            transactionTemplate.executeWithoutResult(status ->
+                                    jdbcTemplate.update(
+                                            """
+                                            INSERT INTO cash_sessions (tenant_id, cashier_id, opening_fund)
+                                            VALUES (?, ?, 100)
+                                            """,
+                                            tenantA,
+                                            cashierB)))
+                    .rootCause()
+                    .isInstanceOfSatisfying(
+                            SQLException.class,
                             cause -> assertThat(cause.getSQLState()).isEqualTo("23503"));
 
-            assertThatThrownBy(() -> transactionTemplate.executeWithoutResult(status ->
-                    jdbcTemplate.update("""
-                            INSERT INTO cash_movements
-                                (tenant_id, cash_session_id, movement_type, amount, reason, recorded_by)
-                            VALUES (?, ?, 'DEPOSIT', 10, 'Prueba', ?)
-                            """, tenantA, sessionB, cashierA)))
-                    .rootCause().isInstanceOfSatisfying(SQLException.class,
+            assertThatThrownBy(() ->
+                            transactionTemplate.executeWithoutResult(status ->
+                                    jdbcTemplate.update(
+                                            """
+                                            INSERT INTO cash_movements
+                                                (tenant_id, cash_session_id, movement_type, amount, reason, recorded_by)
+                                            VALUES (?, ?, 'DEPOSIT', 10, 'Prueba', ?)
+                                            """,
+                                            tenantA,
+                                            sessionB,
+                                            cashierA)))
+                    .rootCause()
+                    .isInstanceOfSatisfying(
+                            SQLException.class,
                             cause -> assertThat(cause.getSQLState()).isEqualTo("23503"));
         } finally {
             TenantContext.clear();
@@ -197,8 +231,9 @@ class TenantIsolationTest {
     private int readCountAs(UUID tenantId, String table, UUID id) {
         TenantContext.set(tenantId);
         try {
-            return transactionTemplate.execute(status -> jdbcTemplate.queryForObject(
-                    "SELECT count(*) FROM " + table + " WHERE id = ?", Integer.class, id));
+            return transactionTemplate.execute(status ->
+                    jdbcTemplate.queryForObject(
+                            "SELECT count(*) FROM " + table + " WHERE id = ?", Integer.class, id));
         } finally {
             TenantContext.clear();
         }

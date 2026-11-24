@@ -21,7 +21,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** El principal autenticado es el UUID del usuario (ver TenantFilter); nunca se confia en el body. */
+/**
+ * El principal autenticado es el UUID del usuario (ver TenantFilter); nunca se confia en el body.
+ */
 @RestController
 @RequestMapping("/api/v1/inventory/movements")
 public class InventoryMovementController {
@@ -35,8 +37,10 @@ public class InventoryMovementController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','KITCHEN')")
     public List<InventoryMovementRow> list(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+                    LocalDate to,
             @RequestParam(required = false) UUID itemId) {
         return movementService.listMovements(from, to, itemId);
     }
@@ -44,12 +48,16 @@ public class InventoryMovementController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('ADMIN','KITCHEN')")
-    public RegisteredMovementResponse register(@Valid @RequestBody RegisterMovementRequest request,
-                                               Authentication authentication) {
-        InventoryMovement movement = movementService.register(
-                request.inventoryItemId(), request.movementType(),
-                request.quantity(), request.countedStock(), request.reason(),
-                userIdOf(authentication));
+    public RegisteredMovementResponse register(
+            @Valid @RequestBody RegisterMovementRequest request, Authentication authentication) {
+        InventoryMovement movement =
+                movementService.register(
+                        request.inventoryItemId(),
+                        request.movementType(),
+                        request.quantity(),
+                        request.countedStock(),
+                        request.reason(),
+                        userIdOf(authentication));
         return RegisteredMovementResponse.from(movement);
     }
 

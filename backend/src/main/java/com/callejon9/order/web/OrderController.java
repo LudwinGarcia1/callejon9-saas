@@ -29,7 +29,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** El principal autenticado es el UUID del usuario (ver TenantFilter); nunca se confia en el body. */
+/**
+ * El principal autenticado es el UUID del usuario (ver TenantFilter); nunca se confia en el body.
+ */
 @RestController
 @RequestMapping("/api/v1/orders")
 public class OrderController {
@@ -46,10 +48,11 @@ public class OrderController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('WAITER','ADMIN')")
-    public OrderResponse open(@Valid @RequestBody OpenOrderRequest request,
-                               Authentication authentication) {
-        var order = orderService.openOrder(
-                request.tableId(), request.guestCount(), waiterIdOf(authentication));
+    public OrderResponse open(
+            @Valid @RequestBody OpenOrderRequest request, Authentication authentication) {
+        var order =
+                orderService.openOrder(
+                        request.tableId(), request.guestCount(), waiterIdOf(authentication));
         return OrderResponse.from(orderService.getOrder(order.getId()));
     }
 
@@ -60,10 +63,9 @@ public class OrderController {
     }
 
     /**
-     * Paginado (CAL-16): {@code ?status} o {@code ?open=true}, mas
-     * {@code page}, {@code size} (1 a {@value PageQuery#MAX_SIZE}) y
-     * {@code sort} sobre {@code openedAt}, {@code folio} o {@code total}. Por
-     * defecto, la mas reciente primero.
+     * Paginado (CAL-16): {@code ?status} o {@code ?open=true}, mas {@code page}, {@code size} (1 a
+     * {@value PageQuery#MAX_SIZE}) y {@code sort} sobre {@code openedAt}, {@code folio} o {@code
+     * total}. Por defecto, la mas reciente primero.
      */
     @GetMapping
     @PreAuthorize("hasAnyRole('WAITER','CASHIER','ADMIN')")
@@ -73,25 +75,30 @@ public class OrderController {
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
             @RequestParam(required = false) String sort) {
-        Pageable pageable = PageQuery.of(page, size, sort, SORTABLE, Sort.by(Sort.Direction.DESC, "openedAt"));
-        return PageResponse.from(orderService.listOrders(status, open, pageable), OrderSummaryResponse::from);
+        Pageable pageable =
+                PageQuery.of(page, size, sort, SORTABLE, Sort.by(Sort.Direction.DESC, "openedAt"));
+        return PageResponse.from(
+                orderService.listOrders(status, open, pageable), OrderSummaryResponse::from);
     }
 
     @PostMapping("/{id}/items")
     @PreAuthorize("hasAnyRole('WAITER','ADMIN')")
-    public OrderResponse addItems(@PathVariable UUID id,
-                                   @Valid @RequestBody AddOrderItemsRequest request,
-                                   Authentication authentication) {
-        List<NewOrderItem> items = request.items().stream()
-                .map(item -> new NewOrderItem(item.productId(), item.quantity(), item.notes()))
-                .toList();
+    public OrderResponse addItems(
+            @PathVariable UUID id,
+            @Valid @RequestBody AddOrderItemsRequest request,
+            Authentication authentication) {
+        List<NewOrderItem> items =
+                request.items().stream()
+                        .map(item ->
+                                new NewOrderItem(item.productId(), item.quantity(), item.notes()))
+                        .toList();
         return OrderResponse.from(orderService.addItems(id, items, actorOf(authentication)));
     }
 
     @DeleteMapping("/{id}/items/{itemId}")
     @PreAuthorize("hasAnyRole('WAITER','ADMIN')")
-    public OrderResponse removeItem(@PathVariable UUID id, @PathVariable UUID itemId,
-                                     Authentication authentication) {
+    public OrderResponse removeItem(
+            @PathVariable UUID id, @PathVariable UUID itemId, Authentication authentication) {
         return OrderResponse.from(orderService.removeItem(id, itemId, actorOf(authentication)));
     }
 
@@ -112,8 +119,9 @@ public class OrderController {
     }
 
     private OrderActor actorOf(Authentication authentication) {
-        boolean admin = authentication.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+        boolean admin =
+                authentication.getAuthorities().stream()
+                        .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
         return new OrderActor(waiterIdOf(authentication), admin);
     }
 }

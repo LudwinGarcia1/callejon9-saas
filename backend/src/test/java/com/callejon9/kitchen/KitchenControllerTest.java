@@ -1,5 +1,10 @@
 package com.callejon9.kitchen;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.callejon9.catalog.domain.Product;
 import com.callejon9.catalog.repository.ProductRepository;
 import com.callejon9.platform.tenant.domain.Tenant;
@@ -28,16 +33,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 /**
- * El tablero de cocina: listar las ordenes SENT y avanzar el kitchenStatus de
- * cada producto. Sigue el mismo patron de fixtures que OrderControllerTest,
- * ya que necesita ordenes reales (waiter_id y table_id con FK a filas
- * existentes) antes de poder enviarlas a cocina.
+ * El tablero de cocina: listar las ordenes SENT y avanzar el kitchenStatus de cada producto. Sigue
+ * el mismo patron de fixtures que OrderControllerTest, ya que necesita ordenes reales (waiter_id y
+ * table_id con FK a filas existentes) antes de poder enviarlas a cocina.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -60,17 +59,37 @@ class KitchenControllerTest {
 
     @BeforeEach
     void seed() {
-        tenant = onboardingService.onboard("Cocina Test", "cocina-test",
-                "admin@cocina.com", "Admin", "Secreto123!", "FREE");
+        tenant =
+                onboardingService.onboard(
+                        "Cocina Test",
+                        "cocina-test",
+                        "admin@cocina.com",
+                        "Admin",
+                        "Secreto123!",
+                        "FREE");
 
         TenantContext.set(tenant.getId());
         try {
-            waiter = transactionTemplate.execute(status -> userRepository.save(User.builder()
-                    .email("mesero@cocina.com").passwordHash("x").fullName("Mesero")
-                    .role(UserRole.WAITER).active(true).build()));
-            kitchenUser = transactionTemplate.execute(status -> userRepository.save(User.builder()
-                    .email("cocinero@cocina.com").passwordHash("x").fullName("Cocinero")
-                    .role(UserRole.KITCHEN).active(true).build()));
+            waiter =
+                    transactionTemplate.execute(status ->
+                            userRepository.save(
+                                    User.builder()
+                                            .email("mesero@cocina.com")
+                                            .passwordHash("x")
+                                            .fullName("Mesero")
+                                            .role(UserRole.WAITER)
+                                            .active(true)
+                                            .build()));
+            kitchenUser =
+                    transactionTemplate.execute(status ->
+                            userRepository.save(
+                                    User.builder()
+                                            .email("cocinero@cocina.com")
+                                            .passwordHash("x")
+                                            .fullName("Cocinero")
+                                            .role(UserRole.KITCHEN)
+                                            .active(true)
+                                            .build()));
         } finally {
             TenantContext.clear();
         }
@@ -89,8 +108,14 @@ class KitchenControllerTest {
     private RestaurantTable createTable(int number) {
         TenantContext.set(tenant.getId());
         try {
-            return transactionTemplate.execute(status -> tableRepository.save(RestaurantTable.builder()
-                    .number(number).capacity(4).status(TableStatus.FREE).active(true).build()));
+            return transactionTemplate.execute(status ->
+                    tableRepository.save(
+                            RestaurantTable.builder()
+                                    .number(number)
+                                    .capacity(4)
+                                    .status(TableStatus.FREE)
+                                    .active(true)
+                                    .build()));
         } finally {
             TenantContext.clear();
         }
@@ -99,44 +124,68 @@ class KitchenControllerTest {
     private Product createProduct(String name, String price) {
         TenantContext.set(tenant.getId());
         try {
-            return transactionTemplate.execute(status -> productRepository.save(Product.builder()
-                    .name(name).description(name).price(new BigDecimal(price)).active(true).build()));
+            return transactionTemplate.execute(status ->
+                    productRepository.save(
+                            Product.builder()
+                                    .name(name)
+                                    .description(name)
+                                    .price(new BigDecimal(price))
+                                    .active(true)
+                                    .build()));
         } finally {
             TenantContext.clear();
         }
     }
 
     private UUID openOrderOn(RestaurantTable table) throws Exception {
-        String body = mockMvc.perform(post("/api/v1/orders")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tableId\":\"" + table.getId() + "\",\"guestCount\":2}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        String body =
+                mockMvc.perform(
+                                post("/api/v1/orders")
+                                        .cookie(cookieFor(waiter))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                "{\"tableId\":\""
+                                                        + table.getId()
+                                                        + "\",\"guestCount\":2}"))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
         return UUID.fromString(body.replaceAll(".*\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
     }
 
     private void addItem(UUID orderId, Product product) throws Exception {
-        mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"items\":[{\"productId\":\"" + product.getId() + "\",\"quantity\":1}]}"))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/items")
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"items\":[{\"productId\":\""
+                                                + product.getId()
+                                                + "\",\"quantity\":1}]}"))
                 .andExpect(status().isOk());
     }
 
     private void sendToKitchen(UUID orderId) throws Exception {
-        mockMvc.perform(post("/api/v1/orders/" + orderId + "/send-to-kitchen").cookie(cookieFor(waiter)))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/send-to-kitchen")
+                                .cookie(cookieFor(waiter)))
                 .andExpect(status().isOk());
     }
 
     private UUID firstItemIdOf(UUID orderId) throws Exception {
-        String body = mockMvc.perform(get("/api/v1/orders/" + orderId).cookie(cookieFor(waiter)))
-                .andReturn().getResponse().getContentAsString();
-        return UUID.fromString(body.replaceAll(".*\"items\":\\[\\{\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
+        String body =
+                mockMvc.perform(get("/api/v1/orders/" + orderId).cookie(cookieFor(waiter)))
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
+        return UUID.fromString(
+                body.replaceAll(".*\"items\":\\[\\{\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
     }
 
     @Test
-    @DisplayName("GET /kitchen/orders lista las ordenes SENT, la mas antigua primero, con sus items en PENDING")
+    @DisplayName(
+            "GET /kitchen/orders lista las ordenes SENT, la mas antigua primero, con sus items en PENDING")
     void listsSentOrdersOldestFirst() throws Exception {
         Product product = createProduct("Taco", "25.00");
 
@@ -173,10 +222,11 @@ class KitchenControllerTest {
         sendToKitchen(orderId);
         UUID itemId = firstItemIdOf(orderId);
 
-        mockMvc.perform(post("/api/v1/kitchen/items/" + itemId + "/status")
-                        .cookie(cookieFor(kitchenUser))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"status\":\"IN_PREPARATION\"}"))
+        mockMvc.perform(
+                        post("/api/v1/kitchen/items/" + itemId + "/status")
+                                .cookie(cookieFor(kitchenUser))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"status\":\"IN_PREPARATION\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.kitchenStatus").value("IN_PREPARATION"));
     }
@@ -190,10 +240,11 @@ class KitchenControllerTest {
         sendToKitchen(orderId);
         UUID itemId = firstItemIdOf(orderId);
 
-        mockMvc.perform(post("/api/v1/kitchen/items/" + itemId + "/status")
-                        .cookie(cookieFor(kitchenUser))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"status\":\"READY\"}"))
+        mockMvc.perform(
+                        post("/api/v1/kitchen/items/" + itemId + "/status")
+                                .cookie(cookieFor(kitchenUser))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"status\":\"READY\"}"))
                 .andExpect(status().isConflict());
     }
 
@@ -206,21 +257,24 @@ class KitchenControllerTest {
         sendToKitchen(orderId);
         UUID itemId = firstItemIdOf(orderId);
 
-        mockMvc.perform(post("/api/v1/kitchen/items/" + itemId + "/status")
-                        .cookie(cookieFor(kitchenUser))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"status\":\"IN_PREPARATION\"}"))
+        mockMvc.perform(
+                        post("/api/v1/kitchen/items/" + itemId + "/status")
+                                .cookie(cookieFor(kitchenUser))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"status\":\"IN_PREPARATION\"}"))
                 .andExpect(status().isOk());
-        mockMvc.perform(post("/api/v1/kitchen/items/" + itemId + "/status")
-                        .cookie(cookieFor(kitchenUser))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"status\":\"READY\"}"))
+        mockMvc.perform(
+                        post("/api/v1/kitchen/items/" + itemId + "/status")
+                                .cookie(cookieFor(kitchenUser))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"status\":\"READY\"}"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/api/v1/kitchen/items/" + itemId + "/status")
-                        .cookie(cookieFor(kitchenUser))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"status\":\"PENDING\"}"))
+        mockMvc.perform(
+                        post("/api/v1/kitchen/items/" + itemId + "/status")
+                                .cookie(cookieFor(kitchenUser))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"status\":\"PENDING\"}"))
                 .andExpect(status().isConflict());
     }
 
@@ -235,13 +289,17 @@ class KitchenControllerTest {
         addItem(orderId, quesadilla);
         sendToKitchen(orderId);
 
-        String body = mockMvc.perform(get("/api/v1/orders/" + orderId).cookie(cookieFor(waiter)))
-                .andReturn().getResponse().getContentAsString();
-        var itemIds = java.util.regex.Pattern.compile("\"id\":\"([0-9a-fA-F-]+)\"")
-                .matcher(body.substring(body.indexOf("\"items\"")))
-                .results()
-                .map(m -> m.group(1))
-                .toList();
+        String body =
+                mockMvc.perform(get("/api/v1/orders/" + orderId).cookie(cookieFor(waiter)))
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
+        var itemIds =
+                java.util.regex.Pattern.compile("\"id\":\"([0-9a-fA-F-]+)\"")
+                        .matcher(body.substring(body.indexOf("\"items\"")))
+                        .results()
+                        .map(m -> m.group(1))
+                        .toList();
 
         for (String itemId : itemIds) {
             advance(itemId, "IN_PREPARATION");
@@ -295,10 +353,11 @@ class KitchenControllerTest {
     }
 
     private void advance(String itemId, String newStatus) throws Exception {
-        mockMvc.perform(post("/api/v1/kitchen/items/" + itemId + "/status")
-                        .cookie(cookieFor(kitchenUser))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"status\":\"" + newStatus + "\"}"))
+        mockMvc.perform(
+                        post("/api/v1/kitchen/items/" + itemId + "/status")
+                                .cookie(cookieFor(kitchenUser))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"status\":\"" + newStatus + "\"}"))
                 .andExpect(status().isOk());
     }
 }

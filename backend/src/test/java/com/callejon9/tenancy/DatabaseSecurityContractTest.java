@@ -1,5 +1,8 @@
 package com.callejon9.tenancy;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,22 +18,17 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 /**
- * Contrato de seguridad del esquema, leido directamente del catalogo de
- * PostgreSQL despues de aplicar todas las migraciones.
+ * Contrato de seguridad del esquema, leido directamente del catalogo de PostgreSQL despues de
+ * aplicar todas las migraciones.
  *
- * TenantIsolationTest demuestra que la politica aisla filas; esta prueba
- * demuestra que la politica sigue existiendo en todas las tablas que la
- * necesitan y que el rol de runtime no tiene una salida alrededor de ella.
- * Si una migracion agrega una tabla o vista, concede un privilegio de mas o
- * debilita RLS, el build falla nombrando el objeto.
+ * <p>TenantIsolationTest demuestra que la politica aisla filas; esta prueba demuestra que la
+ * politica sigue existiendo en todas las tablas que la necesitan y que el rol de runtime no tiene
+ * una salida alrededor de ella. Si una migracion agrega una tabla o vista, concede un privilegio de
+ * mas o debilita RLS, el build falla nombrando el objeto.
  *
- * Al agregar una tabla o vista nueva hay que clasificarla aqui: por
- * restaurante (RLS forzado) o control plane (con la lista exacta de
- * privilegios que el codigo usa).
+ * <p>Al agregar una tabla o vista nueva hay que clasificarla aqui: por restaurante (RLS forzado) o
+ * control plane (con la lista exacta de privilegios que el codigo usa).
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -39,17 +37,18 @@ class DatabaseSecurityContractTest {
 
     private static final String APP_ROLE = "callejon9_app";
 
-    private static final List<String> TABLE_PRIVILEGES = List.of(
-            "SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER");
+    private static final List<String> TABLE_PRIVILEGES =
+            List.of("SELECT", "INSERT", "UPDATE", "DELETE", "TRUNCATE", "REFERENCES", "TRIGGER");
 
     private static final Set<String> FULL_DML = Set.of("SELECT", "INSERT", "UPDATE", "DELETE");
 
     /**
-     * Tablas, vistas, vistas materializadas y tablas foraneas: todas reciben
-     * DML por el ALTER DEFAULT PRIVILEGES de V4, y una vista simple sobre una
-     * tabla de control plane es actualizable con los privilegios de su dueno.
+     * Tablas, vistas, vistas materializadas y tablas foraneas: todas reciben DML por el ALTER
+     * DEFAULT PRIVILEGES de V4, y una vista simple sobre una tabla de control plane es actualizable
+     * con los privilegios de su dueno.
      */
-    private static final String PUBLIC_RELATIONS = """
+    private static final String PUBLIC_RELATIONS =
+            """
             SELECT c.relname
             FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
             WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p', 'v', 'm', 'f')
@@ -60,30 +59,43 @@ class DatabaseSecurityContractTest {
             "(tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid)";
 
     /** Tablas con datos de un restaurante: el aislamiento lo impone su politica RLS. */
-    private static final Set<String> TENANT_TABLES = Set.of(
-            "users", "refresh_tokens", "restaurant_tables", "categories", "products",
-            "customers", "orders", "order_items", "sales", "payments", "tickets",
-            "inventory_items", "inventory_movements", "notifications", "tenant_folio_sequences",
-            "cash_sessions", "cash_movements");
+    private static final Set<String> TENANT_TABLES =
+            Set.of(
+                    "users",
+                    "refresh_tokens",
+                    "restaurant_tables",
+                    "categories",
+                    "products",
+                    "customers",
+                    "orders",
+                    "order_items",
+                    "sales",
+                    "payments",
+                    "tickets",
+                    "inventory_items",
+                    "inventory_movements",
+                    "notifications",
+                    "tenant_folio_sequences",
+                    "cash_sessions",
+                    "cash_movements");
 
     /**
-     * Control plane, sin RLS. Cada privilegio responde a un uso real:
-     * tenants se lee, se crea en el signup, se bloquea con SELECT ... FOR UPDATE
-     * (que exige UPDATE) y se borra en la compensacion del onboarding; plans
-     * solo se lee; subscriptions se lee y se crea en el signup (su borrado en
+     * Control plane, sin RLS. Cada privilegio responde a un uso real: tenants se lee, se crea en el
+     * signup, se bloquea con SELECT ... FOR UPDATE (que exige UPDATE) y se borra en la compensacion
+     * del onboarding; plans solo se lee; subscriptions se lee y se crea en el signup (su borrado en
      * cascada lo ejecuta PostgreSQL como dueno de la tabla).
      */
-    private static final Map<String, Set<String>> CONTROL_PLANE_PRIVILEGES = Map.of(
-            "tenants", FULL_DML,
-            "plans", Set.of("SELECT"),
-            "subscriptions", Set.of("SELECT", "INSERT"),
-            "flyway_schema_history", Set.of());
+    private static final Map<String, Set<String>> CONTROL_PLANE_PRIVILEGES =
+            Map.of(
+                    "tenants", FULL_DML,
+                    "plans", Set.of("SELECT"),
+                    "subscriptions", Set.of("SELECT", "INSERT"),
+                    "flyway_schema_history", Set.of());
 
     /** Unica tabla de control plane que referencia un tenant sin estar bajo RLS. */
     private static final Set<String> CONTROL_PLANE_WITH_TENANT_ID = Set.of("subscriptions");
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
     @Test
     @DisplayName("las pruebas se conectan con el rol de runtime")
@@ -108,14 +120,17 @@ class DatabaseSecurityContractTest {
     void everyTableWithTenantIdIsTenantScoped() {
         // pg_attribute y no information_schema.columns: esta ultima oculta las
         // tablas sobre las que el rol conectado no tiene privilegios.
-        List<String> tablesWithTenantId = jdbcTemplate.queryForList("""
-                SELECT c.relname
-                FROM pg_attribute a
-                JOIN pg_class c ON c.oid = a.attrelid
-                JOIN pg_namespace n ON n.oid = c.relnamespace
-                WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p')
-                  AND a.attname = 'tenant_id' AND NOT a.attisdropped
-                """, String.class);
+        List<String> tablesWithTenantId =
+                jdbcTemplate.queryForList(
+                        """
+                        SELECT c.relname
+                        FROM pg_attribute a
+                        JOIN pg_class c ON c.oid = a.attrelid
+                        JOIN pg_namespace n ON n.oid = c.relnamespace
+                        WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p')
+                          AND a.attname = 'tenant_id' AND NOT a.attisdropped
+                        """,
+                        String.class);
 
         assertThat(tablesWithTenantId)
                 .filteredOn(table -> !CONTROL_PLANE_WITH_TENANT_ID.contains(table))
@@ -126,12 +141,15 @@ class DatabaseSecurityContractTest {
     @Test
     @DisplayName("las tablas por restaurante tienen RLS habilitado y forzado")
     void tenantTablesEnableAndForceRls() {
-        List<String> withoutForcedRls = jdbcTemplate.queryForList("""
-                SELECT c.relname
-                FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
-                WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p')
-                  AND NOT (c.relrowsecurity AND c.relforcerowsecurity)
-                """, String.class);
+        List<String> withoutForcedRls =
+                jdbcTemplate.queryForList(
+                        """
+                        SELECT c.relname
+                        FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+                        WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p')
+                          AND NOT (c.relrowsecurity AND c.relforcerowsecurity)
+                        """,
+                        String.class);
 
         assertThat(withoutForcedRls)
                 .as("Tablas sin ENABLE + FORCE ROW LEVEL SECURITY")
@@ -141,31 +159,41 @@ class DatabaseSecurityContractTest {
     @Test
     @DisplayName("las tablas por restaurante filtran lectura y escritura por app.tenant_id")
     void tenantTablesHaveTenantIsolationPolicy() {
-        List<Map<String, Object>> policies = jdbcTemplate.queryForList("""
-                SELECT tablename, permissive, cmd, qual, with_check
-                FROM pg_policies WHERE schemaname = 'public'
-                """);
+        List<Map<String, Object>> policies =
+                jdbcTemplate.queryForList(
+                        """
+                        SELECT tablename, permissive, cmd, qual, with_check
+                        FROM pg_policies WHERE schemaname = 'public'
+                        """);
 
         List<String> violations = new ArrayList<>();
         for (String table : new TreeSet<>(TENANT_TABLES)) {
-            List<Map<String, Object>> own = policies.stream()
-                    .filter(policy -> table.equals(policy.get("tablename")))
-                    .toList();
+            List<Map<String, Object>> own =
+                    policies.stream()
+                            .filter(policy -> table.equals(policy.get("tablename")))
+                            .toList();
 
-            boolean isolatesAllCommands = own.stream().anyMatch(policy ->
-                    "ALL".equals(policy.get("cmd"))
-                            && TENANT_ISOLATION_EXPRESSION.equals(policy.get("qual"))
-                            && TENANT_ISOLATION_EXPRESSION.equals(policy.get("with_check")));
+            boolean isolatesAllCommands =
+                    own.stream()
+                            .anyMatch(policy ->
+                                    "ALL".equals(policy.get("cmd"))
+                                            && TENANT_ISOLATION_EXPRESSION.equals(
+                                                    policy.get("qual"))
+                                            && TENANT_ISOLATION_EXPRESSION.equals(
+                                                    policy.get("with_check")));
             // Las politicas permisivas se combinan con OR: una sola que no sea
             // exactamente el filtro por tenant abriria la tabla completa. Se
             // compara la expresion entera, no si menciona app.tenant_id, porque
             // USING (current_setting('app.tenant_id', true) IS NOT NULL) la
             // menciona y deja ver las filas de todos los restaurantes.
-            boolean everyPermissiveIsolates = own.stream()
-                    .filter(policy -> "PERMISSIVE".equals(policy.get("permissive")))
-                    .allMatch(policy -> TENANT_ISOLATION_EXPRESSION.equals(policy.get("qual"))
-                            && (policy.get("with_check") == null
-                                || TENANT_ISOLATION_EXPRESSION.equals(policy.get("with_check"))));
+            boolean everyPermissiveIsolates =
+                    own.stream()
+                            .filter(policy -> "PERMISSIVE".equals(policy.get("permissive")))
+                            .allMatch(policy ->
+                                    TENANT_ISOLATION_EXPRESSION.equals(policy.get("qual"))
+                                            && (policy.get("with_check") == null
+                                                    || TENANT_ISOLATION_EXPRESSION.equals(
+                                                            policy.get("with_check"))));
 
             if (!isolatesAllCommands || !everyPermissiveIsolates) {
                 violations.add(table);
@@ -182,7 +210,8 @@ class DatabaseSecurityContractTest {
     void runtimeRolePrivilegesMatchMatrix() {
         // Se consulta por oid para no depender de como se cite el nombre.
         Map<String, Set<String>> granted = new HashMap<>();
-        jdbcTemplate.query("""
+        jdbcTemplate.query(
+                """
                 SELECT c.relname, p.privilege
                 FROM pg_class c
                 JOIN pg_namespace n ON n.oid = c.relnamespace
@@ -194,19 +223,25 @@ class DatabaseSecurityContractTest {
                     granted.computeIfAbsent(rs.getString(1), relation -> new HashSet<>())
                             .add(rs.getString(2));
                 },
-                TABLE_PRIVILEGES.toArray(String[]::new), APP_ROLE);
+                TABLE_PRIVILEGES.toArray(String[]::new),
+                APP_ROLE);
 
         List<String> mismatches = new ArrayList<>();
-        for (String relation : new TreeSet<>(jdbcTemplate.queryForList(PUBLIC_RELATIONS, String.class))) {
-            Set<String> expected = TENANT_TABLES.contains(relation)
-                    ? FULL_DML
-                    : CONTROL_PLANE_PRIVILEGES.getOrDefault(relation, Set.of());
+        for (String relation :
+                new TreeSet<>(jdbcTemplate.queryForList(PUBLIC_RELATIONS, String.class))) {
+            Set<String> expected =
+                    TENANT_TABLES.contains(relation)
+                            ? FULL_DML
+                            : CONTROL_PLANE_PRIVILEGES.getOrDefault(relation, Set.of());
             Set<String> actual = granted.getOrDefault(relation, Set.of());
 
             for (String privilege : TABLE_PRIVILEGES) {
                 if (actual.contains(privilege) != expected.contains(privilege)) {
-                    mismatches.add(relation + ": " + privilege
-                            + (actual.contains(privilege) ? " (sobra)" : " (falta)"));
+                    mismatches.add(
+                            relation
+                                    + ": "
+                                    + privilege
+                                    + (actual.contains(privilege) ? " (sobra)" : " (falta)"));
                 }
             }
         }
@@ -217,36 +252,54 @@ class DatabaseSecurityContractTest {
     @Test
     @DisplayName("el rol de runtime no es dueno ni puede saltarse RLS")
     void runtimeRoleCannotBypassRls() {
-        Map<String, Object> role = jdbcTemplate.queryForMap("""
-                SELECT rolsuper, rolbypassrls, rolcreaterole, rolcreatedb
-                FROM pg_roles WHERE rolname = ?
-                """, APP_ROLE);
-        assertThat(role).allSatisfy((attribute, value) ->
-                assertThat(value).as(attribute).isEqualTo(false));
+        Map<String, Object> role =
+                jdbcTemplate.queryForMap(
+                        """
+                        SELECT rolsuper, rolbypassrls, rolcreaterole, rolcreatedb
+                        FROM pg_roles WHERE rolname = ?
+                        """,
+                        APP_ROLE);
+        assertThat(role)
+                .allSatisfy((attribute, value) -> assertThat(value).as(attribute).isEqualTo(false));
 
-        List<String> owned = jdbcTemplate.queryForList("""
-                SELECT c.relname
-                FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
-                WHERE n.nspname = 'public' AND pg_get_userbyid(c.relowner) = ?
-                """, String.class, APP_ROLE);
+        List<String> owned =
+                jdbcTemplate.queryForList(
+                        """
+                        SELECT c.relname
+                        FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+                        WHERE n.nspname = 'public' AND pg_get_userbyid(c.relowner) = ?
+                        """,
+                        String.class,
+                        APP_ROLE);
         assertThat(owned).as("Relaciones cuyo dueno es " + APP_ROLE).isEmpty();
 
-        assertThat(jdbcTemplate.queryForObject(
-                "SELECT has_schema_privilege(?, 'public', 'CREATE')", Boolean.class, APP_ROLE))
-                .as("CREATE en el esquema public").isFalse();
-        assertThat(jdbcTemplate.queryForObject(
-                "SELECT has_database_privilege(?, current_database(), 'CREATE')", Boolean.class,
-                APP_ROLE))
-                .as("CREATE en la base de datos").isFalse();
+        assertThat(
+                        jdbcTemplate.queryForObject(
+                                "SELECT has_schema_privilege(?, 'public', 'CREATE')",
+                                Boolean.class,
+                                APP_ROLE))
+                .as("CREATE en el esquema public")
+                .isFalse();
+        assertThat(
+                        jdbcTemplate.queryForObject(
+                                "SELECT has_database_privilege(?, current_database(), 'CREATE')",
+                                Boolean.class,
+                                APP_ROLE))
+                .as("CREATE en la base de datos")
+                .isFalse();
 
         // Una funcion SECURITY DEFINER corre con los privilegios de su dueno:
         // ejecutable por el rol de runtime, le devolveria lo que V11 le quito.
-        assertThat(jdbcTemplate.queryForList("""
-                SELECT p.proname
-                FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
-                WHERE n.nspname = 'public' AND p.prosecdef
-                  AND has_function_privilege(?, p.oid, 'EXECUTE')
-                """, String.class, APP_ROLE))
+        assertThat(
+                        jdbcTemplate.queryForList(
+                                """
+                                SELECT p.proname
+                                FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+                                WHERE n.nspname = 'public' AND p.prosecdef
+                                  AND has_function_privilege(?, p.oid, 'EXECUTE')
+                                """,
+                                String.class,
+                                APP_ROLE))
                 .as("Funciones SECURITY DEFINER ejecutables por " + APP_ROLE)
                 .isEmpty();
     }
@@ -265,7 +318,8 @@ class DatabaseSecurityContractTest {
         assertThatThrownBy(() -> jdbcTemplate.execute(sql))
                 .as(sql)
                 .rootCause()
-                .isInstanceOfSatisfying(SQLException.class, cause ->
-                        assertThat(cause.getSQLState()).isEqualTo("42501"));
+                .isInstanceOfSatisfying(
+                        SQLException.class,
+                        cause -> assertThat(cause.getSQLState()).isEqualTo("42501"));
     }
 }

@@ -4,8 +4,8 @@ import com.callejon9.tenancy.TenantFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -24,14 +24,17 @@ public class SecurityConfig {
     private final TenantFilter tenantFilter;
     private final boolean hstsOnAnyRequest;
 
-    public SecurityConfig(TenantFilter tenantFilter,
-                          @Value("${app.security.hsts-on-any-request:false}") boolean hstsOnAnyRequest) {
+    public SecurityConfig(
+            TenantFilter tenantFilter,
+            @Value("${app.security.hsts-on-any-request:false}") boolean hstsOnAnyRequest) {
         this.tenantFilter = tenantFilter;
         this.hstsOnAnyRequest = hstsOnAnyRequest;
     }
 
-    /** BCrypt acepta los prefijos $2a$, $2b$ y $2y$, por lo que los hashes
-     *  generados por la libreria bcrypt de Python son validos sin conversion. */
+    /**
+     * BCrypt acepta los prefijos $2a$, $2b$ y $2y$, por lo que los hashes generados por la libreria
+     * bcrypt de Python son validos sin conversion.
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -43,44 +46,63 @@ public class SecurityConfig {
                 // La API es stateless y se autentica con una cookie httpOnly de
                 // SameSite=Strict, que ya impide el envio cross-site.
                 .csrf(csrf -> csrf.disable())
-                .headers(headers -> headers
-                        .contentSecurityPolicy(csp -> csp.policyDirectives(
-                                "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
-                                + "img-src 'self' data:; font-src 'self'; connect-src 'self'; "
-                                + "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"))
-                        .frameOptions(frame -> frame.deny())
-                        .contentTypeOptions(contentType -> {})
-                        .referrerPolicy(referrer -> referrer.policy(ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-                        // Por defecto Spring solo emite HSTS cuando la peticion es
-                        // segura (HTTPS). Detras de App Service nunca lo es, y prod
-                        // lo emite siempre (app.security.hsts-on-any-request).
-                        .httpStrictTransportSecurity(hsts -> {
-                            hsts.maxAgeInSeconds(31536000).includeSubDomains(false).preload(false);
-                            if (hstsOnAnyRequest) {
-                                hsts.requestMatcher(AnyRequestMatcher.INSTANCE);
-                            }
-                        }))
+                .headers(headers ->
+                        headers.contentSecurityPolicy(csp ->
+                                        csp.policyDirectives(
+                                                "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
+                                                        + "img-src 'self' data:; font-src 'self'; connect-src 'self'; "
+                                                        + "object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"))
+                                .frameOptions(frame -> frame.deny())
+                                .contentTypeOptions(contentType -> {})
+                                .referrerPolicy(referrer ->
+                                        referrer.policy(
+                                                ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                                // Por defecto Spring solo emite HSTS cuando la peticion es
+                                // segura (HTTPS). Detras de App Service nunca lo es, y prod
+                                // lo emite siempre (app.security.hsts-on-any-request).
+                                .httpStrictTransportSecurity(hsts -> {
+                                    hsts.maxAgeInSeconds(31536000)
+                                            .includeSubDomains(false)
+                                            .preload(false);
+                                    if (hstsOnAnyRequest) {
+                                        hsts.requestMatcher(AnyRequestMatcher.INSTANCE);
+                                    }
+                                }))
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .exceptionHandling(e -> e.authenticationEntryPoint(
-                        new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .exceptionHandling(e ->
+                        e.authenticationEntryPoint(
+                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 // Lista publica cerrada: todo lo demas exige sesion, y cada
                 // controller declara con @PreAuthorize que roles lo usan.
                 // /auth/refresh es publico porque existe para cuando el access
                 // token ya vencio; se autentica con la cookie refresh_token.
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login", "/api/v1/auth/refresh",
-                                "/api/v1/signup").permitAll()
-                        // Rutas publicas de menu digital y auto-pedido por QR
-                        .requestMatchers("/api/v1/public/**").permitAll()
-                        // Probes del orquestador: dos rutas exactas y solo GET.
-                        // El resto de /actuator/health/** conserva sesion.
-                        .requestMatchers(HttpMethod.GET, "/actuator/health/liveness",
-                                "/actuator/health/readiness").permitAll()
-                        .requestMatchers("/actuator/health", "/v3/api-docs/**",
-                                "/swagger-ui.html", "/swagger-ui/**")
-                            .permitAll()
-                        .requestMatchers("/api/v1/platform/**").hasRole("SUPER_ADMIN")
-                        .anyRequest().authenticated())
+                .authorizeHttpRequests(auth ->
+                        auth.requestMatchers(
+                                        HttpMethod.POST,
+                                        "/api/v1/auth/login",
+                                        "/api/v1/auth/refresh",
+                                        "/api/v1/signup")
+                                .permitAll()
+                                // Rutas publicas de menu digital y auto-pedido por QR
+                                .requestMatchers("/api/v1/public/**")
+                                .permitAll()
+                                // Probes del orquestador: dos rutas exactas y solo GET.
+                                // El resto de /actuator/health/** conserva sesion.
+                                .requestMatchers(
+                                        HttpMethod.GET,
+                                        "/actuator/health/liveness",
+                                        "/actuator/health/readiness")
+                                .permitAll()
+                                .requestMatchers(
+                                        "/actuator/health",
+                                        "/v3/api-docs/**",
+                                        "/swagger-ui.html",
+                                        "/swagger-ui/**")
+                                .permitAll()
+                                .requestMatchers("/api/v1/platform/**")
+                                .hasRole("SUPER_ADMIN")
+                                .anyRequest()
+                                .authenticated())
                 .addFilterBefore(tenantFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

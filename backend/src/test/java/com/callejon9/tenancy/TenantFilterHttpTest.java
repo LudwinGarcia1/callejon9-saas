@@ -1,5 +1,7 @@
 package com.callejon9.tenancy;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.callejon9.support.TestSessions;
 import com.callejon9.user.domain.UserRole;
 import org.junit.jupiter.api.AfterEach;
@@ -16,39 +18,31 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 /**
- * Ejercita /api/v1/platform/** contra un Tomcat embebido real en un puerto
- * aleatorio, en vez de MockMvc.
+ * Ejercita /api/v1/platform/** contra un Tomcat embebido real en un puerto aleatorio, en vez de
+ * MockMvc.
  *
- * <p>{@code TenantFilterTest.adminIsForbiddenFromPlatformEndpoints()} pasa
- * con MockMvc y aun asi el servidor real respondia 401 en vez de 403 para un
- * ADMIN autenticado: {@code MockHttpServletResponse.sendError(...)} solo
- * anota el codigo de estado, mientras que en un Tomcat real dispara un
- * segundo despacho interno (DispatcherType.ERROR) hacia "/error" que
- * atraviesa de nuevo toda la cadena de filtros de Spring Security. Esa
- * segunda pasada es la que decidia el 401 (ver el javadoc de
- * {@link TenantFilter#shouldNotFilterErrorDispatch()}). MockMvc nunca
- * reproduce ese segundo despacho, asi que ninguna prueba basada en MockMvc
- * puede detectar una regresion en ese mecanismo — de ahi que esta prueba
- * levante un servidor real y hable HTTP de verdad.
+ * <p>{@code TenantFilterTest.adminIsForbiddenFromPlatformEndpoints()} pasa con MockMvc y aun asi el
+ * servidor real respondia 401 en vez de 403 para un ADMIN autenticado: {@code
+ * MockHttpServletResponse.sendError(...)} solo anota el codigo de estado, mientras que en un Tomcat
+ * real dispara un segundo despacho interno (DispatcherType.ERROR) hacia "/error" que atraviesa de
+ * nuevo toda la cadena de filtros de Spring Security. Esa segunda pasada es la que decidia el 401
+ * (ver el javadoc de {@link TenantFilter#shouldNotFilterErrorDispatch()}). MockMvc nunca reproduce
+ * ese segundo despacho, asi que ninguna prueba basada en MockMvc puede detectar una regresion en
+ * ese mecanismo — de ahi que esta prueba levante un servidor real y hable HTTP de verdad.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @DisplayName("Autorizacion de /api/v1/platform/** sobre un servidor real")
 class TenantFilterHttpTest {
 
-    @LocalServerPort
-    private int port;
+    @LocalServerPort private int port;
 
-    @Autowired
-    private TestRestTemplate restTemplate;
+    @Autowired private TestRestTemplate restTemplate;
 
     private static final String SLUG_PREFIX = "filtro-http-test";
 
-    @Autowired
-    private TestSessions testSessions;
+    @Autowired private TestSessions testSessions;
 
     @AfterEach
     void cleanUp() {
@@ -66,7 +60,9 @@ class TenantFilterHttpTest {
         }
         return restTemplate.exchange(
                 "http://localhost:" + port + "/api/v1/platform/plans",
-                HttpMethod.GET, new HttpEntity<>(headers), String.class);
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
+                String.class);
     }
 
     @Test

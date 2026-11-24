@@ -13,16 +13,16 @@ import java.util.List;
 @StrongPassword
 public record SignupRequest(
         @NotBlank @Size(max = 160) String restaurantName,
-
         @NotBlank
-        @Pattern(regexp = "^[a-z0-9-]{3,80}$",
-                 message = "Solo minusculas, numeros y guiones, entre 3 y 80 caracteres.")
-        String slug,
-
+                @Pattern(
+                        regexp = "^[a-z0-9-]{3,80}$",
+                        message = "Solo minusculas, numeros y guiones, entre 3 y 80 caracteres.")
+                String slug,
         @NotBlank @Email @Size(max = 180) String adminEmail,
         @NotBlank @Size(max = 160) String adminFullName,
         @NotBlank(message = "Ingresa una contrasena.") String password,
-        @NotBlank String planCode) implements PasswordCandidate {
+        @NotBlank String planCode)
+        implements PasswordCandidate {
 
     @Override
     public List<String> personalData() {

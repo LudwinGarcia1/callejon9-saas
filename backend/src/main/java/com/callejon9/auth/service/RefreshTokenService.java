@@ -27,33 +27,28 @@ import org.springframework.transaction.support.TransactionTemplate;
 /**
  * Emite, rota y revoca refresh tokens.
  *
- * <p>El refresh token es un JWT firmado que transporta el tenant y un secreto
- * aleatorio; en la base solo se guarda el SHA-256 de ese secreto. El tenant
- * firmado es lo que permite fijar {@link TenantContext} ANTES de abrir la
- * transaccion (regla de {@code TenantAwareTransactionManager.doBegin}) aun
- * cuando el access token ya expiro. Si alguien alterara el tenant, la firma
- * no validaria; y aun con una firma valida, RLS no revelaria la fila de otro
+ * <p>El refresh token es un JWT firmado que transporta el tenant y un secreto aleatorio; en la base
+ * solo se guarda el SHA-256 de ese secreto. El tenant firmado es lo que permite fijar {@link
+ * TenantContext} ANTES de abrir la transaccion (regla de {@code
+ * TenantAwareTransactionManager.doBegin}) aun cuando el access token ya expiro. Si alguien alterara
+ * el tenant, la firma no validaria; y aun con una firma valida, RLS no revelaria la fila de otro
  * restaurante.
  *
- * <p>Las transacciones se abren con {@link TransactionTemplate} por la misma
- * razon que en {@link AuthService}: el tenant se decide dentro del metodo.
+ * <p>Las transacciones se abren con {@link TransactionTemplate} por la misma razon que en {@link
+ * AuthService}: el tenant se decide dentro del metodo.
  */
 @Service
 public class RefreshTokenService {
 
     /** Resultado de emitir o rotar: el par de tokens y la expiracion de la sesion. */
-    public record IssuedTokens(User user, String accessToken, String refreshToken,
-                               Instant sessionExpiresAt) {
-    }
+    public record IssuedTokens(
+            User user, String accessToken, String refreshToken, Instant sessionExpiresAt) {}
 
-    private sealed interface Outcome permits Rotated, Rejected {
-    }
+    private sealed interface Outcome permits Rotated, Rejected {}
 
-    private record Rotated(IssuedTokens tokens) implements Outcome {
-    }
+    private record Rotated(IssuedTokens tokens) implements Outcome {}
 
-    private record Rejected() implements Outcome {
-    }
+    private record Rejected() implements Outcome {}
 
     private static final Logger log = LoggerFactory.getLogger(RefreshTokenService.class);
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -73,7 +68,12 @@ public class RefreshTokenService {
             TenantRepository tenantRepository,
             JwtService jwtService,
             TransactionTemplate transactionTemplate) {
-        this(refreshTokenRepository, userRepository, tenantRepository, jwtService, transactionTemplate,
+        this(
+                refreshTokenRepository,
+                userRepository,
+                tenantRepository,
+                jwtService,
+                transactionTemplate,
                 Clock.systemUTC());
     }
 
@@ -93,12 +93,12 @@ public class RefreshTokenService {
     }
 
     /**
-     * Abre una familia nueva tras un login. El id de la familia es tambien el
-     * id de la sesion que viaja en el access token ({@code sid}). El llamador debe haber fijado el
-     * tenant del usuario en {@link TenantContext}.
+     * Abre una familia nueva tras un login. El id de la familia es tambien el id de la sesion que
+     * viaja en el access token ({@code sid}). El llamador debe haber fijado el tenant del usuario
+     * en {@link TenantContext}.
      *
-     * <p>La sesion tiene una expiracion absoluta: los tokens rotados heredan
-     * la del login, asi que renovar no alarga la sesion indefinidamente.
+     * <p>La sesion tiene una expiracion absoluta: los tokens rotados heredan la del login, asi que
+     * renovar no alarga la sesion indefinidamente.
      */
     public IssuedTokens issueForLogin(User user) {
         return transactionTemplate.execute(status -> {
@@ -117,27 +117,30 @@ public class RefreshTokenService {
             UUID sessionId = UUID.randomUUID();
             String refreshToken = persistNewToken(user, sessionId, sessionExpiresAt).raw();
 
-            return new IssuedTokens(user, jwtService.generateAccessToken(user, sessionId),
-                    refreshToken, sessionExpiresAt);
+            return new IssuedTokens(
+                    user,
+                    jwtService.generateAccessToken(user, sessionId),
+                    refreshToken,
+                    sessionExpiresAt);
         });
     }
 
     /**
-     * Consume el refresh token presentado y emite un par nuevo de la misma
-     * familia. Cualquier rechazo termina en {@link BadCredentialsException}
-     * sin detalle, para no revelar si el token era desconocido, expirado o
-     * reutilizado.
+     * Consume el refresh token presentado y emite un par nuevo de la misma familia. Cualquier
+     * rechazo termina en {@link BadCredentialsException} sin detalle, para no revelar si el token
+     * era desconocido, expirado o reutilizado.
      *
-     * <p>Si el token ya habia sido consumido, la familia completa se revoca y
-     * esa revocacion se confirma antes de lanzar la excepcion: por eso la
-     * transaccion devuelve un resultado en vez de lanzar desde dentro, lo que
-     * provocaria un rollback que desharia la revocacion.
+     * <p>Si el token ya habia sido consumido, la familia completa se revoca y esa revocacion se
+     * confirma antes de lanzar la excepcion: por eso la transaccion devuelve un resultado en vez de
+     * lanzar desde dentro, lo que provocaria un rollback que desharia la revocacion.
      */
     public IssuedTokens rotate(String rawRefreshToken) {
         JwtService.RefreshClaims claims = parseOrReject(rawRefreshToken);
 
-        Outcome outcome = TenantContext.callAs(claims.tenantId(),
-                () -> transactionTemplate.execute(status -> rotateInTransaction(claims)));
+        Outcome outcome =
+                TenantContext.callAs(
+                        claims.tenantId(),
+                        () -> transactionTemplate.execute(status -> rotateInTransaction(claims)));
 
         if (outcome instanceof Rotated rotated) {
             return rotated.tokens();
@@ -146,9 +149,8 @@ public class RefreshTokenService {
     }
 
     /**
-     * Revoca la familia completa del token presentado. Un token invalido o
-     * desconocido no es un error: el logout debe dejar al cliente sin sesion
-     * en cualquier caso.
+     * Revoca la familia completa del token presentado. Un token invalido o desconocido no es un
+     * error: el logout debe dejar al cliente sin sesion en cualquier caso.
      */
     public void revokeSession(String rawRefreshToken) {
         JwtService.RefreshClaims claims;
@@ -158,35 +160,39 @@ public class RefreshTokenService {
             return;
         }
 
-        TenantContext.callAs(claims.tenantId(), () -> transactionTemplate.execute(status -> {
-            findOwnedToken(claims).ifPresent(token ->
-                    refreshTokenRepository.revokeFamily(token.getFamilyId(), clock.instant()));
-            return null;
-        }));
+        TenantContext.callAs(
+                claims.tenantId(),
+                () ->
+                        transactionTemplate.execute(status -> {
+                            findOwnedToken(claims)
+                                    .ifPresent(token ->
+                                            refreshTokenRepository.revokeFamily(
+                                                    token.getFamilyId(), clock.instant()));
+                            return null;
+                        }));
     }
 
     /**
-     * Revoca la sesion de un access token ya verificado. Corre con el tenant
-     * que {@code TenantFilter} publico a partir de ese mismo token, asi que RLS
-     * solo deja tocar sesiones de su restaurante.
+     * Revoca la sesion de un access token ya verificado. Corre con el tenant que {@code
+     * TenantFilter} publico a partir de ese mismo token, asi que RLS solo deja tocar sesiones de su
+     * restaurante.
      */
     public void revokeSessionById(UUID sessionId) {
-        transactionTemplate.executeWithoutResult(status ->
-                refreshTokenRepository.revokeFamily(sessionId, clock.instant()));
+        transactionTemplate.executeWithoutResult(
+                status -> refreshTokenRepository.revokeFamily(sessionId, clock.instant()));
     }
 
     /**
-     * Revoca todas las sesiones del usuario: sus access tokens dejan de
-     * autorizar en la siguiente peticion y sus refresh tokens ya no renuevan.
+     * Revoca todas las sesiones del usuario: sus access tokens dejan de autorizar en la siguiente
+     * peticion y sus refresh tokens ya no renuevan.
      *
-     * <p>Se une a la transaccion del llamador si existe (propagacion
-     * REQUIRED): al desactivar un usuario, la revocacion se confirma o se
-     * deshace junto con el cambio de estado. Requiere el tenant del usuario en
-     * {@link TenantContext}.
+     * <p>Se une a la transaccion del llamador si existe (propagacion REQUIRED): al desactivar un
+     * usuario, la revocacion se confirma o se deshace junto con el cambio de estado. Requiere el
+     * tenant del usuario en {@link TenantContext}.
      */
     public void revokeAllSessionsOf(UUID userId) {
-        transactionTemplate.executeWithoutResult(status ->
-                refreshTokenRepository.revokeAllForUser(userId, clock.instant()));
+        transactionTemplate.executeWithoutResult(
+                status -> refreshTokenRepository.revokeAllForUser(userId, clock.instant()));
     }
 
     private Outcome rotateInTransaction(JwtService.RefreshClaims claims) {
@@ -218,11 +224,10 @@ public class RefreshTokenService {
         // despues, su revocacion ya ve el token nuevo. El orden (usuario y
         // luego token) es el mismo que sigue la desactivacion, asi que no hay
         // interbloqueo.
-        Optional<User> user = userRepository.findByIdForShare(token.getUserId())
-                .filter(User::isActive);
-        boolean tenantActive = tenantRepository.findById(token.getTenantId())
-                .map(Tenant::isActive)
-                .orElse(false);
+        Optional<User> user =
+                userRepository.findByIdForShare(token.getUserId()).filter(User::isActive);
+        boolean tenantActive =
+                tenantRepository.findById(token.getTenantId()).map(Tenant::isActive).orElse(false);
         if (user.isEmpty() || !tenantActive) {
             refreshTokenRepository.revokeFamily(token.getFamilyId(), now);
             return new Rejected();
@@ -236,37 +241,46 @@ public class RefreshTokenService {
         NewToken next = persistNewToken(user.get(), token.getFamilyId(), token.getExpiresAt());
         refreshTokenRepository.markReplaced(token.getId(), next.id(), now);
 
-        return new Rotated(new IssuedTokens(user.get(),
-                jwtService.generateAccessToken(user.get(), token.getFamilyId()), next.raw(),
-                token.getExpiresAt()));
+        return new Rotated(
+                new IssuedTokens(
+                        user.get(),
+                        jwtService.generateAccessToken(user.get(), token.getFamilyId()),
+                        next.raw(),
+                        token.getExpiresAt()));
     }
 
     private Outcome revokeFamilyOnReuse(RefreshToken token, Instant now) {
         int revoked = refreshTokenRepository.revokeFamily(token.getFamilyId(), now);
-        log.warn("Reutilizacion de refresh token detectada: familia {} del usuario {} revocada ({} tokens vigentes).",
-                token.getFamilyId(), token.getUserId(), revoked);
+        log.warn(
+                "Reutilizacion de refresh token detectada: familia {} del usuario {} revocada ({} tokens vigentes).",
+                token.getFamilyId(),
+                token.getUserId(),
+                revoked);
         return new Rejected();
     }
 
     private Optional<RefreshToken> findOwnedToken(JwtService.RefreshClaims claims) {
-        return refreshTokenRepository.findByTokenHash(hash(claims.secret()))
+        return refreshTokenRepository
+                .findByTokenHash(hash(claims.secret()))
                 .filter(token -> token.getUserId().equals(claims.userId()));
     }
 
-    private record NewToken(UUID id, String raw) {
-    }
+    private record NewToken(UUID id, String raw) {}
 
     private NewToken persistNewToken(User user, UUID familyId, Instant expiresAt) {
         String secret = newSecret();
-        RefreshToken saved = refreshTokenRepository.save(RefreshToken.builder()
-                .userId(user.getId())
-                .tokenHash(hash(secret))
-                .familyId(familyId)
-                .expiresAt(expiresAt)
-                .build());
+        RefreshToken saved =
+                refreshTokenRepository.save(
+                        RefreshToken.builder()
+                                .userId(user.getId())
+                                .tokenHash(hash(secret))
+                                .familyId(familyId)
+                                .expiresAt(expiresAt)
+                                .build());
 
-        String raw = jwtService.generateRefreshToken(
-                user.getId(), user.getTenantId(), secret, expiresAt);
+        String raw =
+                jwtService.generateRefreshToken(
+                        user.getId(), user.getTenantId(), secret, expiresAt);
         return new NewToken(saved.getId(), raw);
     }
 
@@ -286,8 +300,9 @@ public class RefreshTokenService {
 
     static String hash(String secret) {
         try {
-            byte[] digest = MessageDigest.getInstance("SHA-256")
-                    .digest(secret.getBytes(StandardCharsets.UTF_8));
+            byte[] digest =
+                    MessageDigest.getInstance("SHA-256")
+                            .digest(secret.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(digest);
         } catch (NoSuchAlgorithmException impossible) {
             throw new IllegalStateException("SHA-256 no disponible.", impossible);

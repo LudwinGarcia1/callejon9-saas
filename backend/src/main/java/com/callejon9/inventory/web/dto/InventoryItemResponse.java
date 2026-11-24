@@ -6,8 +6,8 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
- * {@code level} viaja ya calculado por la entidad: la interfaz pinta una
- * insignia sin recalcular umbrales de negocio en el cliente.
+ * {@code level} viaja ya calculado por la entidad: la interfaz pinta una insignia sin recalcular
+ * umbrales de negocio en el cliente.
  */
 public record InventoryItemResponse(
         UUID id,
@@ -21,8 +21,13 @@ public record InventoryItemResponse(
 
     public static InventoryItemResponse from(InventoryItem item) {
         return new InventoryItemResponse(
-                item.getId(), item.getName(), item.getUnit(),
-                item.getStock(), item.getMinStock(), item.getUnitCost(),
-                item.isActive(), item.level());
+                item.getId(),
+                item.getName(),
+                item.getUnit(),
+                item.getStock(),
+                item.getMinStock(),
+                item.getUnitCost(),
+                item.isActive(),
+                item.level());
     }
 }

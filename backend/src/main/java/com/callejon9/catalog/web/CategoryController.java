@@ -31,9 +31,7 @@ public class CategoryController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','WAITER','KITCHEN','CASHIER')")
     public List<CategoryResponse> list() {
-        return categoryService.listCategories().stream()
-                .map(CategoryResponse::from)
-                .toList();
+        return categoryService.listCategories().stream().map(CategoryResponse::from).toList();
     }
 
     @PostMapping
@@ -46,7 +44,8 @@ public class CategoryController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public CategoryResponse update(@PathVariable UUID id, @Valid @RequestBody UpdateCategoryRequest request) {
+    public CategoryResponse update(
+            @PathVariable UUID id, @Valid @RequestBody UpdateCategoryRequest request) {
         return CategoryResponse.from(
                 categoryService.updateCategory(id, request.name(), request.sortOrder()));
     }

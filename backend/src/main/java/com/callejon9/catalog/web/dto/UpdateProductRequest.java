@@ -11,5 +11,4 @@ public record UpdateProductRequest(
         @NotBlank @Size(max = 160) String name,
         String description,
         @NotNull @DecimalMin(value = "0.00") BigDecimal price,
-        UUID categoryId) {
-}
+        UUID categoryId) {}

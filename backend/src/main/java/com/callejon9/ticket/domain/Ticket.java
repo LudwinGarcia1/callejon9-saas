@@ -20,9 +20,8 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 /**
- * El ticket es un documento inmutable: {@code itemsSnapshot} se guarda como
- * jsonb deliberadamente, de modo que un cambio posterior en el precio de un
- * producto nunca altere un ticket ya emitido.
+ * El ticket es un documento inmutable: {@code itemsSnapshot} se guarda como jsonb deliberadamente,
+ * de modo que un cambio posterior en el precio de un producto nunca altere un ticket ya emitido.
  */
 @Entity
 @Table(name = "tickets")

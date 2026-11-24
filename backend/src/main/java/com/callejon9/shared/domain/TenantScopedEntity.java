@@ -11,9 +11,9 @@ import lombok.Setter;
 /**
  * Base de toda entidad gobernada por RLS.
  *
- * El tenant se asigna automaticamente al persistir, de modo que ningun servicio
- * tenga que recordarlo. La politica WITH CHECK de PostgreSQL rechazaria de todos
- * modos un tenant incorrecto: esto es comodidad, no la garantia.
+ * <p>El tenant se asigna automaticamente al persistir, de modo que ningun servicio tenga que
+ * recordarlo. La politica WITH CHECK de PostgreSQL rechazaria de todos modos un tenant incorrecto:
+ * esto es comodidad, no la garantia.
  */
 @Getter
 @Setter

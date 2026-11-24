@@ -6,16 +6,15 @@ import java.util.function.Supplier;
 /**
  * Mantiene el tenant activo durante el ciclo de vida de una peticion.
  *
- * Equivale al {@code utils/tenant_context.py} del sistema Flask original, que
- * usaba contextvars. Aqui se usa un ThreadLocal, y como Spring MVC atiende cada
- * peticion en su propio hilo, el aislamiento entre peticiones es el mismo.
+ * <p>Equivale al {@code utils/tenant_context.py} del sistema Flask original, que usaba contextvars.
+ * Aqui se usa un ThreadLocal, y como Spring MVC atiende cada peticion en su propio hilo, el
+ * aislamiento entre peticiones es el mismo.
  */
 public final class TenantContext {
 
     private static final ThreadLocal<UUID> CURRENT_TENANT = new ThreadLocal<>();
 
-    private TenantContext() {
-    }
+    private TenantContext() {}
 
     public static void set(UUID tenantId) {
         CURRENT_TENANT.set(tenantId);
@@ -38,10 +37,9 @@ public final class TenantContext {
     }
 
     /**
-     * Ejecuta {@code action} con {@code tenantId} como tenant activo y deja el
-     * contexto exactamente como estaba, incluso si la accion falla. Sirve para
-     * operar con un tenant que viene firmado en un token mientras la peticion
-     * ya tenia otro publicado (o ninguno).
+     * Ejecuta {@code action} con {@code tenantId} como tenant activo y deja el contexto exactamente
+     * como estaba, incluso si la accion falla. Sirve para operar con un tenant que viene firmado en
+     * un token mientras la peticion ya tenia otro publicado (o ninguno).
      */
     public static <T> T callAs(UUID tenantId, Supplier<T> action) {
         UUID previous = CURRENT_TENANT.get();

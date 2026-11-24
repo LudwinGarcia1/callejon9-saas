@@ -1,5 +1,12 @@
 package com.callejon9.config;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.callejon9.auth.web.AuthCookies;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
 import com.callejon9.tenancy.TenantContext;
@@ -18,30 +25,24 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 /**
  * La aplicacion completa con el perfil prod sobre PostgreSQL real.
  *
- * <p>Solo corre con el contenedor de pruebas, que crea los roles con
- * contrasenas aleatorias. En modo external la base usa las contrasenas de
- * desarrollo, y prod se niega a arrancar con ellas: justo lo que debe hacer.
- * Los casos negativos, que no necesitan base, estan en
- * {@link ProductionConfigurationGuardTest}.
+ * <p>Solo corre con el contenedor de pruebas, que crea los roles con contrasenas aleatorias. En
+ * modo external la base usa las contrasenas de desarrollo, y prod se niega a arrancar con ellas:
+ * justo lo que debe hacer. Los casos negativos, que no necesitan base, estan en {@link
+ * ProductionConfigurationGuardTest}.
  */
 // La base de la suite conserva la contrasena publicada del super-administrador
 // (V6), y prod no arranca con ella sin PLATFORM_ADMIN_PASSWORD (CAL-109). Este
 // contexto la reemplaza al arrancar; PlatformAdminPasswordGuardTest prepara y
 // restaura el hash en cada uno de sus casos, asi que el orden no importa.
-@SpringBootTest(properties = {
-        "app.jwt.secret=prueba-de-perfil-prod-con-un-secreto-de-mas-de-32-bytes",
-        "app.realtime.allowed-origins=https://callejon9.example",
-        "app.platform-admin.password=prueba-de-perfil-prod-super-admin"})
+@SpringBootTest(
+        properties = {
+            "app.jwt.secret=prueba-de-perfil-prod-con-un-secreto-de-mas-de-32-bytes",
+            "app.realtime.allowed-origins=https://callejon9.example",
+            "app.platform-admin.password=prueba-de-perfil-prod-super-admin"
+        })
 @AutoConfigureMockMvc
 @ActiveProfiles({"test", "prod"})
 @DisabledIfSystemProperty(named = "test.database.mode", matches = "external")
@@ -65,13 +66,16 @@ class ProductionProfileTest {
     @Test
     @DisplayName("arranca con credenciales validas y el login emite cookies Secure")
     void loginIssuesSecureCookies() throws Exception {
-        onboardingService.onboard("Perfil prod", SLUG, "admin@prod.mx", "Admin", "Secreto123!", "FREE");
+        onboardingService.onboard(
+                "Perfil prod", SLUG, "admin@prod.mx", "Admin", "Secreto123!", "FREE");
 
-        mockMvc.perform(post("/api/v1/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"slug":"perfil-prod","email":"admin@prod.mx","password":"Secreto123!"}
-                                """))
+        mockMvc.perform(
+                        post("/api/v1/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"slug":"perfil-prod","email":"admin@prod.mx","password":"Secreto123!"}
+                                        """))
                 .andExpect(status().isOk())
                 .andExpect(cookie().secure(TenantFilter.ACCESS_TOKEN_COOKIE, true))
                 .andExpect(cookie().httpOnly(TenantFilter.ACCESS_TOKEN_COOKIE, true))

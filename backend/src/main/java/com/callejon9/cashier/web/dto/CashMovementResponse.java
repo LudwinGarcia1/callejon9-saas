@@ -6,5 +6,9 @@ import java.time.Instant;
 import java.util.UUID;
 
 public record CashMovementResponse(
-        UUID id, CashMovementType type, BigDecimal amount, String reason, UUID recordedBy, Instant createdAt) {
-}
+        UUID id,
+        CashMovementType type,
+        BigDecimal amount,
+        String reason,
+        UUID recordedBy,
+        Instant createdAt) {}

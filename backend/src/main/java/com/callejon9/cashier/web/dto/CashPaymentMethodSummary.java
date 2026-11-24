@@ -8,5 +8,4 @@ public record CashPaymentMethodSummary(
         long paymentCount,
         BigDecimal appliedAmount,
         BigDecimal receivedAmount,
-        BigDecimal changeAmount) {
-}
+        BigDecimal changeAmount) {}

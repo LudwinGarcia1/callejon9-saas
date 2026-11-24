@@ -4,6 +4,4 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 public record CreateTableRequest(
-        @NotNull @Min(1) Integer number,
-        @NotNull @Min(1) Integer capacity) {
-}
+        @NotNull @Min(1) Integer number, @NotNull @Min(1) Integer capacity) {}

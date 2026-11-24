@@ -6,6 +6,4 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record OpenOrderRequest(
-        @NotNull UUID tableId,
-        @NotNull @Min(1) @Max(50) Integer guestCount) {
-}
+        @NotNull UUID tableId, @NotNull @Min(1) @Max(50) Integer guestCount) {}

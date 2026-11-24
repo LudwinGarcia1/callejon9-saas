@@ -5,12 +5,12 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 /**
- * Cada campo del cuerpo significa una sola cosa, y este validador es lo que lo
- * sostiene: ADJUSTMENT lleva countedStock y nunca quantity; los otros tres
- * llevan quantity y nunca countedStock; WASTE exige motivo.
+ * Cada campo del cuerpo significa una sola cosa, y este validador es lo que lo sostiene: ADJUSTMENT
+ * lleva countedStock y nunca quantity; los otros tres llevan quantity y nunca countedStock; WASTE
+ * exige motivo.
  *
- * Los mensajes se cuelgan del campo con addPropertyNode para que salgan en el
- * mapa "errors" del ProblemDetail, que es donde el frontend ya los busca.
+ * <p>Los mensajes se cuelgan del campo con addPropertyNode para que salgan en el mapa "errors" del
+ * ProblemDetail, que es donde el frontend ya los busca.
  */
 public class MovementRequestValidator
         implements ConstraintValidator<ValidMovementRequest, RegisterMovementRequest> {
@@ -31,7 +31,9 @@ public class MovementRequestValidator
                 valid = false;
             }
             if (request.quantity() != null) {
-                reject(context, "quantity",
+                reject(
+                        context,
+                        "quantity",
                         "Un ajuste no lleva cantidad: el sistema calcula la diferencia.");
                 valid = false;
             }

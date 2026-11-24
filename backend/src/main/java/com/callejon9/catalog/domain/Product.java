@@ -27,8 +27,7 @@ public class Product extends TenantScopedEntity {
     @Column(nullable = false, length = 160)
     private String name;
 
-    @Column
-    private String description;
+    @Column private String description;
 
     @Column(nullable = false)
     private BigDecimal price;

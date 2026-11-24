@@ -11,9 +11,9 @@ import org.springframework.transaction.event.TransactionalEventListener;
 /**
  * Puente entre los eventos de dominio de cocina y el topico STOMP del tenant.
  *
- * Escucha en AFTER_COMMIT: si la transaccion que envio la orden a cocina (o
- * que avanzo el estado de un producto) se revierte, este listener nunca se
- * ejecuta y el tablero de cocina jamas ve un estado que despues desaparecio.
+ * <p>Escucha en AFTER_COMMIT: si la transaccion que envio la orden a cocina (o que avanzo el estado
+ * de un producto) se revierte, este listener nunca se ejecuta y el tablero de cocina jamas ve un
+ * estado que despues desaparecio.
  */
 @Component
 public class KitchenRealtimeEventPublisher {

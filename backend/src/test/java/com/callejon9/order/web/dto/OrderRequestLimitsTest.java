@@ -1,5 +1,7 @@
 package com.callejon9.order.web.dto;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -14,8 +16,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /** Topes de CAL-112 en el borde exacto: el último valor aceptado y el primero rechazado. */
 @DisplayName("UT · topes de las peticiones de órdenes (CAL-112)")
@@ -68,7 +68,8 @@ class OrderRequestLimitsTest {
     void batchSizeLimits() {
         assertThat(invalidFields(new AddOrderItemsRequest(lines(1)))).isEmpty();
         assertThat(invalidFields(new AddOrderItemsRequest(lines(50)))).isEmpty();
-        assertThat(invalidFields(new AddOrderItemsRequest(Collections.emptyList()))).containsExactly("items");
+        assertThat(invalidFields(new AddOrderItemsRequest(Collections.emptyList())))
+                .containsExactly("items");
         assertThat(invalidFields(new AddOrderItemsRequest(lines(51)))).containsExactly("items");
     }
 
@@ -76,7 +77,8 @@ class OrderRequestLimitsTest {
     @DisplayName("el lote valida cada línea: una cantidad de 100 dentro del lote se rechaza")
     void batchValidatesEachLine() {
         List<AddOrderItemRequest> items = List.of(line(2, null), line(100, null));
-        assertThat(invalidFields(new AddOrderItemsRequest(items))).containsExactly("items[1].quantity");
+        assertThat(invalidFields(new AddOrderItemsRequest(items)))
+                .containsExactly("items[1].quantity");
     }
 
     @Test

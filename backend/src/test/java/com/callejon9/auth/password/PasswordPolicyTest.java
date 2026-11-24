@@ -1,13 +1,13 @@
 package com.callejon9.auth.password;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Politica de contrasenas")
 class PasswordPolicyTest {
@@ -45,13 +45,23 @@ class PasswordPolicyTest {
 
     @Test
     void rejectsRepetitivePasswords() {
-        assertThat(PasswordPolicy.check("aaaaaaaaa1", NONE)).contains(PasswordPolicy.TOO_REPETITIVE);
-        assertThat(PasswordPolicy.check("abab1212abab", NONE)).contains(PasswordPolicy.TOO_REPETITIVE);
+        assertThat(PasswordPolicy.check("aaaaaaaaa1", NONE))
+                .contains(PasswordPolicy.TOO_REPETITIVE);
+        assertThat(PasswordPolicy.check("abab1212abab", NONE))
+                .contains(PasswordPolicy.TOO_REPETITIVE);
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"Password2024!", "qwerty123456", "Contraseña123", "restaurante1",
-            "Secreto123!", "1q2w3e4r5t", "Callejon9-2026"})
+    @ValueSource(
+            strings = {
+                "Password2024!",
+                "qwerty123456",
+                "Contraseña123",
+                "restaurante1",
+                "Secreto123!",
+                "1q2w3e4r5t",
+                "Callejon9-2026"
+            })
     void rejectsCommonPasswordsAndTheirSuffixVariants(String password) {
         assertThat(PasswordPolicy.check(password, NONE)).contains(PasswordPolicy.TOO_COMMON);
     }
@@ -59,7 +69,8 @@ class PasswordPolicyTest {
     @Test
     @DisplayName("rechaza contrasenas con el nombre, el correo o el identificador del restaurante")
     void rejectsPersonalData() {
-        List<String> account = List.of("La Esquina", "la-esquina", "jperez@correo.mx", "Juan Pérez");
+        List<String> account =
+                List.of("La Esquina", "la-esquina", "jperez@correo.mx", "Juan Pérez");
 
         assertThat(PasswordPolicy.check("Perez-2031x", account))
                 .contains(PasswordPolicy.CONTAINS_PERSONAL_DATA);
@@ -75,8 +86,7 @@ class PasswordPolicyTest {
 
     @Test
     void ignoresMissingPersonalData() {
-        assertThat(PasswordPolicy.check("Mantel-Azul-47", Arrays.asList(null, "", "mx")))
-                .isEmpty();
+        assertThat(PasswordPolicy.check("Mantel-Azul-47", Arrays.asList(null, "", "mx"))).isEmpty();
     }
 
     @Test

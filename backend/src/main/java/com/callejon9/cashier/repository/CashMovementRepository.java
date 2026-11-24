@@ -13,7 +13,8 @@ public interface CashMovementRepository extends JpaRepository<CashMovement, UUID
 
     List<CashMovement> findAllByCashSessionIdOrderByCreatedAtDesc(UUID cashSessionId);
 
-    @Query("""
+    @Query(
+            """
             select coalesce(sum(movement.amount), 0)
             from CashMovement movement
             where movement.cashSessionId = :cashSessionId and movement.movementType = :movementType

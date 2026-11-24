@@ -18,5 +18,4 @@ public record CashSessionResponse(
         BigDecimal difference,
         String closureReason,
         List<CashPaymentMethodSummary> paymentSummary,
-        List<CashMovementResponse> movements) {
-}
+        List<CashMovementResponse> movements) {}

@@ -1,5 +1,7 @@
 package com.callejon9.user;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
 import com.callejon9.shared.error.BusinessRuleException;
@@ -24,18 +26,14 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 /**
- * Bajo READ COMMITTED, dos peticiones que desactivan a dos administradores
- * DISTINTOS del mismo restaurante, mientras hay exactamente dos activos,
- * pueden leer ambas {@code countByRoleAndActiveTrue == 2} antes de que
- * cualquiera escriba: las dos pasan la validacion "no es el ultimo
- * administrador" y el restaurante se queda sin ningun administrador activo,
- * sin forma de recuperarlo desde la interfaz. Este test usa CountDownLatch
- * para que los dos hilos esten realmente en vuelo a la vez -- llamar al
- * metodo dos veces en secuencia no reproduciria la carrera y pasaria incluso
- * sin el arreglo.
+ * Bajo READ COMMITTED, dos peticiones que desactivan a dos administradores DISTINTOS del mismo
+ * restaurante, mientras hay exactamente dos activos, pueden leer ambas {@code
+ * countByRoleAndActiveTrue == 2} antes de que cualquiera escriba: las dos pasan la validacion "no
+ * es el ultimo administrador" y el restaurante se queda sin ningun administrador activo, sin forma
+ * de recuperarlo desde la interfaz. Este test usa CountDownLatch para que los dos hilos esten
+ * realmente en vuelo a la vez -- llamar al metodo dos veces en secuencia no reproduciria la carrera
+ * y pasaria incluso sin el arreglo.
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -49,7 +47,8 @@ class UserServiceConcurrencyTest {
     @Autowired private JdbcTemplate jdbcTemplate;
 
     private UUID adminIdOf(String email) {
-        return transactionTemplate.execute(status -> userRepository.findByEmail(email).orElseThrow())
+        return transactionTemplate
+                .execute(status -> userRepository.findByEmail(email).orElseThrow())
                 .getId();
     }
 
@@ -59,15 +58,25 @@ class UserServiceConcurrencyTest {
 
     @BeforeEach
     void seed() {
-        Tenant tenant = onboardingService.onboard("Concurrencia Usuarios", "concurrencia-usuarios",
-                "admin1@concurrencia-usuarios.com", "Admin Uno", "Secreto123!", "FREE");
+        Tenant tenant =
+                onboardingService.onboard(
+                        "Concurrencia Usuarios",
+                        "concurrencia-usuarios",
+                        "admin1@concurrencia-usuarios.com",
+                        "Admin Uno",
+                        "Secreto123!",
+                        "FREE");
         tenantId = tenant.getId();
 
         TenantContext.set(tenantId);
         try {
             admin1Id = adminIdOf("admin1@concurrencia-usuarios.com");
-            User admin2 = userService.createUser(
-                    "admin2@concurrencia-usuarios.com", "Admin Dos", UserRole.ADMIN, "Secreto123!");
+            User admin2 =
+                    userService.createUser(
+                            "admin2@concurrencia-usuarios.com",
+                            "Admin Dos",
+                            UserRole.ADMIN,
+                            "Secreto123!");
             admin2Id = admin2.getId();
         } finally {
             TenantContext.clear();
@@ -81,8 +90,9 @@ class UserServiceConcurrencyTest {
     }
 
     @Test
-    @DisplayName("dos administradores desactivandose entre si a la vez: exactamente uno gana, "
-            + "el otro recibe el conflicto de negocio del ultimo administrador")
+    @DisplayName(
+            "dos administradores desactivandose entre si a la vez: exactamente uno gana, "
+                    + "el otro recibe el conflicto de negocio del ultimo administrador")
     void exactlyOneAdminDeactivationSucceedsWhenBothActiveAdminsAreDeactivatedConcurrently()
             throws InterruptedException {
         int threadCount = 2;
@@ -96,34 +106,36 @@ class UserServiceConcurrencyTest {
         // administrador como quien llama, para no disparar la proteccion de
         // auto-desactivacion (que es una regla distinta a la que este test
         // ejercita).
-        Runnable deactivateAdmin1By2 = () -> {
-            TenantContext.set(tenantId);
-            try {
-                ready.countDown();
-                start.await();
-                userService.setActive(admin1Id, false, admin2Id);
-                successes.incrementAndGet();
-            } catch (Throwable ex) {
-                failures.add(ex);
-            } finally {
-                TenantContext.clear();
-                done.countDown();
-            }
-        };
-        Runnable deactivateAdmin2By1 = () -> {
-            TenantContext.set(tenantId);
-            try {
-                ready.countDown();
-                start.await();
-                userService.setActive(admin2Id, false, admin1Id);
-                successes.incrementAndGet();
-            } catch (Throwable ex) {
-                failures.add(ex);
-            } finally {
-                TenantContext.clear();
-                done.countDown();
-            }
-        };
+        Runnable deactivateAdmin1By2 =
+                () -> {
+                    TenantContext.set(tenantId);
+                    try {
+                        ready.countDown();
+                        start.await();
+                        userService.setActive(admin1Id, false, admin2Id);
+                        successes.incrementAndGet();
+                    } catch (Throwable ex) {
+                        failures.add(ex);
+                    } finally {
+                        TenantContext.clear();
+                        done.countDown();
+                    }
+                };
+        Runnable deactivateAdmin2By1 =
+                () -> {
+                    TenantContext.set(tenantId);
+                    try {
+                        ready.countDown();
+                        start.await();
+                        userService.setActive(admin2Id, false, admin1Id);
+                        successes.incrementAndGet();
+                    } catch (Throwable ex) {
+                        failures.add(ex);
+                    } finally {
+                        TenantContext.clear();
+                        done.countDown();
+                    }
+                };
 
         Thread t1 = new Thread(deactivateAdmin1By2, "deactivate-admin-1");
         Thread t2 = new Thread(deactivateAdmin2By1, "deactivate-admin-2");
@@ -144,8 +156,9 @@ class UserServiceConcurrencyTest {
 
         TenantContext.set(tenantId);
         try {
-            long activeAdmins = transactionTemplate.execute(
-                    status -> userRepository.countByRoleAndActiveTrue(UserRole.ADMIN));
+            long activeAdmins =
+                    transactionTemplate.execute(
+                            status -> userRepository.countByRoleAndActiveTrue(UserRole.ADMIN));
             assertThat(activeAdmins)
                     .as("el restaurante nunca debe quedar sin administradores activos")
                     .isEqualTo(1);

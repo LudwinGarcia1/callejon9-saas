@@ -1,5 +1,12 @@
 package com.callejon9.platform.tenant.service;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.callejon9.platform.plan.domain.Plan;
 import com.callejon9.platform.plan.repository.PlanRepository;
 import com.callejon9.platform.subscription.domain.Subscription;
@@ -11,7 +18,6 @@ import com.callejon9.table.repository.RestaurantTableRepository;
 import com.callejon9.user.repository.UserRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,13 +27,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UT · Límites de usuarios y mesas por plan")
@@ -46,9 +45,13 @@ class PlanLimitServicePlanBoundaryTest {
 
     @BeforeEach
     void setUp() {
-        service = new PlanLimitService(
-                subscriptionRepository, planRepository, userRepository, tenantRepository,
-                tableRepository);
+        service =
+                new PlanLimitService(
+                        subscriptionRepository,
+                        planRepository,
+                        userRepository,
+                        tenantRepository,
+                        tableRepository);
     }
 
     @ParameterizedTest(name = "{0}: permite el último usuario disponible ({1} máximo)")
@@ -57,8 +60,7 @@ class PlanLimitServicePlanBoundaryTest {
         stubActivePlan(planCode, maxUsers, maxTables);
         when(userRepository.countByTenantId(TENANT_ID)).thenReturn((long) maxUsers - 1);
 
-        assertThatCode(() -> service.assertCanAddUser(TENANT_ID))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> service.assertCanAddUser(TENANT_ID)).doesNotThrowAnyException();
 
         verify(tenantRepository).findByIdForUpdate(TENANT_ID);
         verify(userRepository).countByTenantId(TENANT_ID);
@@ -72,8 +74,12 @@ class PlanLimitServicePlanBoundaryTest {
 
         assertThatThrownBy(() -> service.assertCanAddUser(TENANT_ID))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessage("Alcanzaste el limite de " + maxUsers
-                        + " usuarios del plan " + planCode + ".");
+                .hasMessage(
+                        "Alcanzaste el limite de "
+                                + maxUsers
+                                + " usuarios del plan "
+                                + planCode
+                                + ".");
 
         verify(tenantRepository).findByIdForUpdate(TENANT_ID);
         verify(userRepository).countByTenantId(TENANT_ID);
@@ -85,8 +91,7 @@ class PlanLimitServicePlanBoundaryTest {
         stubActivePlan(planCode, maxUsers, maxTables);
         when(tableRepository.countByActiveTrue()).thenReturn((long) maxTables - 1);
 
-        assertThatCode(() -> service.assertCanAddTable(TENANT_ID))
-                .doesNotThrowAnyException();
+        assertThatCode(() -> service.assertCanAddTable(TENANT_ID)).doesNotThrowAnyException();
 
         verify(tenantRepository).findByIdForUpdate(TENANT_ID);
         verify(tableRepository).countByActiveTrue();
@@ -100,27 +105,33 @@ class PlanLimitServicePlanBoundaryTest {
 
         assertThatThrownBy(() -> service.assertCanAddTable(TENANT_ID))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessage("Alcanzaste el limite de " + maxTables
-                        + " mesas del plan " + planCode + ".");
+                .hasMessage(
+                        "Alcanzaste el limite de "
+                                + maxTables
+                                + " mesas del plan "
+                                + planCode
+                                + ".");
 
         verify(tenantRepository).findByIdForUpdate(TENANT_ID);
         verify(tableRepository).countByActiveTrue();
     }
 
     private void stubActivePlan(String code, int maxUsers, int maxTables) {
-        Subscription subscription = Subscription.builder()
-                .tenantId(TENANT_ID)
-                .planId(PLAN_ID)
-                .status(SubscriptionStatus.ACTIVE)
-                .startedAt(Instant.parse("2026-01-01T00:00:00Z"))
-                .build();
-        Plan plan = Plan.builder()
-                .code(code)
-                .name(code)
-                .priceMonthly(BigDecimal.ZERO)
-                .maxUsers(maxUsers)
-                .maxTables(maxTables)
-                .build();
+        Subscription subscription =
+                Subscription.builder()
+                        .tenantId(TENANT_ID)
+                        .planId(PLAN_ID)
+                        .status(SubscriptionStatus.ACTIVE)
+                        .startedAt(Instant.parse("2026-01-01T00:00:00Z"))
+                        .build();
+        Plan plan =
+                Plan.builder()
+                        .code(code)
+                        .name(code)
+                        .priceMonthly(BigDecimal.ZERO)
+                        .maxUsers(maxUsers)
+                        .maxTables(maxTables)
+                        .build();
 
         when(subscriptionRepository.findByTenantIdAndStatusIn(eq(TENANT_ID), anyList()))
                 .thenReturn(Optional.of(subscription));

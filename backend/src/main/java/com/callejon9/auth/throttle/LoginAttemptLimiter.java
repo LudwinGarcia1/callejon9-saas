@@ -15,24 +15,23 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 /**
- * Freno contra fuerza bruta en el login. Cuenta los intentos fallidos dentro
- * de una ventana deslizante con dos llaves independientes:
+ * Freno contra fuerza bruta en el login. Cuenta los intentos fallidos dentro de una ventana
+ * deslizante con dos llaves independientes:
  *
  * <ul>
- *   <li><b>Cuenta</b> (restaurante + correo): frena a quien prueba muchas
- *       contrasenas contra la misma persona, aunque cambie de IP.</li>
- *   <li><b>IP</b>: frena a quien prueba una contrasena comun contra muchas
- *       cuentas distintas (password spraying).</li>
+ *   <li><b>Cuenta</b> (restaurante + correo): frena a quien prueba muchas contrasenas contra la
+ *       misma persona, aunque cambie de IP.
+ *   <li><b>IP</b>: frena a quien prueba una contrasena comun contra muchas cuentas distintas
+ *       (password spraying).
  * </ul>
  *
- * <p>La llave de cuenta se arma con lo que el cliente envio, exista o no la
- * cuenta: asi el bloqueo se comporta igual para una cuenta real que para una
- * inventada y no sirve para descubrir correos validos.
+ * <p>La llave de cuenta se arma con lo que el cliente envio, exista o no la cuenta: asi el bloqueo
+ * se comporta igual para una cuenta real que para una inventada y no sirve para descubrir correos
+ * validos.
  *
- * <p>El estado vive en memoria del proceso. Alcanza para una sola instancia
- * del backend; con varias, cada una contaria por su lado y el limite efectivo
- * se multiplicaria. En ese caso el contador debe moverse a un almacen
- * compartido (Redis o una tabla).
+ * <p>El estado vive en memoria del proceso. Alcanza para una sola instancia del backend; con
+ * varias, cada una contaria por su lado y el limite efectivo se multiplicaria. En ese caso el
+ * contador debe moverse a un almacen compartido (Redis o una tabla).
  */
 @Component
 public class LoginAttemptLimiter {
@@ -57,7 +56,8 @@ public class LoginAttemptLimiter {
         this(maxFailuresPerAccount, maxFailuresPerIp, window, Clock.systemUTC());
     }
 
-    LoginAttemptLimiter(int maxFailuresPerAccount, int maxFailuresPerIp, Duration window, Clock clock) {
+    LoginAttemptLimiter(
+            int maxFailuresPerAccount, int maxFailuresPerIp, Duration window, Clock clock) {
         this.maxFailuresPerAccount = maxFailuresPerAccount;
         this.maxFailuresPerIp = maxFailuresPerIp;
         this.window = window;
@@ -65,15 +65,14 @@ public class LoginAttemptLimiter {
     }
 
     /**
-     * Se llama ANTES de verificar la contrasena. Si la cuenta o la IP agotaron
-     * sus intentos lanza {@link LoginThrottledException}: ni siquiera la
-     * contrasena correcta entra mientras dure el bloqueo, y no se gasta un
-     * calculo de bcrypt en un intento que ya se sabe rechazado.
+     * Se llama ANTES de verificar la contrasena. Si la cuenta o la IP agotaron sus intentos lanza
+     * {@link LoginThrottledException}: ni siquiera la contrasena correcta entra mientras dure el
+     * bloqueo, y no se gasta un calculo de bcrypt en un intento que ya se sabe rechazado.
      */
     public void checkAllowed(String clientIp, String slug, String email) {
         Instant now = clock.instant();
-        Duration accountWait = waitFor(failuresByAccount, accountKey(slug, email),
-                maxFailuresPerAccount, now);
+        Duration accountWait =
+                waitFor(failuresByAccount, accountKey(slug, email), maxFailuresPerAccount, now);
         Duration ipWait = waitFor(failuresByIp, clientIp, maxFailuresPerIp, now);
 
         Duration wait = accountWait.compareTo(ipWait) >= 0 ? accountWait : ipWait;
@@ -90,9 +89,9 @@ public class LoginAttemptLimiter {
     }
 
     /**
-     * Un acierto limpia el contador de la cuenta, pero no el de la IP: si no,
-     * un atacante con una cuenta propia podria intercalar logins validos desde
-     * la misma IP para reiniciar el contador mientras prueba otras cuentas.
+     * Un acierto limpia el contador de la cuenta, pero no el de la IP: si no, un atacante con una
+     * cuenta propia podria intercalar logins validos desde la misma IP para reiniciar el contador
+     * mientras prueba otras cuentas.
      */
     public void recordSuccess(String slug, String email) {
         failuresByAccount.remove(accountKey(slug, email));
@@ -105,8 +104,8 @@ public class LoginAttemptLimiter {
     }
 
     /** Tiempo que falta para liberar la llave, o cero si no esta bloqueada. */
-    private Duration waitFor(Map<String, Deque<Instant>> failures, String key,
-                             int maxFailures, Instant now) {
+    private Duration waitFor(
+            Map<String, Deque<Instant>> failures, String key, int maxFailures, Instant now) {
         Deque<Instant> attempts = failures.get(key);
         if (attempts == null) {
             return Duration.ZERO;
@@ -117,11 +116,12 @@ public class LoginAttemptLimiter {
                 return Duration.ZERO;
             }
             // Se libera cuando el fallo que completo el limite sale de la ventana.
-            Instant releasedAt = attempts.stream()
-                    .skip(attempts.size() - maxFailures)
-                    .findFirst()
-                    .orElseThrow()
-                    .plus(window);
+            Instant releasedAt =
+                    attempts.stream()
+                            .skip(attempts.size() - maxFailures)
+                            .findFirst()
+                            .orElseThrow()
+                            .plus(window);
             return Duration.between(now, releasedAt);
         }
     }
@@ -147,12 +147,13 @@ public class LoginAttemptLimiter {
             return;
         }
         for (Map<String, Deque<Instant>> failures : List.of(failuresByAccount, failuresByIp)) {
-            failures.entrySet().removeIf(entry -> {
-                synchronized (entry.getValue()) {
-                    prune(entry.getValue(), now);
-                    return entry.getValue().isEmpty();
-                }
-            });
+            failures.entrySet()
+                    .removeIf(entry -> {
+                        synchronized (entry.getValue()) {
+                            prune(entry.getValue(), now);
+                            return entry.getValue().isEmpty();
+                        }
+                    });
         }
     }
 }

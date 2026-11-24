@@ -9,10 +9,9 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
 /**
- * Construye las cookies de sesion con los mismos atributos en login, refresh
- * y logout. Un navegador solo sobrescribe o borra una cookie si nombre, path
- * y dominio coinciden, asi que emitirlas desde un unico lugar evita dejar
- * copias huerfanas.
+ * Construye las cookies de sesion con los mismos atributos en login, refresh y logout. Un navegador
+ * solo sobrescribe o borra una cookie si nombre, path y dominio coinciden, asi que emitirlas desde
+ * un unico lugar evita dejar copias huerfanas.
  */
 @Component
 public class AuthCookies {
@@ -20,8 +19,8 @@ public class AuthCookies {
     public static final String REFRESH_TOKEN_COOKIE = "refresh_token";
 
     /**
-     * El refresh token solo lo necesitan /auth/refresh y /auth/logout. Con
-     * este path el navegador no lo adjunta a ninguna otra peticion de la API.
+     * El refresh token solo lo necesitan /auth/refresh y /auth/logout. Con este path el navegador
+     * no lo adjunta a ninguna otra peticion de la API.
      */
     static final String REFRESH_TOKEN_PATH = "/api/v1/auth";
 
@@ -32,14 +31,14 @@ public class AuthCookies {
     }
 
     /**
-     * La cookie de acceso vive lo mismo que la sesion, no los 15 minutos del
-     * JWT que transporta. El middleware del frontend solo comprueba su
-     * presencia para dejar pasar a las paginas protegidas; si el navegador la
-     * borrara al expirar el JWT, cada navegacion rebotaria a /login aunque la
-     * sesion siguiera siendo renovable. La expiracion real del JWT la sigue
-     * validando {@link TenantFilter} en cada peticion.
+     * La cookie de acceso vive lo mismo que la sesion, no los 15 minutos del JWT que transporta. El
+     * middleware del frontend solo comprueba su presencia para dejar pasar a las paginas
+     * protegidas; si el navegador la borrara al expirar el JWT, cada navegacion rebotaria a /login
+     * aunque la sesion siguiera siendo renovable. La expiracion real del JWT la sigue validando
+     * {@link TenantFilter} en cada peticion.
      */
-    public List<ResponseCookie> issue(String accessToken, String refreshToken, Instant sessionExpiresAt) {
+    public List<ResponseCookie> issue(
+            String accessToken, String refreshToken, Instant sessionExpiresAt) {
         Duration maxAge = Duration.between(Instant.now(), sessionExpiresAt);
         if (maxAge.isNegative()) {
             maxAge = Duration.ZERO;

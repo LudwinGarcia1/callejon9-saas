@@ -7,9 +7,8 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * El movimiento tal como quedo guardado. Importa devolverlo y no un 204: en un
- * ajuste, el delta y el motivo compuesto los produjo el servidor, y quien lo
- * registro necesita ver que quedo.
+ * El movimiento tal como quedo guardado. Importa devolverlo y no un 204: en un ajuste, el delta y
+ * el motivo compuesto los produjo el servidor, y quien lo registro necesita ver que quedo.
  */
 public record RegisteredMovementResponse(
         UUID id,

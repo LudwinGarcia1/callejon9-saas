@@ -1,5 +1,7 @@
 package com.callejon9.inventory;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.callejon9.inventory.domain.InventoryItem;
 import com.callejon9.inventory.domain.InventoryMovementType;
 import com.callejon9.inventory.repository.InventoryItemRepository;
@@ -25,20 +27,17 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 /**
- * Bajo READ COMMITTED, dos salidas simultaneas sobre el MISMO insumo pueden
- * leer ambas el mismo stock antes de que cualquiera escriba: el ledger acaba
- * con dos movimientos y la columna stock refleja solo uno. No hay error, no hay
- * excepcion; simplemente el inventario deja de cuadrar.
+ * Bajo READ COMMITTED, dos salidas simultaneas sobre el MISMO insumo pueden leer ambas el mismo
+ * stock antes de que cualquiera escriba: el ledger acaba con dos movimientos y la columna stock
+ * refleja solo uno. No hay error, no hay excepcion; simplemente el inventario deja de cuadrar.
  *
- * Ese lost update rompe la invariante que sostiene el modulo -- que el ledger
- * reproduzca el stock -- asi que la asercion central no es "el stock vale 10",
- * es "reproducir el ledger con la aritmetica del dominio da el stock guardado".
+ * <p>Ese lost update rompe la invariante que sostiene el modulo -- que el ledger reproduzca el
+ * stock -- asi que la asercion central no es "el stock vale 10", es "reproducir el ledger con la
+ * aritmetica del dominio da el stock guardado".
  *
- * El CountDownLatch es lo que hace valer la prueba: llamar al metodo dos veces
- * en secuencia no reproduce la carrera y pasaria incluso sin el lock.
+ * <p>El CountDownLatch es lo que hace valer la prueba: llamar al metodo dos veces en secuencia no
+ * reproduce la carrera y pasaria incluso sin el lock.
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -58,17 +57,28 @@ class InventoryMovementConcurrencyTest {
 
     @BeforeEach
     void seed() {
-        Tenant tenant = onboardingService.onboard("Inventario Concurrencia", "inv-concurrencia",
-                "admin@inv.com", "Admin", "Secreto123!", "FREE");
+        Tenant tenant =
+                onboardingService.onboard(
+                        "Inventario Concurrencia",
+                        "inv-concurrencia",
+                        "admin@inv.com",
+                        "Admin",
+                        "Secreto123!",
+                        "FREE");
         tenantId = tenant.getId();
 
         TenantContext.set(tenantId);
         try {
             // userId nulo a proposito: la columna es nullable y este test no
             // necesita autoria, solo la carrera.
-            InventoryItem item = itemService.createItem(
-                    "Cebolla", "kg", BigDecimal.ZERO, BigDecimal.ZERO,
-                    new BigDecimal("20.000"), null);
+            InventoryItem item =
+                    itemService.createItem(
+                            "Cebolla",
+                            "kg",
+                            BigDecimal.ZERO,
+                            BigDecimal.ZERO,
+                            new BigDecimal("20.000"),
+                            null);
             itemId = item.getId();
         } finally {
             TenantContext.clear();
@@ -90,20 +100,26 @@ class InventoryMovementConcurrencyTest {
         CountDownLatch done = new CountDownLatch(threadCount);
         List<Throwable> failures = new CopyOnWriteArrayList<>();
 
-        Runnable exitTask = () -> {
-            TenantContext.set(tenantId);
-            try {
-                ready.countDown();
-                start.await();
-                movementService.register(itemId, InventoryMovementType.OUT,
-                        new BigDecimal("5.000"), null, null, null);
-            } catch (Throwable ex) {
-                failures.add(ex);
-            } finally {
-                TenantContext.clear();
-                done.countDown();
-            }
-        };
+        Runnable exitTask =
+                () -> {
+                    TenantContext.set(tenantId);
+                    try {
+                        ready.countDown();
+                        start.await();
+                        movementService.register(
+                                itemId,
+                                InventoryMovementType.OUT,
+                                new BigDecimal("5.000"),
+                                null,
+                                null,
+                                null);
+                    } catch (Throwable ex) {
+                        failures.add(ex);
+                    } finally {
+                        TenantContext.clear();
+                        done.countDown();
+                    }
+                };
 
         Thread cookOne = new Thread(exitTask, "cook-1");
         Thread cookTwo = new Thread(exitTask, "cook-2");
@@ -122,15 +138,18 @@ class InventoryMovementConcurrencyTest {
         // Fuera de ella, RLS no revela ninguna fila y la suma daria cero.
         TenantContext.set(tenantId);
         try {
-            BigDecimal stock = transactionTemplate.execute(status ->
-                    itemRepository.findById(itemId).orElseThrow().getStock());
+            BigDecimal stock =
+                    transactionTemplate.execute(
+                            status -> itemRepository.findById(itemId).orElseThrow().getStock());
             // Se reconstruye con signedEffect, la misma funcion que usa el
             // servicio: la prueba reproduce el stock, no lo recalcula aparte.
-            BigDecimal ledger = transactionTemplate.execute(status ->
-                    movementRepository.findByInventoryItemId(itemId).stream()
-                            .map(movement -> movement.getMovementType()
-                                    .signedEffect(movement.getQuantity()))
-                            .reduce(BigDecimal.ZERO, BigDecimal::add));
+            BigDecimal ledger =
+                    transactionTemplate.execute(status ->
+                            movementRepository.findByInventoryItemId(itemId).stream()
+                                    .map(movement ->
+                                            movement.getMovementType()
+                                                    .signedEffect(movement.getQuantity()))
+                                    .reduce(BigDecimal.ZERO, BigDecimal::add));
 
             assertThat(stock)
                     .as("20 de entrada menos dos salidas de 5 deben dejar 10")

@@ -1,5 +1,12 @@
 package com.callejon9.kitchen.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.callejon9.kitchen.event.KitchenItemStatusChangedEvent;
 import com.callejon9.order.domain.KitchenItemStatus;
 import com.callejon9.order.domain.Order;
@@ -31,13 +38,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UT · KitchenService (Cocina y KDS)")
 class KitchenServiceTest {
@@ -45,14 +45,11 @@ class KitchenServiceTest {
     private static final UUID TENANT_ID = UUID.fromString("11111111-2222-3333-4444-555555555555");
     private static final UUID ORDER_ID = UUID.fromString("66666666-7777-8888-9999-000000000000");
 
-    @Mock
-    private OrderRepository orderRepository;
+    @Mock private OrderRepository orderRepository;
 
-    @Mock
-    private OrderItemRepository orderItemRepository;
+    @Mock private OrderItemRepository orderItemRepository;
 
-    @Mock
-    private ApplicationEventPublisher eventPublisher;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
     private KitchenService kitchenService;
 
@@ -68,9 +65,9 @@ class KitchenServiceTest {
     }
 
     /**
-     * Las 13 combinaciones de estado que no son el siguiente paso de la
-     * secuencia: saltos, retrocesos, el mismo estado y cualquier salida de
-     * DELIVERED. Solo PENDING -> IN_PREPARATION -> READY -> DELIVERED queda fuera.
+     * Las 13 combinaciones de estado que no son el siguiente paso de la secuencia: saltos,
+     * retrocesos, el mismo estado y cualquier salida de DELIVERED. Solo PENDING -> IN_PREPARATION
+     * -> READY -> DELIVERED queda fuera.
      */
     static Stream<Arguments> invalidTransitions() {
         KitchenItemStatus[] sequence = KitchenItemStatus.values();
@@ -145,9 +142,11 @@ class KitchenServiceTest {
 
             when(orderItemRepository.findById(itemId)).thenReturn(Optional.of(item));
             when(orderRepository.findForCheckout(ORDER_ID)).thenReturn(Optional.of(order));
-            when(orderItemRepository.findByOrderIdOrderByOrderedAt(ORDER_ID)).thenReturn(List.of(item));
+            when(orderItemRepository.findByOrderIdOrderByOrderedAt(ORDER_ID))
+                    .thenReturn(List.of(item));
 
-            OrderItem updated = kitchenService.advanceItemStatus(itemId, KitchenItemStatus.IN_PREPARATION);
+            OrderItem updated =
+                    kitchenService.advanceItemStatus(itemId, KitchenItemStatus.IN_PREPARATION);
 
             assertThat(updated.getKitchenStatus()).isEqualTo(KitchenItemStatus.IN_PREPARATION);
             verify(orderItemRepository).save(item);
@@ -157,7 +156,8 @@ class KitchenServiceTest {
         }
 
         @Test
-        @DisplayName("Transición válida: IN_PREPARATION -> READY y promueve la orden cuando todos los productos están listos")
+        @DisplayName(
+                "Transición válida: IN_PREPARATION -> READY y promueve la orden cuando todos los productos están listos")
         void inPreparationToReadyPromotesOrderToReady() {
             UUID itemId1 = UUID.randomUUID();
             UUID itemId2 = UUID.randomUUID();
@@ -170,7 +170,8 @@ class KitchenServiceTest {
             when(orderRepository.findForCheckout(ORDER_ID)).thenReturn(Optional.of(order));
             when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(order));
             // Al avanzar item1 a READY, todos los ítems (item1 e item2) quedan en READY
-            when(orderItemRepository.findByOrderIdOrderByOrderedAt(ORDER_ID)).thenReturn(List.of(item1, item2));
+            when(orderItemRepository.findByOrderIdOrderByOrderedAt(ORDER_ID))
+                    .thenReturn(List.of(item1, item2));
 
             OrderItem updated = kitchenService.advanceItemStatus(itemId1, KitchenItemStatus.READY);
 
@@ -191,9 +192,11 @@ class KitchenServiceTest {
             when(orderItemRepository.findById(itemId)).thenReturn(Optional.of(item));
             when(orderRepository.findForCheckout(ORDER_ID)).thenReturn(Optional.of(order));
             when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(order));
-            when(orderItemRepository.findByOrderIdOrderByOrderedAt(ORDER_ID)).thenReturn(List.of(item));
+            when(orderItemRepository.findByOrderIdOrderByOrderedAt(ORDER_ID))
+                    .thenReturn(List.of(item));
 
-            OrderItem updated = kitchenService.advanceItemStatus(itemId, KitchenItemStatus.DELIVERED);
+            OrderItem updated =
+                    kitchenService.advanceItemStatus(itemId, KitchenItemStatus.DELIVERED);
 
             assertThat(updated.getKitchenStatus()).isEqualTo(KitchenItemStatus.DELIVERED);
             verify(orderItemRepository).save(item);
@@ -209,7 +212,8 @@ class KitchenServiceTest {
             when(orderItemRepository.findById(itemId)).thenReturn(Optional.of(item));
             when(orderRepository.findForCheckout(ORDER_ID)).thenReturn(Optional.of(order));
 
-            assertThatThrownBy(() -> kitchenService.advanceItemStatus(itemId, KitchenItemStatus.READY))
+            assertThatThrownBy(
+                            () -> kitchenService.advanceItemStatus(itemId, KitchenItemStatus.READY))
                     .isInstanceOf(BusinessRuleException.class)
                     .hasMessageContaining("No se puede mover el producto de PENDING a READY");
 
@@ -227,7 +231,8 @@ class KitchenServiceTest {
             when(orderItemRepository.findById(itemId)).thenReturn(Optional.of(item));
             when(orderRepository.findForCheckout(ORDER_ID)).thenReturn(Optional.of(order));
 
-            assertThatThrownBy(() -> kitchenService.advanceItemStatus(itemId, KitchenItemStatus.PENDING))
+            assertThatThrownBy(() ->
+                            kitchenService.advanceItemStatus(itemId, KitchenItemStatus.PENDING))
                     .isInstanceOf(BusinessRuleException.class)
                     .hasMessageContaining("No se puede mover el producto de READY a PENDING");
 
@@ -241,20 +246,24 @@ class KitchenServiceTest {
             UUID itemId = UUID.randomUUID();
             when(orderItemRepository.findById(itemId)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> kitchenService.advanceItemStatus(itemId, KitchenItemStatus.IN_PREPARATION))
+            assertThatThrownBy(() ->
+                            kitchenService.advanceItemStatus(
+                                    itemId, KitchenItemStatus.IN_PREPARATION))
                     .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessageContaining("no existe");
         }
 
         @ParameterizedTest(name = "{0} -> {1} se rechaza")
         @MethodSource("com.callejon9.kitchen.service.KitchenServiceTest#invalidTransitions")
-        @DisplayName("Borde: toda transición que no es el siguiente paso se rechaza y no guarda ni publica")
+        @DisplayName(
+                "Borde: toda transición que no es el siguiente paso se rechaza y no guarda ni publica")
         void everyNonAdjacentTransitionIsRejected(KitchenItemStatus from, KitchenItemStatus to) {
             UUID itemId = UUID.randomUUID();
             OrderItem item = buildItem(itemId, from);
 
             when(orderItemRepository.findById(itemId)).thenReturn(Optional.of(item));
-            when(orderRepository.findForCheckout(ORDER_ID)).thenReturn(Optional.of(buildOrder(OrderStatus.SENT)));
+            when(orderRepository.findForCheckout(ORDER_ID))
+                    .thenReturn(Optional.of(buildOrder(OrderStatus.SENT)));
 
             assertThatThrownBy(() -> kitchenService.advanceItemStatus(itemId, to))
                     .isInstanceOf(BusinessRuleException.class)
@@ -266,7 +275,8 @@ class KitchenServiceTest {
         }
 
         @Test
-        @DisplayName("Lanza ResourceNotFoundException si la orden del ítem no existe, sin tocar el ítem")
+        @DisplayName(
+                "Lanza ResourceNotFoundException si la orden del ítem no existe, sin tocar el ítem")
         void throwsNotFoundWhenOrderDoesNotExist() {
             UUID itemId = UUID.randomUUID();
             OrderItem item = buildItem(itemId, KitchenItemStatus.PENDING);
@@ -274,7 +284,9 @@ class KitchenServiceTest {
             when(orderItemRepository.findById(itemId)).thenReturn(Optional.of(item));
             when(orderRepository.findForCheckout(ORDER_ID)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> kitchenService.advanceItemStatus(itemId, KitchenItemStatus.IN_PREPARATION))
+            assertThatThrownBy(() ->
+                            kitchenService.advanceItemStatus(
+                                    itemId, KitchenItemStatus.IN_PREPARATION))
                     .isInstanceOf(ResourceNotFoundException.class)
                     .hasMessageContaining("La orden " + ORDER_ID + " no existe");
 
@@ -298,7 +310,8 @@ class KitchenServiceTest {
 
             when(orderItemRepository.findById(itemId1)).thenReturn(Optional.of(item1));
             when(orderRepository.findForCheckout(ORDER_ID)).thenReturn(Optional.of(order));
-            when(orderItemRepository.findByOrderIdOrderByOrderedAt(ORDER_ID)).thenReturn(List.of(item1, item2));
+            when(orderItemRepository.findByOrderIdOrderByOrderedAt(ORDER_ID))
+                    .thenReturn(List.of(item1, item2));
 
             kitchenService.advanceItemStatus(itemId1, KitchenItemStatus.READY);
 
@@ -318,7 +331,8 @@ class KitchenServiceTest {
             when(orderItemRepository.findById(itemId1)).thenReturn(Optional.of(item1));
             when(orderRepository.findForCheckout(ORDER_ID)).thenReturn(Optional.of(order));
             when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(order));
-            when(orderItemRepository.findByOrderIdOrderByOrderedAt(ORDER_ID)).thenReturn(List.of(item1, item2));
+            when(orderItemRepository.findByOrderIdOrderByOrderedAt(ORDER_ID))
+                    .thenReturn(List.of(item1, item2));
 
             kitchenService.advanceItemStatus(itemId1, KitchenItemStatus.READY);
 
@@ -327,7 +341,8 @@ class KitchenServiceTest {
         }
 
         @Test
-        @DisplayName("Borde: entregar el último producto de una orden ya READY no vuelve a guardar la orden")
+        @DisplayName(
+                "Borde: entregar el último producto de una orden ya READY no vuelve a guardar la orden")
         void orderAlreadyReadyIsNotSavedAgain() {
             UUID itemId = UUID.randomUUID();
             OrderItem item = buildItem(itemId, KitchenItemStatus.READY);
@@ -336,7 +351,8 @@ class KitchenServiceTest {
             when(orderItemRepository.findById(itemId)).thenReturn(Optional.of(item));
             when(orderRepository.findForCheckout(ORDER_ID)).thenReturn(Optional.of(order));
             when(orderRepository.findById(ORDER_ID)).thenReturn(Optional.of(order));
-            when(orderItemRepository.findByOrderIdOrderByOrderedAt(ORDER_ID)).thenReturn(List.of(item));
+            when(orderItemRepository.findByOrderIdOrderByOrderedAt(ORDER_ID))
+                    .thenReturn(List.of(item));
 
             kitchenService.advanceItemStatus(itemId, KitchenItemStatus.DELIVERED);
 

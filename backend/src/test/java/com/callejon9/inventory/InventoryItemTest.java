@@ -1,5 +1,7 @@
 package com.callejon9.inventory;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.callejon9.inventory.domain.InventoryItem;
 import com.callejon9.inventory.domain.InventoryMovementType;
 import com.callejon9.inventory.domain.StockLevel;
@@ -7,11 +9,9 @@ import java.math.BigDecimal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 /**
- * Aritmetica del stock y nivel derivado: comportamiento inherente de la
- * entidad, sin Spring ni base de datos.
+ * Aritmetica del stock y nivel derivado: comportamiento inherente de la entidad, sin Spring ni base
+ * de datos.
  */
 @DisplayName("InventoryItem")
 class InventoryItemTest {

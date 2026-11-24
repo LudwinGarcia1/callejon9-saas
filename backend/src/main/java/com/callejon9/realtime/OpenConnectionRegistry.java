@@ -12,21 +12,19 @@ import org.springframework.web.socket.handler.WebSocketHandlerDecorator;
 import org.springframework.web.socket.handler.WebSocketHandlerDecoratorFactory;
 
 /**
- * Conexiones WebSocket abiertas en ESTA instancia del backend, con el
- * Principal autenticado en el handshake. Solo sirve para encontrar la
- * conexion que hay que cerrar: la decision de cerrarla sale de la base (ver
- * {@link RevokedSessionSweeper}), que es lo que la hace valida con varias
+ * Conexiones WebSocket abiertas en ESTA instancia del backend, con el Principal autenticado en el
+ * handshake. Solo sirve para encontrar la conexion que hay que cerrar: la decision de cerrarla sale
+ * de la base (ver {@link RevokedSessionSweeper}), que es lo que la hace valida con varias
  * instancias.
  *
- * <p>Se registra como decorador del handler de WebSocket, asi que ve cada
- * conexion al abrirse y al cerrarse, sea quien sea el que la cierre.
+ * <p>Se registra como decorador del handler de WebSocket, asi que ve cada conexion al abrirse y al
+ * cerrarse, sea quien sea el que la cierre.
  */
 @Component
 public class OpenConnectionRegistry implements WebSocketHandlerDecoratorFactory {
 
     /** Una conexion abierta y la sesion de login con la que se autentico. */
-    public record OpenConnection(WebSocketSession session, AuthenticatedPrincipal principal) {
-    }
+    public record OpenConnection(WebSocketSession session, AuthenticatedPrincipal principal) {}
 
     private final Map<String, OpenConnection> connections = new ConcurrentHashMap<>();
 

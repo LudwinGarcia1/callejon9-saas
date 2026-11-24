@@ -7,9 +7,9 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Una fila del ledger tal como la lee una persona. {@code userName} puede ser
- * nulo -- la llave es ON DELETE SET NULL y el usuario puede estar dado de
- * baja -- asi que viaja en su tipo de referencia.
+ * Una fila del ledger tal como la lee una persona. {@code userName} puede ser nulo -- la llave es
+ * ON DELETE SET NULL y el usuario puede estar dado de baja -- asi que viaja en su tipo de
+ * referencia.
  */
 public record InventoryMovementRow(
         UUID id,
@@ -23,14 +23,13 @@ public record InventoryMovementRow(
         Instant createdAt) {
 
     /**
-     * El efecto sobre el stock, ya con su signo: una salida de 5 viaja como
-     * -5. Va calculado desde aqui y no en el cliente por el mismo motivo que
-     * {@code level} en InventoryItemResponse -- la interfaz pinta lo que
-     * recibe en vez de reimplementar una regla de negocio.
+     * El efecto sobre el stock, ya con su signo: una salida de 5 viaja como -5. Va calculado desde
+     * aqui y no en el cliente por el mismo motivo que {@code level} en InventoryItemResponse -- la
+     * interfaz pinta lo que recibe en vez de reimplementar una regla de negocio.
      *
-     * Sin esto, la interfaz mostraria "+5" en una salida, porque la columna
-     * quantity guarda la cantidad sin signo salvo en ADJUSTMENT y quien sabe
-     * la direccion de cada tipo es {@link InventoryMovementType}.
+     * <p>Sin esto, la interfaz mostraria "+5" en una salida, porque la columna quantity guarda la
+     * cantidad sin signo salvo en ADJUSTMENT y quien sabe la direccion de cada tipo es {@link
+     * InventoryMovementType}.
      */
     @JsonProperty("signedQuantity")
     public BigDecimal signedQuantity() {

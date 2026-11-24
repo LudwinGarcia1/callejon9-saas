@@ -26,25 +26,23 @@ public class CategoryService {
     @Transactional
     public Category createCategory(String name, int sortOrder) {
         if (categoryRepository.existsByName(name)) {
-            throw new BusinessRuleException(
-                    "Ya existe una categoria llamada '" + name + "'.");
+            throw new BusinessRuleException("Ya existe una categoria llamada '" + name + "'.");
         }
 
-        return categoryRepository.save(Category.builder()
-                .name(name)
-                .sortOrder(sortOrder)
-                .build());
+        return categoryRepository.save(Category.builder().name(name).sortOrder(sortOrder).build());
     }
 
     /** Corrige el nombre o el orden de una categoria ya creada. */
     @Transactional
     public Category updateCategory(UUID categoryId, String name, int sortOrder) {
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new ResourceNotFoundException("La categoria no existe."));
+        Category category =
+                categoryRepository
+                        .findById(categoryId)
+                        .orElseThrow(
+                                () -> new ResourceNotFoundException("La categoria no existe."));
 
         if (categoryRepository.existsByNameAndIdNot(name, categoryId)) {
-            throw new BusinessRuleException(
-                    "Ya existe una categoria llamada '" + name + "'.");
+            throw new BusinessRuleException("Ya existe una categoria llamada '" + name + "'.");
         }
 
         category.setName(name);

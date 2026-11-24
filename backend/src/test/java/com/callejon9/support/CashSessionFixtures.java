@@ -8,8 +8,7 @@ import java.math.BigDecimal;
 /** Shared real-service setup for integration tests that perform checkout. */
 public final class CashSessionFixtures {
 
-    private CashSessionFixtures() {
-    }
+    private CashSessionFixtures() {}
 
     public static void openFor(CashSessionService service, User cashier) {
         service.open(cashier.getId(), new OpenCashSessionRequest(BigDecimal.ZERO));

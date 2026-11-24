@@ -1,9 +1,9 @@
 package com.callejon9.platform.tenant.throttle;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("Llave de cupo del registro de restaurantes")
 class SignupRateLimiterTest {

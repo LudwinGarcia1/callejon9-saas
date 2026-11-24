@@ -14,5 +14,4 @@ public record CashSessionListItem(
         BigDecimal expectedCash,
         BigDecimal countedCash,
         BigDecimal difference,
-        String closureReason) {
-}
+        String closureReason) {}

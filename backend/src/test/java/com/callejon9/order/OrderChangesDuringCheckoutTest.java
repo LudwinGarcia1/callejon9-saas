@@ -1,5 +1,9 @@
 package com.callejon9.order;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.assertj.core.api.Assertions.fail;
+
 import com.callejon9.auth.service.AuthService;
 import com.callejon9.cashier.service.CashSessionService;
 import com.callejon9.cashier.web.dto.OpenCashSessionRequest;
@@ -37,25 +41,20 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.assertj.core.api.Assertions.fail;
-
 /**
- * El cobro toma una foto de las lineas de la orden y la confirma al final de
- * su transaccion. Si otra operacion modifica la orden en medio, sin esperar
- * su turno, el cambio queda fuera del ticket: un producto entregado y nunca
- * cobrado, o una orden pagada que termina como cancelada o enviada a cocina.
+ * El cobro toma una foto de las lineas de la orden y la confirma al final de su transaccion. Si
+ * otra operacion modifica la orden en medio, sin esperar su turno, el cambio queda fuera del
+ * ticket: un producto entregado y nunca cobrado, o una orden pagada que termina como cancelada o
+ * enviada a cocina.
  *
- * <p>Cada prueba fija el orden de la carrera en vez de esperar a que ocurra
- * por casualidad: la primera operacion termina su trabajo pero no confirma,
- * la segunda arranca y la prueba comprueba con {@code pg_blocking_pids} que
- * la transaccion de la primera la bloquea antes de dejarla confirmar. La
- * prueba en paralelo que pide el hallazgo va al final, sin orden fijo.
+ * <p>Cada prueba fija el orden de la carrera en vez de esperar a que ocurra por casualidad: la
+ * primera operacion termina su trabajo pero no confirma, la segunda arranca y la prueba comprueba
+ * con {@code pg_blocking_pids} que la transaccion de la primera la bloquea antes de dejarla
+ * confirmar. La prueba en paralelo que pide el hallazgo va al final, sin orden fijo.
  *
- * <p>El bloqueo que lo impide es {@code OrderRepository.findForCheckout}
- * ({@code SELECT ... FOR UPDATE}), que comparten el cobro, {@code addItems},
- * {@code cancelOrder}, {@code sendToKitchen} y el avance de cocina.
+ * <p>El bloqueo que lo impide es {@code OrderRepository.findForCheckout} ({@code SELECT ... FOR
+ * UPDATE}), que comparten el cobro, {@code addItems}, {@code cancelOrder}, {@code sendToKitchen} y
+ * el avance de cocina.
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -88,18 +87,33 @@ class OrderChangesDuringCheckoutTest {
 
     @BeforeEach
     void seed() {
-        tenantId = onboardingService.onboard("Cobro Concurrente", SLUG,
-                "admin@cobro-concurrente.com", "Admin", "Secreto123!", "FREE").getId();
+        tenantId =
+                onboardingService
+                        .onboard(
+                                "Cobro Concurrente",
+                                SLUG,
+                                "admin@cobro-concurrente.com",
+                                "Admin",
+                                "Secreto123!",
+                                "FREE")
+                        .getId();
         // waiter_id y cashier_id referencian users(id): tiene que ser un usuario real.
-        userId = authService.authenticate(SLUG, "admin@cobro-concurrente.com", "Secreto123!")
-                .user().getId();
+        userId =
+                authService
+                        .authenticate(SLUG, "admin@cobro-concurrente.com", "Secreto123!")
+                        .user()
+                        .getId();
         actor = new OrderActor(userId, true);
 
-        inTenant(() -> cashSessionService.open(userId, new OpenCashSessionRequest(BigDecimal.ZERO)));
+        inTenant(
+                () -> cashSessionService.open(userId, new OpenCashSessionRequest(BigDecimal.ZERO)));
 
         inTenant(() -> {
             tableId = tableService.createTable(1, 4).getId();
-            tacosId = productService.createProduct("Tacos al pastor", null, TACOS_PRICE, null).getId();
+            tacosId =
+                    productService
+                            .createProduct("Tacos al pastor", null, TACOS_PRICE, null)
+                            .getId();
             sodaId = productService.createProduct("Refresco", null, SODA_PRICE, null).getId();
             return null;
         });
@@ -113,14 +127,21 @@ class OrderChangesDuringCheckoutTest {
     }
 
     @Test
-    @DisplayName("P1: un producto agregado mientras se cobra se rechaza y el ticket cuadra con las lineas")
+    @DisplayName(
+            "P1: un producto agregado mientras se cobra se rechaza y el ticket cuadra con las lineas")
     void itemsAddedDuringCheckoutAreRejected() throws Exception {
         UUID orderId = openOrderWithTacos();
 
-        Race<Ticket> race = secondWaitsForFirst(
-                () -> checkout(orderId),
-                () -> orderService.addItems(orderId, List.of(new NewOrderItem(sodaId, 1, null)), actor));
-        Throwable addItemsError = catchThrowable(() -> race.second().get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        Race<Ticket> race =
+                secondWaitsForFirst(
+                        () -> checkout(orderId),
+                        () ->
+                                orderService.addItems(
+                                        orderId,
+                                        List.of(new NewOrderItem(sodaId, 1, null)),
+                                        actor));
+        Throwable addItemsError =
+                catchThrowable(() -> race.second().get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
 
         assertTicketMatchesOrderLines(race.first(), orderId);
         assertRejectedByBusinessRule(addItemsError);
@@ -132,10 +153,11 @@ class OrderChangesDuringCheckoutTest {
     void cancelDuringCheckoutIsRejected() throws Exception {
         UUID orderId = openOrderWithTacos();
 
-        Race<Ticket> race = secondWaitsForFirst(
-                () -> checkout(orderId),
-                () -> orderService.cancelOrder(orderId, actor));
-        Throwable cancelError = catchThrowable(() -> race.second().get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        Race<Ticket> race =
+                secondWaitsForFirst(
+                        () -> checkout(orderId), () -> orderService.cancelOrder(orderId, actor));
+        Throwable cancelError =
+                catchThrowable(() -> race.second().get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
 
         assertThat(orderStatus(orderId))
                 .as("una orden cobrada no debe terminar cancelada")
@@ -149,13 +171,17 @@ class OrderChangesDuringCheckoutTest {
     void itemsAddedBeforeCheckoutAreCharged() throws Exception {
         UUID orderId = openOrderWithTacos();
 
-        Race<Object> race = secondWaitsForFirst(
-                () -> orderService.addItems(orderId, List.of(new NewOrderItem(sodaId, 1, null)), actor),
-                () -> checkout(orderId));
+        Race<Object> race =
+                secondWaitsForFirst(
+                        () ->
+                                orderService.addItems(
+                                        orderId, List.of(new NewOrderItem(sodaId, 1, null)), actor),
+                        () -> checkout(orderId));
         Ticket ticket = (Ticket) race.second().get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
         assertTicketMatchesOrderLines(ticket, orderId);
-        assertThat(ticket.getItemsSnapshot()).extracting(TicketItemSnapshot::productName)
+        assertThat(ticket.getItemsSnapshot())
+                .extracting(TicketItemSnapshot::productName)
                 .containsExactlyInAnyOrder("Tacos al pastor", "Refresco");
         assertThat(ticket.getSubtotal())
                 .isEqualByComparingTo(TACOS_PRICE.multiply(BigDecimal.TWO).add(SODA_PRICE));
@@ -166,10 +192,11 @@ class OrderChangesDuringCheckoutTest {
     void sendToKitchenDuringCheckoutIsRejected() throws Exception {
         UUID orderId = openOrderWithTacos();
 
-        Race<Ticket> race = secondWaitsForFirst(
-                () -> checkout(orderId),
-                () -> orderService.sendToKitchen(orderId, actor));
-        Throwable sendError = catchThrowable(() -> race.second().get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        Race<Ticket> race =
+                secondWaitsForFirst(
+                        () -> checkout(orderId), () -> orderService.sendToKitchen(orderId, actor));
+        Throwable sendError =
+                catchThrowable(() -> race.second().get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
 
         assertThat(orderStatus(orderId))
                 .as("una orden cobrada no debe volver a la cocina")
@@ -179,8 +206,8 @@ class OrderChangesDuringCheckoutTest {
     }
 
     /**
-     * La prueba que pide el hallazgo, sin fijar el orden: ambas operaciones
-     * arrancan a la vez. Gane quien gane, el ticket debe cuadrar con las lineas.
+     * La prueba que pide el hallazgo, sin fijar el orden: ambas operaciones arrancan a la vez. Gane
+     * quien gane, el ticket debe cuadrar con las lineas.
      */
     @Test
     @DisplayName("agregar y cobrar en paralelo: en cada ronda el ticket es la suma de las lineas")
@@ -189,19 +216,25 @@ class OrderChangesDuringCheckoutTest {
             UUID orderId = openOrderWithTacos();
             CountDownLatch start = new CountDownLatch(1);
 
-            Future<Ticket> checkout = executor.submit(() -> {
-                start.await();
-                return inTenant(() -> checkout(orderId));
-            });
-            Future<?> addItems = executor.submit(() -> {
-                start.await();
-                return inTenant(() -> orderService.addItems(
-                        orderId, List.of(new NewOrderItem(sodaId, 1, null)), actor));
-            });
+            Future<Ticket> checkout =
+                    executor.submit(() -> {
+                        start.await();
+                        return inTenant(() -> checkout(orderId));
+                    });
+            Future<?> addItems =
+                    executor.submit(() -> {
+                        start.await();
+                        return inTenant(() ->
+                                orderService.addItems(
+                                        orderId,
+                                        List.of(new NewOrderItem(sodaId, 1, null)),
+                                        actor));
+                    });
             start.countDown();
 
             Ticket ticket = checkout.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-            Throwable addItemsError = catchThrowable(() -> addItems.get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
+            Throwable addItemsError =
+                    catchThrowable(() -> addItems.get(TIMEOUT_SECONDS, TimeUnit.SECONDS));
             if (addItemsError != null) {
                 assertRejectedByBusinessRule(addItemsError);
             }
@@ -209,27 +242,33 @@ class OrderChangesDuringCheckoutTest {
         }
     }
 
-    private record Race<T>(T first, Future<?> second) {
-    }
+    private record Race<T>(T first, Future<?> second) {}
 
     /**
-     * Ejecuta {@code first} en una transaccion que no confirma hasta que
-     * {@code second} queda bloqueada por ella; entonces confirma y devuelve
-     * el resultado de la primera junto con la segunda aun en curso.
+     * Ejecuta {@code first} en una transaccion que no confirma hasta que {@code second} queda
+     * bloqueada por ella; entonces confirma y devuelve el resultado de la primera junto con la
+     * segunda aun en curso.
      */
-    private <T> Race<T> secondWaitsForFirst(Supplier<T> first, Supplier<?> second) throws Exception {
+    private <T> Race<T> secondWaitsForFirst(Supplier<T> first, Supplier<?> second)
+            throws Exception {
         CountDownLatch firstDone = new CountDownLatch(1);
         CountDownLatch commitFirst = new CountDownLatch(1);
         AtomicInteger firstBackendPid = new AtomicInteger();
 
-        Future<T> firstResult = executor.submit(() -> inTenant(() -> transactionTemplate.execute(status -> {
-            T result = first.get();
-            // La conexion de esta transaccion: la que debe bloquear a la segunda.
-            firstBackendPid.set(jdbcTemplate.queryForObject("SELECT pg_backend_pid()", Integer.class));
-            firstDone.countDown();
-            awaitUninterruptibly(commitFirst);
-            return result;
-        })));
+        Future<T> firstResult =
+                executor.submit(() ->
+                        inTenant(() ->
+                                transactionTemplate.execute(status -> {
+                                    T result = first.get();
+                                    // La conexion de esta transaccion: la que debe bloquear a la
+                                    // segunda.
+                                    firstBackendPid.set(
+                                            jdbcTemplate.queryForObject(
+                                                    "SELECT pg_backend_pid()", Integer.class));
+                                    firstDone.countDown();
+                                    awaitUninterruptibly(commitFirst);
+                                    return result;
+                                })));
         assertThat(firstDone.await(TIMEOUT_SECONDS, TimeUnit.SECONDS))
                 .as("la primera operacion debe terminar su trabajo antes de confirmar")
                 .isTrue();
@@ -242,17 +281,19 @@ class OrderChangesDuringCheckoutTest {
     }
 
     /**
-     * La segunda operacion debe quedar bloqueada por la transaccion de la
-     * primera (no por cualquier otra sesion de la base) o, si nada la detiene,
-     * terminar sin esperar. Lo segundo es justo el defecto que estas pruebas
-     * buscan, y lo delatan sus aserciones, no esta espera.
+     * La segunda operacion debe quedar bloqueada por la transaccion de la primera (no por cualquier
+     * otra sesion de la base) o, si nada la detiene, terminar sin esperar. Lo segundo es justo el
+     * defecto que estas pruebas buscan, y lo delatan sus aserciones, no esta espera.
      */
-    private void awaitBlockedByOrCompletion(int blockerPid, Future<?> second) throws InterruptedException {
+    private void awaitBlockedByOrCompletion(int blockerPid, Future<?> second)
+            throws InterruptedException {
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(TIMEOUT_SECONDS);
         while (System.nanoTime() < deadline) {
-            Integer blocked = jdbcTemplate.queryForObject(
-                    "SELECT count(*) FROM pg_stat_activity WHERE ? = ANY(pg_blocking_pids(pid))",
-                    Integer.class, blockerPid);
+            Integer blocked =
+                    jdbcTemplate.queryForObject(
+                            "SELECT count(*) FROM pg_stat_activity WHERE ? = ANY(pg_blocking_pids(pid))",
+                            Integer.class,
+                            blockerPid);
             if ((blocked != null && blocked > 0) || second.isDone()) {
                 return;
             }
@@ -286,11 +327,20 @@ class OrderChangesDuringCheckoutTest {
     }
 
     private void assertTicketMatchesOrderLines(Ticket ticket, UUID orderId) {
-        BigDecimal linesTotal = inTenant(() -> transactionTemplate.execute(status -> jdbcTemplate.queryForObject(
-                "SELECT coalesce(sum(unit_price * quantity), 0) FROM order_items WHERE order_id = ?",
-                BigDecimal.class, orderId)));
-        Integer lineCount = inTenant(() -> transactionTemplate.execute(status -> jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM order_items WHERE order_id = ?", Integer.class, orderId)));
+        BigDecimal linesTotal =
+                inTenant(() ->
+                        transactionTemplate.execute(status ->
+                                jdbcTemplate.queryForObject(
+                                        "SELECT coalesce(sum(unit_price * quantity), 0) FROM order_items WHERE order_id = ?",
+                                        BigDecimal.class,
+                                        orderId)));
+        Integer lineCount =
+                inTenant(() ->
+                        transactionTemplate.execute(status ->
+                                jdbcTemplate.queryForObject(
+                                        "SELECT count(*) FROM order_items WHERE order_id = ?",
+                                        Integer.class,
+                                        orderId)));
 
         assertThat(ticket.getSubtotal())
                 .as("el total del ticket debe ser la suma de las lineas de la orden")
@@ -308,8 +358,10 @@ class OrderChangesDuringCheckoutTest {
     }
 
     private String orderStatus(UUID orderId) {
-        return inTenant(() -> transactionTemplate.execute(status -> jdbcTemplate.queryForObject(
-                "SELECT status FROM orders WHERE id = ?", String.class, orderId)));
+        return inTenant(() ->
+                transactionTemplate.execute(status ->
+                        jdbcTemplate.queryForObject(
+                                "SELECT status FROM orders WHERE id = ?", String.class, orderId)));
     }
 
     private <T> T inTenant(Supplier<T> action) {

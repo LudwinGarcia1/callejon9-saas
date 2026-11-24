@@ -1,5 +1,11 @@
 package com.callejon9.sale.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.callejon9.cashier.domain.CashSession;
 import com.callejon9.cashier.repository.CashSessionRepository;
 import com.callejon9.order.domain.Order;
@@ -8,7 +14,6 @@ import com.callejon9.order.domain.OrderStatus;
 import com.callejon9.order.repository.OrderItemRepository;
 import com.callejon9.order.repository.OrderRepository;
 import com.callejon9.order.service.FolioGenerator;
-import com.callejon9.sale.domain.Payment;
 import com.callejon9.sale.domain.PaymentMethod;
 import com.callejon9.sale.domain.Sale;
 import com.callejon9.sale.repository.PaymentRepository;
@@ -35,13 +40,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UT · CheckoutService (Cobro y Pagos)")
 class CheckoutServiceTest {
@@ -50,45 +48,37 @@ class CheckoutServiceTest {
     private static final UUID CASHIER_ID = UUID.fromString("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
     private static final UUID TABLE_ID = UUID.fromString("cccccccc-cccc-cccc-cccc-cccccccccccc");
 
-    @Mock
-    private OrderRepository orderRepository;
+    @Mock private OrderRepository orderRepository;
 
-    @Mock
-    private OrderItemRepository orderItemRepository;
+    @Mock private OrderItemRepository orderItemRepository;
 
-    @Mock
-    private SaleRepository saleRepository;
+    @Mock private SaleRepository saleRepository;
 
-    @Mock
-    private TicketRepository ticketRepository;
+    @Mock private TicketRepository ticketRepository;
 
-    @Mock
-    private TableService tableService;
+    @Mock private TableService tableService;
 
-    @Mock
-    private FolioGenerator folioGenerator;
+    @Mock private FolioGenerator folioGenerator;
 
-    @Mock
-    private PaymentRepository paymentRepository;
+    @Mock private PaymentRepository paymentRepository;
 
-    @Mock
-    private CashSessionRepository cashSessionRepository;
+    @Mock private CashSessionRepository cashSessionRepository;
 
     private CheckoutService checkoutService;
 
     @BeforeEach
     void setUp() {
         TenantContext.set(TENANT_ID);
-        checkoutService = new CheckoutService(
-                orderRepository,
-                orderItemRepository,
-                saleRepository,
-                ticketRepository,
-                tableService,
-                folioGenerator,
-                paymentRepository,
-                cashSessionRepository
-        );
+        checkoutService =
+                new CheckoutService(
+                        orderRepository,
+                        orderItemRepository,
+                        saleRepository,
+                        ticketRepository,
+                        tableService,
+                        folioGenerator,
+                        paymentRepository,
+                        cashSessionRepository);
     }
 
     @AfterEach
@@ -128,7 +118,8 @@ class CheckoutServiceTest {
             UUID orderId = UUID.randomUUID();
             when(orderRepository.findForCheckout(orderId)).thenReturn(Optional.empty());
 
-            CheckoutRequest request = new CheckoutRequest(PaymentMethod.CASH, BigDecimal.ZERO, null);
+            CheckoutRequest request =
+                    new CheckoutRequest(PaymentMethod.CASH, BigDecimal.ZERO, null);
 
             assertThatThrownBy(() -> checkoutService.checkout(orderId, request, CASHIER_ID))
                     .isInstanceOf(ResourceNotFoundException.class)
@@ -144,7 +135,8 @@ class CheckoutServiceTest {
 
             when(orderRepository.findForCheckout(orderId)).thenReturn(Optional.of(order));
 
-            CheckoutRequest request = new CheckoutRequest(PaymentMethod.CASH, BigDecimal.ZERO, null);
+            CheckoutRequest request =
+                    new CheckoutRequest(PaymentMethod.CASH, BigDecimal.ZERO, null);
 
             assertThatThrownBy(() -> checkoutService.checkout(orderId, request, CASHIER_ID))
                     .isInstanceOf(BusinessRuleException.class)
@@ -160,7 +152,8 @@ class CheckoutServiceTest {
             when(orderRepository.findForCheckout(orderId)).thenReturn(Optional.of(order));
             when(orderItemRepository.findByOrderIdOrderByOrderedAt(orderId)).thenReturn(List.of());
 
-            CheckoutRequest request = new CheckoutRequest(PaymentMethod.CASH, BigDecimal.ZERO, null);
+            CheckoutRequest request =
+                    new CheckoutRequest(PaymentMethod.CASH, BigDecimal.ZERO, null);
 
             assertThatThrownBy(() -> checkoutService.checkout(orderId, request, CASHIER_ID))
                     .isInstanceOf(BusinessRuleException.class)
@@ -175,10 +168,13 @@ class CheckoutServiceTest {
             OrderItem item = buildOrderItem(orderId, "Tacos", new BigDecimal("100.00"), 1);
 
             when(orderRepository.findForCheckout(orderId)).thenReturn(Optional.of(order));
-            when(orderItemRepository.findByOrderIdOrderByOrderedAt(orderId)).thenReturn(List.of(item));
+            when(orderItemRepository.findByOrderIdOrderByOrderedAt(orderId))
+                    .thenReturn(List.of(item));
 
-            List<PaymentRequest> payments = List.of(new PaymentRequest(PaymentMethod.CASH, new BigDecimal("100.00")));
-            CheckoutRequest request = new CheckoutRequest(PaymentMethod.CASH, BigDecimal.ZERO, payments);
+            List<PaymentRequest> payments =
+                    List.of(new PaymentRequest(PaymentMethod.CASH, new BigDecimal("100.00")));
+            CheckoutRequest request =
+                    new CheckoutRequest(PaymentMethod.CASH, BigDecimal.ZERO, payments);
 
             assertThatThrownBy(() -> checkoutService.checkout(orderId, request, CASHIER_ID))
                     .isInstanceOf(InvalidPaymentException.class)
@@ -193,10 +189,12 @@ class CheckoutServiceTest {
             OrderItem item = buildOrderItem(orderId, "Corte Ribeye", new BigDecimal("450.00"), 1);
 
             when(orderRepository.findForCheckout(orderId)).thenReturn(Optional.of(order));
-            when(orderItemRepository.findByOrderIdOrderByOrderedAt(orderId)).thenReturn(List.of(item));
+            when(orderItemRepository.findByOrderIdOrderByOrderedAt(orderId))
+                    .thenReturn(List.of(item));
 
             // Subtotal $450, total $450, pero solo se envían $300
-            List<PaymentRequest> payments = List.of(new PaymentRequest(PaymentMethod.CASH, new BigDecimal("300.00")));
+            List<PaymentRequest> payments =
+                    List.of(new PaymentRequest(PaymentMethod.CASH, new BigDecimal("300.00")));
             CheckoutRequest request = new CheckoutRequest(null, BigDecimal.ZERO, payments);
 
             assertThatThrownBy(() -> checkoutService.checkout(orderId, request, CASHIER_ID))
@@ -217,22 +215,28 @@ class CheckoutServiceTest {
             OrderItem item = buildOrderItem(orderId, "Menú Ejecutivo", new BigDecimal("66.66"), 3);
 
             when(orderRepository.findForCheckout(orderId)).thenReturn(Optional.of(order));
-            when(orderItemRepository.findByOrderIdOrderByOrderedAt(orderId)).thenReturn(List.of(item));
+            when(orderItemRepository.findByOrderIdOrderByOrderedAt(orderId))
+                    .thenReturn(List.of(item));
             when(folioGenerator.next("TCK-")).thenReturn("TCK-2026-999");
-            when(saleRepository.save(any(Sale.class))).thenAnswer(invocation -> invocation.getArgument(0));
-            when(ticketRepository.save(any(Ticket.class))).thenAnswer(invocation -> invocation.getArgument(0));
-            CashSession session = CashSession.builder()
-                    .cashierId(CASHIER_ID)
-                    .openingFund(BigDecimal.ZERO)
-                    .openedAt(Instant.now())
-                    .build();
+            when(saleRepository.save(any(Sale.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+            when(ticketRepository.save(any(Ticket.class)))
+                    .thenAnswer(invocation -> invocation.getArgument(0));
+            CashSession session =
+                    CashSession.builder()
+                            .cashierId(CASHIER_ID)
+                            .openingFund(BigDecimal.ZERO)
+                            .openedAt(Instant.now())
+                            .build();
             session.setId(UUID.randomUUID());
-            when(cashSessionRepository.findOpenForCashierForUpdate(CASHIER_ID)).thenReturn(Optional.of(session));
+            when(cashSessionRepository.findOpenForCashierForUpdate(CASHIER_ID))
+                    .thenReturn(Optional.of(session));
 
             // 10% de propina sobre $199.98 = $19.998 -> redondeado a $20.00
             // Total = $199.98 + $20.00 = $219.98
             // Cliente paga en efectivo con $300.00 -> Cambio = $80.02
-            List<PaymentRequest> payments = List.of(new PaymentRequest(PaymentMethod.CASH, new BigDecimal("300.00")));
+            List<PaymentRequest> payments =
+                    List.of(new PaymentRequest(PaymentMethod.CASH, new BigDecimal("300.00")));
             CheckoutRequest request = new CheckoutRequest(null, new BigDecimal("10.00"), payments);
 
             Ticket ticket = checkoutService.checkout(orderId, request, CASHIER_ID);

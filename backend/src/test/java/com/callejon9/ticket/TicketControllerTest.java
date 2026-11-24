@@ -1,8 +1,13 @@
 package com.callejon9.ticket;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.callejon9.cashier.service.CashSessionService;
 import com.callejon9.catalog.domain.Product;
 import com.callejon9.catalog.repository.ProductRepository;
-import com.callejon9.cashier.service.CashSessionService;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
 import com.callejon9.support.CashSessionFixtures;
@@ -30,11 +35,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -59,21 +59,55 @@ class TicketControllerTest {
 
     @BeforeEach
     void seed() {
-        tenant = onboardingService.onboard("Tickets Test", "tickets-test",
-                "admin@tickets.com", "Admin", "Secreto123!", "FREE");
+        tenant =
+                onboardingService.onboard(
+                        "Tickets Test",
+                        "tickets-test",
+                        "admin@tickets.com",
+                        "Admin",
+                        "Secreto123!",
+                        "FREE");
 
         TenantContext.set(tenant.getId());
         try {
-            waiter = transactionTemplate.execute(status -> userRepository.save(User.builder()
-                    .email("mesero@tickets.com").passwordHash("x").fullName("Mesero")
-                    .role(UserRole.WAITER).active(true).build()));
-            cashier = transactionTemplate.execute(status -> userRepository.save(User.builder()
-                    .email("cajero@tickets.com").passwordHash("x").fullName("Cajero")
-                    .role(UserRole.CASHIER).active(true).build()));
-            table = transactionTemplate.execute(status -> tableRepository.save(RestaurantTable.builder()
-                    .number(1).capacity(4).status(TableStatus.FREE).active(true).build()));
-            product = transactionTemplate.execute(status -> productRepository.save(Product.builder()
-                    .name("Taco").description("Taco").price(new BigDecimal("25.00")).active(true).build()));
+            waiter =
+                    transactionTemplate.execute(status ->
+                            userRepository.save(
+                                    User.builder()
+                                            .email("mesero@tickets.com")
+                                            .passwordHash("x")
+                                            .fullName("Mesero")
+                                            .role(UserRole.WAITER)
+                                            .active(true)
+                                            .build()));
+            cashier =
+                    transactionTemplate.execute(status ->
+                            userRepository.save(
+                                    User.builder()
+                                            .email("cajero@tickets.com")
+                                            .passwordHash("x")
+                                            .fullName("Cajero")
+                                            .role(UserRole.CASHIER)
+                                            .active(true)
+                                            .build()));
+            table =
+                    transactionTemplate.execute(status ->
+                            tableRepository.save(
+                                    RestaurantTable.builder()
+                                            .number(1)
+                                            .capacity(4)
+                                            .status(TableStatus.FREE)
+                                            .active(true)
+                                            .build()));
+            product =
+                    transactionTemplate.execute(status ->
+                            productRepository.save(
+                                    Product.builder()
+                                            .name("Taco")
+                                            .description("Taco")
+                                            .price(new BigDecimal("25.00"))
+                                            .active(true)
+                                            .build()));
             CashSessionFixtures.openFor(cashSessionService, cashier);
         } finally {
             TenantContext.clear();
@@ -91,26 +125,42 @@ class TicketControllerTest {
     }
 
     private UUID checkoutAndGetTicketId() throws Exception {
-        String orderBody = mockMvc.perform(post("/api/v1/orders")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tableId\":\"" + table.getId() + "\",\"guestCount\":2}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-        UUID orderId = UUID.fromString(orderBody.replaceAll(".*\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
+        String orderBody =
+                mockMvc.perform(
+                                post("/api/v1/orders")
+                                        .cookie(cookieFor(waiter))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                "{\"tableId\":\""
+                                                        + table.getId()
+                                                        + "\",\"guestCount\":2}"))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
+        UUID orderId =
+                UUID.fromString(orderBody.replaceAll(".*\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
 
-        mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"items\":[{\"productId\":\"" + product.getId() + "\",\"quantity\":1}]}"))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/items")
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"items\":[{\"productId\":\""
+                                                + product.getId()
+                                                + "\",\"quantity\":1}]}"))
                 .andExpect(status().isOk());
 
-        String ticketBody = mockMvc.perform(post("/api/v1/orders/" + orderId + "/checkout")
-                        .cookie(cookieFor(cashier))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"paymentMethod\":\"CASH\",\"tipPercent\":10}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        String ticketBody =
+                mockMvc.perform(
+                                post("/api/v1/orders/" + orderId + "/checkout")
+                                        .cookie(cookieFor(cashier))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content("{\"paymentMethod\":\"CASH\",\"tipPercent\":10}"))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
         return UUID.fromString(ticketBody.replaceAll(".*\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
     }
 
@@ -135,15 +185,21 @@ class TicketControllerTest {
     void pdfEndpointReturnsAPdfDocument() throws Exception {
         UUID ticketId = checkoutAndGetTicketId();
 
-        var result = mockMvc.perform(get("/api/v1/tickets/" + ticketId + "/pdf").cookie(cookieFor(cashier)))
-                .andExpect(status().isOk())
-                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
-                        .content().contentType(MediaType.APPLICATION_PDF))
-                .andReturn();
+        var result =
+                mockMvc.perform(
+                                get("/api/v1/tickets/" + ticketId + "/pdf")
+                                        .cookie(cookieFor(cashier)))
+                        .andExpect(status().isOk())
+                        .andExpect(
+                                org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                                        .content()
+                                        .contentType(MediaType.APPLICATION_PDF))
+                        .andReturn();
 
         byte[] pdf = result.getResponse().getContentAsByteArray();
         assertThat(pdf.length).isGreaterThan(0);
         // Todo PDF valido inicia con la firma %PDF-.
-        assertThat(new String(pdf, 0, 5, java.nio.charset.StandardCharsets.US_ASCII)).isEqualTo("%PDF-");
+        assertThat(new String(pdf, 0, 5, java.nio.charset.StandardCharsets.US_ASCII))
+                .isEqualTo("%PDF-");
     }
 }

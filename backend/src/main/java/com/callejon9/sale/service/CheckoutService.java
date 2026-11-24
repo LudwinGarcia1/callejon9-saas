@@ -27,14 +27,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Cierra la cuenta de una orden: crea la venta y su ticket inmutable, marca
- * la orden como PAID y libera la mesa. Todo en una sola transaccion, tal
- * como lo exige la regla de negocio (si algo falla a la mitad, nada de esto
- * debe quedar a medias).
+ * Cierra la cuenta de una orden: crea la venta y su ticket inmutable, marca la orden como PAID y
+ * libera la mesa. Todo en una sola transaccion, tal como lo exige la regla de negocio (si algo
+ * falla a la mitad, nada de esto debe quedar a medias).
  *
- * El TenantContext ya esta fijado por TenantFilter antes de que la peticion
- * llegue aqui, asi que @Transactional declarativo alcanza (mismo patron que
- * OrderService).
+ * <p>El TenantContext ya esta fijado por TenantFilter antes de que la peticion llegue aqui, asi
+ * que @Transactional declarativo alcanza (mismo patron que OrderService).
  */
 @Service
 public class CheckoutService {
@@ -70,14 +68,22 @@ public class CheckoutService {
     }
 
     @Transactional
-    public Ticket checkout(UUID orderId, com.callejon9.sale.web.dto.CheckoutRequest request, UUID cashierId) {
+    public Ticket checkout(
+            UUID orderId, com.callejon9.sale.web.dto.CheckoutRequest request, UUID cashierId) {
         BigDecimal tipPercent = request.tipPercent();
-        Order order = orderRepository.findForCheckout(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("La orden " + orderId + " no existe."));
+        Order order =
+                orderRepository
+                        .findForCheckout(orderId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "La orden " + orderId + " no existe."));
 
         if (order.getStatus() == OrderStatus.PAID || order.getStatus() == OrderStatus.CANCELED) {
             throw new BusinessRuleException(
-                    "La orden " + order.getFolio() + " ya esta " + order.getStatus()
+                    "La orden "
+                            + order.getFolio()
+                            + " ya esta "
+                            + order.getStatus()
                             + " y no admite cobro.");
         }
 
@@ -89,62 +95,86 @@ public class CheckoutService {
 
         List<TicketItemSnapshot> snapshot = items.stream().map(this::toSnapshot).toList();
 
-        BigDecimal subtotal = snapshot.stream()
-                .map(TicketItemSnapshot::subtotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .setScale(2, RoundingMode.HALF_UP);
-        BigDecimal tip = subtotal.multiply(tipPercent)
-                .divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP)
-                .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal subtotal =
+                snapshot.stream()
+                        .map(TicketItemSnapshot::subtotal)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add)
+                        .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal tip =
+                subtotal.multiply(tipPercent)
+                        .divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP)
+                        .setScale(2, RoundingMode.HALF_UP);
         BigDecimal total = subtotal.add(tip).setScale(2, RoundingMode.HALF_UP);
 
         if (request.payments() != null && request.paymentMethod() != null) {
             throw new InvalidPaymentException("Envía payments o paymentMethod, no ambos.");
         }
-        var requestedPayments = request.payments() != null ? request.payments()
-                : List.of(new com.callejon9.sale.web.dto.PaymentRequest(request.paymentMethod(), total));
+        var requestedPayments =
+                request.payments() != null
+                        ? request.payments()
+                        : List.of(
+                                new com.callejon9.sale.web.dto.PaymentRequest(
+                                        request.paymentMethod(), total));
         var payments = PaymentAllocation.allocate(requestedPayments, total);
-        PaymentMethod paymentMethod = payments.size() == 1 ? payments.getFirst().method() : PaymentMethod.MIXED;
+        PaymentMethod paymentMethod =
+                payments.size() == 1 ? payments.getFirst().method() : PaymentMethod.MIXED;
 
-        var cashSession = cashSessionRepository.findOpenForCashierForUpdate(cashierId)
-                .orElseThrow(CashSessionRequiredException::new);
+        var cashSession =
+                cashSessionRepository
+                        .findOpenForCashierForUpdate(cashierId)
+                        .orElseThrow(CashSessionRequiredException::new);
 
         Instant now = Instant.now();
 
-        Sale sale = saleRepository.save(Sale.builder()
-                .orderId(order.getId())
-                .tableId(order.getTableId())
-                .cashierId(cashierId)
-                .cashSessionId(cashSession.getId())
-                .status(SaleStatus.COMPLETED)
-                .paymentMethod(paymentMethod)
-                .subtotal(subtotal)
-                .tip(tip)
-                .total(total)
-                .build());
+        Sale sale =
+                saleRepository.save(
+                        Sale.builder()
+                                .orderId(order.getId())
+                                .tableId(order.getTableId())
+                                .cashierId(cashierId)
+                                .cashSessionId(cashSession.getId())
+                                .status(SaleStatus.COMPLETED)
+                                .paymentMethod(paymentMethod)
+                                .subtotal(subtotal)
+                                .tip(tip)
+                                .total(total)
+                                .build());
 
         for (var payment : payments) {
-            paymentRepository.save(com.callejon9.sale.domain.Payment.builder()
-                    .saleId(sale.getId()).provider("MANUAL").method(payment.method())
-                    .amount(payment.amount()).receivedAmount(payment.receivedAmount()).status("COMPLETED").build());
+            paymentRepository.save(
+                    com.callejon9.sale.domain.Payment.builder()
+                            .saleId(sale.getId())
+                            .provider("MANUAL")
+                            .method(payment.method())
+                            .amount(payment.amount())
+                            .receivedAmount(payment.receivedAmount())
+                            .status("COMPLETED")
+                            .build());
         }
         paymentRepository.flush();
 
-        Ticket ticket = ticketRepository.save(Ticket.builder()
-                .saleId(sale.getId())
-                .orderId(order.getId())
-                .folio(folioGenerator.next(TICKET_FOLIO_PREFIX))
-                .itemsSnapshot(snapshot)
-                .paymentsSnapshot(payments)
-                .change(payments.stream().map(com.callejon9.ticket.domain.TicketPaymentSnapshot::change)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add))
-                .subtotal(subtotal)
-                .tip(tip)
-                .tipPercent(tipPercent.setScale(2, RoundingMode.HALF_UP))
-                .total(total)
-                .paymentMethod(paymentMethod)
-                .closedAt(now)
-                .build());
+        Ticket ticket =
+                ticketRepository.save(
+                        Ticket.builder()
+                                .saleId(sale.getId())
+                                .orderId(order.getId())
+                                .folio(folioGenerator.next(TICKET_FOLIO_PREFIX))
+                                .itemsSnapshot(snapshot)
+                                .paymentsSnapshot(payments)
+                                .change(
+                                        payments.stream()
+                                                .map(
+                                                        com.callejon9.ticket.domain
+                                                                        .TicketPaymentSnapshot
+                                                                ::change)
+                                                .reduce(BigDecimal.ZERO, BigDecimal::add))
+                                .subtotal(subtotal)
+                                .tip(tip)
+                                .tipPercent(tipPercent.setScale(2, RoundingMode.HALF_UP))
+                                .total(total)
+                                .paymentMethod(paymentMethod)
+                                .closedAt(now)
+                                .build());
 
         order.setStatus(OrderStatus.PAID);
         order.setClosedAt(now);
@@ -158,10 +188,15 @@ public class CheckoutService {
     }
 
     private TicketItemSnapshot toSnapshot(OrderItem item) {
-        BigDecimal lineSubtotal = item.getUnitPrice()
-                .multiply(BigDecimal.valueOf(item.getQuantity()))
-                .setScale(2, RoundingMode.HALF_UP);
-        return new TicketItemSnapshot(item.getProductId(), item.getProductName(),
-                item.getUnitPrice(), item.getQuantity(), lineSubtotal);
+        BigDecimal lineSubtotal =
+                item.getUnitPrice()
+                        .multiply(BigDecimal.valueOf(item.getQuantity()))
+                        .setScale(2, RoundingMode.HALF_UP);
+        return new TicketItemSnapshot(
+                item.getProductId(),
+                item.getProductName(),
+                item.getUnitPrice(),
+                item.getQuantity(),
+                lineSubtotal);
     }
 }

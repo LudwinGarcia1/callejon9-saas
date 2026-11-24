@@ -1,5 +1,12 @@
 package com.callejon9.catalog;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
 import com.callejon9.support.TestSessions;
@@ -20,13 +27,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -43,8 +43,14 @@ class ProductControllerTest {
 
     @BeforeEach
     void seed() {
-        tenant = onboardingService.onboard("Productos Test", "productos-test",
-                "admin@productos.com", "Admin", "Secreto123!", "FREE");
+        tenant =
+                onboardingService.onboard(
+                        "Productos Test",
+                        "productos-test",
+                        "admin@productos.com",
+                        "Admin",
+                        "Secreto123!",
+                        "FREE");
         admin = testSessions.newUserIn(tenant.getId(), UserRole.ADMIN);
     }
 
@@ -63,34 +69,49 @@ class ProductControllerTest {
     }
 
     private UUID createCategory(String name) throws Exception {
-        String body = mockMvc.perform(post("/api/v1/categories")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"" + name + "\"}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        String body =
+                mockMvc.perform(
+                                post("/api/v1/categories")
+                                        .cookie(cookieFor(admin))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content("{\"name\":\"" + name + "\"}"))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
         return UUID.fromString(body.replaceAll(".*\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
     }
 
     private UUID createProduct(String name, String price) throws Exception {
-        String body = mockMvc.perform(post("/api/v1/products")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"" + name + "\",\"price\":" + price + "}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        String body =
+                mockMvc.perform(
+                                post("/api/v1/products")
+                                        .cookie(cookieFor(admin))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                "{\"name\":\""
+                                                        + name
+                                                        + "\",\"price\":"
+                                                        + price
+                                                        + "}"))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
         return UUID.fromString(body.replaceAll(".*\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
     }
 
     @Test
     @DisplayName("ADMIN puede crear un producto")
     void adminCanCreateAProduct() throws Exception {
-        mockMvc.perform(post("/api/v1/products")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"name":"Taco","description":"Taco al pastor","price":25.50}
-                                """))
+        mockMvc.perform(
+                        post("/api/v1/products")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"name":"Taco","description":"Taco al pastor","price":25.50}
+                                        """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Taco"))
                 .andExpect(jsonPath("$.price").value(25.50))
@@ -103,17 +124,29 @@ class ProductControllerTest {
         UUID bebidasId = createCategory("Bebidas");
         UUID postresId = createCategory("Postres");
 
-        mockMvc.perform(post("/api/v1/products").cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Agua\",\"price\":15.00,\"categoryId\":\"" + bebidasId + "\"}"))
+        mockMvc.perform(
+                        post("/api/v1/products")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"name\":\"Agua\",\"price\":15.00,\"categoryId\":\""
+                                                + bebidasId
+                                                + "\"}"))
                 .andExpect(status().isCreated());
-        mockMvc.perform(post("/api/v1/products").cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Flan\",\"price\":40.00,\"categoryId\":\"" + postresId + "\"}"))
+        mockMvc.perform(
+                        post("/api/v1/products")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"name\":\"Flan\",\"price\":40.00,\"categoryId\":\""
+                                                + postresId
+                                                + "\"}"))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(get("/api/v1/products").param("categoryId", bebidasId.toString())
-                        .cookie(cookieFor(admin)))
+        mockMvc.perform(
+                        get("/api/v1/products")
+                                .param("categoryId", bebidasId.toString())
+                                .cookie(cookieFor(admin)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].name").value("Agua"));
@@ -125,11 +158,15 @@ class ProductControllerTest {
         UUID productId = createProduct("Taco", "25.00");
         UUID categoryId = createCategory("Tacos");
 
-        mockMvc.perform(put("/api/v1/products/" + productId)
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Taco de bistec\",\"description\":\"Con todo\","
-                                + "\"price\":30.00,\"categoryId\":\"" + categoryId + "\"}"))
+        mockMvc.perform(
+                        put("/api/v1/products/" + productId)
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"name\":\"Taco de bistec\",\"description\":\"Con todo\","
+                                                + "\"price\":30.00,\"categoryId\":\""
+                                                + categoryId
+                                                + "\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Taco de bistec"))
                 .andExpect(jsonPath("$.description").value("Con todo"))
@@ -143,20 +180,22 @@ class ProductControllerTest {
         createProduct("Taco", "25.00");
         UUID flanId = createProduct("Flan", "40.00");
 
-        mockMvc.perform(put("/api/v1/products/" + flanId)
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Taco\",\"price\":40.00}"))
+        mockMvc.perform(
+                        put("/api/v1/products/" + flanId)
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"name\":\"Taco\",\"price\":40.00}"))
                 .andExpect(status().isConflict());
     }
 
     @Test
     @DisplayName("editar un producto que no existe da 404")
     void updatingANonexistentProductGives404() throws Exception {
-        mockMvc.perform(put("/api/v1/products/" + UUID.randomUUID())
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Taco\",\"price\":25.00}"))
+        mockMvc.perform(
+                        put("/api/v1/products/" + UUID.randomUUID())
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"name\":\"Taco\",\"price\":25.00}"))
                 .andExpect(status().isNotFound());
     }
 
@@ -165,10 +204,11 @@ class ProductControllerTest {
     void patchDeactivatesAProductAndItDisappearsFromTheCatalog() throws Exception {
         UUID productId = createProduct("Taco", "25.00");
 
-        mockMvc.perform(patch("/api/v1/products/" + productId)
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":false}"))
+        mockMvc.perform(
+                        patch("/api/v1/products/" + productId)
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":false}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(false));
 
@@ -182,18 +222,21 @@ class ProductControllerTest {
     void listWithIncludeInactiveIncludesInactiveProducts() throws Exception {
         UUID productId = createProduct("Taco", "25.00");
 
-        mockMvc.perform(patch("/api/v1/products/" + productId)
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":false}"))
+        mockMvc.perform(
+                        patch("/api/v1/products/" + productId)
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":false}"))
                 .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/v1/products").cookie(cookieFor(admin)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
 
-        mockMvc.perform(get("/api/v1/products").param("includeInactive", "true")
-                        .cookie(cookieFor(admin)))
+        mockMvc.perform(
+                        get("/api/v1/products")
+                                .param("includeInactive", "true")
+                                .cookie(cookieFor(admin)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].name").value("Taco"))
@@ -205,16 +248,18 @@ class ProductControllerTest {
     void reactivatingAProductMakesItReappearInTheDefaultListing() throws Exception {
         UUID productId = createProduct("Taco", "25.00");
 
-        mockMvc.perform(patch("/api/v1/products/" + productId)
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":false}"))
+        mockMvc.perform(
+                        patch("/api/v1/products/" + productId)
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":false}"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(patch("/api/v1/products/" + productId)
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":true}"))
+        mockMvc.perform(
+                        patch("/api/v1/products/" + productId)
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":true}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(true));
 
@@ -230,16 +275,18 @@ class ProductControllerTest {
         UUID productId = createProduct("Taco", "25.00");
         User waiter = userWithRole(UserRole.WAITER);
 
-        mockMvc.perform(put("/api/v1/products/" + productId)
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Taco Nuevo\",\"price\":25.00}"))
+        mockMvc.perform(
+                        put("/api/v1/products/" + productId)
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"name\":\"Taco Nuevo\",\"price\":25.00}"))
                 .andExpect(status().isForbidden());
 
-        mockMvc.perform(patch("/api/v1/products/" + productId)
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":false}"))
+        mockMvc.perform(
+                        patch("/api/v1/products/" + productId)
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":false}"))
                 .andExpect(status().isForbidden());
     }
 }

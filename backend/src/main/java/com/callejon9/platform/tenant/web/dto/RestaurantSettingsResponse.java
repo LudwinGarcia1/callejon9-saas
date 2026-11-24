@@ -6,6 +6,7 @@ import com.callejon9.platform.tenant.domain.Tenant;
 public record RestaurantSettingsResponse(String name, String slug, String timezone) {
 
     public static RestaurantSettingsResponse from(Tenant tenant) {
-        return new RestaurantSettingsResponse(tenant.getName(), tenant.getSlug(), tenant.getTimezone());
+        return new RestaurantSettingsResponse(
+                tenant.getName(), tenant.getSlug(), tenant.getTimezone());
     }
 }

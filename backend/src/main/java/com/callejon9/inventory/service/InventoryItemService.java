@@ -21,18 +21,19 @@ public class InventoryItemService {
     private final InventoryMovementRepository movementRepository;
     private final InventoryMovementService movementService;
 
-    public InventoryItemService(InventoryItemRepository itemRepository,
-                                InventoryMovementRepository movementRepository,
-                                InventoryMovementService movementService) {
+    public InventoryItemService(
+            InventoryItemRepository itemRepository,
+            InventoryMovementRepository movementRepository,
+            InventoryMovementService movementService) {
         this.itemRepository = itemRepository;
         this.movementRepository = movementRepository;
         this.movementService = movementService;
     }
 
     /**
-     * Por defecto solo insumos activos. La pantalla de inventario pasa
-     * {@code includeInactive = true} para poder ver (y reactivar) los dados de
-     * baja, que de otro modo quedarian atrapados sin forma de deshacerse.
+     * Por defecto solo insumos activos. La pantalla de inventario pasa {@code includeInactive =
+     * true} para poder ver (y reactivar) los dados de baja, que de otro modo quedarian atrapados
+     * sin forma de deshacerse.
      */
     @Transactional(readOnly = true)
     public List<InventoryItem> listItems(boolean includeInactive) {
@@ -42,60 +43,76 @@ public class InventoryItemService {
     }
 
     /**
-     * El stock inicial no se escribe en la columna: se registra como un
-     * movimiento IN, y el movimiento es el que mueve el stock. Asi no existe
-     * ningun camino por el que la columna cambie sin una fila que lo explique,
-     * ni siquiera el alta.
+     * El stock inicial no se escribe en la columna: se registra como un movimiento IN, y el
+     * movimiento es el que mueve el stock. Asi no existe ningun camino por el que la columna cambie
+     * sin una fila que lo explique, ni siquiera el alta.
      *
-     * Es una sola transaccion: si el movimiento falla, el insumo no queda
-     * creado con un stock que nada justifica.
+     * <p>Es una sola transaccion: si el movimiento falla, el insumo no queda creado con un stock
+     * que nada justifica.
      */
     @Transactional
-    public InventoryItem createItem(String name, String unit, BigDecimal minStock,
-                                    BigDecimal unitCost, BigDecimal initialStock, UUID userId) {
+    public InventoryItem createItem(
+            String name,
+            String unit,
+            BigDecimal minStock,
+            BigDecimal unitCost,
+            BigDecimal initialStock,
+            UUID userId) {
         if (itemRepository.existsByName(name)) {
             throw new BusinessRuleException("Ya existe un insumo llamado '" + name + "'.");
         }
 
-        InventoryItem item = itemRepository.save(InventoryItem.builder()
-                .name(name)
-                .unit(unit)
-                .stock(BigDecimal.ZERO)
-                .minStock(Objects.requireNonNullElse(minStock, BigDecimal.ZERO))
-                .unitCost(Objects.requireNonNullElse(unitCost, BigDecimal.ZERO))
-                .active(true)
-                .build());
+        InventoryItem item =
+                itemRepository.save(
+                        InventoryItem.builder()
+                                .name(name)
+                                .unit(unit)
+                                .stock(BigDecimal.ZERO)
+                                .minStock(Objects.requireNonNullElse(minStock, BigDecimal.ZERO))
+                                .unitCost(Objects.requireNonNullElse(unitCost, BigDecimal.ZERO))
+                                .active(true)
+                                .build());
 
         if (initialStock != null && initialStock.signum() > 0) {
-            movementService.register(item.getId(), InventoryMovementType.IN,
-                    initialStock, null, "Stock inicial", userId);
+            movementService.register(
+                    item.getId(),
+                    InventoryMovementType.IN,
+                    initialStock,
+                    null,
+                    "Stock inicial",
+                    userId);
         }
         return item;
     }
 
     /**
-     * Corrige nombre, unidad, minimo y costo. No toca el stock: cambiarlo aqui
-     * dejaria un salto en el historial que ninguna fila explicaria.
+     * Corrige nombre, unidad, minimo y costo. No toca el stock: cambiarlo aqui dejaria un salto en
+     * el historial que ninguna fila explicaria.
      *
-     * La unidad queda fija en cuanto el insumo tiene movimientos. Sin esta
-     * regla, un 20 registrado en kilos se convierte en gramos y nada en el
-     * historial dice en que unidad se capturo cada fila. Mandar la misma
-     * unidad no cuenta como cambio.
+     * <p>La unidad queda fija en cuanto el insumo tiene movimientos. Sin esta regla, un 20
+     * registrado en kilos se convierte en gramos y nada en el historial dice en que unidad se
+     * capturo cada fila. Mandar la misma unidad no cuenta como cambio.
      */
     @Transactional
-    public InventoryItem updateItem(UUID itemId, String name, String unit,
-                                    BigDecimal minStock, BigDecimal unitCost) {
-        InventoryItem item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new ResourceNotFoundException("El insumo no existe."));
+    public InventoryItem updateItem(
+            UUID itemId, String name, String unit, BigDecimal minStock, BigDecimal unitCost) {
+        InventoryItem item =
+                itemRepository
+                        .findById(itemId)
+                        .orElseThrow(() -> new ResourceNotFoundException("El insumo no existe."));
 
         if (itemRepository.existsByNameAndIdNot(name, itemId)) {
             throw new BusinessRuleException("Ya existe un insumo llamado '" + name + "'.");
         }
 
         if (!item.getUnit().equals(unit) && movementRepository.existsByInventoryItemId(itemId)) {
-            throw new BusinessRuleException("El insumo '" + item.getName() + "' ya tiene movimientos en '"
-                    + item.getUnit() + "'. Cambiar la unidad haria ilegible su historial; "
-                    + "crea otro insumo con la unidad correcta.");
+            throw new BusinessRuleException(
+                    "El insumo '"
+                            + item.getName()
+                            + "' ya tiene movimientos en '"
+                            + item.getUnit()
+                            + "'. Cambiar la unidad haria ilegible su historial; "
+                            + "crea otro insumo con la unidad correcta.");
         }
 
         item.setName(name);
@@ -106,14 +123,15 @@ public class InventoryItemService {
     }
 
     /**
-     * Da de alta o de baja un insumo. La baja es siempre logica: el insumo
-     * queda referenciado por los movimientos que lo tocaron, y borrarlo
-     * perderia ese historico.
+     * Da de alta o de baja un insumo. La baja es siempre logica: el insumo queda referenciado por
+     * los movimientos que lo tocaron, y borrarlo perderia ese historico.
      */
     @Transactional
     public InventoryItem setActive(UUID itemId, boolean active) {
-        InventoryItem item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new ResourceNotFoundException("El insumo no existe."));
+        InventoryItem item =
+                itemRepository
+                        .findById(itemId)
+                        .orElseThrow(() -> new ResourceNotFoundException("El insumo no existe."));
 
         item.setActive(active);
         return itemRepository.save(item);

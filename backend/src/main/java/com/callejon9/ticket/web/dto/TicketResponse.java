@@ -23,9 +23,19 @@ public record TicketResponse(
         BigDecimal change) {
 
     public static TicketResponse from(Ticket ticket) {
-        return new TicketResponse(ticket.getId(), ticket.getSaleId(), ticket.getOrderId(),
-                ticket.getFolio(), ticket.getItemsSnapshot(), ticket.getSubtotal(), ticket.getTip(),
-                ticket.getTipPercent(), ticket.getTotal(), ticket.getPaymentMethod().name(),
-                ticket.getClosedAt(), ticket.getPaymentsSnapshot(), ticket.getChange());
+        return new TicketResponse(
+                ticket.getId(),
+                ticket.getSaleId(),
+                ticket.getOrderId(),
+                ticket.getFolio(),
+                ticket.getItemsSnapshot(),
+                ticket.getSubtotal(),
+                ticket.getTip(),
+                ticket.getTipPercent(),
+                ticket.getTotal(),
+                ticket.getPaymentMethod().name(),
+                ticket.getClosedAt(),
+                ticket.getPaymentsSnapshot(),
+                ticket.getChange());
     }
 }

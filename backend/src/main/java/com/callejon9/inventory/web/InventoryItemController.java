@@ -44,25 +44,35 @@ public class InventoryItemController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
-    public InventoryItemResponse create(@Valid @RequestBody CreateInventoryItemRequest request,
-                                        Authentication authentication) {
-        return InventoryItemResponse.from(itemService.createItem(
-                request.name(), request.unit(), request.minStock(), request.unitCost(),
-                request.initialStock(), (UUID) authentication.getPrincipal()));
+    public InventoryItemResponse create(
+            @Valid @RequestBody CreateInventoryItemRequest request, Authentication authentication) {
+        return InventoryItemResponse.from(
+                itemService.createItem(
+                        request.name(),
+                        request.unit(),
+                        request.minStock(),
+                        request.unitCost(),
+                        request.initialStock(),
+                        (UUID) authentication.getPrincipal()));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public InventoryItemResponse update(@PathVariable UUID id,
-                                        @Valid @RequestBody UpdateInventoryItemRequest request) {
-        return InventoryItemResponse.from(itemService.updateItem(
-                id, request.name(), request.unit(), request.minStock(), request.unitCost()));
+    public InventoryItemResponse update(
+            @PathVariable UUID id, @Valid @RequestBody UpdateInventoryItemRequest request) {
+        return InventoryItemResponse.from(
+                itemService.updateItem(
+                        id,
+                        request.name(),
+                        request.unit(),
+                        request.minStock(),
+                        request.unitCost()));
     }
 
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public InventoryItemResponse patch(@PathVariable UUID id,
-                                       @Valid @RequestBody UpdateInventoryItemStatusRequest request) {
+    public InventoryItemResponse patch(
+            @PathVariable UUID id, @Valid @RequestBody UpdateInventoryItemStatusRequest request) {
         return InventoryItemResponse.from(itemService.setActive(id, request.active()));
     }
 }

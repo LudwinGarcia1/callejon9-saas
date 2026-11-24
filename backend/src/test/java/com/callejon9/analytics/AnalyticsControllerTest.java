@@ -1,10 +1,15 @@
 package com.callejon9.analytics;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.callejon9.cashier.service.CashSessionService;
 import com.callejon9.catalog.domain.Product;
 import com.callejon9.catalog.repository.ProductRepository;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
-import com.callejon9.cashier.service.CashSessionService;
 import com.callejon9.support.CashSessionFixtures;
 import com.callejon9.support.TestSessions;
 import com.callejon9.table.domain.RestaurantTable;
@@ -34,15 +39,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 /**
- * Pantalla de analitica: reconecta CRISP-DM (Pareto de productos,
- * distribucion de ventas por dia, mezcla de pago) con datos reales. Reutiliza
- * el mismo patron de fixtures que SalesControllerTest.
+ * Pantalla de analitica: reconecta CRISP-DM (Pareto de productos, distribucion de ventas por dia,
+ * mezcla de pago) con datos reales. Reutiliza el mismo patron de fixtures que SalesControllerTest.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -71,22 +70,56 @@ class AnalyticsControllerTest {
 
     @BeforeEach
     void seed() {
-        tenant = onboardingService.onboard("Analitica Test", "analitica-test",
-                "admin@analitica.com", "Admin", "Secreto123!", "FREE");
+        tenant =
+                onboardingService.onboard(
+                        "Analitica Test",
+                        "analitica-test",
+                        "admin@analitica.com",
+                        "Admin",
+                        "Secreto123!",
+                        "FREE");
 
         TenantContext.set(tenant.getId());
         try {
-            waiter = transactionTemplate.execute(status -> userRepository.save(User.builder()
-                    .email("mesero@analitica.com").passwordHash("x").fullName("Mesero")
-                    .role(UserRole.WAITER).active(true).build()));
-            cashier = transactionTemplate.execute(status -> userRepository.save(User.builder()
-                    .email("cajero@analitica.com").passwordHash("x").fullName("Cajero")
-                    .role(UserRole.CASHIER).active(true).build()));
-            admin = transactionTemplate.execute(status -> userRepository.save(User.builder()
-                    .email("gerente@analitica.com").passwordHash("x").fullName("Gerente")
-                    .role(UserRole.ADMIN).active(true).build()));
-            table = transactionTemplate.execute(status -> tableRepository.save(RestaurantTable.builder()
-                    .number(9).capacity(4).status(TableStatus.FREE).active(true).build()));
+            waiter =
+                    transactionTemplate.execute(status ->
+                            userRepository.save(
+                                    User.builder()
+                                            .email("mesero@analitica.com")
+                                            .passwordHash("x")
+                                            .fullName("Mesero")
+                                            .role(UserRole.WAITER)
+                                            .active(true)
+                                            .build()));
+            cashier =
+                    transactionTemplate.execute(status ->
+                            userRepository.save(
+                                    User.builder()
+                                            .email("cajero@analitica.com")
+                                            .passwordHash("x")
+                                            .fullName("Cajero")
+                                            .role(UserRole.CASHIER)
+                                            .active(true)
+                                            .build()));
+            admin =
+                    transactionTemplate.execute(status ->
+                            userRepository.save(
+                                    User.builder()
+                                            .email("gerente@analitica.com")
+                                            .passwordHash("x")
+                                            .fullName("Gerente")
+                                            .role(UserRole.ADMIN)
+                                            .active(true)
+                                            .build()));
+            table =
+                    transactionTemplate.execute(status ->
+                            tableRepository.save(
+                                    RestaurantTable.builder()
+                                            .number(9)
+                                            .capacity(4)
+                                            .status(TableStatus.FREE)
+                                            .active(true)
+                                            .build()));
             CashSessionFixtures.openFor(cashSessionService, cashier);
         } finally {
             TenantContext.clear();
@@ -96,7 +129,8 @@ class AnalyticsControllerTest {
     @AfterEach
     void cleanUp() {
         TenantContext.clear();
-        jdbcTemplate.update("DELETE FROM tenants WHERE slug IN ('analitica-test','analitica-test-b')");
+        jdbcTemplate.update(
+                "DELETE FROM tenants WHERE slug IN ('analitica-test','analitica-test-b')");
     }
 
     private Cookie cookieFor(User user) {
@@ -106,61 +140,94 @@ class AnalyticsControllerTest {
     private Product createProduct(Tenant owner, String name, String price) {
         TenantContext.set(owner.getId());
         try {
-            return transactionTemplate.execute(status -> productRepository.save(Product.builder()
-                    .name(name).description(name).price(new BigDecimal(price)).active(true).build()));
+            return transactionTemplate.execute(status ->
+                    productRepository.save(
+                            Product.builder()
+                                    .name(name)
+                                    .description(name)
+                                    .price(new BigDecimal(price))
+                                    .active(true)
+                                    .build()));
         } finally {
             TenantContext.clear();
         }
     }
 
     private JsonNode openOrder(User asWaiter, RestaurantTable atTable) throws Exception {
-        String body = mockMvc.perform(post("/api/v1/orders")
-                        .cookie(cookieFor(asWaiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tableId\":\"" + atTable.getId() + "\",\"guestCount\":2}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        String body =
+                mockMvc.perform(
+                                post("/api/v1/orders")
+                                        .cookie(cookieFor(asWaiter))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                "{\"tableId\":\""
+                                                        + atTable.getId()
+                                                        + "\",\"guestCount\":2}"))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
         return objectMapper.readTree(body);
     }
 
-    private void addItem(User asWaiter, UUID orderId, Product product, int quantity) throws Exception {
-        mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
-                        .cookie(cookieFor(asWaiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"items\":[{\"productId\":\"" + product.getId()
-                                + "\",\"quantity\":" + quantity + "}]}"))
+    private void addItem(User asWaiter, UUID orderId, Product product, int quantity)
+            throws Exception {
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/items")
+                                .cookie(cookieFor(asWaiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"items\":[{\"productId\":\""
+                                                + product.getId()
+                                                + "\",\"quantity\":"
+                                                + quantity
+                                                + "}]}"))
                 .andExpect(status().isOk());
     }
 
     /** Abre una orden, agrega un producto y cobra; regresa el id de la venta generada. */
-    private UUID checkout(User asWaiter, User asCashier, RestaurantTable atTable, Product product,
-            int quantity, String paymentMethod) throws Exception {
+    private UUID checkout(
+            User asWaiter,
+            User asCashier,
+            RestaurantTable atTable,
+            Product product,
+            int quantity,
+            String paymentMethod)
+            throws Exception {
         JsonNode order = openOrder(asWaiter, atTable);
         UUID orderId = UUID.fromString(order.get("id").asText());
         addItem(asWaiter, orderId, product, quantity);
 
-        String ticketBody = mockMvc.perform(post("/api/v1/orders/" + orderId + "/checkout")
-                        .cookie(cookieFor(asCashier))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"paymentMethod\":\"" + paymentMethod + "\",\"tipPercent\":0}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        String ticketBody =
+                mockMvc.perform(
+                                post("/api/v1/orders/" + orderId + "/checkout")
+                                        .cookie(cookieFor(asCashier))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                "{\"paymentMethod\":\""
+                                                        + paymentMethod
+                                                        + "\",\"tipPercent\":0}"))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
         return UUID.fromString(objectMapper.readTree(ticketBody).get("saleId").asText());
     }
 
     /**
-     * Recorre {@code sale_id} para fijar {@code created_at} a mediodia (zona
-     * del negocio) del dia dado. Requiere el tenant fijado en una transaccion
-     * real: sin eso, RLS no revela ninguna fila para un UPDATE crudo y la
-     * actualizacion afectaria cero filas en silencio.
+     * Recorre {@code sale_id} para fijar {@code created_at} a mediodia (zona del negocio) del dia
+     * dado. Requiere el tenant fijado en una transaccion real: sin eso, RLS no revela ninguna fila
+     * para un UPDATE crudo y la actualizacion afectaria cero filas en silencio.
      */
     private void backdateSale(Tenant owner, UUID saleId, LocalDate day) {
         TenantContext.set(owner.getId());
         try {
-            transactionTemplate.executeWithoutResult(status -> jdbcTemplate.update(
-                    "UPDATE sales SET created_at = ? WHERE id = ?",
-                    java.sql.Timestamp.from(day.atTime(12, 0).atZone(BUSINESS_ZONE).toInstant()),
-                    saleId));
+            transactionTemplate.executeWithoutResult(status ->
+                    jdbcTemplate.update(
+                            "UPDATE sales SET created_at = ? WHERE id = ?",
+                            java.sql.Timestamp.from(
+                                    day.atTime(12, 0).atZone(BUSINESS_ZONE).toInstant()),
+                            saleId));
         } finally {
             TenantContext.clear();
         }
@@ -178,26 +245,33 @@ class AnalyticsControllerTest {
         backdateSale(tenant, checkout(waiter, cashier, table, agua, 2, "CARD"), day);
         backdateSale(tenant, checkout(waiter, cashier, table, torta, 1, "TRANSFER"), day);
 
-        String body = mockMvc.perform(get("/api/v1/analytics")
-                        .param("from", day.toString())
-                        .param("to", day.toString())
-                        .cookie(cookieFor(admin)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.pareto.length()").value(3))
-                .andReturn().getResponse().getContentAsString();
+        String body =
+                mockMvc.perform(
+                                get("/api/v1/analytics")
+                                        .param("from", day.toString())
+                                        .param("to", day.toString())
+                                        .cookie(cookieFor(admin)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.pareto.length()").value(3))
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
 
         JsonNode pareto = objectMapper.readTree(body).get("pareto");
         BigDecimal shareSum = BigDecimal.ZERO;
         for (JsonNode row : pareto) {
             shareSum = shareSum.add(row.get("revenueShare").decimalValue());
         }
-        org.junit.jupiter.api.Assertions.assertEquals(0, shareSum.compareTo(new BigDecimal("100.00")));
+        org.junit.jupiter.api.Assertions.assertEquals(
+                0, shareSum.compareTo(new BigDecimal("100.00")));
 
         JsonNode lastRow = pareto.get(pareto.size() - 1);
         org.junit.jupiter.api.Assertions.assertEquals(
-                0, lastRow.get("cumulativeShare").decimalValue().compareTo(new BigDecimal("100.00")));
+                0,
+                lastRow.get("cumulativeShare").decimalValue().compareTo(new BigDecimal("100.00")));
         // Ordenado descendente por ingreso: Taco (75.00) primero.
-        org.junit.jupiter.api.Assertions.assertEquals("Taco", pareto.get(0).get("productName").asText());
+        org.junit.jupiter.api.Assertions.assertEquals(
+                "Taco", pareto.get(0).get("productName").asText());
     }
 
     @Test
@@ -212,15 +286,19 @@ class AnalyticsControllerTest {
             totalRevenue = totalRevenue.add(new BigDecimal((i + 1) + ".00"));
         }
 
-        String body = mockMvc.perform(get("/api/v1/analytics")
-                        .param("from", day.toString())
-                        .param("to", day.toString())
-                        .cookie(cookieFor(admin)))
-                .andExpect(status().isOk())
-                // 12 productos + la fila "Otros".
-                .andExpect(jsonPath("$.pareto.length()").value(13))
-                .andExpect(jsonPath("$.pareto[12].productName").value("Otros"))
-                .andReturn().getResponse().getContentAsString();
+        String body =
+                mockMvc.perform(
+                                get("/api/v1/analytics")
+                                        .param("from", day.toString())
+                                        .param("to", day.toString())
+                                        .cookie(cookieFor(admin)))
+                        .andExpect(status().isOk())
+                        // 12 productos + la fila "Otros".
+                        .andExpect(jsonPath("$.pareto.length()").value(13))
+                        .andExpect(jsonPath("$.pareto[12].productName").value("Otros"))
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
 
         JsonNode pareto = objectMapper.readTree(body).get("pareto");
         BigDecimal sumOfRevenues = BigDecimal.ZERO;
@@ -241,20 +319,24 @@ class AnalyticsControllerTest {
         backdateSale(tenant, checkout(waiter, cashier, table, taco, 1, "CASH"), firstDay);
         backdateSale(tenant, checkout(waiter, cashier, table, taco, 2, "CASH"), lastDay);
 
-        String body = mockMvc.perform(get("/api/v1/analytics")
-                        .param("from", firstDay.toString())
-                        .param("to", lastDay.toString())
-                        .cookie(cookieFor(admin)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.salesByDay.length()").value(3))
-                .andExpect(jsonPath("$.salesByDay[0].day").value(firstDay.toString()))
-                .andExpect(jsonPath("$.salesByDay[0].count").value(1))
-                .andExpect(jsonPath("$.salesByDay[1].day").value(emptyDay.toString()))
-                .andExpect(jsonPath("$.salesByDay[1].count").value(0))
-                .andExpect(jsonPath("$.salesByDay[1].total").value(0))
-                .andExpect(jsonPath("$.salesByDay[2].day").value(lastDay.toString()))
-                .andExpect(jsonPath("$.salesByDay[2].count").value(1))
-                .andReturn().getResponse().getContentAsString();
+        String body =
+                mockMvc.perform(
+                                get("/api/v1/analytics")
+                                        .param("from", firstDay.toString())
+                                        .param("to", lastDay.toString())
+                                        .cookie(cookieFor(admin)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.salesByDay.length()").value(3))
+                        .andExpect(jsonPath("$.salesByDay[0].day").value(firstDay.toString()))
+                        .andExpect(jsonPath("$.salesByDay[0].count").value(1))
+                        .andExpect(jsonPath("$.salesByDay[1].day").value(emptyDay.toString()))
+                        .andExpect(jsonPath("$.salesByDay[1].count").value(0))
+                        .andExpect(jsonPath("$.salesByDay[1].total").value(0))
+                        .andExpect(jsonPath("$.salesByDay[2].day").value(lastDay.toString()))
+                        .andExpect(jsonPath("$.salesByDay[2].count").value(1))
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
 
         org.junit.jupiter.api.Assertions.assertTrue(body.contains(emptyDay.toString()));
     }
@@ -269,10 +351,11 @@ class AnalyticsControllerTest {
         backdateSale(tenant, checkout(waiter, cashier, table, taco, 1, "CASH"), day);
         backdateSale(tenant, checkout(waiter, cashier, table, taco, 1, "CARD"), day);
 
-        mockMvc.perform(get("/api/v1/analytics")
-                        .param("from", day.toString())
-                        .param("to", day.toString())
-                        .cookie(cookieFor(admin)))
+        mockMvc.perform(
+                        get("/api/v1/analytics")
+                                .param("from", day.toString())
+                                .param("to", day.toString())
+                                .cookie(cookieFor(admin)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.paymentMix.length()").value(2))
                 .andExpect(jsonPath("$.paymentMix[0].method").value("CASH"))
@@ -291,41 +374,51 @@ class AnalyticsControllerTest {
         UUID orderId = UUID.fromString(order.get("id").asText());
         addItem(waiter, orderId, taco, 1);
 
-        String ticketBody = mockMvc.perform(post("/api/v1/orders/" + orderId + "/checkout")
-                        .cookie(cookieFor(cashier))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tipPercent\":10,\"payments\":["
-                                + "{\"method\":\"CASH\",\"amount\":10.00},"
-                                + "{\"method\":\"CARD\",\"amount\":12.00}]}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        String ticketBody =
+                mockMvc.perform(
+                                post("/api/v1/orders/" + orderId + "/checkout")
+                                        .cookie(cookieFor(cashier))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                "{\"tipPercent\":10,\"payments\":["
+                                                        + "{\"method\":\"CASH\",\"amount\":10.00},"
+                                                        + "{\"method\":\"CARD\",\"amount\":12.00}]}"))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
         UUID saleId = UUID.fromString(objectMapper.readTree(ticketBody).get("saleId").asText());
         LocalDate day = LocalDate.now(BUSINESS_ZONE).minusDays(3);
         backdateSale(tenant, saleId, day);
 
-        String analyticsBody = mockMvc.perform(get("/api/v1/analytics")
-                        .param("from", day.toString())
-                        .param("to", day.toString())
-                        .cookie(cookieFor(admin)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.pareto[0].revenue").value(20.00))
-                .andExpect(jsonPath("$.salesByDay[0].count").value(1))
-                .andExpect(jsonPath("$.salesByDay[0].total").value(22.00))
-                .andExpect(jsonPath("$.paymentMix.length()").value(2))
-                .andExpect(jsonPath("$.paymentMix[0].method").value("CARD"))
-                .andExpect(jsonPath("$.paymentMix[0].count").value(1))
-                .andExpect(jsonPath("$.paymentMix[0].total").value(12.00))
-                .andExpect(jsonPath("$.paymentMix[1].method").value("CASH"))
-                .andExpect(jsonPath("$.paymentMix[1].count").value(1))
-                .andExpect(jsonPath("$.paymentMix[1].total").value(10.00))
-                .andReturn().getResponse().getContentAsString();
+        String analyticsBody =
+                mockMvc.perform(
+                                get("/api/v1/analytics")
+                                        .param("from", day.toString())
+                                        .param("to", day.toString())
+                                        .cookie(cookieFor(admin)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.pareto[0].revenue").value(20.00))
+                        .andExpect(jsonPath("$.salesByDay[0].count").value(1))
+                        .andExpect(jsonPath("$.salesByDay[0].total").value(22.00))
+                        .andExpect(jsonPath("$.paymentMix.length()").value(2))
+                        .andExpect(jsonPath("$.paymentMix[0].method").value("CARD"))
+                        .andExpect(jsonPath("$.paymentMix[0].count").value(1))
+                        .andExpect(jsonPath("$.paymentMix[0].total").value(12.00))
+                        .andExpect(jsonPath("$.paymentMix[1].method").value("CASH"))
+                        .andExpect(jsonPath("$.paymentMix[1].count").value(1))
+                        .andExpect(jsonPath("$.paymentMix[1].total").value(10.00))
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
 
         JsonNode paymentMix = objectMapper.readTree(analyticsBody).get("paymentMix");
         BigDecimal appliedPayments = BigDecimal.ZERO;
         for (JsonNode payment : paymentMix) {
             appliedPayments = appliedPayments.add(payment.get("total").decimalValue());
         }
-        org.junit.jupiter.api.Assertions.assertEquals(0, appliedPayments.compareTo(new BigDecimal("22.00")));
+        org.junit.jupiter.api.Assertions.assertEquals(
+                0, appliedPayments.compareTo(new BigDecimal("22.00")));
     }
 
     @Test
@@ -351,9 +444,10 @@ class AnalyticsControllerTest {
     @Test
     @DisplayName("rechaza fechas de analitica que no cumplen el formato ISO")
     void rejectsDateWithInvalidFormat() throws Exception {
-        mockMvc.perform(get("/api/v1/analytics")
-                        .param("from", "20/10/2026")
-                        .cookie(cookieFor(admin)))
+        mockMvc.perform(
+                        get("/api/v1/analytics")
+                                .param("from", "20/10/2026")
+                                .cookie(cookieFor(admin)))
                 .andExpect(status().isBadRequest());
     }
 
@@ -364,25 +458,59 @@ class AnalyticsControllerTest {
         LocalDate day = LocalDate.now(BUSINESS_ZONE).minusDays(1);
         backdateSale(tenant, checkout(waiter, cashier, table, ownProduct, 1, "CASH"), day);
 
-        Tenant tenantB = onboardingService.onboard("Analitica Test B", "analitica-test-b",
-                "admin@analiticab.com", "Admin B", "Secreto123!", "FREE");
+        Tenant tenantB =
+                onboardingService.onboard(
+                        "Analitica Test B",
+                        "analitica-test-b",
+                        "admin@analiticab.com",
+                        "Admin B",
+                        "Secreto123!",
+                        "FREE");
         TenantContext.set(tenantB.getId());
         User waiterB;
         User cashierB;
         User adminB;
         RestaurantTable tableB;
         try {
-            waiterB = transactionTemplate.execute(status -> userRepository.save(User.builder()
-                    .email("mesero@analiticab.com").passwordHash("x").fullName("Mesero B")
-                    .role(UserRole.WAITER).active(true).build()));
-            cashierB = transactionTemplate.execute(status -> userRepository.save(User.builder()
-                    .email("cajero@analiticab.com").passwordHash("x").fullName("Cajero B")
-                    .role(UserRole.CASHIER).active(true).build()));
-            adminB = transactionTemplate.execute(status -> userRepository.save(User.builder()
-                    .email("gerente@analiticab.com").passwordHash("x").fullName("Gerente B")
-                    .role(UserRole.ADMIN).active(true).build()));
-            tableB = transactionTemplate.execute(status -> tableRepository.save(RestaurantTable.builder()
-                    .number(1).capacity(2).status(TableStatus.FREE).active(true).build()));
+            waiterB =
+                    transactionTemplate.execute(status ->
+                            userRepository.save(
+                                    User.builder()
+                                            .email("mesero@analiticab.com")
+                                            .passwordHash("x")
+                                            .fullName("Mesero B")
+                                            .role(UserRole.WAITER)
+                                            .active(true)
+                                            .build()));
+            cashierB =
+                    transactionTemplate.execute(status ->
+                            userRepository.save(
+                                    User.builder()
+                                            .email("cajero@analiticab.com")
+                                            .passwordHash("x")
+                                            .fullName("Cajero B")
+                                            .role(UserRole.CASHIER)
+                                            .active(true)
+                                            .build()));
+            adminB =
+                    transactionTemplate.execute(status ->
+                            userRepository.save(
+                                    User.builder()
+                                            .email("gerente@analiticab.com")
+                                            .passwordHash("x")
+                                            .fullName("Gerente B")
+                                            .role(UserRole.ADMIN)
+                                            .active(true)
+                                            .build()));
+            tableB =
+                    transactionTemplate.execute(status ->
+                            tableRepository.save(
+                                    RestaurantTable.builder()
+                                            .number(1)
+                                            .capacity(2)
+                                            .status(TableStatus.FREE)
+                                            .active(true)
+                                            .build()));
             CashSessionFixtures.openFor(cashSessionService, cashierB);
         } finally {
             TenantContext.clear();
@@ -391,10 +519,11 @@ class AnalyticsControllerTest {
         backdateSale(tenantB, checkout(waiterB, cashierB, tableB, productB, 5, "MERCADOPAGO"), day);
 
         // Tenant A: solo su propio producto y su propio ingreso.
-        mockMvc.perform(get("/api/v1/analytics")
-                        .param("from", day.toString())
-                        .param("to", day.toString())
-                        .cookie(cookieFor(admin)))
+        mockMvc.perform(
+                        get("/api/v1/analytics")
+                                .param("from", day.toString())
+                                .param("to", day.toString())
+                                .cookie(cookieFor(admin)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.pareto.length()").value(1))
                 .andExpect(jsonPath("$.pareto[0].productName").value("Taco"))
@@ -404,10 +533,11 @@ class AnalyticsControllerTest {
                 .andExpect(jsonPath("$.paymentMix[0].method").value("CASH"));
 
         // Tenant B: solo el suyo.
-        mockMvc.perform(get("/api/v1/analytics")
-                        .param("from", day.toString())
-                        .param("to", day.toString())
-                        .cookie(cookieFor(adminB)))
+        mockMvc.perform(
+                        get("/api/v1/analytics")
+                                .param("from", day.toString())
+                                .param("to", day.toString())
+                                .cookie(cookieFor(adminB)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.pareto.length()").value(1))
                 .andExpect(jsonPath("$.pareto[0].productName").value("Torta Ahogada"))

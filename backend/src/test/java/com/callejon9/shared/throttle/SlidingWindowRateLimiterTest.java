@@ -1,5 +1,8 @@
 package com.callejon9.shared.throttle;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -14,9 +17,6 @@ import java.util.concurrent.Future;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("Cupo por ventana deslizante")
 class SlidingWindowRateLimiterTest {
@@ -100,13 +100,13 @@ class SlidingWindowRateLimiterTest {
         ExecutorService pool = Executors.newFixedThreadPool(threads);
         CountDownLatch start = new CountDownLatch(1);
         try {
-            Callable<Boolean> attempt = () -> {
-                start.await();
-                return limiter.tryAcquire("203.0.113.6").isZero();
-            };
-            List<Future<Boolean>> results = IntStream.range(0, threads)
-                    .mapToObj(i -> pool.submit(attempt))
-                    .toList();
+            Callable<Boolean> attempt =
+                    () -> {
+                        start.await();
+                        return limiter.tryAcquire("203.0.113.6").isZero();
+                    };
+            List<Future<Boolean>> results =
+                    IntStream.range(0, threads).mapToObj(i -> pool.submit(attempt)).toList();
             start.countDown();
 
             long granted = 0;
@@ -127,11 +127,15 @@ class SlidingWindowRateLimiterTest {
         IntStream.range(0, 3).forEach(i -> limiter.tryAcquire("203.0.113.7"));
 
         // Suficientes operaciones con otras llaves para disparar la purga.
-        IntStream.range(0, 1_000).forEach(i -> limiter.tryAcquire("10.0." + (i / 250) + "." + (i % 250)));
-        assertThat(limiter.tryAcquire("203.0.113.7")).as("la llave bloqueada sobrevive a la purga").isPositive();
+        IntStream.range(0, 1_000)
+                .forEach(i -> limiter.tryAcquire("10.0." + (i / 250) + "." + (i % 250)));
+        assertThat(limiter.tryAcquire("203.0.113.7"))
+                .as("la llave bloqueada sobrevive a la purga")
+                .isPositive();
 
         clock.advance(WINDOW);
-        IntStream.range(0, 1_000).forEach(i -> limiter.tryAcquire("10.1." + (i / 250) + "." + (i % 250)));
+        IntStream.range(0, 1_000)
+                .forEach(i -> limiter.tryAcquire("10.1." + (i / 250) + "." + (i % 250)));
         assertThat(limiter.tryAcquire("203.0.113.7")).isZero();
     }
 

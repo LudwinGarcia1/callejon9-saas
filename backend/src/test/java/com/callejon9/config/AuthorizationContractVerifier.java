@@ -6,12 +6,12 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.HashSet;
 import java.util.UUID;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -32,51 +32,88 @@ import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMappi
 
 /** Utilidad exclusiva de tests. No invoca negocio ni cambia permisos. */
 final class AuthorizationContractVerifier {
-    record Route(String method, String path) { }
+    record Route(String method, String path) {}
 
     record Endpoint(Route route, RequestMappingInfo mapping, HandlerMethod handler) {
         String description() {
-            return handler.getBeanType().getSimpleName() + "#" + handler.getMethod().getName()
-                    + " — " + route.method() + " " + route.path() + " " + mapping;
+            return handler.getBeanType().getSimpleName()
+                    + "#"
+                    + handler.getMethod().getName()
+                    + " — "
+                    + route.method()
+                    + " "
+                    + route.path()
+                    + " "
+                    + mapping;
         }
     }
 
     record Finding(Endpoint endpoint, String decision, Set<String> allowed, String violation) {
-        boolean valid() { return violation == null; }
+        boolean valid() {
+            return violation == null;
+        }
 
         String describe() {
-            return endpoint.description() + " => " + decision + "; filtros/anotaciones=" + allowed
+            return endpoint.description()
+                    + " => "
+                    + decision
+                    + "; filtros/anotaciones="
+                    + allowed
                     + (valid() ? "" : "; ERROR: " + violation);
         }
     }
 
     private static final String ANONYMOUS = "ANONYMOUS";
     private static final UUID SAMPLE_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
-    private static final Set<String> ROLES = Arrays.stream(UserRole.values())
-            .map(Enum::name).collect(java.util.stream.Collectors.toUnmodifiableSet());
-    private static final Map<Route, String> PUBLIC_ROUTES = Map.ofEntries(
-            Map.entry(new Route("POST", "/api/v1/auth/login"), "Iniciar sesión sin cookie previa"),
-            Map.entry(new Route("POST", "/api/v1/auth/refresh"), "Renovar la sesión con la cookie refresh_token cuando el access token ya venció"),
-            Map.entry(new Route("POST", "/api/v1/signup"), "Registrar un restaurante sin sesión previa"),
-            Map.entry(new Route("GET", "/actuator/health"), "Comprobar disponibilidad"),
-            // Rutas concretas bajo /actuator/health/**: el mapping descubierto
-            // es el comodin, asi que la matriz las declara aparte (CAL-22).
-            Map.entry(new Route("GET", "/actuator/health/liveness"), "Probe de vida del orquestador"),
-            Map.entry(new Route("GET", "/actuator/health/readiness"), "Probe de disponibilidad del orquestador"),
-            Map.entry(new Route("GET", "/v3/api-docs"), "Consultar OpenAPI JSON"),
-            Map.entry(new Route("GET", "/v3/api-docs/swagger-config"), "Configurar Swagger UI"),
-            Map.entry(new Route("GET", "/swagger-ui.html"), "Abrir Swagger UI"),
-            // Menu QR del comensal (#72): el slug elige el restaurante y RLS
-            // acota cada consulta a ese tenant.
-            Map.entry(new Route("GET", "/api/v1/public/{slug}/catalog"), "Ver el menú del restaurante desde el QR de la mesa"),
-            Map.entry(new Route("POST", "/api/v1/public/{slug}/tables/{tableNumber}/orders"), "Enviar a cocina el pedido del comensal desde el QR de la mesa"),
-            Map.entry(new Route("POST", "/api/v1/public/{slug}/tables/{tableNumber}/call-waiter"), "Llamar al mesero desde el QR de la mesa"));
-    private static final Set<Route> SESSION_ROUTES = Set.of(
-            new Route("GET", "/api/v1/auth/me"), new Route("POST", "/api/v1/auth/logout"));
+    private static final Set<String> ROLES =
+            Arrays.stream(UserRole.values())
+                    .map(Enum::name)
+                    .collect(java.util.stream.Collectors.toUnmodifiableSet());
+    private static final Map<Route, String> PUBLIC_ROUTES =
+            Map.ofEntries(
+                    Map.entry(
+                            new Route("POST", "/api/v1/auth/login"),
+                            "Iniciar sesión sin cookie previa"),
+                    Map.entry(
+                            new Route("POST", "/api/v1/auth/refresh"),
+                            "Renovar la sesión con la cookie refresh_token cuando el access token ya venció"),
+                    Map.entry(
+                            new Route("POST", "/api/v1/signup"),
+                            "Registrar un restaurante sin sesión previa"),
+                    Map.entry(new Route("GET", "/actuator/health"), "Comprobar disponibilidad"),
+                    // Rutas concretas bajo /actuator/health/**: el mapping descubierto
+                    // es el comodin, asi que la matriz las declara aparte (CAL-22).
+                    Map.entry(
+                            new Route("GET", "/actuator/health/liveness"),
+                            "Probe de vida del orquestador"),
+                    Map.entry(
+                            new Route("GET", "/actuator/health/readiness"),
+                            "Probe de disponibilidad del orquestador"),
+                    Map.entry(new Route("GET", "/v3/api-docs"), "Consultar OpenAPI JSON"),
+                    Map.entry(
+                            new Route("GET", "/v3/api-docs/swagger-config"),
+                            "Configurar Swagger UI"),
+                    Map.entry(new Route("GET", "/swagger-ui.html"), "Abrir Swagger UI"),
+                    // Menu QR del comensal (#72): el slug elige el restaurante y RLS
+                    // acota cada consulta a ese tenant.
+                    Map.entry(
+                            new Route("GET", "/api/v1/public/{slug}/catalog"),
+                            "Ver el menú del restaurante desde el QR de la mesa"),
+                    Map.entry(
+                            new Route("POST", "/api/v1/public/{slug}/tables/{tableNumber}/orders"),
+                            "Enviar a cocina el pedido del comensal desde el QR de la mesa"),
+                    Map.entry(
+                            new Route(
+                                    "POST",
+                                    "/api/v1/public/{slug}/tables/{tableNumber}/call-waiter"),
+                            "Llamar al mesero desde el QR de la mesa"));
+    private static final Set<Route> SESSION_ROUTES =
+            Set.of(new Route("GET", "/api/v1/auth/me"), new Route("POST", "/api/v1/auth/logout"));
 
     private final WebApplicationContext context;
     private final FilterChainProxy filters;
-    private final PreAuthorizeAuthorizationManager methodAuthorization = new PreAuthorizeAuthorizationManager();
+    private final PreAuthorizeAuthorizationManager methodAuthorization =
+            new PreAuthorizeAuthorizationManager();
 
     AuthorizationContractVerifier(WebApplicationContext context, FilterChainProxy filters) {
         this.context = context;
@@ -87,23 +124,33 @@ final class AuthorizationContractVerifier {
     List<Endpoint> discover() {
         List<Endpoint> endpoints = new ArrayList<>();
         // Incluye también los mappings de Actuator; no se filtra por paquete.
-        context.getBeansOfType(RequestMappingInfoHandlerMapping.class).values().forEach(mapping ->
-                mapping.getHandlerMethods().forEach((info, handler) -> {
-                    Set<RequestMethod> methods = info.getMethodsCondition().getMethods();
-                    if (methods.isEmpty()) {
-                        methods = Set.of(RequestMethod.values());
-                    }
-                    methods = new HashSet<>(methods);
-                    if (methods.contains(RequestMethod.GET)) {
-                        methods.add(RequestMethod.HEAD);
-                    }
-                    for (RequestMethod method : methods) {
-                        for (String path : info.getPatternValues()) {
-                            endpoints.add(new Endpoint(new Route(method.name(), path), info, handler));
-                        }
-                    }
-                }));
-        return endpoints.stream().sorted(java.util.Comparator.comparing(Endpoint::description)).toList();
+        context.getBeansOfType(RequestMappingInfoHandlerMapping.class)
+                .values()
+                .forEach(mapping ->
+                        mapping.getHandlerMethods()
+                                .forEach((info, handler) -> {
+                                    Set<RequestMethod> methods =
+                                            info.getMethodsCondition().getMethods();
+                                    if (methods.isEmpty()) {
+                                        methods = Set.of(RequestMethod.values());
+                                    }
+                                    methods = new HashSet<>(methods);
+                                    if (methods.contains(RequestMethod.GET)) {
+                                        methods.add(RequestMethod.HEAD);
+                                    }
+                                    for (RequestMethod method : methods) {
+                                        for (String path : info.getPatternValues()) {
+                                            endpoints.add(
+                                                    new Endpoint(
+                                                            new Route(method.name(), path),
+                                                            info,
+                                                            handler));
+                                        }
+                                    }
+                                }));
+        return endpoints.stream()
+                .sorted(java.util.Comparator.comparing(Endpoint::description))
+                .toList();
     }
 
     Finding inspect(Endpoint endpoint) {
@@ -119,42 +166,73 @@ final class AuthorizationContractVerifier {
             String publicReason = publicReason(endpoint.route());
             if (publicReason != null) {
                 if (!allowed.contains(ANONYMOUS)) {
-                    return failure(endpoint, allowed, "Ruta pública documentada rechazada por la seguridad real");
+                    return failure(
+                            endpoint,
+                            allowed,
+                            "Ruta pública documentada rechazada por la seguridad real");
                 }
                 return new Finding(endpoint, "Pública: " + publicReason, allowed, null);
             }
             if ((Boolean.TRUE.equals(web.get(ANONYMOUS)) && method.isEmpty())
                     || Boolean.TRUE.equals(method.get(ANONYMOUS))) {
-                return failure(endpoint, allowed, "Permiso público sin entrada exacta en la lista pública");
+                return failure(
+                        endpoint,
+                        allowed,
+                        "Permiso público sin entrada exacta en la lista pública");
             }
             if (!method.isEmpty()) {
-                return new Finding(endpoint, "@PreAuthorize de método, clase o heredada", allowed, null);
+                return new Finding(
+                        endpoint, "@PreAuthorize de método, clase o heredada", allowed, null);
             }
-            Route sessionRoute = endpoint.route().method().equals("HEAD")
-                    ? new Route("GET", endpoint.route().path()) : endpoint.route();
+            Route sessionRoute =
+                    endpoint.route().method().equals("HEAD")
+                            ? new Route("GET", endpoint.route().path())
+                            : endpoint.route();
             if (SESSION_ROUTES.contains(sessionRoute)) {
                 return allowed.equals(ROLES)
                         ? new Finding(endpoint, "Sesión explícita documentada", allowed, null)
-                        : failure(endpoint, allowed, "La ruta de sesión no exige autenticación para todos los roles");
+                        : failure(
+                                endpoint,
+                                allowed,
+                                "La ruta de sesión no exige autenticación para todos los roles");
             }
             if (endpoint.route().path().startsWith("/api/v1/platform/")) {
                 return allowed.equals(Set.of("SUPER_ADMIN"))
-                        ? new Finding(endpoint, "Matcher de plataforma verificado en SecurityFilterChain", allowed, null)
-                        : failure(endpoint, allowed, "El matcher real de plataforma no limita a SUPER_ADMIN");
+                        ? new Finding(
+                                endpoint,
+                                "Matcher de plataforma verificado en SecurityFilterChain",
+                                allowed,
+                                null)
+                        : failure(
+                                endpoint,
+                                allowed,
+                                "El matcher real de plataforma no limita a SUPER_ADMIN");
             }
-            return failure(endpoint, allowed,
+            return failure(
+                    endpoint,
+                    allowed,
                     "Falta una decisión explícita; authenticated() general no constituye contrato");
         } catch (RuntimeException ex) {
-            return failure(endpoint, Set.of(), "No se pudo verificar: " + ex.getClass().getSimpleName()
-                    + ": " + ex.getMessage());
+            return failure(
+                    endpoint,
+                    Set.of(),
+                    "No se pudo verificar: "
+                            + ex.getClass().getSimpleName()
+                            + ": "
+                            + ex.getMessage());
         }
     }
 
     void requireValid(List<Endpoint> endpoints) {
-        List<String> violations = endpoints.stream().map(this::inspect).filter(f -> !f.valid())
-                .map(Finding::describe).toList();
+        List<String> violations =
+                endpoints.stream()
+                        .map(this::inspect)
+                        .filter(f -> !f.valid())
+                        .map(Finding::describe)
+                        .toList();
         if (!violations.isEmpty()) {
-            throw new AssertionError("Contrato de autorización incumplido:\n" + String.join("\n", violations));
+            throw new AssertionError(
+                    "Contrato de autorización incumplido:\n" + String.join("\n", violations));
         }
     }
 
@@ -168,72 +246,128 @@ final class AuthorizationContractVerifier {
 
     private Map<String, Boolean> webDecisions(Route route, RequestMappingInfo mapping) {
         Map<String, Boolean> decisions = new LinkedHashMap<>();
-        subjects().forEach((subject, authentication) -> {
-            MockHttpServletRequest request = new MockHttpServletRequest(context.getServletContext(),
-                    route.method(), route.path().replaceAll("\\{[^}]+}", SAMPLE_ID.toString())
-                            .replace("**", "contract-probe").replace("*", "contract-probe"));
-            request.setServletPath(request.getRequestURI());
-            if (mapping != null) {
-                mapping.getParamsCondition().getExpressions().forEach(expression -> {
-                    if (!expression.isNegated()) {
-                        request.setParameter(expression.getName(), expression.getValue() == null
-                                ? "contract-probe" : expression.getValue());
+        subjects()
+                .forEach((subject, authentication) -> {
+                    MockHttpServletRequest request =
+                            new MockHttpServletRequest(
+                                    context.getServletContext(),
+                                    route.method(),
+                                    route.path()
+                                            .replaceAll("\\{[^}]+}", SAMPLE_ID.toString())
+                                            .replace("**", "contract-probe")
+                                            .replace("*", "contract-probe"));
+                    request.setServletPath(request.getRequestURI());
+                    if (mapping != null) {
+                        mapping.getParamsCondition()
+                                .getExpressions()
+                                .forEach(expression -> {
+                                    if (!expression.isNegated()) {
+                                        request.setParameter(
+                                                expression.getName(),
+                                                expression.getValue() == null
+                                                        ? "contract-probe"
+                                                        : expression.getValue());
+                                    }
+                                });
+                        mapping.getHeadersCondition()
+                                .getExpressions()
+                                .forEach(expression -> {
+                                    if (!expression.isNegated()) {
+                                        request.addHeader(
+                                                expression.getName(),
+                                                expression.getValue() == null
+                                                        ? "contract-probe"
+                                                        : expression.getValue());
+                                    }
+                                });
+                        mapping.getConsumesCondition().getConsumableMediaTypes().stream()
+                                .findFirst()
+                                .ifPresent(type -> request.setContentType(type.toString()));
+                        mapping.getProducesCondition().getProducibleMediaTypes().stream()
+                                .findFirst()
+                                .ifPresent(type -> request.addHeader("Accept", type.toString()));
                     }
-                });
-                mapping.getHeadersCondition().getExpressions().forEach(expression -> {
-                    if (!expression.isNegated()) {
-                        request.addHeader(expression.getName(), expression.getValue() == null
-                                ? "contract-probe" : expression.getValue());
+                    var chain =
+                            filters.getFilterChains().stream()
+                                    .filter(candidate -> candidate.matches(request))
+                                    .findFirst()
+                                    .orElseThrow(() ->
+                                            new IllegalStateException("Sin SecurityFilterChain"));
+                    var authorization =
+                            chain.getFilters().stream()
+                                    .filter(AuthorizationFilter.class::isInstance)
+                                    .map(AuthorizationFilter.class::cast)
+                                    .findFirst()
+                                    .orElseThrow(() ->
+                                            new IllegalStateException("Sin AuthorizationFilter"));
+                    AuthorizationDecision decision =
+                            authorization
+                                    .getAuthorizationManager()
+                                    .check(() -> authentication, (HttpServletRequest) request);
+                    if (decision == null) {
+                        throw new IllegalStateException("El filtro no decidió autorización");
                     }
+                    decisions.put(subject, decision.isGranted());
                 });
-                mapping.getConsumesCondition().getConsumableMediaTypes().stream().findFirst()
-                        .ifPresent(type -> request.setContentType(type.toString()));
-                mapping.getProducesCondition().getProducibleMediaTypes().stream().findFirst()
-                        .ifPresent(type -> request.addHeader("Accept", type.toString()));
-            }
-            var chain = filters.getFilterChains().stream().filter(candidate -> candidate.matches(request))
-                    .findFirst().orElseThrow(() -> new IllegalStateException("Sin SecurityFilterChain"));
-            var authorization = chain.getFilters().stream().filter(AuthorizationFilter.class::isInstance)
-                    .map(AuthorizationFilter.class::cast).findFirst()
-                    .orElseThrow(() -> new IllegalStateException("Sin AuthorizationFilter"));
-            AuthorizationDecision decision = authorization.getAuthorizationManager()
-                    .check(() -> authentication, (HttpServletRequest) request);
-            if (decision == null) {
-                throw new IllegalStateException("El filtro no decidió autorización");
-            }
-            decisions.put(subject, decision.isGranted());
-        });
         return decisions;
     }
 
     private Map<String, Boolean> methodDecisions(HandlerMethod handler) {
-        Object bean = handler.getBean() instanceof String name ? context.getBean(name) : handler.getBean();
+        Object bean =
+                handler.getBean() instanceof String name
+                        ? context.getBean(name)
+                        : handler.getBean();
         Object target = AopTestUtils.getUltimateTargetObject(bean);
         Method method = handler.getMethod();
-        MethodInvocation invocation = new MethodInvocation() {
-            public Method getMethod() { return method; }
-            public Object[] getArguments() { return new Object[method.getParameterCount()]; }
-            public Object proceed() { throw new UnsupportedOperationException("No ejecutar negocio"); }
-            public Object getThis() { return target; }
-            public AccessibleObject getStaticPart() { return method; }
-        };
+        MethodInvocation invocation =
+                new MethodInvocation() {
+                    public Method getMethod() {
+                        return method;
+                    }
+
+                    public Object[] getArguments() {
+                        return new Object[method.getParameterCount()];
+                    }
+
+                    public Object proceed() {
+                        throw new UnsupportedOperationException("No ejecutar negocio");
+                    }
+
+                    public Object getThis() {
+                        return target;
+                    }
+
+                    public AccessibleObject getStaticPart() {
+                        return method;
+                    }
+                };
         Map<String, Boolean> decisions = new LinkedHashMap<>();
-        subjects().forEach((subject, authentication) -> {
-            AuthorizationDecision decision = methodAuthorization.check(() -> authentication, invocation);
-            if (decision != null) {
-                decisions.put(subject, decision.isGranted());
-            }
-        });
+        subjects()
+                .forEach((subject, authentication) -> {
+                    AuthorizationDecision decision =
+                            methodAuthorization.check(() -> authentication, invocation);
+                    if (decision != null) {
+                        decisions.put(subject, decision.isGranted());
+                    }
+                });
         return decisions;
     }
 
     private static Map<String, Authentication> subjects() {
         Map<String, Authentication> subjects = new LinkedHashMap<>();
-        subjects.put(ANONYMOUS, new AnonymousAuthenticationToken("contract-test", "anonymousUser",
-                List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS"))));
+        subjects.put(
+                ANONYMOUS,
+                new AnonymousAuthenticationToken(
+                        "contract-test",
+                        "anonymousUser",
+                        List.of(new SimpleGrantedAuthority("ROLE_ANONYMOUS"))));
         for (UserRole role : UserRole.values()) {
-            subjects.put(role.name(), UsernamePasswordAuthenticationToken.authenticated(SAMPLE_ID, null,
-                    List.of(new SimpleGrantedAuthority("ROLE_" + role.name()))));
+            subjects.put(
+                    role.name(),
+                    UsernamePasswordAuthenticationToken.authenticated(
+                            SAMPLE_ID,
+                            null,
+                            List.of(new SimpleGrantedAuthority("ROLE_" + role.name()))));
         }
         return subjects;
     }

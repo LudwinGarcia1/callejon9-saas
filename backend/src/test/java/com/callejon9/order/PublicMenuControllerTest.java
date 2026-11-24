@@ -1,5 +1,11 @@
 package com.callejon9.order;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.callejon9.catalog.domain.Category;
 import com.callejon9.catalog.domain.Product;
 import com.callejon9.catalog.repository.CategoryRepository;
@@ -38,41 +44,26 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 class PublicMenuControllerTest {
 
-    @Mock
-    private TenantRepository tenantRepository;
+    @Mock private TenantRepository tenantRepository;
 
-    @Mock
-    private CategoryRepository categoryRepository;
+    @Mock private CategoryRepository categoryRepository;
 
-    @Mock
-    private ProductRepository productRepository;
+    @Mock private ProductRepository productRepository;
 
-    @Mock
-    private RestaurantTableRepository tableRepository;
+    @Mock private RestaurantTableRepository tableRepository;
 
-    @Mock
-    private OrderRepository orderRepository;
+    @Mock private OrderRepository orderRepository;
 
-    @Mock
-    private OrderItemRepository orderItemRepository;
+    @Mock private OrderItemRepository orderItemRepository;
 
-    @Mock
-    private FolioGenerator folioGenerator;
+    @Mock private FolioGenerator folioGenerator;
 
-    @Mock
-    private ApplicationEventPublisher eventPublisher;
+    @Mock private ApplicationEventPublisher eventPublisher;
 
-    @Mock
-    private PlatformTransactionManager transactionManager;
+    @Mock private PlatformTransactionManager transactionManager;
 
     private PublicMenuController controller;
 
@@ -81,17 +72,17 @@ class PublicMenuControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new PublicMenuController(
-                tenantRepository,
-                categoryRepository,
-                productRepository,
-                tableRepository,
-                orderRepository,
-                orderItemRepository,
-                folioGenerator,
-                eventPublisher,
-                new TransactionTemplate(transactionManager)
-        );
+        controller =
+                new PublicMenuController(
+                        tenantRepository,
+                        categoryRepository,
+                        productRepository,
+                        tableRepository,
+                        orderRepository,
+                        orderItemRepository,
+                        folioGenerator,
+                        eventPublisher,
+                        new TransactionTemplate(transactionManager));
     }
 
     @Test
@@ -106,7 +97,12 @@ class PublicMenuControllerTest {
         cat.setTenantId(tenantId);
         when(categoryRepository.findAllByOrderBySortOrderAscNameAsc()).thenReturn(List.of(cat));
 
-        Product prod = Product.builder().name("Taco Pastor").price(new BigDecimal("25.00")).active(true).build();
+        Product prod =
+                Product.builder()
+                        .name("Taco Pastor")
+                        .price(new BigDecimal("25.00"))
+                        .active(true)
+                        .build();
         prod.setId(UUID.randomUUID());
         prod.setTenantId(tenantId);
         when(productRepository.findByActiveTrueOrderByName()).thenReturn(List.of(prod));
@@ -138,12 +134,13 @@ class PublicMenuControllerTest {
         when(tenantRepository.findBySlug(slug)).thenReturn(Optional.of(tenant));
 
         UUID tableId = UUID.randomUUID();
-        RestaurantTable table = RestaurantTable.builder()
-                .number(4)
-                .capacity(4)
-                .status(TableStatus.FREE)
-                .active(true)
-                .build();
+        RestaurantTable table =
+                RestaurantTable.builder()
+                        .number(4)
+                        .capacity(4)
+                        .status(TableStatus.FREE)
+                        .active(true)
+                        .build();
         table.setId(tableId);
         table.setTenantId(tenantId);
         when(tableRepository.findByNumber(4)).thenReturn(Optional.of(table));
@@ -154,30 +151,32 @@ class PublicMenuControllerTest {
         when(folioGenerator.next()).thenReturn("FOL-202610-004");
 
         UUID orderId = UUID.randomUUID();
-        Order newOrder = Order.builder()
-                .folio("FOL-202610-004")
-                .tableId(tableId)
-                .status(OrderStatus.NEW)
-                .total(BigDecimal.ZERO)
-                .openedAt(Instant.now())
-                .build();
+        Order newOrder =
+                Order.builder()
+                        .folio("FOL-202610-004")
+                        .tableId(tableId)
+                        .status(OrderStatus.NEW)
+                        .total(BigDecimal.ZERO)
+                        .openedAt(Instant.now())
+                        .build();
         newOrder.setId(orderId);
         newOrder.setTenantId(tenantId);
         when(orderRepository.save(any(Order.class))).thenReturn(newOrder);
 
         UUID prodId = UUID.randomUUID();
-        Product product = Product.builder()
-                .name("Guacamole")
-                .price(new BigDecimal("95.00"))
-                .active(true)
-                .build();
+        Product product =
+                Product.builder()
+                        .name("Guacamole")
+                        .price(new BigDecimal("95.00"))
+                        .active(true)
+                        .build();
         product.setId(prodId);
         product.setTenantId(tenantId);
         when(productRepository.findById(prodId)).thenReturn(Optional.of(product));
 
-        AddOrderItemsRequest request = new AddOrderItemsRequest(List.of(
-                new AddOrderItemRequest(prodId, 2, "Sin cebolla")
-        ));
+        AddOrderItemsRequest request =
+                new AddOrderItemsRequest(
+                        List.of(new AddOrderItemRequest(prodId, 2, "Sin cebolla")));
 
         OrderResponse response = controller.createTableOrder(slug, 4, request);
 
@@ -185,7 +184,8 @@ class PublicMenuControllerTest {
         assertThat(response.folio()).isEqualTo("FOL-202610-004");
         assertThat(table.getStatus()).isEqualTo(TableStatus.OCCUPIED);
 
-        ArgumentCaptor<OrderSentToKitchenEvent> eventCaptor = ArgumentCaptor.forClass(OrderSentToKitchenEvent.class);
+        ArgumentCaptor<OrderSentToKitchenEvent> eventCaptor =
+                ArgumentCaptor.forClass(OrderSentToKitchenEvent.class);
         verify(eventPublisher).publishEvent(eventCaptor.capture());
         assertThat(eventCaptor.getValue().tenantId()).isEqualTo(tenantId);
     }

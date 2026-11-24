@@ -1,11 +1,11 @@
 package com.callejon9.tenancy;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class TenantContextTest {
 
@@ -80,9 +80,13 @@ class TenantContextTest {
         UUID requestTenant = UUID.randomUUID();
         TenantContext.set(requestTenant);
 
-        assertThatThrownBy(() -> TenantContext.callAs(UUID.randomUUID(), () -> {
-            throw new IllegalStateException("falla dentro");
-        })).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() ->
+                        TenantContext.callAs(
+                                UUID.randomUUID(),
+                                () -> {
+                                    throw new IllegalStateException("falla dentro");
+                                }))
+                .isInstanceOf(IllegalStateException.class);
 
         assertThat(TenantContext.require()).isEqualTo(requestTenant);
     }

@@ -29,8 +29,8 @@ public class RefreshToken extends TenantScopedEntity {
     private String tokenHash;
 
     /**
-     * Todos los tokens que descienden de un mismo login comparten familia.
-     * Reutilizar un token ya consumido revoca la familia completa.
+     * Todos los tokens que descienden de un mismo login comparten familia. Reutilizar un token ya
+     * consumido revoca la familia completa.
      */
     @Column(name = "family_id", nullable = false, updatable = false)
     private UUID familyId;

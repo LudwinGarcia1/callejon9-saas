@@ -1,5 +1,13 @@
 package com.callejon9.config;
 
+import static com.callejon9.user.domain.UserRole.ADMIN;
+import static com.callejon9.user.domain.UserRole.CASHIER;
+import static com.callejon9.user.domain.UserRole.KITCHEN;
+import static com.callejon9.user.domain.UserRole.SUPER_ADMIN;
+import static com.callejon9.user.domain.UserRole.WAITER;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.callejon9.support.TestSessions;
 import com.callejon9.user.domain.UserRole;
 import jakarta.servlet.http.Cookie;
@@ -22,24 +30,15 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static com.callejon9.user.domain.UserRole.ADMIN;
-import static com.callejon9.user.domain.UserRole.CASHIER;
-import static com.callejon9.user.domain.UserRole.KITCHEN;
-import static com.callejon9.user.domain.UserRole.SUPER_ADMIN;
-import static com.callejon9.user.domain.UserRole.WAITER;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 /**
- * Matriz rol x endpoint de las lecturas de la API. Cada fila es la regla
- * aceptada en CAL-5; un rol fuera de la fila recibe 403 antes de tocar datos.
+ * Matriz rol x endpoint de las lecturas de la API. Cada fila es la regla aceptada en CAL-5; un rol
+ * fuera de la fila recibe 403 antes de tocar datos.
  *
- * <p>El token abre una sesion real (el servidor verifica el sid en cada
- * peticion) de un usuario en un restaurante recien creado y sin mas datos que
- * ese usuario, asi que un acceso permitido
- * responde 200 con listas vacias o 404 cuando la ruta pide un id: ambos
- * prueban que la peticion paso la autorizacion. El aislamiento entre
- * restaurantes es otra capa y se prueba aparte en TenantIsolationTest.
+ * <p>El token abre una sesion real (el servidor verifica el sid en cada peticion) de un usuario en
+ * un restaurante recien creado y sin mas datos que ese usuario, asi que un acceso permitido
+ * responde 200 con listas vacias o 404 cuando la ruta pide un id: ambos prueban que la peticion
+ * paso la autorizacion. El aislamiento entre restaurantes es otra capa y se prueba aparte en
+ * TenantIsolationTest.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -50,25 +49,32 @@ class AuthorizationMatrixTest {
     private static final Set<UserRole> OPERATIONAL = EnumSet.of(ADMIN, WAITER, KITCHEN, CASHIER);
     private static final String RANDOM_ID = UUID.randomUUID().toString();
 
-    private record Rule(String path, int allowedStatus, Set<UserRole> roles) {
-    }
+    private record Rule(String path, int allowedStatus, Set<UserRole> roles) {}
 
-    private static final List<Rule> READ_RULES = List.of(
-            new Rule("/api/v1/analytics", 200, EnumSet.of(ADMIN)),
-            new Rule("/api/v1/sales", 200, EnumSet.of(ADMIN, CASHIER)),
-            new Rule("/api/v1/tickets/" + RANDOM_ID, 404, EnumSet.of(ADMIN, CASHIER)),
-            new Rule("/api/v1/tickets?folio=TCK-000000000000", 404, EnumSet.of(ADMIN, CASHIER)),
-            new Rule("/api/v1/tickets/" + RANDOM_ID + "/pdf", 404, EnumSet.of(ADMIN, CASHIER)),
-            new Rule("/api/v1/orders", 200, EnumSet.of(ADMIN, WAITER, CASHIER)),
-            new Rule("/api/v1/orders/" + RANDOM_ID, 404, EnumSet.of(ADMIN, WAITER, CASHIER)),
-            new Rule("/api/v1/kitchen/orders", 200, EnumSet.of(ADMIN, KITCHEN)),
-            new Rule("/api/v1/tables", 200, OPERATIONAL),
-            new Rule("/api/v1/products", 200, OPERATIONAL),
-            new Rule("/api/v1/categories", 200, OPERATIONAL),
-            new Rule("/api/v1/inventory/items", 200, EnumSet.of(ADMIN, KITCHEN)),
-            new Rule("/api/v1/inventory/movements", 200, EnumSet.of(ADMIN, KITCHEN)),
-            new Rule("/api/v1/users", 200, EnumSet.of(ADMIN)),
-            new Rule("/api/v1/platform/plans", 200, EnumSet.of(SUPER_ADMIN)));
+    private static final List<Rule> READ_RULES =
+            List.of(
+                    new Rule("/api/v1/analytics", 200, EnumSet.of(ADMIN)),
+                    new Rule("/api/v1/sales", 200, EnumSet.of(ADMIN, CASHIER)),
+                    new Rule("/api/v1/tickets/" + RANDOM_ID, 404, EnumSet.of(ADMIN, CASHIER)),
+                    new Rule(
+                            "/api/v1/tickets?folio=TCK-000000000000",
+                            404,
+                            EnumSet.of(ADMIN, CASHIER)),
+                    new Rule(
+                            "/api/v1/tickets/" + RANDOM_ID + "/pdf",
+                            404,
+                            EnumSet.of(ADMIN, CASHIER)),
+                    new Rule("/api/v1/orders", 200, EnumSet.of(ADMIN, WAITER, CASHIER)),
+                    new Rule(
+                            "/api/v1/orders/" + RANDOM_ID, 404, EnumSet.of(ADMIN, WAITER, CASHIER)),
+                    new Rule("/api/v1/kitchen/orders", 200, EnumSet.of(ADMIN, KITCHEN)),
+                    new Rule("/api/v1/tables", 200, OPERATIONAL),
+                    new Rule("/api/v1/products", 200, OPERATIONAL),
+                    new Rule("/api/v1/categories", 200, OPERATIONAL),
+                    new Rule("/api/v1/inventory/items", 200, EnumSet.of(ADMIN, KITCHEN)),
+                    new Rule("/api/v1/inventory/movements", 200, EnumSet.of(ADMIN, KITCHEN)),
+                    new Rule("/api/v1/users", 200, EnumSet.of(ADMIN)),
+                    new Rule("/api/v1/platform/plans", 200, EnumSet.of(SUPER_ADMIN)));
 
     private static final String SLUG_PREFIX = "matriz-autorizacion";
 
@@ -76,9 +82,16 @@ class AuthorizationMatrixTest {
     @Autowired private TestSessions testSessions;
 
     static Stream<Arguments> readMatrix() {
-        return READ_RULES.stream().flatMap(rule -> Arrays.stream(UserRole.values())
-                .map(role -> Arguments.of(role, rule.path(),
-                        rule.roles().contains(role) ? rule.allowedStatus() : 403)));
+        return READ_RULES.stream()
+                .flatMap(rule ->
+                        Arrays.stream(UserRole.values())
+                                .map(role ->
+                                        Arguments.of(
+                                                role,
+                                                rule.path(),
+                                                rule.roles().contains(role)
+                                                        ? rule.allowedStatus()
+                                                        : 403)));
     }
 
     static Stream<Arguments> anonymousAccess() {
@@ -141,19 +154,18 @@ class AuthorizationMatrixTest {
     @MethodSource("readMatrix")
     @DisplayName("cada rol obtiene exactamente las lecturas que su fila concede")
     void eachRoleGetsOnlyItsReads(UserRole role, String path, int expectedStatus) throws Exception {
-        mockMvc.perform(request(HttpMethod.GET, path)
-                        .cookie(new Cookie("access_token", tokenFor(role))))
+        mockMvc.perform(
+                        request(HttpMethod.GET, path)
+                                .cookie(new Cookie("access_token", tokenFor(role))))
                 .andExpect(status().is(expectedStatus));
     }
 
     @ParameterizedTest(name = "{0} {1} sin cookie -> {2}")
     @MethodSource("anonymousAccess")
     @DisplayName("sin cookie solo responden login, signup, health, probes y OpenAPI")
-    void onlyTheDocumentedPublicRoutesAnswerWithoutSession(HttpMethod method, String path,
-            int expectedStatus) throws Exception {
-        mockMvc.perform(request(method, path)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
+    void onlyTheDocumentedPublicRoutesAnswerWithoutSession(
+            HttpMethod method, String path, int expectedStatus) throws Exception {
+        mockMvc.perform(request(method, path).contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().is(expectedStatus));
     }
 }

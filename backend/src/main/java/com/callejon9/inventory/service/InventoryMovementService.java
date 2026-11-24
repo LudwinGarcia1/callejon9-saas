@@ -19,9 +19,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * El ledger. Todo cambio de stock pasa por aqui: no existe ningun otro camino
- * que toque inventory_items.stock, y por eso la suma de los movimientos de un
- * insumo cuadra siempre con su columna.
+ * El ledger. Todo cambio de stock pasa por aqui: no existe ningun otro camino que toque
+ * inventory_items.stock, y por eso la suma de los movimientos de un insumo cuadra siempre con su
+ * columna.
  */
 @Service
 public class InventoryMovementService {
@@ -30,42 +30,50 @@ public class InventoryMovementService {
     private final InventoryMovementRepository movementRepository;
     private final BusinessCalendar businessCalendar;
 
-    public InventoryMovementService(InventoryItemRepository itemRepository,
-                                    InventoryMovementRepository movementRepository,
-                                    BusinessCalendar businessCalendar) {
+    public InventoryMovementService(
+            InventoryItemRepository itemRepository,
+            InventoryMovementRepository movementRepository,
+            BusinessCalendar businessCalendar) {
         this.itemRepository = itemRepository;
         this.movementRepository = movementRepository;
         this.businessCalendar = businessCalendar;
     }
 
     /**
-     * Registra un movimiento y aplica su efecto sobre el stock, en una sola
-     * transaccion.
+     * Registra un movimiento y aplica su efecto sobre el stock, en una sola transaccion.
      *
-     * En un ADJUSTMENT el delta se calcula aqui, contra el stock que acaba de
-     * leerse: {@code countedStock - stock}. Es la unica forma de que el
-     * numero guardado corresponda al conteo que la persona hizo.
+     * <p>En un ADJUSTMENT el delta se calcula aqui, contra el stock que acaba de leerse: {@code
+     * countedStock - stock}. Es la unica forma de que el numero guardado corresponda al conteo que
+     * la persona hizo.
      *
-     * El insumo se lee con lock pesimista, y el lock va ANTES de leer el
-     * stock: tanto el delta de un ajuste como la suma de cualquier otro
-     * movimiento se calculan a partir de ese valor, y leerlo sin bloquear es
-     * justo la ventana por la que se pierde un movimiento.
+     * <p>El insumo se lee con lock pesimista, y el lock va ANTES de leer el stock: tanto el delta
+     * de un ajuste como la suma de cualquier otro movimiento se calculan a partir de ese valor, y
+     * leerlo sin bloquear es justo la ventana por la que se pierde un movimiento.
      */
     @Transactional
-    public InventoryMovement register(UUID itemId, InventoryMovementType type,
-                                      BigDecimal quantity, BigDecimal countedStock,
-                                      String reason, UUID userId) {
-        InventoryItem item = itemRepository.findByIdForUpdate(itemId)
-                .orElseThrow(() -> new ResourceNotFoundException("El insumo no existe."));
+    public InventoryMovement register(
+            UUID itemId,
+            InventoryMovementType type,
+            BigDecimal quantity,
+            BigDecimal countedStock,
+            String reason,
+            UUID userId) {
+        InventoryItem item =
+                itemRepository
+                        .findByIdForUpdate(itemId)
+                        .orElseThrow(() -> new ResourceNotFoundException("El insumo no existe."));
 
         if (!item.isActive()) {
-            throw new BusinessRuleException("El insumo '" + item.getName()
-                    + "' esta dado de baja. Reactivalo para poder moverlo.");
+            throw new BusinessRuleException(
+                    "El insumo '"
+                            + item.getName()
+                            + "' esta dado de baja. Reactivalo para poder moverlo.");
         }
 
-        BigDecimal effectiveQuantity = type == InventoryMovementType.ADJUSTMENT
-                ? countedStock.subtract(item.getStock())
-                : quantity;
+        BigDecimal effectiveQuantity =
+                type == InventoryMovementType.ADJUSTMENT
+                        ? countedStock.subtract(item.getStock())
+                        : quantity;
 
         if (type == InventoryMovementType.ADJUSTMENT && effectiveQuantity.signum() == 0) {
             throw new BusinessRuleException(
@@ -75,21 +83,22 @@ public class InventoryMovementService {
         item.apply(type, effectiveQuantity);
         itemRepository.save(item);
 
-        return movementRepository.save(InventoryMovement.builder()
-                .inventoryItemId(item.getId())
-                .movementType(type)
-                .quantity(effectiveQuantity)
-                .reason(type == InventoryMovementType.ADJUSTMENT
-                        ? adjustmentReason(countedStock, reason)
-                        : reason)
-                .userId(userId)
-                .build());
+        return movementRepository.save(
+                InventoryMovement.builder()
+                        .inventoryItemId(item.getId())
+                        .movementType(type)
+                        .quantity(effectiveQuantity)
+                        .reason(
+                                type == InventoryMovementType.ADJUSTMENT
+                                        ? adjustmentReason(countedStock, reason)
+                                        : reason)
+                        .userId(userId)
+                        .build());
     }
 
     /**
-     * El motivo de un ajuste conserva el numero que se conto, que el delta por
-     * si solo pierde: guardar solo "-3" no dice si se contaron 8 sobre 11 o 5
-     * sobre 8.
+     * El motivo de un ajuste conserva el numero que se conto, que el delta por si solo pierde:
+     * guardar solo "-3" no dice si se contaron 8 sobre 11 o 5 sobre 8.
      */
     private String adjustmentReason(BigDecimal countedStock, String reason) {
         String prefix = "Conteo fisico: " + countedStock.stripTrailingZeros().toPlainString();
@@ -97,10 +106,10 @@ public class InventoryMovementService {
     }
 
     /**
-     * El rango se resuelve en la zona horaria del negocio, no en UTC (ver
-     * {@link BusinessCalendar}): un movimiento registrado a las 19:00 en
-     * Mexico City cae en el dia siguiente en UTC, y el listado se vaciaria a
-     * media cena. Sin parametros, hoy; con uno solo, ese mismo dia.
+     * El rango se resuelve en la zona horaria del negocio, no en UTC (ver {@link
+     * BusinessCalendar}): un movimiento registrado a las 19:00 en Mexico City cae en el dia
+     * siguiente en UTC, y el listado se vaciaria a media cena. Sin parametros, hoy; con uno solo,
+     * ese mismo dia.
      */
     @Transactional(readOnly = true)
     public List<InventoryMovementRow> listMovements(LocalDate from, LocalDate to, UUID itemId) {

@@ -8,5 +8,4 @@ import java.math.BigDecimal;
 
 public record CloseCashSessionRequest(
         @NotNull @DecimalMin("0.00") @Digits(integer = 8, fraction = 2) BigDecimal countedCash,
-        @Size(max = 250) String reason) {
-}
+        @Size(max = 250) String reason) {}

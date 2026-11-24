@@ -19,16 +19,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * Traduce el JWT de la peticion a un Authentication de Spring Security y al
- * TenantContext. Es la unica pieza que decide cual es el tenant de la peticion.
+ * Traduce el JWT de la peticion a un Authentication de Spring Security y al TenantContext. Es la
+ * unica pieza que decide cual es el tenant de la peticion.
  *
- * Un token solo autentica si {@link AccessTokenVerifier} confirma que su
- * sesion sigue vigente en el servidor: tras un logout, el mismo JWT deja de
- * servir aunque todavia no haya expirado.
+ * <p>Un token solo autentica si {@link AccessTokenVerifier} confirma que su sesion sigue vigente en
+ * el servidor: tras un logout, el mismo JWT deja de servir aunque todavia no haya expirado.
  *
- * Siempre limpia el TenantContext en el finally: si el ThreadLocal sobreviviera
- * al final de la peticion, el siguiente uso de ese hilo del pool heredaria el
- * tenant anterior.
+ * <p>Siempre limpia el TenantContext en el finally: si el ThreadLocal sobreviviera al final de la
+ * peticion, el siguiente uso de ese hilo del pool heredaria el tenant anterior.
  */
 @Component
 public class TenantFilter extends OncePerRequestFilter {
@@ -36,9 +34,8 @@ public class TenantFilter extends OncePerRequestFilter {
     public static final String ACCESS_TOKEN_COOKIE = "access_token";
 
     /**
-     * Atributo de peticion con la sesion ({@code sid}) del access token ya
-     * verificado. Lo usa el logout para revocar esa sesion aunque el cliente
-     * no envie la cookie de refresco.
+     * Atributo de peticion con la sesion ({@code sid}) del access token ya verificado. Lo usa el
+     * logout para revocar esa sesion aunque el cliente no envie la cookie de refresco.
      */
     public static final String SESSION_ID_ATTRIBUTE = "com.callejon9.sessionId";
 
@@ -52,7 +49,8 @@ public class TenantFilter extends OncePerRequestFilter {
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
-            @NonNull FilterChain chain) throws ServletException, IOException {
+            @NonNull FilterChain chain)
+            throws ServletException, IOException {
         try {
             readToken(request).ifPresent(token -> authenticate(token, request));
             chain.doFilter(request, response);
@@ -63,16 +61,14 @@ public class TenantFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Un {@code response.sendError(...)} en un Tomcat real (no en MockMvc)
-     * dispara un segundo despacho interno con DispatcherType.ERROR hacia
-     * "/error", que atraviesa de nuevo toda la cadena de filtros de Spring
-     * Security. OncePerRequestFilter se salta ese segundo despacho por
-     * defecto, pero este filtro es quien traduce la cookie JWT en la
-     * Authentication: si no corriera tambien ahi, el segundo paso veria un
-     * contexto vacio (relleno luego por AnonymousAuthenticationFilter) y
-     * ExceptionTranslationFilter, al ver una autenticacion anonima, llamaria
-     * otra vez a sendError — esta vez con 401 — pisando el 403 correcto que
-     * ya se habia calculado en el primer paso.
+     * Un {@code response.sendError(...)} en un Tomcat real (no en MockMvc) dispara un segundo
+     * despacho interno con DispatcherType.ERROR hacia "/error", que atraviesa de nuevo toda la
+     * cadena de filtros de Spring Security. OncePerRequestFilter se salta ese segundo despacho por
+     * defecto, pero este filtro es quien traduce la cookie JWT en la Authentication: si no corriera
+     * tambien ahi, el segundo paso veria un contexto vacio (relleno luego por
+     * AnonymousAuthenticationFilter) y ExceptionTranslationFilter, al ver una autenticacion
+     * anonima, llamaria otra vez a sendError — esta vez con 401 — pisando el 403 correcto que ya se
+     * habia calculado en el primer paso.
      */
     @Override
     protected boolean shouldNotFilterErrorDispatch() {
@@ -89,8 +85,8 @@ public class TenantFilter extends OncePerRequestFilter {
         TenantContext.set(claims.tenantId());
 
         var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + claims.role().name()));
-        var authentication = new UsernamePasswordAuthenticationToken(
-                claims.userId(), null, authorities);
+        var authentication =
+                new UsernamePasswordAuthenticationToken(claims.userId(), null, authorities);
         authentication.setDetails(request.getRequestURI());
 
         SecurityContextHolder.getContext().setAuthentication(authentication);

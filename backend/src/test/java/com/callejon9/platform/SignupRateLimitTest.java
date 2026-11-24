@@ -1,5 +1,15 @@
 package com.callejon9.platform;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.not;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.callejon9.tenancy.TenantContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,22 +27,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.matchesPattern;
-import static org.hamcrest.Matchers.not;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 /**
- * Freno contra altas masivas en el registro publico de restaurantes. El
- * limitador es un bean compartido por todo el contexto de pruebas, asi que
- * cada prueba usa IPs publicas propias (rango de documentacion 203.0.113.0/24)
- * y sus propios slugs. Las reglas de la ventana se prueban con reloj
- * controlado en {@code SlidingWindowRateLimiterTest}.
+ * Freno contra altas masivas en el registro publico de restaurantes. El limitador es un bean
+ * compartido por todo el contexto de pruebas, asi que cada prueba usa IPs publicas propias (rango
+ * de documentacion 203.0.113.0/24) y sus propios slugs. Las reglas de la ventana se prueban con
+ * reloj controlado en {@code SlidingWindowRateLimiterTest}.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -45,15 +44,21 @@ class SignupRateLimitTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private JdbcTemplate jdbcTemplate;
 
-    @Value("${app.signup.rate-limit.max-per-ip}") private int maxPerIp;
+    @Value("${app.signup.rate-limit.max-per-ip}")
+    private int maxPerIp;
 
     /** Prefijo de los slugs de cada prueba: la limpieza borra solo lo suyo. */
     private String slugPrefix;
 
     @BeforeEach
     void prefix(TestInfo testInfo) {
-        slugPrefix = "alta-" + testInfo.getTestMethod().orElseThrow().getName()
-                .replaceAll("([A-Z])", "-$1").toLowerCase();
+        slugPrefix =
+                "alta-"
+                        + testInfo.getTestMethod()
+                                .orElseThrow()
+                                .getName()
+                                .replaceAll("([A-Z])", "-$1")
+                                .toLowerCase();
     }
 
     @AfterEach
@@ -73,10 +78,12 @@ class SignupRateLimitTest {
                     return request;
                 })
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""
+                .content(
+                        """
                         {"restaurantName":"Alta Test","slug":"%s","adminEmail":"admin@alta.mx",
                          "adminFullName":"Rosa Mendez","password":"%s","planCode":"FREE"}
-                        """.formatted(slug, PASSWORD));
+                        """
+                                .formatted(slug, PASSWORD));
     }
 
     /** Consume el cupo completo de la IP con altas validas. */
@@ -128,8 +135,9 @@ class SignupRateLimitTest {
 
         // Desde una IP publica la cabecera no se cree: sigue contando 203.0.113.13.
         String spoofedSlug = slugPrefix + "-spoof";
-        mockMvc.perform(signupRequest(blockedIp, spoofedSlug)
-                        .header("X-Forwarded-For", "198.51.100.7"))
+        mockMvc.perform(
+                        signupRequest(blockedIp, spoofedSlug)
+                                .header("X-Forwarded-For", "198.51.100.7"))
                 .andExpect(status().isTooManyRequests());
         assertThat(tenantsWithSlug(spoofedSlug)).isZero();
 
@@ -139,40 +147,47 @@ class SignupRateLimitTest {
     }
 
     @Test
-    @DisplayName("CAL-169 y CAL-176: en Azure el cupo es por cliente, por la web y directo, y no se evade inventando cabeceras")
+    @DisplayName(
+            "CAL-169 y CAL-176: en Azure el cupo es por cliente, por la web y directo, y no se evade inventando cabeceras")
     void limitIsPerClientBehindAppService() throws Exception {
         // El contenedor recibe todo desde el enlace local de App Service; por la
         // web, la ultima entrada es la IP de salida del frontend (application-test.yml).
         String appServiceHop = "169.254.129.3";
         String viaFrontend = "203.0.113.20:51234, 192.0.2.10:40000";
         for (int i = 0; i < maxPerIp; i++) {
-            mockMvc.perform(signupRequest(appServiceHop, slugPrefix + "-" + i)
-                            .header("X-Forwarded-For", viaFrontend))
+            mockMvc.perform(
+                            signupRequest(appServiceHop, slugPrefix + "-" + i)
+                                    .header("X-Forwarded-For", viaFrontend))
                     .andExpect(status().isCreated());
         }
 
-        mockMvc.perform(signupRequest(appServiceHop, slugPrefix + "-web")
-                        .header("X-Forwarded-For", viaFrontend))
+        mockMvc.perform(
+                        signupRequest(appServiceHop, slugPrefix + "-web")
+                                .header("X-Forwarded-For", viaFrontend))
                 .andExpect(status().isTooManyRequests());
-        mockMvc.perform(signupRequest(appServiceHop, slugPrefix + "-directo")
-                        .header("X-Forwarded-For", "203.0.113.20:50000"))
+        mockMvc.perform(
+                        signupRequest(appServiceHop, slugPrefix + "-directo")
+                                .header("X-Forwarded-For", "203.0.113.20:50000"))
                 .andExpect(status().isTooManyRequests());
         // Una entrada inventada a la izquierda no cambia la llave del cliente.
         String spoofedSlug = slugPrefix + "-spoof";
-        mockMvc.perform(signupRequest(appServiceHop, spoofedSlug)
-                        .header("X-Forwarded-For", "198.51.100.77, " + viaFrontend))
+        mockMvc.perform(
+                        signupRequest(appServiceHop, spoofedSlug)
+                                .header("X-Forwarded-For", "198.51.100.77, " + viaFrontend))
                 .andExpect(status().isTooManyRequests());
         assertThat(tenantsWithSlug(spoofedSlug)).isZero();
 
         String otherSlug = slugPrefix + "-otro";
-        mockMvc.perform(signupRequest(appServiceHop, otherSlug)
-                        .header("X-Forwarded-For", "203.0.113.21:51234, 192.0.2.10:40000"))
+        mockMvc.perform(
+                        signupRequest(appServiceHop, otherSlug)
+                                .header("X-Forwarded-For", "203.0.113.21:51234, 192.0.2.10:40000"))
                 .andExpect(status().isCreated());
         assertThat(tenantsWithSlug(otherSlug)).isEqualTo(1);
     }
 
     @Test
-    @DisplayName("CAL-169: con el secreto del frontend, el cupo es por navegador aunque la salida no este en la lista")
+    @DisplayName(
+            "CAL-169: con el secreto del frontend, el cupo es por navegador aunque la salida no este en la lista")
     void limitIsPerBrowserWithTheFrontendSecret() throws Exception {
         // Salida del frontend fuera de la lista de confianza: sin el secreto,
         // todos los navegadores compartirian este cupo.
@@ -180,23 +195,32 @@ class SignupRateLimitTest {
         String unlistedOutbound = "198.51.100.200:40000";
         String secret = "secreto-de-prueba-del-proxy-de-next-32b";
         for (int i = 0; i < maxPerIp; i++) {
-            mockMvc.perform(signupRequest(appServiceHop, slugPrefix + "-" + i)
-                            .header("X-Forwarded-For", "203.0.113.30:51234, " + unlistedOutbound)
-                            .header("X-Callejon9-Client-Ip", "203.0.113.30")
-                            .header("X-Callejon9-Proxy-Secret", secret))
+            mockMvc.perform(
+                            signupRequest(appServiceHop, slugPrefix + "-" + i)
+                                    .header(
+                                            "X-Forwarded-For",
+                                            "203.0.113.30:51234, " + unlistedOutbound)
+                                    .header("X-Callejon9-Client-Ip", "203.0.113.30")
+                                    .header("X-Callejon9-Proxy-Secret", secret))
                     .andExpect(status().isCreated());
         }
-        mockMvc.perform(signupRequest(appServiceHop, slugPrefix + "-extra")
-                        .header("X-Forwarded-For", "203.0.113.30:51234, " + unlistedOutbound)
-                        .header("X-Callejon9-Client-Ip", "203.0.113.30")
-                        .header("X-Callejon9-Proxy-Secret", secret))
+        mockMvc.perform(
+                        signupRequest(appServiceHop, slugPrefix + "-extra")
+                                .header(
+                                        "X-Forwarded-For",
+                                        "203.0.113.30:51234, " + unlistedOutbound)
+                                .header("X-Callejon9-Client-Ip", "203.0.113.30")
+                                .header("X-Callejon9-Proxy-Secret", secret))
                 .andExpect(status().isTooManyRequests());
 
         String otherSlug = slugPrefix + "-otro";
-        mockMvc.perform(signupRequest(appServiceHop, otherSlug)
-                        .header("X-Forwarded-For", "203.0.113.31:51234, " + unlistedOutbound)
-                        .header("X-Callejon9-Client-Ip", "203.0.113.31")
-                        .header("X-Callejon9-Proxy-Secret", secret))
+        mockMvc.perform(
+                        signupRequest(appServiceHop, otherSlug)
+                                .header(
+                                        "X-Forwarded-For",
+                                        "203.0.113.31:51234, " + unlistedOutbound)
+                                .header("X-Callejon9-Client-Ip", "203.0.113.31")
+                                .header("X-Callejon9-Proxy-Secret", secret))
                 .andExpect(status().isCreated());
         assertThat(tenantsWithSlug(otherSlug)).isEqualTo(1);
     }

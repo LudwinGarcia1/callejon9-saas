@@ -36,9 +36,7 @@ public class TableController {
     @PreAuthorize("hasAnyRole('ADMIN','WAITER','KITCHEN','CASHIER')")
     public List<TableResponse> list(
             @RequestParam(required = false, defaultValue = "false") boolean includeInactive) {
-        return tableService.listTables(includeInactive).stream()
-                .map(TableResponse::from)
-                .toList();
+        return tableService.listTables(includeInactive).stream().map(TableResponse::from).toList();
     }
 
     @PostMapping
@@ -50,30 +48,32 @@ public class TableController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public TableResponse update(@PathVariable UUID id, @Valid @RequestBody UpdateTableRequest request) {
-        return TableResponse.from(tableService.updateTable(id, request.number(), request.capacity()));
+    public TableResponse update(
+            @PathVariable UUID id, @Valid @RequestBody UpdateTableRequest request) {
+        return TableResponse.from(
+                tableService.updateTable(id, request.number(), request.capacity()));
     }
 
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public TableResponse patch(@PathVariable UUID id, @Valid @RequestBody UpdateTableActiveRequest request) {
+    public TableResponse patch(
+            @PathVariable UUID id, @Valid @RequestBody UpdateTableActiveRequest request) {
         return TableResponse.from(tableService.setActive(id, request.active()));
     }
 
     /**
      * Reservar, mandar a limpieza o devolver a libre.
      *
-     * <p>Subrecurso en vez de otro campo del PATCH porque no es asignar un
-     * valor: es una transicion con reglas. Sigue la forma que ya usa
-     * {@code POST /kitchen/items/{itemId}/status}.
+     * <p>Subrecurso en vez de otro campo del PATCH porque no es asignar un valor: es una transicion
+     * con reglas. Sigue la forma que ya usa {@code POST /kitchen/items/{itemId}/status}.
      *
-     * <p>Lo abre a WAITER, a diferencia del resto del controlador: quien ve
-     * que una mesa quedo sucia esta en el piso, no en la oficina.
+     * <p>Lo abre a WAITER, a diferencia del resto del controlador: quien ve que una mesa quedo
+     * sucia esta en el piso, no en la oficina.
      */
     @PostMapping("/{id}/status")
     @PreAuthorize("hasAnyRole('ADMIN','WAITER')")
-    public TableResponse changeStatus(@PathVariable UUID id,
-                                      @Valid @RequestBody UpdateTableStatusRequest request) {
+    public TableResponse changeStatus(
+            @PathVariable UUID id, @Valid @RequestBody UpdateTableStatusRequest request) {
         return TableResponse.from(tableService.changeStatus(id, request.status()));
     }
 }

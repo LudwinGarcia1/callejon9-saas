@@ -1,5 +1,11 @@
 package com.callejon9.order;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.callejon9.catalog.domain.Product;
 import com.callejon9.catalog.repository.ProductRepository;
 import com.callejon9.order.domain.Order;
@@ -33,16 +39,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 /**
- * Deficits de seguridad del modulo de mesero y su correccion. Cada grupo
- * documenta un deficit: antes de la correccion estas peticiones respondian
- * 200/201 y modificaban datos; ahora se rechazan sin efectos.
+ * Deficits de seguridad del modulo de mesero y su correccion. Cada grupo documenta un deficit:
+ * antes de la correccion estas peticiones respondian 200/201 y modificaban datos; ahora se rechazan
+ * sin efectos.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -70,24 +70,58 @@ class WaiterOrderSecurityTest {
 
     @BeforeEach
     void seed() {
-        tenant = onboardingService.onboard("Mesero Seguridad", "mesero-seguridad",
-                "admin@meseroseg.com", "Admin", "Secreto123!", "FREE");
+        tenant =
+                onboardingService.onboard(
+                        "Mesero Seguridad",
+                        "mesero-seguridad",
+                        "admin@meseroseg.com",
+                        "Admin",
+                        "Secreto123!",
+                        "FREE");
 
         TenantContext.set(tenant.getId());
         try {
-            admin = transactionTemplate.execute(
-                    status -> userRepository.findByEmail("admin@meseroseg.com").orElseThrow());
-            waiterA = transactionTemplate.execute(status -> userRepository.save(User.builder()
-                    .email("mesero.a@meseroseg.com").passwordHash("x").fullName("Mesero A")
-                    .role(UserRole.WAITER).active(true).build()));
-            waiterB = transactionTemplate.execute(status -> userRepository.save(User.builder()
-                    .email("mesero.b@meseroseg.com").passwordHash("x").fullName("Mesero B")
-                    .role(UserRole.WAITER).active(true).build()));
-            table = transactionTemplate.execute(status -> tableRepository.save(RestaurantTable.builder()
-                    .number(1).capacity(4).status(TableStatus.FREE).active(true).build()));
-            product = transactionTemplate.execute(status -> productRepository.save(Product.builder()
-                    .name("Taco").description("Taco al pastor")
-                    .price(new BigDecimal("25.00")).active(true).build()));
+            admin =
+                    transactionTemplate.execute(status ->
+                            userRepository.findByEmail("admin@meseroseg.com").orElseThrow());
+            waiterA =
+                    transactionTemplate.execute(status ->
+                            userRepository.save(
+                                    User.builder()
+                                            .email("mesero.a@meseroseg.com")
+                                            .passwordHash("x")
+                                            .fullName("Mesero A")
+                                            .role(UserRole.WAITER)
+                                            .active(true)
+                                            .build()));
+            waiterB =
+                    transactionTemplate.execute(status ->
+                            userRepository.save(
+                                    User.builder()
+                                            .email("mesero.b@meseroseg.com")
+                                            .passwordHash("x")
+                                            .fullName("Mesero B")
+                                            .role(UserRole.WAITER)
+                                            .active(true)
+                                            .build()));
+            table =
+                    transactionTemplate.execute(status ->
+                            tableRepository.save(
+                                    RestaurantTable.builder()
+                                            .number(1)
+                                            .capacity(4)
+                                            .status(TableStatus.FREE)
+                                            .active(true)
+                                            .build()));
+            product =
+                    transactionTemplate.execute(status ->
+                            productRepository.save(
+                                    Product.builder()
+                                            .name("Taco")
+                                            .description("Taco al pastor")
+                                            .price(new BigDecimal("25.00"))
+                                            .active(true)
+                                            .build()));
         } finally {
             TenantContext.clear();
         }
@@ -104,31 +138,44 @@ class WaiterOrderSecurityTest {
     }
 
     private UUID openOrderAs(User user) throws Exception {
-        String body = mockMvc.perform(post("/api/v1/orders")
-                        .cookie(cookieFor(user))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tableId\":\"" + table.getId() + "\",\"guestCount\":2}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        String body =
+                mockMvc.perform(
+                                post("/api/v1/orders")
+                                        .cookie(cookieFor(user))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                "{\"tableId\":\""
+                                                        + table.getId()
+                                                        + "\",\"guestCount\":2}"))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
         return UUID.fromString(body.replaceAll(".*\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
     }
 
     private String itemBody(int quantity) {
-        return "{\"items\":[{\"productId\":\"" + product.getId() + "\",\"quantity\":" + quantity + "}]}";
+        return "{\"items\":[{\"productId\":\""
+                + product.getId()
+                + "\",\"quantity\":"
+                + quantity
+                + "}]}";
     }
 
     private void addItemAs(User user, UUID orderId) throws Exception {
-        mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
-                        .cookie(cookieFor(user))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(itemBody(1)))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/items")
+                                .cookie(cookieFor(user))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(itemBody(1)))
                 .andExpect(status().isOk());
     }
 
     private Order reload(UUID orderId) {
         TenantContext.set(tenant.getId());
         try {
-            return transactionTemplate.execute(status -> orderRepository.findById(orderId).orElseThrow());
+            return transactionTemplate.execute(
+                    status -> orderRepository.findById(orderId).orElseThrow());
         } finally {
             TenantContext.clear();
         }
@@ -153,10 +200,11 @@ class WaiterOrderSecurityTest {
         void anotherWaiterCannotAddItems() throws Exception {
             UUID orderId = openOrderAs(waiterA);
 
-            mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
-                            .cookie(cookieFor(waiterB))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(itemBody(3)))
+            mockMvc.perform(
+                            post("/api/v1/orders/" + orderId + "/items")
+                                    .cookie(cookieFor(waiterB))
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(itemBody(3)))
                     .andExpect(status().isForbidden());
 
             assertThat(itemCount(orderId)).isZero();
@@ -169,11 +217,13 @@ class WaiterOrderSecurityTest {
             UUID orderId = openOrderAs(waiterA);
             addItemAs(waiterA, orderId);
 
-            mockMvc.perform(post("/api/v1/orders/" + orderId + "/send-to-kitchen")
-                            .cookie(cookieFor(waiterB)))
+            mockMvc.perform(
+                            post("/api/v1/orders/" + orderId + "/send-to-kitchen")
+                                    .cookie(cookieFor(waiterB)))
                     .andExpect(status().isForbidden());
-            mockMvc.perform(post("/api/v1/orders/" + orderId + "/cancel")
-                            .cookie(cookieFor(waiterB)))
+            mockMvc.perform(
+                            post("/api/v1/orders/" + orderId + "/cancel")
+                                    .cookie(cookieFor(waiterB)))
                     .andExpect(status().isForbidden());
 
             assertThat(reload(orderId).getStatus()).isEqualTo(OrderStatus.NEW);
@@ -187,14 +237,19 @@ class WaiterOrderSecurityTest {
             UUID itemId;
             TenantContext.set(tenant.getId());
             try {
-                itemId = transactionTemplate.execute(status ->
-                        orderItemRepository.findByOrderIdOrderByOrderedAt(orderId).get(0).getId());
+                itemId =
+                        transactionTemplate.execute(status ->
+                                orderItemRepository
+                                        .findByOrderIdOrderByOrderedAt(orderId)
+                                        .get(0)
+                                        .getId());
             } finally {
                 TenantContext.clear();
             }
 
-            mockMvc.perform(delete("/api/v1/orders/" + orderId + "/items/" + itemId)
-                            .cookie(cookieFor(waiterB)))
+            mockMvc.perform(
+                            delete("/api/v1/orders/" + orderId + "/items/" + itemId)
+                                    .cookie(cookieFor(waiterB)))
                     .andExpect(status().isForbidden());
 
             assertThat(itemCount(orderId)).isEqualTo(1);
@@ -208,8 +263,9 @@ class WaiterOrderSecurityTest {
             addItemAs(waiterA, orderId);
             addItemAs(admin, orderId);
 
-            mockMvc.perform(post("/api/v1/orders/" + orderId + "/send-to-kitchen")
-                            .cookie(cookieFor(waiterA)))
+            mockMvc.perform(
+                            post("/api/v1/orders/" + orderId + "/send-to-kitchen")
+                                    .cookie(cookieFor(waiterA)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status").value("SENT"));
         }
@@ -224,10 +280,11 @@ class WaiterOrderSecurityTest {
         void hugeQuantityIsRejected() throws Exception {
             UUID orderId = openOrderAs(waiterA);
 
-            mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
-                            .cookie(cookieFor(waiterA))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(itemBody(Integer.MAX_VALUE)))
+            mockMvc.perform(
+                            post("/api/v1/orders/" + orderId + "/items")
+                                    .cookie(cookieFor(waiterA))
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(itemBody(Integer.MAX_VALUE)))
                     .andExpect(status().isBadRequest());
 
             assertThat(itemCount(orderId)).isZero();
@@ -239,11 +296,16 @@ class WaiterOrderSecurityTest {
             UUID orderId = openOrderAs(waiterA);
             String notes = "x".repeat(10_000);
 
-            mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
-                            .cookie(cookieFor(waiterA))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"items\":[{\"productId\":\"" + product.getId()
-                                    + "\",\"quantity\":1,\"notes\":\"" + notes + "\"}]}"))
+            mockMvc.perform(
+                            post("/api/v1/orders/" + orderId + "/items")
+                                    .cookie(cookieFor(waiterA))
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(
+                                            "{\"items\":[{\"productId\":\""
+                                                    + product.getId()
+                                                    + "\",\"quantity\":1,\"notes\":\""
+                                                    + notes
+                                                    + "\"}]}"))
                     .andExpect(status().isBadRequest());
 
             assertThat(itemCount(orderId)).isZero();
@@ -254,21 +316,31 @@ class WaiterOrderSecurityTest {
         void oversizedBatchAndGuestCountAreRejected() throws Exception {
             UUID orderId = openOrderAs(waiterA);
             String line = "{\"productId\":\"" + product.getId() + "\",\"quantity\":1}";
-            String batch = "{\"items\":[" + String.join(",", java.util.Collections.nCopies(51, line)) + "]}";
+            String batch =
+                    "{\"items\":["
+                            + String.join(",", java.util.Collections.nCopies(51, line))
+                            + "]}";
 
-            mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
-                            .cookie(cookieFor(waiterA))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(batch))
+            mockMvc.perform(
+                            post("/api/v1/orders/" + orderId + "/items")
+                                    .cookie(cookieFor(waiterA))
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(batch))
                     .andExpect(status().isBadRequest());
             assertThat(itemCount(orderId)).isZero();
 
-            mockMvc.perform(post("/api/v1/orders/" + orderId + "/cancel").cookie(cookieFor(waiterA)))
+            mockMvc.perform(
+                            post("/api/v1/orders/" + orderId + "/cancel")
+                                    .cookie(cookieFor(waiterA)))
                     .andExpect(status().isOk());
-            mockMvc.perform(post("/api/v1/orders")
-                            .cookie(cookieFor(waiterA))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"tableId\":\"" + table.getId() + "\",\"guestCount\":10000}"))
+            mockMvc.perform(
+                            post("/api/v1/orders")
+                                    .cookie(cookieFor(waiterA))
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content(
+                                            "{\"tableId\":\""
+                                                    + table.getId()
+                                                    + "\",\"guestCount\":10000}"))
                     .andExpect(status().isBadRequest());
         }
     }
@@ -280,8 +352,9 @@ class WaiterOrderSecurityTest {
         private UUID sentOrderOf(User user) throws Exception {
             UUID orderId = openOrderAs(user);
             addItemAs(user, orderId);
-            mockMvc.perform(post("/api/v1/orders/" + orderId + "/send-to-kitchen")
-                            .cookie(cookieFor(user)))
+            mockMvc.perform(
+                            post("/api/v1/orders/" + orderId + "/send-to-kitchen")
+                                    .cookie(cookieFor(user)))
                     .andExpect(status().isOk());
             return orderId;
         }
@@ -291,14 +364,17 @@ class WaiterOrderSecurityTest {
         void waiterCannotCancelASentOrder() throws Exception {
             UUID orderId = sentOrderOf(waiterA);
 
-            mockMvc.perform(post("/api/v1/orders/" + orderId + "/cancel").cookie(cookieFor(waiterA)))
+            mockMvc.perform(
+                            post("/api/v1/orders/" + orderId + "/cancel")
+                                    .cookie(cookieFor(waiterA)))
                     .andExpect(status().isForbidden());
 
             assertThat(reload(orderId).getStatus()).isEqualTo(OrderStatus.SENT);
             TenantContext.set(tenant.getId());
             try {
-                RestaurantTable reloaded = transactionTemplate.execute(
-                        status -> tableRepository.findById(table.getId()).orElseThrow());
+                RestaurantTable reloaded =
+                        transactionTemplate.execute(
+                                status -> tableRepository.findById(table.getId()).orElseThrow());
                 assertThat(reloaded.getStatus()).isEqualTo(TableStatus.OCCUPIED);
             } finally {
                 TenantContext.clear();
@@ -310,7 +386,9 @@ class WaiterOrderSecurityTest {
         void waiterCanCancelANewOrder() throws Exception {
             UUID orderId = openOrderAs(waiterA);
 
-            mockMvc.perform(post("/api/v1/orders/" + orderId + "/cancel").cookie(cookieFor(waiterA)))
+            mockMvc.perform(
+                            post("/api/v1/orders/" + orderId + "/cancel")
+                                    .cookie(cookieFor(waiterA)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status").value("CANCELED"));
         }

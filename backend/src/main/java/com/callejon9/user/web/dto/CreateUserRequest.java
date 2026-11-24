@@ -16,7 +16,8 @@ public record CreateUserRequest(
         @NotBlank @Email @Size(max = 180) String email,
         @NotBlank @Size(max = 160) String fullName,
         @NotNull UserRole role,
-        @NotBlank(message = "Ingresa una contrasena.") String password) implements PasswordCandidate {
+        @NotBlank(message = "Ingresa una contrasena.") String password)
+        implements PasswordCandidate {
 
     @Override
     public List<String> personalData() {

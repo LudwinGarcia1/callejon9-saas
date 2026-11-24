@@ -16,8 +16,8 @@ import java.time.format.DateTimeFormatter;
 import org.springframework.stereotype.Component;
 
 /**
- * Genera el PDF del ticket con OpenPDF: un recibo sencillo, sin diseno
- * elaborado, con lo minimo que un cliente esperaria ver al pagar la cuenta.
+ * Genera el PDF del ticket con OpenPDF: un recibo sencillo, sin diseno elaborado, con lo minimo que
+ * un cliente esperaria ver al pagar la cuenta.
  */
 @Component
 public class TicketPdfGenerator {
@@ -38,28 +38,40 @@ public class TicketPdfGenerator {
 
             document.add(new Paragraph(restaurantName, titleFont));
             document.add(new Paragraph("Folio: " + ticket.getFolio(), normalFont));
-            document.add(new Paragraph("Fecha: " + DATE_FORMAT.format(ticket.getClosedAt()), normalFont));
+            document.add(
+                    new Paragraph(
+                            "Fecha: " + DATE_FORMAT.format(ticket.getClosedAt()), normalFont));
             document.add(new Paragraph(" "));
 
             document.add(buildItemsTable(ticket, normalFont, boldFont));
 
             document.add(new Paragraph(" "));
-            document.add(new Paragraph("Subtotal: $" + ticket.getSubtotal().toPlainString(), normalFont));
+            document.add(
+                    new Paragraph(
+                            "Subtotal: $" + ticket.getSubtotal().toPlainString(), normalFont));
             document.add(new Paragraph("Propina: $" + ticket.getTip().toPlainString(), normalFont));
             document.add(new Paragraph("Total: $" + ticket.getTotal().toPlainString(), boldFont));
-            document.add(new Paragraph(
-                    "Metodo de pago: " + paymentMethodLabel(ticket), normalFont));
+            document.add(
+                    new Paragraph("Metodo de pago: " + paymentMethodLabel(ticket), normalFont));
             for (var payment : ticket.getPaymentsSnapshot()) {
-                document.add(new Paragraph(paymentMethodLabel(payment.method()) + ": $" + payment.amount().toPlainString()
-                        + " | Recibido: $" + payment.receivedAmount().toPlainString(), normalFont));
+                document.add(
+                        new Paragraph(
+                                paymentMethodLabel(payment.method())
+                                        + ": $"
+                                        + payment.amount().toPlainString()
+                                        + " | Recibido: $"
+                                        + payment.receivedAmount().toPlainString(),
+                                normalFont));
             }
-            document.add(new Paragraph("Cambio: $" + ticket.getChange().toPlainString(), normalFont));
+            document.add(
+                    new Paragraph("Cambio: $" + ticket.getChange().toPlainString(), normalFont));
 
             document.close();
             return out.toByteArray();
         } catch (Exception generationFailure) {
             throw new IllegalStateException(
-                    "No se pudo generar el PDF del ticket " + ticket.getFolio() + ".", generationFailure);
+                    "No se pudo generar el PDF del ticket " + ticket.getFolio() + ".",
+                    generationFailure);
         }
     }
 
@@ -75,7 +87,8 @@ public class TicketPdfGenerator {
         for (TicketItemSnapshot item : ticket.getItemsSnapshot()) {
             table.addCell(new PdfPCell(new Paragraph(item.productName(), normalFont)));
             table.addCell(new PdfPCell(new Paragraph(String.valueOf(item.quantity()), normalFont)));
-            table.addCell(new PdfPCell(new Paragraph(item.unitPrice().toPlainString(), normalFont)));
+            table.addCell(
+                    new PdfPCell(new Paragraph(item.unitPrice().toPlainString(), normalFont)));
             table.addCell(new PdfPCell(new Paragraph(item.subtotal().toPlainString(), normalFont)));
         }
         return table;

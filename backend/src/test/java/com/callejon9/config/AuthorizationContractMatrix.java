@@ -12,34 +12,60 @@ import org.springframework.util.AntPathMatcher;
 
 /** Contrato versionado independiente del descubrimiento y de las anotaciones. */
 final class AuthorizationContractMatrix {
-    record Key(String method, String path, List<String> params, List<String> headers,
-               List<String> consumes, List<String> produces) { }
+    record Key(
+            String method,
+            String path,
+            List<String> params,
+            List<String> headers,
+            List<String> consumes,
+            List<String> produces) {}
 
-    record Rule(String method, String path, List<String> params, List<String> headers,
-                List<String> consumes, List<String> produces, Set<String> roles, String reason) {
+    record Rule(
+            String method,
+            String path,
+            List<String> params,
+            List<String> headers,
+            List<String> consumes,
+            List<String> produces,
+            Set<String> roles,
+            String reason) {
         Key key() {
-            return new Key(method, path, sorted(params), sorted(headers), sorted(consumes), sorted(produces));
+            return new Key(
+                    method,
+                    path,
+                    sorted(params),
+                    sorted(headers),
+                    sorted(consumes),
+                    sorted(produces));
         }
     }
 
     static List<Rule> load() throws IOException {
-        try (var input = AuthorizationContractMatrix.class.getResourceAsStream("/security/authorization-contract.json")) {
-            if (input == null) { throw new IOException("Falta la matriz de autorizacion"); }
-            return new ObjectMapper().readValue(input, new TypeReference<List<Rule>>() { });
+        try (var input =
+                AuthorizationContractMatrix.class.getResourceAsStream(
+                        "/security/authorization-contract.json")) {
+            if (input == null) {
+                throw new IOException("Falta la matriz de autorizacion");
+            }
+            return new ObjectMapper().readValue(input, new TypeReference<List<Rule>>() {});
         }
     }
 
     static Key key(AuthorizationContractVerifier.Endpoint endpoint) {
         var mapping = endpoint.mapping();
-        return new Key(endpoint.route().method(), endpoint.route().path(),
+        return new Key(
+                endpoint.route().method(),
+                endpoint.route().path(),
                 sorted(mapping.getParamsCondition().getExpressions()),
                 sorted(mapping.getHeadersCondition().getExpressions()),
                 sorted(mapping.getConsumesCondition().getExpressions()),
                 sorted(mapping.getProducesCondition().getExpressions()));
     }
 
-    static void requireMatches(List<AuthorizationContractVerifier.Endpoint> endpoints, List<Rule> rules,
-                               AuthorizationContractVerifier verifier) {
+    static void requireMatches(
+            List<AuthorizationContractVerifier.Endpoint> endpoints,
+            List<Rule> rules,
+            AuthorizationContractVerifier verifier) {
         var remaining = new HashMap<Key, Rule>();
         var violations = new ArrayList<String>();
         for (var rule : rules) {
@@ -63,12 +89,20 @@ final class AuthorizationContractMatrix {
             if (endpoint.mapping().getCustomCondition() != null) {
                 violations.add("Condicion personalizada no modelada: " + endpoint.description());
             }
-            var actual = endpoint.route().path().startsWith("/api/v1/")
-                    ? finding.allowed()
-                    : verifier.webDecisions(endpoint).entrySet().stream().filter(java.util.Map.Entry::getValue)
-                            .map(java.util.Map.Entry::getKey).collect(java.util.stream.Collectors.toSet());
+            var actual =
+                    endpoint.route().path().startsWith("/api/v1/")
+                            ? finding.allowed()
+                            : verifier.webDecisions(endpoint).entrySet().stream()
+                                    .filter(java.util.Map.Entry::getValue)
+                                    .map(java.util.Map.Entry::getKey)
+                                    .collect(java.util.stream.Collectors.toSet());
             if (!actual.equals(rule.roles())) {
-                violations.add(endpoint.description() + "; esperados=" + rule.roles() + "; reales=" + actual);
+                violations.add(
+                        endpoint.description()
+                                + "; esperados="
+                                + rule.roles()
+                                + "; reales="
+                                + actual);
             }
         }
         for (var rule : List.copyOf(remaining.values())) {
@@ -80,20 +114,38 @@ final class AuthorizationContractMatrix {
             // con la decision real del filtro para esa ruta exacta.
             remaining.remove(rule.key());
             var route = new AuthorizationContractVerifier.Route(rule.method(), rule.path());
-            var actual = verifier.webDecisions(route).entrySet().stream().filter(java.util.Map.Entry::getValue)
-                    .map(java.util.Map.Entry::getKey).collect(java.util.stream.Collectors.toSet());
+            var actual =
+                    verifier.webDecisions(route).entrySet().stream()
+                            .filter(java.util.Map.Entry::getValue)
+                            .map(java.util.Map.Entry::getKey)
+                            .collect(java.util.stream.Collectors.toSet());
             if (!actual.equals(rule.roles())) {
-                violations.add("Ruta concreta " + rule.method() + " " + rule.path()
-                        + "; esperados=" + rule.roles() + "; reales=" + actual);
+                violations.add(
+                        "Ruta concreta "
+                                + rule.method()
+                                + " "
+                                + rule.path()
+                                + "; esperados="
+                                + rule.roles()
+                                + "; reales="
+                                + actual);
             }
-            if (actual.contains("ANONYMOUS") && !AuthorizationContractVerifier.isDocumentedPublic(route)) {
-                violations.add("Ruta concreta publica sin entrada exacta en la lista publica del verificador: "
-                        + rule.method() + " " + rule.path());
+            if (actual.contains("ANONYMOUS")
+                    && !AuthorizationContractVerifier.isDocumentedPublic(route)) {
+                violations.add(
+                        "Ruta concreta publica sin entrada exacta en la lista publica del verificador: "
+                                + rule.method()
+                                + " "
+                                + rule.path());
             }
         }
-        remaining.values().forEach(rule -> violations.add("Decision sin endpoint descubierto: " + rule.key()));
+        remaining
+                .values()
+                .forEach(
+                        rule -> violations.add("Decision sin endpoint descubierto: " + rule.key()));
         if (!violations.isEmpty()) {
-            throw new AssertionError("Matriz de autorizacion incumplida:\n" + String.join("\n", violations));
+            throw new AssertionError(
+                    "Matriz de autorizacion incumplida:\n" + String.join("\n", violations));
         }
     }
 
@@ -101,12 +153,14 @@ final class AuthorizationContractMatrix {
         return !path.contains("*") && !path.contains("{");
     }
 
-    private static boolean coveredByDiscoveredWildcard(Rule rule,
-                                                       List<AuthorizationContractVerifier.Endpoint> endpoints) {
+    private static boolean coveredByDiscoveredWildcard(
+            Rule rule, List<AuthorizationContractVerifier.Endpoint> endpoints) {
         var matcher = new AntPathMatcher();
-        return endpoints.stream().anyMatch(endpoint -> endpoint.route().method().equals(rule.method())
-                && endpoint.route().path().endsWith("/**")
-                && matcher.match(endpoint.route().path(), rule.path()));
+        return endpoints.stream()
+                .anyMatch(endpoint ->
+                        endpoint.route().method().equals(rule.method())
+                                && endpoint.route().path().endsWith("/**")
+                                && matcher.match(endpoint.route().path(), rule.path()));
     }
 
     private static List<String> sorted(Collection<?> values) {

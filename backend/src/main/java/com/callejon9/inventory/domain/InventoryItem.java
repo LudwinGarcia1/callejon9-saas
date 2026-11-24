@@ -39,21 +39,19 @@ public class InventoryItem extends TenantScopedEntity {
     private boolean active;
 
     /**
-     * Aplica el efecto de un movimiento sobre el stock. Nunca lanza y nunca
-     * topa en cero: negarse a registrar el movimiento no produce la cebolla
-     * que el cocinero tiene en la mano, produce que dejen de usar el sistema.
-     * Un stock negativo se permite y se senala (ver {@link #level()}).
+     * Aplica el efecto de un movimiento sobre el stock. Nunca lanza y nunca topa en cero: negarse a
+     * registrar el movimiento no produce la cebolla que el cocinero tiene en la mano, produce que
+     * dejen de usar el sistema. Un stock negativo se permite y se senala (ver {@link #level()}).
      */
     public void apply(InventoryMovementType type, BigDecimal quantity) {
         this.stock = this.stock.add(type.signedEffect(quantity));
     }
 
     /**
-     * La alerta de minimo exige {@code minStock > 0}. La columna tiene
-     * DEFAULT 0, asi que sin esa condicion todo insumo recien creado con
-     * stock 0 y minimo 0 apareceria en alerta, y la lista de alertas -- que
-     * es la mitad del valor del modulo -- naceria llena de ruido.
-     * {@code minStock = 0} significa "no configure minimo".
+     * La alerta de minimo exige {@code minStock > 0}. La columna tiene DEFAULT 0, asi que sin esa
+     * condicion todo insumo recien creado con stock 0 y minimo 0 apareceria en alerta, y la lista
+     * de alertas -- que es la mitad del valor del modulo -- naceria llena de ruido. {@code minStock
+     * = 0} significa "no configure minimo".
      */
     public StockLevel level() {
         if (stock.signum() < 0) {

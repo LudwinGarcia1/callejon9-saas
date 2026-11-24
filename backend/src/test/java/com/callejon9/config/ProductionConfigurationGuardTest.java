@@ -1,5 +1,8 @@
 package com.callejon9.config;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
+
 import com.callejon9.auth.service.JwtService;
 import com.callejon9.auth.web.AuthCookies;
 import com.callejon9.tenancy.TenantFilter;
@@ -29,30 +32,26 @@ import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.env.SystemEnvironmentPropertySource;
 import org.springframework.http.ResponseCookie;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowable;
-
 /**
- * Arranca la aplicacion con los {@code application*.yml} reales pero solo con
- * los beans de sesion: no necesita base de datos, asi que cubre todos los
- * casos negativos sin Docker.
+ * Arranca la aplicacion con los {@code application*.yml} reales pero solo con los beans de sesion:
+ * no necesita base de datos, asi que cubre todos los casos negativos sin Docker.
  *
- * <p>El entorno se arma a mano, sin variables del sistema ni propiedades de
- * la JVM: CI define JWT_SECRET y las contrasenas de desarrollo, y la prueba de
- * "variable ausente" tiene que poder verla ausente.
+ * <p>El entorno se arma a mano, sin variables del sistema ni propiedades de la JVM: CI define
+ * JWT_SECRET y las contrasenas de desarrollo, y la prueba de "variable ausente" tiene que poder
+ * verla ausente.
  */
 @ExtendWith(OutputCaptureExtension.class)
 @DisplayName("Configuracion del perfil prod")
 class ProductionConfigurationGuardTest {
 
-    private static final String STRONG_SECRET = "prueba-" + UUID.randomUUID() + "-" + UUID.randomUUID();
+    private static final String STRONG_SECRET =
+            "prueba-" + UUID.randomUUID() + "-" + UUID.randomUUID();
     private static final String ORIGIN = "https://callejon9.example";
 
     @Configuration(proxyBeanMethods = false)
     @EnableConfigurationProperties(JwtProperties.class)
     @Import({ProductionConfigurationGuard.class, JwtService.class, AuthCookies.class})
-    static class SessionBeans {
-    }
+    static class SessionBeans {}
 
     private static Map<String, Object> productionVariables() {
         Map<String, Object> variables = new HashMap<>();
@@ -63,14 +62,22 @@ class ProductionConfigurationGuardTest {
         return variables;
     }
 
-    private static ConfigurableApplicationContext start(Map<String, Object> variables, String... profiles) {
+    private static ConfigurableApplicationContext start(
+            Map<String, Object> variables, String... profiles) {
         StandardEnvironment environment = new StandardEnvironment();
-        environment.getPropertySources().remove(StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME);
+        environment
+                .getPropertySources()
+                .remove(StandardEnvironment.SYSTEM_PROPERTIES_PROPERTY_SOURCE_NAME);
         // Reemplaza las variables reales con el mismo tipo de fuente, para que
         // nombres como SPRINGDOC_SWAGGERUI_ENABLED se resuelvan igual que en
         // App Service.
-        environment.getPropertySources().replace(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
-                new SystemEnvironmentPropertySource(StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME, variables));
+        environment
+                .getPropertySources()
+                .replace(
+                        StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
+                        new SystemEnvironmentPropertySource(
+                                StandardEnvironment.SYSTEM_ENVIRONMENT_PROPERTY_SOURCE_NAME,
+                                variables));
         return new SpringApplicationBuilder(SessionBeans.class)
                 .environment(environment)
                 .web(WebApplicationType.NONE)
@@ -90,20 +97,23 @@ class ProductionConfigurationGuardTest {
     void missingSecretsStopStartup() {
         String message = startupFailure(Map.of(), "prod");
 
-        assertThat(message).contains(
-                "JWT_SECRET no esta definida",
-                "DB_APP_PASSWORD no esta definida",
-                "DB_OWNER_PASSWORD no esta definida",
-                "APP_ALLOWED_ORIGINS no esta definida");
+        assertThat(message)
+                .contains(
+                        "JWT_SECRET no esta definida",
+                        "DB_APP_PASSWORD no esta definida",
+                        "DB_OWNER_PASSWORD no esta definida",
+                        "APP_ALLOWED_ORIGINS no esta definida");
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {
-            "dev-only-secret-change-me-min-32-bytes-long!!",
-            "ci-only-secret-at-least-32-bytes-long!!",
-            "dev-only-secret-change-me-min-32-bytes-long!! ",
-            "dev-only-secret-change-me-min-32-bytes-long!!\r",
-            "secreto-corto"})
+    @ValueSource(
+            strings = {
+                "dev-only-secret-change-me-min-32-bytes-long!!",
+                "ci-only-secret-at-least-32-bytes-long!!",
+                "dev-only-secret-change-me-min-32-bytes-long!! ",
+                "dev-only-secret-change-me-min-32-bytes-long!!\r",
+                "secreto-corto"
+            })
     @DisplayName("un JWT_SECRET publicado o corto detiene el arranque sin aparecer en el log")
     void insecureJwtSecretStopsStartup(String secret, CapturedOutput output) {
         Map<String, Object> variables = productionVariables();
@@ -123,14 +133,16 @@ class ProductionConfigurationGuardTest {
 
         String message = startupFailure(variables, "prod");
 
-        assertThat(message).contains("APP_PROXY_SECRET debe tener al menos 32 bytes")
+        assertThat(message)
+                .contains("APP_PROXY_SECRET debe tener al menos 32 bytes")
                 .doesNotContain("secreto-proxy-corto");
         assertThat(output.getAll()).doesNotContain("secreto-proxy-corto");
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"Callejon9Demo!", "Callejon9Demo! ", "corta-de-15-car"})
-    @DisplayName("CAL-109: una PLATFORM_ADMIN_PASSWORD publicada o corta detiene el arranque sin aparecer en el log")
+    @DisplayName(
+            "CAL-109: una PLATFORM_ADMIN_PASSWORD publicada o corta detiene el arranque sin aparecer en el log")
     void invalidPlatformAdminPasswordStopsStartup(String password, CapturedOutput output) {
         Map<String, Object> variables = productionVariables();
         variables.put("PLATFORM_ADMIN_PASSWORD", password);
@@ -142,7 +154,8 @@ class ProductionConfigurationGuardTest {
     }
 
     @Test
-    @DisplayName("CAL-109: PLATFORM_ADMIN_PASSWORD es opcional y, con 16 caracteres o mas, prod arranca")
+    @DisplayName(
+            "CAL-109: PLATFORM_ADMIN_PASSWORD es opcional y, con 16 caracteres o mas, prod arranca")
     void platformAdminPasswordIsOptional() {
         try (ConfigurableApplicationContext context = start(productionVariables(), "prod")) {
             assertThat(context.isActive()).isTrue();
@@ -168,7 +181,8 @@ class ProductionConfigurationGuardTest {
     }
 
     @Test
-    @DisplayName("las contrasenas de desarrollo de la base detienen el arranque sin aparecer en el log")
+    @DisplayName(
+            "las contrasenas de desarrollo de la base detienen el arranque sin aparecer en el log")
     void developmentDatabasePasswordsStopStartup(CapturedOutput output) {
         Map<String, Object> variables = productionVariables();
         variables.put("DB_APP_PASSWORD", "app_dev_pwd");
@@ -177,9 +191,10 @@ class ProductionConfigurationGuardTest {
 
         String message = startupFailure(variables, "prod");
 
-        assertThat(message).contains(
-                "DB_APP_PASSWORD usa la contrasena de desarrollo",
-                "DB_OWNER_PASSWORD usa la contrasena de desarrollo");
+        assertThat(message)
+                .contains(
+                        "DB_APP_PASSWORD usa la contrasena de desarrollo",
+                        "DB_OWNER_PASSWORD usa la contrasena de desarrollo");
         assertThat(output.getAll()).doesNotContain("app_dev_pwd", "owner_dev_pwd");
     }
 
@@ -192,9 +207,10 @@ class ProductionConfigurationGuardTest {
 
         String message = startupFailure(variables, "prod");
 
-        assertThat(message).contains(
-                "app.auth.cookie-secure debe ser true",
-                "APP_ALLOWED_ORIGINS solo admite origenes https://");
+        assertThat(message)
+                .contains(
+                        "app.auth.cookie-secure debe ser true",
+                        "APP_ALLOWED_ORIGINS solo admite origenes https://");
     }
 
     @ParameterizedTest
@@ -210,33 +226,53 @@ class ProductionConfigurationGuardTest {
     @DisplayName("con secretos validos prod arranca, emite cookies Secure y no advierte")
     void validProductionConfigurationStarts(CapturedOutput output) {
         try (ConfigurableApplicationContext context = start(productionVariables(), "prod")) {
-            List<ResponseCookie> cookies = context.getBean(AuthCookies.class)
-                    .issue("access", "refresh", Instant.now().plusSeconds(60));
-            assertThat(cookies).extracting(ResponseCookie::getName)
-                    .containsExactly(TenantFilter.ACCESS_TOKEN_COOKIE, AuthCookies.REFRESH_TOKEN_COOKIE);
-            assertThat(cookies).allSatisfy(cookie -> {
-                assertThat(cookie.isSecure()).isTrue();
-                assertThat(cookie.isHttpOnly()).isTrue();
-                assertThat(cookie.getSameSite()).isEqualTo("Strict");
-            });
+            List<ResponseCookie> cookies =
+                    context.getBean(AuthCookies.class)
+                            .issue("access", "refresh", Instant.now().plusSeconds(60));
+            assertThat(cookies)
+                    .extracting(ResponseCookie::getName)
+                    .containsExactly(
+                            TenantFilter.ACCESS_TOKEN_COOKIE, AuthCookies.REFRESH_TOKEN_COOKIE);
+            assertThat(cookies)
+                    .allSatisfy(cookie -> {
+                        assertThat(cookie.isSecure()).isTrue();
+                        assertThat(cookie.isHttpOnly()).isTrue();
+                        assertThat(cookie.getSameSite()).isEqualTo("Strict");
+                    });
 
             JwtService jwtService = context.getBean(JwtService.class);
-            User user = User.builder().email("a@b.mx").passwordHash("x").fullName("A")
-                    .role(UserRole.ADMIN).active(true).build();
+            User user =
+                    User.builder()
+                            .email("a@b.mx")
+                            .passwordHash("x")
+                            .fullName("A")
+                            .role(UserRole.ADMIN)
+                            .active(true)
+                            .build();
             user.setId(UUID.randomUUID());
             user.setTenantId(UUID.randomUUID());
             UUID sessionId = UUID.randomUUID();
-            assertThat(jwtService.parse(jwtService.generateAccessToken(user, sessionId)).sessionId())
+            assertThat(
+                            jwtService
+                                    .parse(jwtService.generateAccessToken(user, sessionId))
+                                    .sessionId())
                     .isEqualTo(sessionId);
 
             var environment = context.getEnvironment();
-            assertThat(environment.getProperty("management.endpoints.web.exposure.include")).isEqualTo("health");
-            assertThat(environment.getProperty("management.endpoint.health.show-details")).isEqualTo("never");
-            assertThat(environment.getProperty("springdoc.api-docs.enabled", Boolean.class)).isFalse();
-            assertThat(environment.getProperty("springdoc.swagger-ui.enabled", Boolean.class)).isFalse();
-            assertThat(environment.getProperty("server.forward-headers-strategy")).isEqualTo("none");
+            assertThat(environment.getProperty("management.endpoints.web.exposure.include"))
+                    .isEqualTo("health");
+            assertThat(environment.getProperty("management.endpoint.health.show-details"))
+                    .isEqualTo("never");
+            assertThat(environment.getProperty("springdoc.api-docs.enabled", Boolean.class))
+                    .isFalse();
+            assertThat(environment.getProperty("springdoc.swagger-ui.enabled", Boolean.class))
+                    .isFalse();
+            assertThat(environment.getProperty("server.forward-headers-strategy"))
+                    .isEqualTo("none");
         }
-        assertThat(output.getAll()).doesNotContain("NO apta para produccion").doesNotContain(STRONG_SECRET);
+        assertThat(output.getAll())
+                .doesNotContain("NO apta para produccion")
+                .doesNotContain(STRONG_SECRET);
     }
 
     @Test
@@ -247,20 +283,24 @@ class ProductionConfigurationGuardTest {
         variables.put("SPRINGDOC_SWAGGERUI_ENABLED", "true");
         try (ConfigurableApplicationContext context = start(variables, "prod")) {
             var environment = context.getEnvironment();
-            assertThat(environment.getProperty("springdoc.api-docs.enabled", Boolean.class)).isTrue();
-            assertThat(environment.getProperty("springdoc.swagger-ui.enabled", Boolean.class)).isTrue();
+            assertThat(environment.getProperty("springdoc.api-docs.enabled", Boolean.class))
+                    .isTrue();
+            assertThat(environment.getProperty("springdoc.swagger-ui.enabled", Boolean.class))
+                    .isTrue();
         }
     }
 
     @Test
-    @DisplayName("demo sigue arrancando sin variables, con cookies sin Secure y una advertencia visible")
+    @DisplayName(
+            "demo sigue arrancando sin variables, con cookies sin Secure y una advertencia visible")
     void demoStartsWithVisibleWarning(CapturedOutput output) {
         try (ConfigurableApplicationContext context = start(Map.of(), "demo")) {
             assertThat(context.getBean(AuthCookies.class).clear())
                     .allSatisfy(cookie -> assertThat(cookie.isSecure()).isFalse());
         }
         assertThat(output.getAll())
-                .contains("Configuracion NO apta para produccion (perfiles [demo], JWT_SECRET publicado en el repositorio)")
+                .contains(
+                        "Configuracion NO apta para produccion (perfiles [demo], JWT_SECRET publicado en el repositorio)")
                 .doesNotContain("dev-only-secret-change-me-min-32-bytes-long!!");
     }
 
@@ -271,6 +311,7 @@ class ProductionConfigurationGuardTest {
             assertThat(context.getBean(JwtService.class)).isNotNull();
         }
         assertThat(output.getAll())
-                .contains("Configuracion NO apta para produccion (perfiles por defecto, JWT_SECRET publicado en el repositorio)");
+                .contains(
+                        "Configuracion NO apta para produccion (perfiles por defecto, JWT_SECRET publicado en el repositorio)");
     }
 }

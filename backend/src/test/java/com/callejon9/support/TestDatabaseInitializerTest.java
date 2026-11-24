@@ -1,25 +1,27 @@
 package com.callejon9.support;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.mock.env.MockEnvironment;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 class TestDatabaseInitializerTest {
     @Test
     void externalModePreservesConnectionAndDoesNotRequireDocker() {
-        var environment = new MockEnvironment()
-                .withProperty("test.database.mode", "external")
-                .withProperty("spring.datasource.url", "jdbc:postgresql://external/test");
+        var environment =
+                new MockEnvironment()
+                        .withProperty("test.database.mode", "external")
+                        .withProperty("spring.datasource.url", "jdbc:postgresql://external/test");
         environment.setActiveProfiles("test");
         try (var context = new GenericApplicationContext()) {
             context.setEnvironment(environment);
             new TestDatabaseInitializer().initialize(context);
             assertThat(environment.getProperty("spring.datasource.url"))
                     .isEqualTo("jdbc:postgresql://external/test");
-            assertThat(environment.getPropertySources().contains("testContainerDatabase")).isFalse();
+            assertThat(environment.getPropertySources().contains("testContainerDatabase"))
+                    .isFalse();
         }
     }
 
@@ -39,7 +41,11 @@ class TestDatabaseInitializerTest {
     void doesNotChangeNonTestContexts() {
         try (var context = new GenericApplicationContext()) {
             new TestDatabaseInitializer().initialize(context);
-            assertThat(context.getEnvironment().getPropertySources().contains("testContainerDatabase")).isFalse();
+            assertThat(
+                            context.getEnvironment()
+                                    .getPropertySources()
+                                    .contains("testContainerDatabase"))
+                    .isFalse();
         }
     }
 }

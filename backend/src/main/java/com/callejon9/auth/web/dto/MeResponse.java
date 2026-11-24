@@ -10,6 +10,7 @@ public record MeResponse(
         UUID tenantId,
         String slug,
         String restaurantName,
-        /** ID IANA del restaurante, para que el cliente muestre fechas en su hora local (CAL-19). */
-        String timezone) {
-}
+        /**
+         * ID IANA del restaurante, para que el cliente muestre fechas en su hora local (CAL-19).
+         */
+        String timezone) {}

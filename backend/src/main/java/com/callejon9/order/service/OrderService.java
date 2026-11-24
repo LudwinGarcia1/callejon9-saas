@@ -28,9 +28,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * El TenantContext ya esta fijado por TenantFilter antes de que la peticion
- * llegue aqui, asi que @Transactional declarativo alcanza: a diferencia de
- * TenantOnboardingService, no se cruza la frontera control plane / data plane.
+ * El TenantContext ya esta fijado por TenantFilter antes de que la peticion llegue aqui, asi
+ * que @Transactional declarativo alcanza: a diferencia de TenantOnboardingService, no se cruza la
+ * frontera control plane / data plane.
  */
 @Service
 public class OrderService {
@@ -38,7 +38,8 @@ public class OrderService {
     private static final Logger log = LoggerFactory.getLogger(OrderService.class);
 
     /** Ordenes que siguen en servicio: todavia no se cobran ni se cancelan. */
-    static final List<OrderStatus> OPEN_STATUSES = List.of(OrderStatus.NEW, OrderStatus.SENT, OrderStatus.READY);
+    static final List<OrderStatus> OPEN_STATUSES =
+            List.of(OrderStatus.NEW, OrderStatus.SENT, OrderStatus.READY);
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
@@ -69,29 +70,32 @@ public class OrderService {
         tableService.occupy(tableId, waiterId);
 
         Instant now = Instant.now();
-        return orderRepository.save(Order.builder()
-                .folio(folioGenerator.next())
-                .tableId(tableId)
-                .waiterId(waiterId)
-                .guestCount(guestCount)
-                .status(OrderStatus.NEW)
-                .total(BigDecimal.ZERO)
-                .openedAt(now)
-                .build());
+        return orderRepository.save(
+                Order.builder()
+                        .folio(folioGenerator.next())
+                        .tableId(tableId)
+                        .waiterId(waiterId)
+                        .guestCount(guestCount)
+                        .status(OrderStatus.NEW)
+                        .total(BigDecimal.ZERO)
+                        .openedAt(now)
+                        .build());
     }
 
     @Transactional(readOnly = true)
     public OrderWithItems getOrder(UUID orderId) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("La orden no existe."));
+        Order order =
+                orderRepository
+                        .findById(orderId)
+                        .orElseThrow(() -> new ResourceNotFoundException("La orden no existe."));
         List<OrderItem> items = orderItemRepository.findByOrderIdOrderByOrderedAt(orderId);
         return new OrderWithItems(order, items);
     }
 
     /**
-     * Una pagina de ordenes (CAL-16). {@code openOnly} deja solo las que
-     * siguen en servicio -- lo que piden mesero, caja y la app movil --, para
-     * que no tengan que traer el historial completo y filtrarlo en el cliente.
+     * Una pagina de ordenes (CAL-16). {@code openOnly} deja solo las que siguen en servicio -- lo
+     * que piden mesero, caja y la app movil --, para que no tengan que traer el historial completo
+     * y filtrarlo en el cliente.
      */
     @Transactional(readOnly = true)
     public Page<Order> listOrders(OrderStatus status, boolean openOnly, Pageable pageable) {
@@ -114,21 +118,23 @@ public class OrderService {
 
         if (order.getStatus() == OrderStatus.PAID || order.getStatus() == OrderStatus.CANCELED) {
             throw new BusinessRuleException(
-                    "La orden " + order.getFolio() + " ya esta " + order.getStatus()
+                    "La orden "
+                            + order.getFolio()
+                            + " ya esta "
+                            + order.getStatus()
                             + " y no admite mas productos.");
         }
 
         Instant now = Instant.now();
-        List<OrderItem> toSave = newItems.stream()
-                .map(newItem -> toOrderItem(order.getId(), newItem, now))
-                .toList();
+        List<OrderItem> toSave =
+                newItems.stream().map(newItem -> toOrderItem(order.getId(), newItem, now)).toList();
         orderItemRepository.saveAll(toSave);
 
         // Lo que se pide despues del envio tambien hay que prepararlo: una
         // orden READY vuelve a SENT para reaparecer en el tablero de cocina
         // (que solo lista SENT) y se anuncia de nuevo con sus items PENDING.
-        boolean alreadyInKitchen = order.getStatus() == OrderStatus.SENT
-                || order.getStatus() == OrderStatus.READY;
+        boolean alreadyInKitchen =
+                order.getStatus() == OrderStatus.SENT || order.getStatus() == OrderStatus.READY;
         if (alreadyInKitchen) {
             order.setStatus(OrderStatus.SENT);
         }
@@ -146,14 +152,13 @@ public class OrderService {
     }
 
     /**
-     * Quita una linea de una orden que todavia no se envia a cocina, para que
-     * el mesero corrija un error de captura sin cancelar toda la orden.
+     * Quita una linea de una orden que todavia no se envia a cocina, para que el mesero corrija un
+     * error de captura sin cancelar toda la orden.
      *
-     * <p>Solo en NEW: una vez en cocina la linea ya se esta preparando, y
-     * quitarla dejaria al tablero mostrando algo que nadie va a cobrar. El
-     * candado de la orden ({@code findForCheckout}) serializa esta operacion
-     * con el envio a cocina, asi que no hay ventana para quitar una linea que
-     * ya salio.
+     * <p>Solo en NEW: una vez en cocina la linea ya se esta preparando, y quitarla dejaria al
+     * tablero mostrando algo que nadie va a cobrar. El candado de la orden ({@code
+     * findForCheckout}) serializa esta operacion con el envio a cocina, asi que no hay ventana para
+     * quitar una linea que ya salio.
      */
     @Transactional
     public OrderWithItems removeItem(UUID orderId, UUID itemId, OrderActor actor) {
@@ -162,14 +167,21 @@ public class OrderService {
 
         if (order.getStatus() != OrderStatus.NEW) {
             throw new BusinessRuleException(
-                    "La orden " + order.getFolio() + " ya no esta en NEW; "
+                    "La orden "
+                            + order.getFolio()
+                            + " ya no esta en NEW; "
                             + "solo se quitan productos antes de enviarla a cocina.");
         }
 
-        OrderItem item = orderItemRepository.findById(itemId)
-                .filter(candidate -> candidate.getOrderId().equals(orderId))
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "El producto no existe en la orden " + order.getFolio() + "."));
+        OrderItem item =
+                orderItemRepository
+                        .findById(itemId)
+                        .filter(candidate -> candidate.getOrderId().equals(orderId))
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "El producto no existe en la orden "
+                                                + order.getFolio()
+                                                + "."));
         orderItemRepository.delete(item);
         orderItemRepository.flush();
 
@@ -180,15 +192,13 @@ public class OrderService {
     }
 
     /**
-     * Cancela una orden y libera su mesa, todo en una sola transaccion: si
-     * algo falla a la mitad, nada de esto debe quedar a medias (mismo
-     * criterio que {@code CheckoutService.checkout}). Las lineas de la orden
-     * se conservan intactas para el registro; solo cambia el estado.
+     * Cancela una orden y libera su mesa, todo en una sola transaccion: si algo falla a la mitad,
+     * nada de esto debe quedar a medias (mismo criterio que {@code CheckoutService.checkout}). Las
+     * lineas de la orden se conservan intactas para el registro; solo cambia el estado.
      *
-     * <p>Un mesero solo cancela su propia orden y solo mientras sigue en NEW.
-     * Una vez enviada a cocina el producto ya se preparo o se esta
-     * preparando: cancelarla libera la mesa sin venta, asi que esa decision
-     * queda reservada al administrador y se registra quien la tomo.
+     * <p>Un mesero solo cancela su propia orden y solo mientras sigue en NEW. Una vez enviada a
+     * cocina el producto ya se preparo o se esta preparando: cancelarla libera la mesa sin venta,
+     * asi que esa decision queda reservada al administrador y se registra quien la tomo.
      */
     @Transactional
     public OrderWithItems cancelOrder(UUID orderId, OrderActor actor) {
@@ -197,19 +207,28 @@ public class OrderService {
 
         if (order.getStatus() == OrderStatus.PAID || order.getStatus() == OrderStatus.CANCELED) {
             throw new BusinessRuleException(
-                    "La orden " + order.getFolio() + " ya esta " + order.getStatus()
+                    "La orden "
+                            + order.getFolio()
+                            + " ya esta "
+                            + order.getStatus()
                             + " y no se puede cancelar.");
         }
 
         if (order.getStatus() != OrderStatus.NEW && !actor.admin()) {
             throw new AccessDeniedException(
-                    "La orden " + order.getFolio() + " ya se envio a cocina; "
+                    "La orden "
+                            + order.getFolio()
+                            + " ya se envio a cocina; "
                             + "solo un administrador puede cancelarla.");
         }
 
-        log.info("Orden cancelada: folio={} estadoPrevio={} total={} usuario={} admin={}",
-                order.getFolio(), order.getStatus(), order.getTotal(),
-                actor.userId(), actor.admin());
+        log.info(
+                "Orden cancelada: folio={} estadoPrevio={} total={} usuario={} admin={}",
+                order.getFolio(),
+                order.getStatus(),
+                order.getTotal(),
+                actor.userId(),
+                actor.admin());
 
         order.setStatus(OrderStatus.CANCELED);
         order.setClosedAt(Instant.now());
@@ -253,9 +272,12 @@ public class OrderService {
     }
 
     private OrderItem toOrderItem(UUID orderId, NewOrderItem newItem, Instant now) {
-        Product product = productRepository.findById(newItem.productId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "El producto " + newItem.productId() + " no existe."));
+        Product product =
+                productRepository
+                        .findById(newItem.productId())
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "El producto " + newItem.productId() + " no existe."));
 
         if (!product.isActive()) {
             throw new BusinessRuleException("El producto " + product.getName() + " esta inactivo.");
@@ -280,9 +302,9 @@ public class OrderService {
     }
 
     /**
-     * RLS ya garantiza que la orden es del restaurante; esto acota dentro del
-     * restaurante. El rol WAITER basta para llegar al endpoint, pero no para
-     * modificar la orden de otro mesero: solo ADMIN opera sobre cualquiera.
+     * RLS ya garantiza que la orden es del restaurante; esto acota dentro del restaurante. El rol
+     * WAITER basta para llegar al endpoint, pero no para modificar la orden de otro mesero: solo
+     * ADMIN opera sobre cualquiera.
      */
     private void requireOwnership(Order order, OrderActor actor) {
         if (!actor.admin() && !actor.userId().equals(order.getWaiterId())) {
@@ -292,7 +314,8 @@ public class OrderService {
     }
 
     private Order requireOrder(UUID orderId) {
-        return orderRepository.findForCheckout(orderId)
+        return orderRepository
+                .findForCheckout(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("La orden no existe."));
     }
 }

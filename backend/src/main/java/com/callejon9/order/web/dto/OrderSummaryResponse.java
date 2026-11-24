@@ -16,8 +16,14 @@ public record OrderSummaryResponse(
         Instant openedAt) {
 
     public static OrderSummaryResponse from(Order order) {
-        return new OrderSummaryResponse(order.getId(), order.getFolio(), order.getTableId(),
-                order.getWaiterId(), order.getGuestCount(), order.getStatus().name(),
-                order.getTotal(), order.getOpenedAt());
+        return new OrderSummaryResponse(
+                order.getId(),
+                order.getFolio(),
+                order.getTableId(),
+                order.getWaiterId(),
+                order.getGuestCount(),
+                order.getStatus().name(),
+                order.getTotal(),
+                order.getOpenedAt());
     }
 }

@@ -1,10 +1,10 @@
 package com.callejon9.cashier.repository;
 
 import com.callejon9.cashier.domain.CashSession;
+import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -19,7 +19,8 @@ public interface CashSessionRepository extends JpaRepository<CashSession, UUID> 
     Optional<CashSession> findByCashierIdAndClosedAtIsNull(UUID cashierId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("select session from CashSession session where session.cashierId = :cashierId and session.closedAt is null")
+    @Query(
+            "select session from CashSession session where session.cashierId = :cashierId and session.closedAt is null")
     Optional<CashSession> findOpenForCashierForUpdate(@Param("cashierId") UUID cashierId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

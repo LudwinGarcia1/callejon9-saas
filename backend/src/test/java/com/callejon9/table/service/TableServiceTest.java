@@ -1,8 +1,15 @@
 package com.callejon9.table.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.callejon9.platform.tenant.service.PlanLimitService;
 import com.callejon9.shared.error.BusinessRuleException;
-import com.callejon9.shared.error.ResourceNotFoundException;
 import com.callejon9.table.domain.RestaurantTable;
 import com.callejon9.table.domain.TableStatus;
 import com.callejon9.table.repository.RestaurantTableRepository;
@@ -19,26 +26,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UT · TableService")
 class TableServiceTest {
 
-    @Mock
-    private RestaurantTableRepository tableRepository;
+    @Mock private RestaurantTableRepository tableRepository;
 
-    @Mock
-    private PlanLimitService planLimitService;
+    @Mock private PlanLimitService planLimitService;
 
-    @InjectMocks
-    private TableService tableService;
+    @InjectMocks private TableService tableService;
 
     private static final UUID TENANT_ID = UUID.fromString("00000000-0000-0000-0000-000000000010");
 
@@ -86,7 +82,8 @@ class TableServiceTest {
     void createTableAtPlanLimitThrows() {
         when(tableRepository.existsByNumber(6)).thenReturn(false);
         doThrow(new BusinessRuleException("Alcanzaste el limite de 5 mesas del plan FREE."))
-                .when(planLimitService).assertCanAddTable(TENANT_ID);
+                .when(planLimitService)
+                .assertCanAddTable(TENANT_ID);
 
         assertThatThrownBy(() -> tableService.createTable(6, 4))
                 .isInstanceOf(BusinessRuleException.class)
@@ -99,12 +96,19 @@ class TableServiceTest {
     @DisplayName("updateTable actualiza numero y capacidad cuando no colisiona")
     void updateTableSucceeds() {
         UUID id = UUID.randomUUID();
-        RestaurantTable existing = RestaurantTable.builder().number(1).capacity(2).status(TableStatus.FREE).active(true).build();
+        RestaurantTable existing =
+                RestaurantTable.builder()
+                        .number(1)
+                        .capacity(2)
+                        .status(TableStatus.FREE)
+                        .active(true)
+                        .build();
         existing.setId(id);
 
         when(tableRepository.findById(id)).thenReturn(Optional.of(existing));
         when(tableRepository.existsByNumberAndIdNot(2, id)).thenReturn(false);
-        when(tableRepository.save(any(RestaurantTable.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(tableRepository.save(any(RestaurantTable.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         RestaurantTable updated = tableService.updateTable(id, 2, 6);
 
@@ -117,7 +121,13 @@ class TableServiceTest {
     @DisplayName("updateTable rechaza numero duplicado con BusinessRuleException")
     void updateTableDuplicateNumberThrows() {
         UUID id = UUID.randomUUID();
-        RestaurantTable existing = RestaurantTable.builder().number(1).capacity(2).status(TableStatus.FREE).active(true).build();
+        RestaurantTable existing =
+                RestaurantTable.builder()
+                        .number(1)
+                        .capacity(2)
+                        .status(TableStatus.FREE)
+                        .active(true)
+                        .build();
         existing.setId(id);
 
         when(tableRepository.findById(id)).thenReturn(Optional.of(existing));
@@ -135,11 +145,13 @@ class TableServiceTest {
     void occupyFreeTableSucceeds() {
         UUID tableId = UUID.randomUUID();
         UUID waiterId = UUID.randomUUID();
-        RestaurantTable table = RestaurantTable.builder().number(1).status(TableStatus.FREE).active(true).build();
+        RestaurantTable table =
+                RestaurantTable.builder().number(1).status(TableStatus.FREE).active(true).build();
         table.setId(tableId);
 
         when(tableRepository.findByIdForUpdate(tableId)).thenReturn(Optional.of(table));
-        when(tableRepository.save(any(RestaurantTable.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(tableRepository.save(any(RestaurantTable.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         RestaurantTable occupied = tableService.occupy(tableId, waiterId);
 
@@ -152,7 +164,12 @@ class TableServiceTest {
     @DisplayName("occupy rechaza ocupar una mesa que ya esta OCCUPIED")
     void occupyAlreadyOccupiedTableThrows() {
         UUID tableId = UUID.randomUUID();
-        RestaurantTable table = RestaurantTable.builder().number(4).status(TableStatus.OCCUPIED).active(true).build();
+        RestaurantTable table =
+                RestaurantTable.builder()
+                        .number(4)
+                        .status(TableStatus.OCCUPIED)
+                        .active(true)
+                        .build();
         table.setId(tableId);
 
         when(tableRepository.findByIdForUpdate(tableId)).thenReturn(Optional.of(table));
@@ -168,7 +185,12 @@ class TableServiceTest {
     @DisplayName("occupy rechaza ocupar una mesa que esta RESERVED")
     void occupyReservedTableThrows() {
         UUID tableId = UUID.randomUUID();
-        RestaurantTable table = RestaurantTable.builder().number(3).status(TableStatus.RESERVED).active(true).build();
+        RestaurantTable table =
+                RestaurantTable.builder()
+                        .number(3)
+                        .status(TableStatus.RESERVED)
+                        .active(true)
+                        .build();
         table.setId(tableId);
 
         when(tableRepository.findByIdForUpdate(tableId)).thenReturn(Optional.of(table));
@@ -184,7 +206,12 @@ class TableServiceTest {
     @DisplayName("occupy rechaza ocupar una mesa que esta en CLEANING")
     void occupyCleaningTableThrows() {
         UUID tableId = UUID.randomUUID();
-        RestaurantTable table = RestaurantTable.builder().number(2).status(TableStatus.CLEANING).active(true).build();
+        RestaurantTable table =
+                RestaurantTable.builder()
+                        .number(2)
+                        .status(TableStatus.CLEANING)
+                        .active(true)
+                        .build();
         table.setId(tableId);
 
         when(tableRepository.findByIdForUpdate(tableId)).thenReturn(Optional.of(table));
@@ -200,7 +227,8 @@ class TableServiceTest {
     @DisplayName("occupy rechaza ocupar una mesa inactiva / dada de baja")
     void occupyInactiveTableThrows() {
         UUID tableId = UUID.randomUUID();
-        RestaurantTable table = RestaurantTable.builder().number(7).status(TableStatus.FREE).active(false).build();
+        RestaurantTable table =
+                RestaurantTable.builder().number(7).status(TableStatus.FREE).active(false).build();
         table.setId(tableId);
 
         when(tableRepository.findByIdForUpdate(tableId)).thenReturn(Optional.of(table));
@@ -216,11 +244,18 @@ class TableServiceTest {
     @DisplayName("free libera la mesa y remueve el mesero asignado")
     void freeTableSucceeds() {
         UUID tableId = UUID.randomUUID();
-        RestaurantTable table = RestaurantTable.builder().number(10).status(TableStatus.OCCUPIED).waiterId(UUID.randomUUID()).active(true).build();
+        RestaurantTable table =
+                RestaurantTable.builder()
+                        .number(10)
+                        .status(TableStatus.OCCUPIED)
+                        .waiterId(UUID.randomUUID())
+                        .active(true)
+                        .build();
         table.setId(tableId);
 
         when(tableRepository.findById(tableId)).thenReturn(Optional.of(table));
-        when(tableRepository.save(any(RestaurantTable.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(tableRepository.save(any(RestaurantTable.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         RestaurantTable freed = tableService.free(tableId);
 
@@ -233,11 +268,13 @@ class TableServiceTest {
     @DisplayName("changeStatus cambia estado a RESERVED o CLEANING")
     void changeStatusSucceeds() {
         UUID tableId = UUID.randomUUID();
-        RestaurantTable table = RestaurantTable.builder().number(8).status(TableStatus.FREE).active(true).build();
+        RestaurantTable table =
+                RestaurantTable.builder().number(8).status(TableStatus.FREE).active(true).build();
         table.setId(tableId);
 
         when(tableRepository.findByIdForUpdate(tableId)).thenReturn(Optional.of(table));
-        when(tableRepository.save(any(RestaurantTable.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(tableRepository.save(any(RestaurantTable.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         RestaurantTable changed = tableService.changeStatus(tableId, TableStatus.RESERVED);
 
@@ -261,7 +298,12 @@ class TableServiceTest {
     @DisplayName("changeStatus rechaza cambiar estado de mesa con orden abierta (OCCUPIED)")
     void changeStatusWhenAlreadyOccupiedThrows() {
         UUID tableId = UUID.randomUUID();
-        RestaurantTable table = RestaurantTable.builder().number(11).status(TableStatus.OCCUPIED).active(true).build();
+        RestaurantTable table =
+                RestaurantTable.builder()
+                        .number(11)
+                        .status(TableStatus.OCCUPIED)
+                        .active(true)
+                        .build();
         table.setId(tableId);
 
         when(tableRepository.findByIdForUpdate(tableId)).thenReturn(Optional.of(table));
@@ -277,11 +319,13 @@ class TableServiceTest {
     @DisplayName("setActive permite dar de baja una mesa libre")
     void setActiveDeactivatesFreeTable() {
         UUID tableId = UUID.randomUUID();
-        RestaurantTable table = RestaurantTable.builder().number(12).status(TableStatus.FREE).active(true).build();
+        RestaurantTable table =
+                RestaurantTable.builder().number(12).status(TableStatus.FREE).active(true).build();
         table.setId(tableId);
 
         when(tableRepository.findById(tableId)).thenReturn(Optional.of(table));
-        when(tableRepository.save(any(RestaurantTable.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(tableRepository.save(any(RestaurantTable.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         RestaurantTable deactivated = tableService.setActive(tableId, false);
 
@@ -293,12 +337,13 @@ class TableServiceTest {
     @DisplayName("setActive valida el limite del plan al reactivar una mesa")
     void setActiveReactivationChecksPlanLimit() {
         UUID tableId = UUID.randomUUID();
-        RestaurantTable table = RestaurantTable.builder()
-                .number(13).status(TableStatus.FREE).active(false).build();
+        RestaurantTable table =
+                RestaurantTable.builder().number(13).status(TableStatus.FREE).active(false).build();
         table.setId(tableId);
         when(tableRepository.findById(tableId)).thenReturn(Optional.of(table));
         doThrow(new BusinessRuleException("Alcanzaste el limite de 5 mesas del plan FREE."))
-                .when(planLimitService).assertCanAddTable(TENANT_ID);
+                .when(planLimitService)
+                .assertCanAddTable(TENANT_ID);
 
         assertThatThrownBy(() -> tableService.setActive(tableId, true))
                 .isInstanceOf(BusinessRuleException.class)
@@ -311,7 +356,12 @@ class TableServiceTest {
     @DisplayName("setActive rechaza dar de baja una mesa ocupada con comanda abierta")
     void setActiveRejectsDeactivatingOccupiedTable() {
         UUID tableId = UUID.randomUUID();
-        RestaurantTable table = RestaurantTable.builder().number(14).status(TableStatus.OCCUPIED).active(true).build();
+        RestaurantTable table =
+                RestaurantTable.builder()
+                        .number(14)
+                        .status(TableStatus.OCCUPIED)
+                        .active(true)
+                        .build();
         table.setId(tableId);
 
         when(tableRepository.findById(tableId)).thenReturn(Optional.of(table));

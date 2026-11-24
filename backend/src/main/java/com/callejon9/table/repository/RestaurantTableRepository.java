@@ -11,8 +11,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 /**
- * No filtra por tenant en las consultas: las politicas RLS de PostgreSQL ya
- * limitan las filas visibles al tenant activo.
+ * No filtra por tenant en las consultas: las politicas RLS de PostgreSQL ya limitan las filas
+ * visibles al tenant activo.
  */
 public interface RestaurantTableRepository extends JpaRepository<RestaurantTable, UUID> {
 
@@ -32,13 +32,11 @@ public interface RestaurantTableRepository extends JpaRepository<RestaurantTable
     List<RestaurantTable> findAllByOrderByNumber();
 
     /**
-     * Igual que {@code findById}, pero con {@code SELECT ... FOR UPDATE}: bloquea
-     * la fila hasta que la transaccion actual termine. Sin este lock, dos
-     * peticiones que ocupan la misma mesa bajo READ COMMITTED pueden leer
-     * ambas el estado FREE antes de que cualquiera escriba, y las dos crean
-     * una orden (doble reservacion silenciosa, sin ningun error). Con el
-     * lock, la segunda transaccion espera a que la primera confirme y
-     * entonces relee el estado ya actualizado.
+     * Igual que {@code findById}, pero con {@code SELECT ... FOR UPDATE}: bloquea la fila hasta que
+     * la transaccion actual termine. Sin este lock, dos peticiones que ocupan la misma mesa bajo
+     * READ COMMITTED pueden leer ambas el estado FREE antes de que cualquiera escriba, y las dos
+     * crean una orden (doble reservacion silenciosa, sin ningun error). Con el lock, la segunda
+     * transaccion espera a que la primera confirme y entonces relee el estado ya actualizado.
      */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select t from RestaurantTable t where t.id = :id")

@@ -14,8 +14,13 @@ public record OrderItemResponse(
         String notes) {
 
     public static OrderItemResponse from(OrderItem item) {
-        return new OrderItemResponse(item.getId(), item.getProductId(), item.getProductName(),
-                item.getUnitPrice(), item.getQuantity(), item.getKitchenStatus().name(),
+        return new OrderItemResponse(
+                item.getId(),
+                item.getProductId(),
+                item.getProductName(),
+                item.getUnitPrice(),
+                item.getQuantity(),
+                item.getKitchenStatus().name(),
                 item.getNotes());
     }
 }

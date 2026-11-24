@@ -17,32 +17,30 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
 /**
- * Impide que produccion opere con la contrasena publicada del super-administrador
- * (CAL-109).
+ * Impide que produccion opere con la contrasena publicada del super-administrador (CAL-109).
  *
- * <p>{@code V6__seed_platform_admin.sql} siembra en cualquier base nueva la cuenta
- * {@code super@callejon9.com} del tenant tecnico {@code platform}, con una
- * contrasena que esta escrita en el repositorio. Sirve para desarrollo y para la
- * demo; en produccion equivale a no tener contrasena. {@code V6} ya esta aplicada
- * y las migraciones son append-only, asi que la correccion vive aqui: con el
- * perfil {@code prod}, al arrancar y despues de Flyway, se revisa esa cuenta.
+ * <p>{@code V6__seed_platform_admin.sql} siembra en cualquier base nueva la cuenta {@code
+ * super@callejon9.com} del tenant tecnico {@code platform}, con una contrasena que esta escrita en
+ * el repositorio. Sirve para desarrollo y para la demo; en produccion equivale a no tener
+ * contrasena. {@code V6} ya esta aplicada y las migraciones son append-only, asi que la correccion
+ * vive aqui: con el perfil {@code prod}, al arrancar y despues de Flyway, se revisa esa cuenta.
  *
  * <ul>
- *   <li>Si su hash corresponde a la contrasena publicada y hay
- *       {@code PLATFORM_ADMIN_PASSWORD}, se reemplaza por esa contrasena.</li>
- *   <li>Si corresponde y no hay variable, el arranque se detiene.</li>
- *   <li>Si ya es otro hash, no se toca, con o sin variable: no deshace una
- *       rotacion posterior, como el cambio de contrasena de CAL-25.</li>
- *   <li>Si no existen el tenant o la cuenta, no hay nada que revisar.</li>
+ *   <li>Si su hash corresponde a la contrasena publicada y hay {@code PLATFORM_ADMIN_PASSWORD}, se
+ *       reemplaza por esa contrasena.
+ *   <li>Si corresponde y no hay variable, el arranque se detiene.
+ *   <li>Si ya es otro hash, no se toca, con o sin variable: no deshace una rotacion posterior, como
+ *       el cambio de contrasena de CAL-25.
+ *   <li>Si no existen el tenant o la cuenta, no hay nada que revisar.
  * </ul>
  *
- * <p>Lee y escribe como {@code callejon9_app}, igual que el resto del sistema: el
- * tenant {@code platform} se publica con {@code set_config(..., true)} al abrir la
- * transaccion, a traves de {@link TenantContext}. No necesita {@code BYPASSRLS}.
+ * <p>Lee y escribe como {@code callejon9_app}, igual que el resto del sistema: el tenant {@code
+ * platform} se publica con {@code set_config(..., true)} al abrir la transaccion, a traves de
+ * {@link TenantContext}. No necesita {@code BYPASSRLS}.
  *
- * <p>Corre en {@link #afterSingletonsInstantiated()}: despues de Flyway y de crear
- * los repositorios, pero antes de que el servidor HTTP empiece a aceptar
- * conexiones. Si falla, el puerto nunca abre.
+ * <p>Corre en {@link #afterSingletonsInstantiated()}: despues de Flyway y de crear los
+ * repositorios, pero antes de que el servidor HTTP empiece a aceptar conexiones. Si falla, el
+ * puerto nunca abre.
  *
  * <p>Ni la contrasena ni el hash aparecen en el log ni en los mensajes de error.
  */
@@ -81,9 +79,9 @@ public class PlatformAdminPasswordGuard implements SmartInitializingSingleton {
     }
 
     /**
-     * Motivo por el que un valor de {@code PLATFORM_ADMIN_PASSWORD} no sirve, o
-     * vacio si sirve. Tambien lo usa {@code ProductionConfigurationGuard} para
-     * rechazarlo antes de tocar la base. El mensaje nunca incluye el valor.
+     * Motivo por el que un valor de {@code PLATFORM_ADMIN_PASSWORD} no sirve, o vacio si sirve.
+     * Tambien lo usa {@code ProductionConfigurationGuard} para rechazarlo antes de tocar la base.
+     * El mensaje nunca incluye el valor.
      */
     public static Optional<String> problemWith(String value) {
         String candidate = value == null ? "" : value.strip();
@@ -101,49 +99,68 @@ public class PlatformAdminPasswordGuard implements SmartInitializingSingleton {
 
     @Override
     public void afterSingletonsInstantiated() {
-        problemWith(configuredPassword).ifPresent(problem -> {
-            throw new IllegalStateException(problem);
-        });
+        problemWith(configuredPassword)
+                .ifPresent(problem -> {
+                    throw new IllegalStateException(problem);
+                });
 
         // tenants no lleva RLS: es el catalogo de tenants y se lee sin contexto.
-        Optional<UUID> platformTenant = transactionTemplate.execute(status ->
-                tenantRepository.findBySlug(PLATFORM_SLUG).map(Tenant::getId));
+        Optional<UUID> platformTenant =
+                transactionTemplate.execute(
+                        status -> tenantRepository.findBySlug(PLATFORM_SLUG).map(Tenant::getId));
         if (platformTenant == null || platformTenant.isEmpty()) {
-            log.info("No existe el tenant '{}'; no hay super-administrador sembrado que revisar.", PLATFORM_SLUG);
+            log.info(
+                    "No existe el tenant '{}'; no hay super-administrador sembrado que revisar.",
+                    PLATFORM_SLUG);
             return;
         }
 
-        TenantContext.callAs(platformTenant.get(), () -> transactionTemplate.execute(status -> {
-            replacePublishedPassword();
-            return null;
-        }));
+        TenantContext.callAs(
+                platformTenant.get(),
+                () ->
+                        transactionTemplate.execute(status -> {
+                            replacePublishedPassword();
+                            return null;
+                        }));
     }
 
     private void replacePublishedPassword() {
         Optional<User> admin = userRepository.findByEmail(ADMIN_EMAIL);
         if (admin.isEmpty()) {
-            log.info("El tenant '{}' no tiene la cuenta sembrada {}; no hay nada que revisar.",
-                    PLATFORM_SLUG, ADMIN_EMAIL);
+            log.info(
+                    "El tenant '{}' no tiene la cuenta sembrada {}; no hay nada que revisar.",
+                    PLATFORM_SLUG,
+                    ADMIN_EMAIL);
             return;
         }
 
         User user = admin.get();
         if (!passwordEncoder.matches(PUBLISHED_PASSWORD, user.getPasswordHash())) {
-            log.info("El super-administrador {} ya no usa la contrasena publicada; no se modifica.", ADMIN_EMAIL);
+            log.info(
+                    "El super-administrador {} ya no usa la contrasena publicada; no se modifica.",
+                    ADMIN_EMAIL);
             return;
         }
 
         if (configuredPassword.isEmpty()) {
-            throw new IllegalStateException("El super-administrador " + ADMIN_EMAIL
-                    + " usa la contrasena publicada en el repositorio (V6__seed_platform_admin.sql). "
-                    + "Define " + VARIABLE + " con " + MIN_LENGTH + " caracteres o mas para "
-                    + "reemplazarla al arrancar; en Azure llega desde Key Vault (platform-admin-password).");
+            throw new IllegalStateException(
+                    "El super-administrador "
+                            + ADMIN_EMAIL
+                            + " usa la contrasena publicada en el repositorio (V6__seed_platform_admin.sql). "
+                            + "Define "
+                            + VARIABLE
+                            + " con "
+                            + MIN_LENGTH
+                            + " caracteres o mas para "
+                            + "reemplazarla al arrancar; en Azure llega desde Key Vault (platform-admin-password).");
         }
 
         // Cambio por dirty checking: se escribe al confirmar la transaccion, con el
         // tenant platform ya publicado para la politica RLS de users.
         user.setPasswordHash(passwordEncoder.encode(configuredPassword));
-        log.warn("Se reemplazo la contrasena publicada del super-administrador {} por la de {}.",
-                ADMIN_EMAIL, VARIABLE);
+        log.warn(
+                "Se reemplazo la contrasena publicada del super-administrador {} por la de {}.",
+                ADMIN_EMAIL,
+                VARIABLE);
     }
 }

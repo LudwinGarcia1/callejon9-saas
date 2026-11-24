@@ -1,5 +1,9 @@
 package com.callejon9.platform;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.callejon9.platform.plan.repository.PlanRepository;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.PlanLimitService;
@@ -20,14 +24,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 /**
- * Limites de cada plan justo en el borde: el ultimo permitido y el primero
- * rechazado, con los planes sembrados en V1__control_plane.sql (los mismos que
- * publica {@code frontend/src/lib/plans.ts}).
+ * Limites de cada plan justo en el borde: el ultimo permitido y el primero rechazado, con los
+ * planes sembrados en V1__control_plane.sql (los mismos que publica {@code
+ * frontend/src/lib/plans.ts}).
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -49,8 +49,14 @@ class PlanLimitBoundaryTest {
 
     private Tenant onboard(String planCode, String kind) {
         String code = planCode.toLowerCase(Locale.ROOT);
-        Tenant tenant = onboardingService.onboard("Borde " + planCode, "plan-borde-" + kind + "-" + code,
-                "admin@" + kind + "-" + code + ".borde.com", "Admin Borde", "Mantel-Azul-47", planCode);
+        Tenant tenant =
+                onboardingService.onboard(
+                        "Borde " + planCode,
+                        "plan-borde-" + kind + "-" + code,
+                        "admin@" + kind + "-" + code + ".borde.com",
+                        "Admin Borde",
+                        "Mantel-Azul-47",
+                        planCode);
         TenantContext.set(tenant.getId());
         return tenant;
     }
@@ -82,7 +88,12 @@ class PlanLimitBoundaryTest {
         assertThatThrownBy(() -> planLimitService.assertCanAddUser(tenant.getId()))
                 .as("con %d usuarios el usuario %d se rechaza", lastAllowed, firstRejected)
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessage("Alcanzaste el limite de " + lastAllowed + " usuarios del plan " + planCode + ".");
+                .hasMessage(
+                        "Alcanzaste el limite de "
+                                + lastAllowed
+                                + " usuarios del plan "
+                                + planCode
+                                + ".");
     }
 
     @ParameterizedTest(name = "{0}: la mesa {1} entra y la {2} se rechaza")
@@ -94,7 +105,8 @@ class PlanLimitBoundaryTest {
         for (int number = 1; number <= lastAllowed; number++) {
             tableService.createTable(number, 4);
         }
-        List<RestaurantTable> tables = transactionTemplate.execute(status -> tableService.listTables(true));
+        List<RestaurantTable> tables =
+                transactionTemplate.execute(status -> tableService.listTables(true));
         assertThat(tables).hasSize(lastAllowed);
 
         assertThatThrownBy(() -> tableService.createTable(firstRejected, 4))
@@ -106,10 +118,14 @@ class PlanLimitBoundaryTest {
         if (count <= 0) {
             return;
         }
-        transactionTemplate.executeWithoutResult(status -> jdbcTemplate.update("""
-                INSERT INTO users (tenant_id, email, password_hash, full_name, role)
-                SELECT ?, 'mesero-' || g || '-' || (SELECT count(*) FROM users) || '@borde.com', 'x', 'Mesero ' || g, 'WAITER'
-                FROM generate_series(1, ?) AS g
-                """, tenant.getId(), count));
+        transactionTemplate.executeWithoutResult(status ->
+                jdbcTemplate.update(
+                        """
+                        INSERT INTO users (tenant_id, email, password_hash, full_name, role)
+                        SELECT ?, 'mesero-' || g || '-' || (SELECT count(*) FROM users) || '@borde.com', 'x', 'Mesero ' || g, 'WAITER'
+                        FROM generate_series(1, ?) AS g
+                        """,
+                        tenant.getId(),
+                        count));
     }
 }

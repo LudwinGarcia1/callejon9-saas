@@ -16,9 +16,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * productName y unitPrice son una FOTOGRAFIA del producto al momento de
- * agregarlo a la orden: si el precio del producto cambia despues, el ticket
- * ya emitido no debe cambiar.
+ * productName y unitPrice son una FOTOGRAFIA del producto al momento de agregarlo a la orden: si el
+ * precio del producto cambia despues, el ticket ya emitido no debe cambiar.
  */
 @Entity
 @Table(name = "order_items")
@@ -48,8 +47,7 @@ public class OrderItem extends TenantScopedEntity {
     @Column(name = "kitchen_status", nullable = false, length = 20)
     private KitchenItemStatus kitchenStatus;
 
-    @Column
-    private String notes;
+    @Column private String notes;
 
     @Column(name = "ordered_at", nullable = false)
     private Instant orderedAt;

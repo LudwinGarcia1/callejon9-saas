@@ -1,5 +1,10 @@
 package com.callejon9.config;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import callejon9.contractfixtures.AuthorizationFixtures;
 import com.callejon9.support.TestSessions;
 import com.callejon9.user.domain.UserRole;
@@ -27,16 +32,14 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import({AuthorizationFixtures.MethodRules.class, AuthorizationFixtures.ClassRules.class,
-        AuthorizationFixtures.MatcherRules.class})
+@Import({
+    AuthorizationFixtures.MethodRules.class,
+    AuthorizationFixtures.ClassRules.class,
+    AuthorizationFixtures.MatcherRules.class
+})
 @DisplayName("CAL-7: verificador de autorización con mappings y filtros reales")
 class AuthorizationContractTest {
     @Autowired private WebApplicationContext context;
@@ -73,12 +76,12 @@ class AuthorizationContractTest {
 
     @ParameterizedTest(name = "{0} permite únicamente {1}")
     @CsvSource({
-            "/api/v1/contract-fixtures/method, ADMIN",
-            "/api/v1/contract-fixtures/composed, ADMIN",
-            "/api/v1/contract-fixtures/inherited, CASHIER",
-            "/api/v1/contract-class, KITCHEN",
-            "/api/v1/contract-class/override, ADMIN",
-            "/api/v1/platform/contract-fixture, SUPER_ADMIN"
+        "/api/v1/contract-fixtures/method, ADMIN",
+        "/api/v1/contract-fixtures/composed, ADMIN",
+        "/api/v1/contract-fixtures/inherited, CASHIER",
+        "/api/v1/contract-class, KITCHEN",
+        "/api/v1/contract-class/override, ADMIN",
+        "/api/v1/platform/contract-fixture, SUPER_ADMIN"
     })
     void recognizesEffectivePolicies(String path, String role) {
         var finding = verifier.inspect(endpoint("GET", path));
@@ -91,7 +94,8 @@ class AuthorizationContractTest {
     @DisplayName("Una ruta pública no documentada no se acepta ni bajo /auth/**")
     void rejectsUndocumentedPublicRoutes(String path) {
         assertThatThrownBy(() -> verifier.requireValid(List.of(endpoint("GET", path))))
-                .isInstanceOf(AssertionError.class).hasMessageContaining("lista pública");
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("lista pública");
     }
 
     @Test
@@ -99,7 +103,8 @@ class AuthorizationContractTest {
         var endpoint = endpoint("GET", "/api/v1/auth/contract-fixture");
         assertThat(verifier.inspect(endpoint).allowed()).doesNotContain("ANONYMOUS");
         assertThatThrownBy(() -> verifier.requireValid(List.of(endpoint)))
-                .isInstanceOf(AssertionError.class).hasMessageContaining("authenticated() general");
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("authenticated() general");
         mockMvc.perform(get("/api/v1/auth/contract-fixture")).andExpect(status().isUnauthorized());
     }
 
@@ -107,23 +112,38 @@ class AuthorizationContractTest {
     void matrixRejectsNewMissingAndDuplicateEndpoints() {
         var endpoint = endpoint("GET", "/api/v1/contract-fixtures/method");
         var rule = ruleFor(endpoint, Set.of("ADMIN"));
-        assertThatThrownBy(() -> AuthorizationContractMatrix.requireMatches(List.of(endpoint), List.of(), verifier))
-                .hasMessageContaining("MethodRules#method").hasMessageContaining("sin decision");
-        assertThatThrownBy(() -> AuthorizationContractMatrix.requireMatches(List.of(), List.of(rule), verifier))
+        assertThatThrownBy(() ->
+                        AuthorizationContractMatrix.requireMatches(
+                                List.of(endpoint), List.of(), verifier))
+                .hasMessageContaining("MethodRules#method")
+                .hasMessageContaining("sin decision");
+        assertThatThrownBy(() ->
+                        AuthorizationContractMatrix.requireMatches(
+                                List.of(), List.of(rule), verifier))
                 .hasMessageContaining("sin endpoint descubierto");
-        assertThatThrownBy(() -> AuthorizationContractMatrix.requireMatches(List.of(endpoint), List.of(rule, rule), verifier))
+        assertThatThrownBy(() ->
+                        AuthorizationContractMatrix.requireMatches(
+                                List.of(endpoint), List.of(rule, rule), verifier))
                 .hasMessageContaining("duplicada");
     }
 
     @Test
     void matrixRejectsPermissionWideningAndNarrowing() {
         var endpoint = endpoint("GET", "/api/v1/contract-fixtures/method");
-        AuthorizationContractMatrix.requireMatches(List.of(endpoint), List.of(ruleFor(endpoint, Set.of("ADMIN"))), verifier);
-        assertThatThrownBy(() -> AuthorizationContractMatrix.requireMatches(List.of(endpoint),
-                List.of(ruleFor(endpoint, Set.of("ADMIN", "WAITER"))), verifier))
-                .hasMessageContaining("esperados=").hasMessageContaining("reales=");
-        assertThatThrownBy(() -> AuthorizationContractMatrix.requireMatches(List.of(endpoint),
-                List.of(ruleFor(endpoint, Set.of("WAITER"))), verifier))
+        AuthorizationContractMatrix.requireMatches(
+                List.of(endpoint), List.of(ruleFor(endpoint, Set.of("ADMIN"))), verifier);
+        assertThatThrownBy(() ->
+                        AuthorizationContractMatrix.requireMatches(
+                                List.of(endpoint),
+                                List.of(ruleFor(endpoint, Set.of("ADMIN", "WAITER"))),
+                                verifier))
+                .hasMessageContaining("esperados=")
+                .hasMessageContaining("reales=");
+        assertThatThrownBy(() ->
+                        AuthorizationContractMatrix.requireMatches(
+                                List.of(endpoint),
+                                List.of(ruleFor(endpoint, Set.of("WAITER"))),
+                                verifier))
                 .hasMessageContaining("MethodRules#method");
     }
 
@@ -133,13 +153,34 @@ class AuthorizationContractTest {
         var roles = verifier.inspect(endpoint).allowed();
         var rule = ruleFor(endpoint, roles);
         assertThat(rule.params()).containsExactly("folio");
-        var lostCondition = new AuthorizationContractMatrix.Rule(rule.method(), rule.path(), List.of(),
-                rule.headers(), rule.consumes(), rule.produces(), rule.roles(), rule.reason());
-        assertThatThrownBy(() -> AuthorizationContractMatrix.requireMatches(List.of(endpoint), List.of(lostCondition), verifier))
-                .hasMessageContaining("TicketController#getByFolio").hasMessageContaining("sin decision");
-        var unjustified = new AuthorizationContractMatrix.Rule(rule.method(), rule.path(), rule.params(),
-                rule.headers(), rule.consumes(), rule.produces(), roles, "");
-        assertThatThrownBy(() -> AuthorizationContractMatrix.requireMatches(List.of(endpoint), List.of(unjustified), verifier))
+        var lostCondition =
+                new AuthorizationContractMatrix.Rule(
+                        rule.method(),
+                        rule.path(),
+                        List.of(),
+                        rule.headers(),
+                        rule.consumes(),
+                        rule.produces(),
+                        rule.roles(),
+                        rule.reason());
+        assertThatThrownBy(() ->
+                        AuthorizationContractMatrix.requireMatches(
+                                List.of(endpoint), List.of(lostCondition), verifier))
+                .hasMessageContaining("TicketController#getByFolio")
+                .hasMessageContaining("sin decision");
+        var unjustified =
+                new AuthorizationContractMatrix.Rule(
+                        rule.method(),
+                        rule.path(),
+                        rule.params(),
+                        rule.headers(),
+                        rule.consumes(),
+                        rule.produces(),
+                        roles,
+                        "");
+        assertThatThrownBy(() ->
+                        AuthorizationContractMatrix.requireMatches(
+                                List.of(endpoint), List.of(unjustified), verifier))
                 .hasMessageContaining("sin roles o justificacion");
     }
 
@@ -148,60 +189,107 @@ class AuthorizationContractTest {
         var privateHead = endpoint("HEAD", "/api/v1/contract-fixtures/method");
         assertThat(verifier.inspect(privateHead).allowed()).containsExactly("ADMIN");
         assertThat(verifier.inspect(endpoint("HEAD", "/api/v1/auth/me")).valid()).isTrue();
-        assertThat(verifier.inspect(endpoint("HEAD", "/v3/api-docs")).allowed()).contains("ANONYMOUS");
+        assertThat(verifier.inspect(endpoint("HEAD", "/v3/api-docs")).allowed())
+                .contains("ANONYMOUS");
     }
 
     @Test
-    @DisplayName("Una ruta concreta bajo un comodín se contrasta con la decisión real y con la lista pública")
+    @DisplayName(
+            "Una ruta concreta bajo un comodín se contrasta con la decisión real y con la lista pública")
     void concreteRulesBeneathWildcardsAreVerified() {
         var wildcard = endpoint("GET", "/actuator/health/**");
         var sessionRoles = Set.of("ADMIN", "CASHIER", "KITCHEN", "SUPER_ADMIN", "WAITER");
         var everyone = Set.of("ANONYMOUS", "ADMIN", "CASHIER", "KITCHEN", "SUPER_ADMIN", "WAITER");
         var wildcardRule = ruleFor(wildcard, sessionRoles);
 
-        AuthorizationContractMatrix.requireMatches(List.of(wildcard),
-                List.of(wildcardRule, concreteRule("/actuator/health/liveness", everyone)), verifier);
+        AuthorizationContractMatrix.requireMatches(
+                List.of(wildcard),
+                List.of(wildcardRule, concreteRule("/actuator/health/liveness", everyone)),
+                verifier);
 
         // Declarar publica una ruta que la seguridad real protege.
-        assertThatThrownBy(() -> AuthorizationContractMatrix.requireMatches(List.of(wildcard),
-                List.of(wildcardRule, concreteRule("/actuator/health/db", everyone)), verifier))
-                .hasMessageContaining("Ruta concreta GET /actuator/health/db").hasMessageContaining("reales=");
+        assertThatThrownBy(() ->
+                        AuthorizationContractMatrix.requireMatches(
+                                List.of(wildcard),
+                                List.of(
+                                        wildcardRule,
+                                        concreteRule("/actuator/health/db", everyone)),
+                                verifier))
+                .hasMessageContaining("Ruta concreta GET /actuator/health/db")
+                .hasMessageContaining("reales=");
         // Una ruta concreta que ningun comodin descubierto sirve.
-        assertThatThrownBy(() -> AuthorizationContractMatrix.requireMatches(List.of(wildcard),
-                List.of(wildcardRule, concreteRule("/api/v1/sin-comodin", everyone)), verifier))
+        assertThatThrownBy(() ->
+                        AuthorizationContractMatrix.requireMatches(
+                                List.of(wildcard),
+                                List.of(
+                                        wildcardRule,
+                                        concreteRule("/api/v1/sin-comodin", everyone)),
+                                verifier))
                 .hasMessageContaining("sin endpoint descubierto");
 
         // Si la seguridad abre una ruta concreta que no esta en la lista
         // publica del verificador, la matriz sola no basta para aceptarla.
-        var publicFilter = new AuthorizationFilter((authentication, request) -> new AuthorizationDecision(true));
-        var publicVerifier = new AuthorizationContractVerifier(context,
-                new FilterChainProxy(new DefaultSecurityFilterChain(AnyRequestMatcher.INSTANCE, publicFilter)));
-        assertThatThrownBy(() -> AuthorizationContractMatrix.requireMatches(List.of(wildcard),
-                List.of(ruleFor(wildcard, everyone), concreteRule("/actuator/health/db", everyone)), publicVerifier))
+        var publicFilter =
+                new AuthorizationFilter(
+                        (authentication, request) -> new AuthorizationDecision(true));
+        var publicVerifier =
+                new AuthorizationContractVerifier(
+                        context,
+                        new FilterChainProxy(
+                                new DefaultSecurityFilterChain(
+                                        AnyRequestMatcher.INSTANCE, publicFilter)));
+        assertThatThrownBy(() ->
+                        AuthorizationContractMatrix.requireMatches(
+                                List.of(wildcard),
+                                List.of(
+                                        ruleFor(wildcard, everyone),
+                                        concreteRule("/actuator/health/db", everyone)),
+                                publicVerifier))
                 .hasMessageContaining("sin entrada exacta en la lista publica");
     }
 
     private static AuthorizationContractMatrix.Rule concreteRule(String path, Set<String> roles) {
-        return new AuthorizationContractMatrix.Rule("GET", path, List.of(), List.of(), List.of(), List.of(),
-                roles, "Contrato deliberado de prueba");
+        return new AuthorizationContractMatrix.Rule(
+                "GET",
+                path,
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                roles,
+                "Contrato deliberado de prueba");
     }
 
-    private AuthorizationContractMatrix.Rule ruleFor(AuthorizationContractVerifier.Endpoint endpoint, Set<String> roles) {
+    private AuthorizationContractMatrix.Rule ruleFor(
+            AuthorizationContractVerifier.Endpoint endpoint, Set<String> roles) {
         var key = AuthorizationContractMatrix.key(endpoint);
-        return new AuthorizationContractMatrix.Rule(key.method(), key.path(), key.params(), key.headers(),
-                key.consumes(), key.produces(), roles, "Contrato deliberado de prueba");
+        return new AuthorizationContractMatrix.Rule(
+                key.method(),
+                key.path(),
+                key.params(),
+                key.headers(),
+                key.consumes(),
+                key.produces(),
+                roles,
+                "Contrato deliberado de prueba");
     }
 
     @Test
     @DisplayName("La lista pública distingue método HTTP y ruta exacta")
     void acceptsOnlyDocumentedPublicMethods() {
-        verifier.requireValid(List.of(endpoint("POST", "/api/v1/auth/login"),
-                endpoint("POST", "/api/v1/auth/refresh"), endpoint("POST", "/api/v1/signup")));
+        verifier.requireValid(
+                List.of(
+                        endpoint("POST", "/api/v1/auth/login"),
+                        endpoint("POST", "/api/v1/auth/refresh"),
+                        endpoint("POST", "/api/v1/signup")));
         for (String path : List.of("/api/v1/auth/login", "/api/v1/auth/refresh")) {
             var publicEndpoint = endpoint("POST", path);
-            var wrongMethod = new AuthorizationContractVerifier.Endpoint(
-                    new AuthorizationContractVerifier.Route("GET", publicEndpoint.route().path()),
-                    publicEndpoint.mapping(), publicEndpoint.handler());
+            var wrongMethod =
+                    new AuthorizationContractVerifier.Endpoint(
+                            new AuthorizationContractVerifier.Route(
+                                    "GET", publicEndpoint.route().path()),
+                            publicEndpoint.mapping(),
+                            publicEndpoint.handler());
             assertThat(verifier.inspect(wrongMethod).valid()).as("GET %s", path).isFalse();
         }
     }
@@ -209,40 +297,55 @@ class AuthorizationContractTest {
     @Test
     @DisplayName("Un prefijo parecido a plataforma no hereda sus permisos")
     void doesNotConfusePlatformPrefixes() {
-        assertThatThrownBy(() -> verifier.requireValid(List.of(
-                endpoint("GET", "/api/v1/platform-other/contract-fixture"))))
-                .isInstanceOf(AssertionError.class).hasMessageContaining("Falta una decisión explícita");
+        assertThatThrownBy(() ->
+                        verifier.requireValid(
+                                List.of(
+                                        endpoint(
+                                                "GET", "/api/v1/platform-other/contract-fixture"))))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("Falta una decisión explícita");
     }
 
     @Test
     @DisplayName("Si el matcher de plataforma se debilita, el verificador lo detecta")
     void detectsMatcherDriftInsteadOfTrustingDuplicatedConfiguration() {
-        var weakenedFilter = new AuthorizationFilter(AuthenticatedAuthorizationManager.authenticated());
-        var weakenedChain = new FilterChainProxy(new DefaultSecurityFilterChain(
-                AnyRequestMatcher.INSTANCE, weakenedFilter));
+        var weakenedFilter =
+                new AuthorizationFilter(AuthenticatedAuthorizationManager.authenticated());
+        var weakenedChain =
+                new FilterChainProxy(
+                        new DefaultSecurityFilterChain(AnyRequestMatcher.INSTANCE, weakenedFilter));
         var changedVerifier = new AuthorizationContractVerifier(context, weakenedChain);
-        assertThatThrownBy(() -> changedVerifier.requireValid(List.of(
-                endpoint("GET", "/api/v1/platform/contract-fixture"))))
-                .isInstanceOf(AssertionError.class).hasMessageContaining("no limita a SUPER_ADMIN");
+        assertThatThrownBy(() ->
+                        changedVerifier.requireValid(
+                                List.of(endpoint("GET", "/api/v1/platform/contract-fixture"))))
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("no limita a SUPER_ADMIN");
     }
 
     @ParameterizedTest
     @CsvSource({"GET, /api/v1/auth/me", "POST, /api/v1/auth/logout"})
     @DisplayName("Las rutas de sesión no se aceptan como excepciones públicas")
     void sessionRoutesMustRequireAuthentication(String method, String path) {
-        var publicFilter = new AuthorizationFilter((authentication, request) -> new AuthorizationDecision(true));
-        var publicChain = new FilterChainProxy(new DefaultSecurityFilterChain(
-                AnyRequestMatcher.INSTANCE, publicFilter));
+        var publicFilter =
+                new AuthorizationFilter(
+                        (authentication, request) -> new AuthorizationDecision(true));
+        var publicChain =
+                new FilterChainProxy(
+                        new DefaultSecurityFilterChain(AnyRequestMatcher.INSTANCE, publicFilter));
         var publicVerifier = new AuthorizationContractVerifier(context, publicChain);
         assertThatThrownBy(() -> publicVerifier.requireValid(List.of(endpoint(method, path))))
-                .isInstanceOf(AssertionError.class).hasMessageContaining("lista pública");
+                .isInstanceOf(AssertionError.class)
+                .hasMessageContaining("lista pública");
 
-        var sessionFilter = new AuthorizationFilter(AuthenticatedAuthorizationManager.authenticated());
-        var sessionChain = new FilterChainProxy(new DefaultSecurityFilterChain(
-                AnyRequestMatcher.INSTANCE, sessionFilter));
+        var sessionFilter =
+                new AuthorizationFilter(AuthenticatedAuthorizationManager.authenticated());
+        var sessionChain =
+                new FilterChainProxy(
+                        new DefaultSecurityFilterChain(AnyRequestMatcher.INSTANCE, sessionFilter));
         var sessionVerifier = new AuthorizationContractVerifier(context, sessionChain);
         sessionVerifier.requireValid(List.of(endpoint(method, path)));
-        assertThat(sessionVerifier.inspect(endpoint(method, path)).allowed()).hasSize(UserRole.values().length)
+        assertThat(sessionVerifier.inspect(endpoint(method, path)).allowed())
+                .hasSize(UserRole.values().length)
                 .doesNotContain("ANONYMOUS");
     }
 
@@ -262,10 +365,14 @@ class AuthorizationContractTest {
     @DisplayName("Los filtros y proxies reales confirman permisos para los cinco roles")
     void actualHttpAuthorizationMatchesVerifier(UserRole role) throws Exception {
         Cookie cookie = cookie(role);
-        for (String path : List.of("/api/v1/contract-fixtures/method",
-                "/api/v1/contract-fixtures/composed", "/api/v1/contract-fixtures/inherited",
-                "/api/v1/contract-class", "/api/v1/contract-class/override",
-                "/api/v1/platform/contract-fixture")) {
+        for (String path :
+                List.of(
+                        "/api/v1/contract-fixtures/method",
+                        "/api/v1/contract-fixtures/composed",
+                        "/api/v1/contract-fixtures/inherited",
+                        "/api/v1/contract-class",
+                        "/api/v1/contract-class/override",
+                        "/api/v1/platform/contract-fixture")) {
             Set<String> allowed = verifier.inspect(endpoint("GET", path)).allowed();
             mockMvc.perform(get(path).cookie(cookie))
                     .andExpect(status().is(allowed.contains(role.name()) ? 200 : 403));
@@ -275,13 +382,21 @@ class AuthorizationContractTest {
     @Test
     @DisplayName("Los endpoints protegidos rechazan peticiones anónimas")
     void actualHttpRejectsAnonymousRequests() throws Exception {
-        mockMvc.perform(get("/api/v1/contract-fixtures/method")).andExpect(status().isUnauthorized());
-        mockMvc.perform(get("/api/v1/platform/contract-fixture")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/contract-fixtures/method"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/platform/contract-fixture"))
+                .andExpect(status().isUnauthorized());
     }
 
     private AuthorizationContractVerifier.Endpoint endpoint(String method, String path) {
-        List<AuthorizationContractVerifier.Endpoint> matches = endpoints.stream()
-                .filter(e -> e.route().equals(new AuthorizationContractVerifier.Route(method, path))).toList();
+        List<AuthorizationContractVerifier.Endpoint> matches =
+                endpoints.stream()
+                        .filter(e ->
+                                e.route()
+                                        .equals(
+                                                new AuthorizationContractVerifier.Route(
+                                                        method, path)))
+                        .toList();
         assertThat(matches).as("Mapping registrado %s %s", method, path).hasSize(1);
         return matches.getFirst();
     }

@@ -3,9 +3,9 @@ package com.callejon9.shared.throttle;
 import java.time.Duration;
 
 /**
- * Una operacion se rechazo por haber agotado su cupo. Se traduce a 429 con
- * {@code Retry-After} en {@code GlobalExceptionHandler}. El titulo y el
- * mensaje son fijos para cada uso: nunca repiten datos de la peticion.
+ * Una operacion se rechazo por haber agotado su cupo. Se traduce a 429 con {@code Retry-After} en
+ * {@code GlobalExceptionHandler}. El titulo y el mensaje son fijos para cada uso: nunca repiten
+ * datos de la peticion.
  */
 public class RateLimitExceededException extends RuntimeException {
 

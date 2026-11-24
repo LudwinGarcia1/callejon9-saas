@@ -1,8 +1,16 @@
 package com.callejon9.order;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.callejon9.catalog.domain.Product;
 import com.callejon9.catalog.repository.ProductRepository;
-import com.callejon9.order.domain.OrderStatus;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
 import com.callejon9.support.TestSessions;
@@ -29,20 +37,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 /**
- * El flujo de meseros: abrir una orden, agregar productos y enviarla a
- * cocina. El waiter_id de orders y restaurant_tables tiene FK a users, asi
- * que a diferencia de TenantFilterTest (que solo prueba el filtro de
- * seguridad) aqui el usuario autenticado debe existir realmente en la tabla
+ * El flujo de meseros: abrir una orden, agregar productos y enviarla a cocina. El waiter_id de
+ * orders y restaurant_tables tiene FK a users, asi que a diferencia de TenantFilterTest (que solo
+ * prueba el filtro de seguridad) aqui el usuario autenticado debe existir realmente en la tabla
  * users del tenant.
  */
 @SpringBootTest
@@ -68,24 +66,51 @@ class OrderControllerTest {
 
     @BeforeEach
     void seed() {
-        tenant = onboardingService.onboard("Ordenes Test", "ordenes-test",
-                "admin@ordenes.com", "Admin", "Secreto123!", "FREE");
+        tenant =
+                onboardingService.onboard(
+                        "Ordenes Test",
+                        "ordenes-test",
+                        "admin@ordenes.com",
+                        "Admin",
+                        "Secreto123!",
+                        "FREE");
 
         TenantContext.set(tenant.getId());
         try {
-            admin = transactionTemplate.execute(
-                    status -> userRepository.findByEmail("admin@ordenes.com").orElseThrow());
+            admin =
+                    transactionTemplate.execute(status ->
+                            userRepository.findByEmail("admin@ordenes.com").orElseThrow());
 
-            waiter = transactionTemplate.execute(status -> userRepository.save(User.builder()
-                    .email("mesero@ordenes.com").passwordHash("x").fullName("Mesero")
-                    .role(UserRole.WAITER).active(true).build()));
+            waiter =
+                    transactionTemplate.execute(status ->
+                            userRepository.save(
+                                    User.builder()
+                                            .email("mesero@ordenes.com")
+                                            .passwordHash("x")
+                                            .fullName("Mesero")
+                                            .role(UserRole.WAITER)
+                                            .active(true)
+                                            .build()));
 
-            table = transactionTemplate.execute(status -> tableRepository.save(RestaurantTable.builder()
-                    .number(1).capacity(4).status(TableStatus.FREE).active(true).build()));
+            table =
+                    transactionTemplate.execute(status ->
+                            tableRepository.save(
+                                    RestaurantTable.builder()
+                                            .number(1)
+                                            .capacity(4)
+                                            .status(TableStatus.FREE)
+                                            .active(true)
+                                            .build()));
 
-            product = transactionTemplate.execute(status -> productRepository.save(Product.builder()
-                    .name("Taco").description("Taco al pastor")
-                    .price(new BigDecimal("25.00")).active(true).build()));
+            product =
+                    transactionTemplate.execute(status ->
+                            productRepository.save(
+                                    Product.builder()
+                                            .name("Taco")
+                                            .description("Taco al pastor")
+                                            .price(new BigDecimal("25.00"))
+                                            .active(true)
+                                            .build()));
         } finally {
             TenantContext.clear();
         }
@@ -104,19 +129,24 @@ class OrderControllerTest {
     @Test
     @DisplayName("un WAITER abre una orden y la mesa queda OCCUPIED")
     void waiterOpensAnOrder() throws Exception {
-        mockMvc.perform(post("/api/v1/orders")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tableId\":\"" + table.getId() + "\",\"guestCount\":2}"))
+        mockMvc.perform(
+                        post("/api/v1/orders")
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"tableId\":\"" + table.getId() + "\",\"guestCount\":2}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("NEW"))
-                .andExpect(jsonPath("$.folio").value(org.hamcrest.Matchers.matchesPattern("ORD-\\d{12}")))
+                .andExpect(
+                        jsonPath("$.folio")
+                                .value(org.hamcrest.Matchers.matchesPattern("ORD-\\d{12}")))
                 .andExpect(jsonPath("$.total").value(0));
 
         TenantContext.set(tenant.getId());
         try {
-            RestaurantTable reloaded = transactionTemplate.execute(
-                    status -> tableRepository.findById(table.getId()).orElseThrow());
+            RestaurantTable reloaded =
+                    transactionTemplate.execute(
+                            status -> tableRepository.findById(table.getId()).orElseThrow());
             assertThat(reloaded.getStatus()).isEqualTo(TableStatus.OCCUPIED);
             assertThat(reloaded.getWaiterId()).isEqualTo(waiter.getId());
         } finally {
@@ -127,43 +157,57 @@ class OrderControllerTest {
     @Test
     @DisplayName("abrir una orden sobre una mesa ya ocupada da 409")
     void cannotOpenAnOrderOnAnOccupiedTable() throws Exception {
-        mockMvc.perform(post("/api/v1/orders")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tableId\":\"" + table.getId() + "\",\"guestCount\":2}"))
+        mockMvc.perform(
+                        post("/api/v1/orders")
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"tableId\":\"" + table.getId() + "\",\"guestCount\":2}"))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/api/v1/orders")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tableId\":\"" + table.getId() + "\",\"guestCount\":1}"))
+        mockMvc.perform(
+                        post("/api/v1/orders")
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"tableId\":\"" + table.getId() + "\",\"guestCount\":1}"))
                 .andExpect(status().isConflict());
     }
 
     @Test
     @DisplayName("una mesa dada de baja no se puede abrir para una orden nueva")
     void cannotOpenAnOrderOnADeactivatedTable() throws Exception {
-        mockMvc.perform(patch("/api/v1/tables/" + table.getId())
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":false}"))
+        mockMvc.perform(
+                        patch("/api/v1/tables/" + table.getId())
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":false}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(false));
 
-        mockMvc.perform(post("/api/v1/orders")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tableId\":\"" + table.getId() + "\",\"guestCount\":2}"))
+        mockMvc.perform(
+                        post("/api/v1/orders")
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"tableId\":\"" + table.getId() + "\",\"guestCount\":2}"))
                 .andExpect(status().isConflict());
     }
 
     private UUID openOrder() throws Exception {
-        String body = mockMvc.perform(post("/api/v1/orders")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tableId\":\"" + table.getId() + "\",\"guestCount\":2}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        String body =
+                mockMvc.perform(
+                                post("/api/v1/orders")
+                                        .cookie(cookieFor(waiter))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                "{\"tableId\":\""
+                                                        + table.getId()
+                                                        + "\",\"guestCount\":2}"))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
         return UUID.fromString(body.replaceAll(".*\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
     }
 
@@ -172,11 +216,14 @@ class OrderControllerTest {
     void addingItemsSnapshotsThePriceAndRecomputesTheTotal() throws Exception {
         UUID orderId = openOrder();
 
-        mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"items\":[{\"productId\":\"" + product.getId()
-                                + "\",\"quantity\":2,\"notes\":\"sin cebolla\"}]}"))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/items")
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"items\":[{\"productId\":\""
+                                                + product.getId()
+                                                + "\",\"quantity\":2,\"notes\":\"sin cebolla\"}]}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(50.00))
                 .andExpect(jsonPath("$.items[0].productName").value("Taco"))
@@ -203,21 +250,27 @@ class OrderControllerTest {
 
     @Test
     @DisplayName("cambiar el precio de un producto por PUT no afecta las ordenes ya abiertas")
-    void updatingAProductPriceThroughThePutEndpointDoesNotAffectAlreadyPlacedOrders() throws Exception {
+    void updatingAProductPriceThroughThePutEndpointDoesNotAffectAlreadyPlacedOrders()
+            throws Exception {
         UUID orderId = openOrder();
-        mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"items\":[{\"productId\":\"" + product.getId()
-                                + "\",\"quantity\":1}]}"))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/items")
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"items\":[{\"productId\":\""
+                                                + product.getId()
+                                                + "\",\"quantity\":1}]}"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(put("/api/v1/products/" + product.getId())
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"name":"Taco","description":"Taco al pastor","price":99.00}
-                                """))
+        mockMvc.perform(
+                        put("/api/v1/products/" + product.getId())
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"name":"Taco","description":"Taco al pastor","price":99.00}
+                                        """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.price").value(99.00));
 
@@ -228,21 +281,27 @@ class OrderControllerTest {
     }
 
     @Test
-    @DisplayName("dar de baja un producto no afecta las ordenes que ya lo incluyen; "
-            + "solo desaparece del catalogo")
-    void deactivatingAProductDoesNotAffectExistingOrdersOnlyHidesItFromTheCatalog() throws Exception {
+    @DisplayName(
+            "dar de baja un producto no afecta las ordenes que ya lo incluyen; "
+                    + "solo desaparece del catalogo")
+    void deactivatingAProductDoesNotAffectExistingOrdersOnlyHidesItFromTheCatalog()
+            throws Exception {
         UUID orderId = openOrder();
-        mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"items\":[{\"productId\":\"" + product.getId()
-                                + "\",\"quantity\":1}]}"))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/items")
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"items\":[{\"productId\":\""
+                                                + product.getId()
+                                                + "\",\"quantity\":1}]}"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(patch("/api/v1/products/" + product.getId())
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":false}"))
+        mockMvc.perform(
+                        patch("/api/v1/products/" + product.getId())
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":false}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(false));
 
@@ -262,17 +321,21 @@ class OrderControllerTest {
     void cannotAddAnInactiveProductToAnOrder() throws Exception {
         UUID orderId = openOrder();
 
-        mockMvc.perform(patch("/api/v1/products/" + product.getId())
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":false}"))
+        mockMvc.perform(
+                        patch("/api/v1/products/" + product.getId())
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":false}"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"items\":[{\"productId\":\"" + product.getId()
-                                + "\",\"quantity\":1}]}"))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/items")
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"items\":[{\"productId\":\""
+                                                + product.getId()
+                                                + "\",\"quantity\":1}]}"))
                 .andExpect(status().isConflict());
 
         mockMvc.perform(get("/api/v1/orders/" + orderId).cookie(cookieFor(waiter)))
@@ -288,19 +351,29 @@ class OrderControllerTest {
         Product inactiveProduct;
         TenantContext.set(tenant.getId());
         try {
-            inactiveProduct = transactionTemplate.execute(status -> productRepository.save(Product.builder()
-                    .name("Producto inactivo").description("No vendible")
-                    .price(new BigDecimal("30.00")).active(false).build()));
+            inactiveProduct =
+                    transactionTemplate.execute(status ->
+                            productRepository.save(
+                                    Product.builder()
+                                            .name("Producto inactivo")
+                                            .description("No vendible")
+                                            .price(new BigDecimal("30.00"))
+                                            .active(false)
+                                            .build()));
         } finally {
             TenantContext.clear();
         }
 
-        mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"items\":[{\"productId\":\"" + product.getId()
-                                + "\",\"quantity\":1},{\"productId\":\"" + inactiveProduct.getId()
-                                + "\",\"quantity\":1}]}"))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/items")
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"items\":[{\"productId\":\""
+                                                + product.getId()
+                                                + "\",\"quantity\":1},{\"productId\":\""
+                                                + inactiveProduct.getId()
+                                                + "\",\"quantity\":1}]}"))
                 .andExpect(status().isConflict());
 
         mockMvc.perform(get("/api/v1/orders/" + orderId).cookie(cookieFor(waiter)))
@@ -317,16 +390,20 @@ class OrderControllerTest {
         TenantContext.set(tenant.getId());
         try {
             transactionTemplate.executeWithoutResult(status ->
-                    jdbcTemplate.update("UPDATE orders SET status = 'CANCELED' WHERE id = ?", orderId));
+                    jdbcTemplate.update(
+                            "UPDATE orders SET status = 'CANCELED' WHERE id = ?", orderId));
         } finally {
             TenantContext.clear();
         }
 
-        mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"items\":[{\"productId\":\"" + product.getId()
-                                + "\",\"quantity\":1}]}"))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/items")
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"items\":[{\"productId\":\""
+                                                + product.getId()
+                                                + "\",\"quantity\":1}]}"))
                 .andExpect(status().isConflict());
     }
 
@@ -334,15 +411,19 @@ class OrderControllerTest {
     @DisplayName("enviar a cocina cambia el estado a SENT y marca sentToKitchenAt")
     void sendToKitchenTransitionsTheOrder() throws Exception {
         UUID orderId = openOrder();
-        mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"items\":[{\"productId\":\"" + product.getId()
-                                + "\",\"quantity\":1}]}"))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/items")
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"items\":[{\"productId\":\""
+                                                + product.getId()
+                                                + "\",\"quantity\":1}]}"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/api/v1/orders/" + orderId + "/send-to-kitchen")
-                        .cookie(cookieFor(waiter)))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/send-to-kitchen")
+                                .cookie(cookieFor(waiter)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("SENT"))
                 .andExpect(jsonPath("$.sentToKitchenAt").isNotEmpty())
@@ -354,8 +435,9 @@ class OrderControllerTest {
     void sendToKitchenWithoutItemsIsRejected() throws Exception {
         UUID orderId = openOrder();
 
-        mockMvc.perform(post("/api/v1/orders/" + orderId + "/send-to-kitchen")
-                        .cookie(cookieFor(waiter)))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/send-to-kitchen")
+                                .cookie(cookieFor(waiter)))
                 .andExpect(status().isConflict());
     }
 
@@ -363,19 +445,24 @@ class OrderControllerTest {
     @DisplayName("enviar a cocina una orden que no esta NEW da 409")
     void sendToKitchenTwiceIsRejected() throws Exception {
         UUID orderId = openOrder();
-        mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"items\":[{\"productId\":\"" + product.getId()
-                                + "\",\"quantity\":1}]}"))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/items")
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"items\":[{\"productId\":\""
+                                                + product.getId()
+                                                + "\",\"quantity\":1}]}"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/api/v1/orders/" + orderId + "/send-to-kitchen")
-                        .cookie(cookieFor(waiter)))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/send-to-kitchen")
+                                .cookie(cookieFor(waiter)))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/api/v1/orders/" + orderId + "/send-to-kitchen")
-                        .cookie(cookieFor(waiter)))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/send-to-kitchen")
+                                .cookie(cookieFor(waiter)))
                 .andExpect(status().isConflict());
     }
 
@@ -400,11 +487,14 @@ class OrderControllerTest {
     @DisplayName("cancelar una orden la marca CANCELED, libera la mesa y conserva sus lineas")
     void cancelingAnOrderFreesTheTableAndKeepsItsItems() throws Exception {
         UUID orderId = openOrder();
-        mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"items\":[{\"productId\":\"" + product.getId()
-                                + "\",\"quantity\":1}]}"))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/items")
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"items\":[{\"productId\":\""
+                                                + product.getId()
+                                                + "\",\"quantity\":1}]}"))
                 .andExpect(status().isOk());
 
         mockMvc.perform(post("/api/v1/orders/" + orderId + "/cancel").cookie(cookieFor(waiter)))
@@ -415,8 +505,9 @@ class OrderControllerTest {
 
         TenantContext.set(tenant.getId());
         try {
-            RestaurantTable reloaded = transactionTemplate.execute(
-                    status -> tableRepository.findById(table.getId()).orElseThrow());
+            RestaurantTable reloaded =
+                    transactionTemplate.execute(
+                            status -> tableRepository.findById(table.getId()).orElseThrow());
             assertThat(reloaded.getStatus()).isEqualTo(TableStatus.FREE);
             assertThat(reloaded.getWaiterId()).isNull();
         } finally {
@@ -431,10 +522,12 @@ class OrderControllerTest {
         mockMvc.perform(post("/api/v1/orders/" + orderId + "/cancel").cookie(cookieFor(waiter)))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/api/v1/orders")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tableId\":\"" + table.getId() + "\",\"guestCount\":3}"))
+        mockMvc.perform(
+                        post("/api/v1/orders")
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"tableId\":\"" + table.getId() + "\",\"guestCount\":3}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("NEW"));
     }
@@ -471,28 +564,36 @@ class OrderControllerTest {
     @Test
     @DisplayName("cancelar una orden que no existe da 404")
     void cancelingANonexistentOrderGives404() throws Exception {
-        mockMvc.perform(post("/api/v1/orders/" + UUID.randomUUID() + "/cancel")
-                        .cookie(cookieFor(waiter)))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + UUID.randomUUID() + "/cancel")
+                                .cookie(cookieFor(waiter)))
                 .andExpect(status().isNotFound());
     }
 
     private String addItemsAndReturnBody(UUID orderId, String itemsJson) throws Exception {
-        return mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"items\":[" + itemsJson + "]}"))
+        return mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/items")
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"items\":[" + itemsJson + "]}"))
                 .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
     }
 
     private String itemJson(int quantity, String notes) {
-        return "{\"productId\":\"" + product.getId() + "\",\"quantity\":" + quantity
-                + (notes == null ? "" : ",\"notes\":\"" + notes + "\"") + "}";
+        return "{\"productId\":\""
+                + product.getId()
+                + "\",\"quantity\":"
+                + quantity
+                + (notes == null ? "" : ",\"notes\":\"" + notes + "\"")
+                + "}";
     }
 
     private UUID firstItemId(String orderBody) {
-        return UUID.fromString(orderBody.replaceAll(
-                "(?s).*\"items\":\\[\\{\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
+        return UUID.fromString(
+                orderBody.replaceAll("(?s).*\"items\":\\[\\{\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
     }
 
     @Test
@@ -504,12 +605,15 @@ class OrderControllerTest {
         UUID removedId = firstItemId(addItemsAndReturnBody(orderId, itemJson(2, "sin crema")));
         addItemsAndReturnBody(orderId, itemJson(1, null));
 
-        mockMvc.perform(delete("/api/v1/orders/" + orderId + "/items/" + removedId)
-                        .cookie(cookieFor(waiter)))
+        mockMvc.perform(
+                        delete("/api/v1/orders/" + orderId + "/items/" + removedId)
+                                .cookie(cookieFor(waiter)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("NEW"))
                 .andExpect(jsonPath("$.items.length()").value(1))
-                .andExpect(jsonPath("$.items[0].id").value(org.hamcrest.Matchers.not(removedId.toString())))
+                .andExpect(
+                        jsonPath("$.items[0].id")
+                                .value(org.hamcrest.Matchers.not(removedId.toString())))
                 .andExpect(jsonPath("$.items[0].quantity").value(1))
                 .andExpect(jsonPath("$.total").value(25.00));
 
@@ -523,11 +627,14 @@ class OrderControllerTest {
     void removingAnItemAfterSendingToKitchenIsRejected() throws Exception {
         UUID orderId = openOrder();
         UUID itemId = firstItemId(addItemsAndReturnBody(orderId, itemJson(1, null)));
-        mockMvc.perform(post("/api/v1/orders/" + orderId + "/send-to-kitchen").cookie(cookieFor(waiter)))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/send-to-kitchen")
+                                .cookie(cookieFor(waiter)))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(delete("/api/v1/orders/" + orderId + "/items/" + itemId)
-                        .cookie(cookieFor(waiter)))
+        mockMvc.perform(
+                        delete("/api/v1/orders/" + orderId + "/items/" + itemId)
+                                .cookie(cookieFor(waiter)))
                 .andExpect(status().isConflict());
 
         mockMvc.perform(get("/api/v1/orders/" + orderId).cookie(cookieFor(waiter)))
@@ -544,24 +651,41 @@ class OrderControllerTest {
         TenantContext.set(tenant.getId());
         RestaurantTable otherTable;
         try {
-            otherTable = transactionTemplate.execute(status -> tableRepository.save(RestaurantTable.builder()
-                    .number(2).capacity(4).status(TableStatus.FREE).active(true).build()));
+            otherTable =
+                    transactionTemplate.execute(status ->
+                            tableRepository.save(
+                                    RestaurantTable.builder()
+                                            .number(2)
+                                            .capacity(4)
+                                            .status(TableStatus.FREE)
+                                            .active(true)
+                                            .build()));
         } finally {
             TenantContext.clear();
         }
-        String otherBody = mockMvc.perform(post("/api/v1/orders")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tableId\":\"" + otherTable.getId() + "\",\"guestCount\":1}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
-        UUID otherOrderId = UUID.fromString(otherBody.replaceAll(".*\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
+        String otherBody =
+                mockMvc.perform(
+                                post("/api/v1/orders")
+                                        .cookie(cookieFor(waiter))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                "{\"tableId\":\""
+                                                        + otherTable.getId()
+                                                        + "\",\"guestCount\":1}"))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
+        UUID otherOrderId =
+                UUID.fromString(otherBody.replaceAll(".*\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
 
-        mockMvc.perform(delete("/api/v1/orders/" + otherOrderId + "/items/" + itemId)
-                        .cookie(cookieFor(waiter)))
+        mockMvc.perform(
+                        delete("/api/v1/orders/" + otherOrderId + "/items/" + itemId)
+                                .cookie(cookieFor(waiter)))
                 .andExpect(status().isNotFound());
-        mockMvc.perform(delete("/api/v1/orders/" + orderId + "/items/" + UUID.randomUUID())
-                        .cookie(cookieFor(waiter)))
+        mockMvc.perform(
+                        delete("/api/v1/orders/" + orderId + "/items/" + UUID.randomUUID())
+                                .cookie(cookieFor(waiter)))
                 .andExpect(status().isNotFound());
 
         mockMvc.perform(get("/api/v1/orders/" + orderId).cookie(cookieFor(waiter)))
@@ -573,32 +697,65 @@ class OrderControllerTest {
     void crossTenantIsolationHoldsForOrders() throws Exception {
         UUID orderIdA = openOrder();
 
-        Tenant tenantB = onboardingService.onboard("Ordenes Test B", "ordenes-test-b",
-                "admin@ordenesb.com", "Admin B", "Secreto123!", "FREE");
+        Tenant tenantB =
+                onboardingService.onboard(
+                        "Ordenes Test B",
+                        "ordenes-test-b",
+                        "admin@ordenesb.com",
+                        "Admin B",
+                        "Secreto123!",
+                        "FREE");
 
         TenantContext.set(tenantB.getId());
         User waiterB;
         RestaurantTable tableB;
         Product productB;
         try {
-            waiterB = transactionTemplate.execute(status -> userRepository.save(User.builder()
-                    .email("mesero@ordenesb.com").passwordHash("x").fullName("Mesero B")
-                    .role(UserRole.WAITER).active(true).build()));
-            tableB = transactionTemplate.execute(status -> tableRepository.save(RestaurantTable.builder()
-                    .number(1).capacity(2).status(TableStatus.FREE).active(true).build()));
-            productB = transactionTemplate.execute(status -> productRepository.save(Product.builder()
-                    .name("Producto B").description("Solo tenant B")
-                    .price(new BigDecimal("20.00")).active(true).build()));
+            waiterB =
+                    transactionTemplate.execute(status ->
+                            userRepository.save(
+                                    User.builder()
+                                            .email("mesero@ordenesb.com")
+                                            .passwordHash("x")
+                                            .fullName("Mesero B")
+                                            .role(UserRole.WAITER)
+                                            .active(true)
+                                            .build()));
+            tableB =
+                    transactionTemplate.execute(status ->
+                            tableRepository.save(
+                                    RestaurantTable.builder()
+                                            .number(1)
+                                            .capacity(2)
+                                            .status(TableStatus.FREE)
+                                            .active(true)
+                                            .build()));
+            productB =
+                    transactionTemplate.execute(status ->
+                            productRepository.save(
+                                    Product.builder()
+                                            .name("Producto B")
+                                            .description("Solo tenant B")
+                                            .price(new BigDecimal("20.00"))
+                                            .active(true)
+                                            .build()));
         } finally {
             TenantContext.clear();
         }
 
-        String bodyB = mockMvc.perform(post("/api/v1/orders")
-                        .cookie(cookieFor(waiterB))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tableId\":\"" + tableB.getId() + "\",\"guestCount\":2}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        String bodyB =
+                mockMvc.perform(
+                                post("/api/v1/orders")
+                                        .cookie(cookieFor(waiterB))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                "{\"tableId\":\""
+                                                        + tableB.getId()
+                                                        + "\",\"guestCount\":2}"))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
         UUID orderIdB = UUID.fromString(bodyB.replaceAll(".*\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
 
         // Tenant A: la lista de ordenes nunca debe contener la orden de B.
@@ -614,11 +771,14 @@ class OrderControllerTest {
 
         // El id de producto tampoco cruza la frontera de tenant: RLS lo oculta
         // durante addItems y la orden de A no recibe una línea parcial.
-        mockMvc.perform(post("/api/v1/orders/" + orderIdA + "/items")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"items\":[{\"productId\":\"" + productB.getId()
-                                + "\",\"quantity\":1}]}"))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderIdA + "/items")
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"items\":[{\"productId\":\""
+                                                + productB.getId()
+                                                + "\",\"quantity\":1}]}"))
                 .andExpect(status().isNotFound());
 
         mockMvc.perform(get("/api/v1/orders/" + orderIdA).cookie(cookieFor(waiter)))

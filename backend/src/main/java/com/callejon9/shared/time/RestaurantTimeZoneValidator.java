@@ -3,7 +3,8 @@ package com.callejon9.shared.time;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-public class RestaurantTimeZoneValidator implements ConstraintValidator<RestaurantTimeZone, String> {
+public class RestaurantTimeZoneValidator
+        implements ConstraintValidator<RestaurantTimeZone, String> {
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {

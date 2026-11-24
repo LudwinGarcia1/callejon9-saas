@@ -13,10 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * El TenantContext ya esta fijado por TenantFilter antes de que la peticion
- * llegue aqui, asi que @Transactional declarativo es suficiente: no hace
- * falta TransactionTemplate como en TenantOnboardingService (ese caso cruza
- * la frontera control plane / data plane, este no).
+ * El TenantContext ya esta fijado por TenantFilter antes de que la peticion llegue aqui, asi
+ * que @Transactional declarativo es suficiente: no hace falta TransactionTemplate como en
+ * TenantOnboardingService (ese caso cruza la frontera control plane / data plane, este no).
  */
 @Service
 public class TableService {
@@ -24,17 +23,17 @@ public class TableService {
     private final RestaurantTableRepository tableRepository;
     private final PlanLimitService planLimitService;
 
-    public TableService(RestaurantTableRepository tableRepository, PlanLimitService planLimitService) {
+    public TableService(
+            RestaurantTableRepository tableRepository, PlanLimitService planLimitService) {
         this.tableRepository = tableRepository;
         this.planLimitService = planLimitService;
     }
 
     /**
-     * Lista las mesas. Por defecto solo las activas: es lo que necesitan el
-     * mapa de mesas del mesero, cocina y caja. La pantalla de administracion
-     * pasa {@code includeInactive = true} para poder ver (y reactivar) las
-     * mesas dadas de baja, que de otro modo quedarian atrapadas sin forma de
-     * deshacerse.
+     * Lista las mesas. Por defecto solo las activas: es lo que necesitan el mapa de mesas del
+     * mesero, cocina y caja. La pantalla de administracion pasa {@code includeInactive = true} para
+     * poder ver (y reactivar) las mesas dadas de baja, que de otro modo quedarian atrapadas sin
+     * forma de deshacerse.
      */
     @Transactional(readOnly = true)
     public List<RestaurantTable> listTables(boolean includeInactive) {
@@ -46,44 +45,48 @@ public class TableService {
     @Transactional
     public RestaurantTable createTable(int number, int capacity) {
         if (tableRepository.existsByNumber(number)) {
-            throw new BusinessRuleException(
-                    "Ya existe una mesa con el numero " + number + ".");
+            throw new BusinessRuleException("Ya existe una mesa con el numero " + number + ".");
         }
 
         planLimitService.assertCanAddTable(TenantContext.require());
 
-        return tableRepository.save(RestaurantTable.builder()
-                .number(number)
-                .capacity(capacity)
-                .status(TableStatus.FREE)
-                .active(true)
-                .build());
+        return tableRepository.save(
+                RestaurantTable.builder()
+                        .number(number)
+                        .capacity(capacity)
+                        .status(TableStatus.FREE)
+                        .active(true)
+                        .build());
     }
 
     /**
      * Ocupa una mesa libre para abrir una orden nueva.
      *
-     * <p>Usa {@code findByIdForUpdate} (SELECT ... FOR UPDATE) en vez de
-     * {@code findById}: sin el lock, bajo READ COMMITTED, dos peticiones
-     * concurrentes pueden leer ambas el estado FREE, escribir OCCUPIED las
-     * dos y crear dos ordenes para la misma mesa sin que ninguna falle. No
-     * hay restriccion UNIQUE en {@code orders.table_id} que lo atrape: el
-     * lock de fila es lo que serializa a la segunda peticion detras de la
-     * primera para que su lectura del estado sea la actualizada.
+     * <p>Usa {@code findByIdForUpdate} (SELECT ... FOR UPDATE) en vez de {@code findById}: sin el
+     * lock, bajo READ COMMITTED, dos peticiones concurrentes pueden leer ambas el estado FREE,
+     * escribir OCCUPIED las dos y crear dos ordenes para la misma mesa sin que ninguna falle. No
+     * hay restriccion UNIQUE en {@code orders.table_id} que lo atrape: el lock de fila es lo que
+     * serializa a la segunda peticion detras de la primera para que su lectura del estado sea la
+     * actualizada.
      */
     @Transactional
     public RestaurantTable occupy(UUID tableId, UUID waiterId) {
-        RestaurantTable table = tableRepository.findByIdForUpdate(tableId)
-                .orElseThrow(() -> new ResourceNotFoundException("La mesa no existe."));
+        RestaurantTable table =
+                tableRepository
+                        .findByIdForUpdate(tableId)
+                        .orElseThrow(() -> new ResourceNotFoundException("La mesa no existe."));
 
         if (!table.isActive()) {
-            throw new BusinessRuleException(
-                    "La mesa " + table.getNumber() + " esta dada de baja.");
+            throw new BusinessRuleException("La mesa " + table.getNumber() + " esta dada de baja.");
         }
 
         if (table.getStatus() != TableStatus.FREE) {
             throw new BusinessRuleException(
-                    "La mesa " + table.getNumber() + " no esta disponible (" + table.getStatus() + ").");
+                    "La mesa "
+                            + table.getNumber()
+                            + " no esta disponible ("
+                            + table.getStatus()
+                            + ").");
         }
 
         table.setStatus(TableStatus.OCCUPIED);
@@ -92,18 +95,16 @@ public class TableService {
     }
 
     /**
-     * Cambio manual del estado de servicio: reservar una mesa, mandarla a
-     * limpieza o devolverla a libre.
+     * Cambio manual del estado de servicio: reservar una mesa, mandarla a limpieza o devolverla a
+     * libre.
      *
-     * <p>{@code OCCUPIED} queda fuera en los dos sentidos, y por la misma
-     * razon: ese estado solo lo justifica una comanda abierta. Ponerlo a mano
-     * crearia una mesa ocupada sin comanda, y quitarlo a una mesa que lo tiene
-     * dejaria la comanda viva sobre una mesa marcada como libre, lista para
-     * que se siente otro grupo. Para eso estan cancelar y cobrar.
+     * <p>{@code OCCUPIED} queda fuera en los dos sentidos, y por la misma razon: ese estado solo lo
+     * justifica una comanda abierta. Ponerlo a mano crearia una mesa ocupada sin comanda, y
+     * quitarlo a una mesa que lo tiene dejaria la comanda viva sobre una mesa marcada como libre,
+     * lista para que se siente otro grupo. Para eso estan cancelar y cobrar.
      *
-     * <p>Toma el mismo lock que {@link #occupy}: sin el, reservar una mesa y
-     * abrir una comanda sobre ella pueden leer ambos {@code FREE} y escribir
-     * cada uno lo suyo.
+     * <p>Toma el mismo lock que {@link #occupy}: sin el, reservar una mesa y abrir una comanda
+     * sobre ella pueden leer ambos {@code FREE} y escribir cada uno lo suyo.
      */
     @Transactional
     public RestaurantTable changeStatus(UUID tableId, TableStatus newStatus) {
@@ -112,17 +113,20 @@ public class TableService {
                     "Una mesa se ocupa abriendo una comanda, no cambiando su estado.");
         }
 
-        RestaurantTable table = tableRepository.findByIdForUpdate(tableId)
-                .orElseThrow(() -> new ResourceNotFoundException("La mesa no existe."));
+        RestaurantTable table =
+                tableRepository
+                        .findByIdForUpdate(tableId)
+                        .orElseThrow(() -> new ResourceNotFoundException("La mesa no existe."));
 
         if (!table.isActive()) {
-            throw new BusinessRuleException(
-                    "La mesa " + table.getNumber() + " esta dada de baja.");
+            throw new BusinessRuleException("La mesa " + table.getNumber() + " esta dada de baja.");
         }
 
         if (table.getStatus() == TableStatus.OCCUPIED) {
             throw new BusinessRuleException(
-                    "La mesa " + table.getNumber() + " tiene una comanda abierta. "
+                    "La mesa "
+                            + table.getNumber()
+                            + " tiene una comanda abierta. "
                             + "Cobrala o cancelala para liberarla.");
         }
 
@@ -133,8 +137,10 @@ public class TableService {
     /** Libera una mesa al cerrar la cuenta (checkout) o al cancelar una orden. */
     @Transactional
     public RestaurantTable free(UUID tableId) {
-        RestaurantTable table = tableRepository.findById(tableId)
-                .orElseThrow(() -> new ResourceNotFoundException("La mesa no existe."));
+        RestaurantTable table =
+                tableRepository
+                        .findById(tableId)
+                        .orElseThrow(() -> new ResourceNotFoundException("La mesa no existe."));
 
         table.setStatus(TableStatus.FREE);
         table.setWaiterId(null);
@@ -144,12 +150,13 @@ public class TableService {
     /** Corrige el numero o la capacidad de una mesa ya creada. */
     @Transactional
     public RestaurantTable updateTable(UUID tableId, int number, int capacity) {
-        RestaurantTable table = tableRepository.findById(tableId)
-                .orElseThrow(() -> new ResourceNotFoundException("La mesa no existe."));
+        RestaurantTable table =
+                tableRepository
+                        .findById(tableId)
+                        .orElseThrow(() -> new ResourceNotFoundException("La mesa no existe."));
 
         if (tableRepository.existsByNumberAndIdNot(number, tableId)) {
-            throw new BusinessRuleException(
-                    "Ya existe una mesa con el numero " + number + ".");
+            throw new BusinessRuleException("Ya existe una mesa con el numero " + number + ".");
         }
 
         table.setNumber(number);
@@ -158,15 +165,16 @@ public class TableService {
     }
 
     /**
-     * Da de alta o de baja una mesa. La baja es siempre logica (active =
-     * false): la mesa queda referenciada por las ordenes historicas que se
-     * abrieron en ella, y borrarla perderia esa atribucion. Una mesa dada de
-     * baja no aparece en el listado y {@link #occupy} la rechaza.
+     * Da de alta o de baja una mesa. La baja es siempre logica (active = false): la mesa queda
+     * referenciada por las ordenes historicas que se abrieron en ella, y borrarla perderia esa
+     * atribucion. Una mesa dada de baja no aparece en el listado y {@link #occupy} la rechaza.
      */
     @Transactional
     public RestaurantTable setActive(UUID tableId, boolean active) {
-        RestaurantTable table = tableRepository.findById(tableId)
-                .orElseThrow(() -> new ResourceNotFoundException("La mesa no existe."));
+        RestaurantTable table =
+                tableRepository
+                        .findById(tableId)
+                        .orElseThrow(() -> new ResourceNotFoundException("La mesa no existe."));
 
         if (!active && table.getStatus() == TableStatus.OCCUPIED) {
             throw new BusinessRuleException(

@@ -28,23 +28,27 @@ public class TicketService {
 
     @Transactional(readOnly = true)
     public Ticket getTicket(UUID id) {
-        return ticketRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("El ticket " + id + " no existe."));
+        return ticketRepository
+                .findById(id)
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("El ticket " + id + " no existe."));
     }
 
     /** Para el historial de ventas: encontrar un ticket cuando solo se conoce su folio. */
     @Transactional(readOnly = true)
     public Ticket getTicketByFolio(String folio) {
-        return ticketRepository.findByFolio(folio)
-                .orElseThrow(() -> new ResourceNotFoundException("El ticket con folio " + folio + " no existe."));
+        return ticketRepository
+                .findByFolio(folio)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "El ticket con folio " + folio + " no existe."));
     }
 
     @Transactional(readOnly = true)
     public byte[] generatePdf(UUID id) {
         Ticket ticket = getTicket(id);
-        String restaurantName = tenantRepository.findById(TenantContext.require())
-                .map(Tenant::getName)
-                .orElse("");
+        String restaurantName =
+                tenantRepository.findById(TenantContext.require()).map(Tenant::getName).orElse("");
         return pdfGenerator.generate(ticket, restaurantName);
     }
 }

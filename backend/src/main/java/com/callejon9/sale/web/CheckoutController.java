@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** El principal autenticado es el UUID del usuario (ver TenantFilter); nunca se confia en el body. */
+/**
+ * El principal autenticado es el UUID del usuario (ver TenantFilter); nunca se confia en el body.
+ */
 @RestController
 @RequestMapping("/api/v1/orders")
 public class CheckoutController {
@@ -33,8 +35,7 @@ public class CheckoutController {
             @PathVariable UUID id,
             @Valid @RequestBody CheckoutRequest request,
             Authentication authentication) {
-        var ticket = checkoutService.checkout(
-                id, request, cashierIdOf(authentication));
+        var ticket = checkoutService.checkout(id, request, cashierIdOf(authentication));
         return TicketResponse.from(ticket);
     }
 

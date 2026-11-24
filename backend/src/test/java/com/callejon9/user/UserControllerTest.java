@@ -1,5 +1,13 @@
 package com.callejon9.user;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
 import com.callejon9.shared.error.BusinessRuleException;
@@ -26,19 +34,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 /**
- * Cubre las reglas de la Task 8 (gestion de usuarios): creacion con limite de
- * plan, unicidad de correo por tenant, rechazo de SUPER_ADMIN, desactivacion
- * logica con sus dos protecciones (auto-desactivacion y ultimo administrador)
- * y aislamiento multi-tenant en esta capa.
+ * Cubre las reglas de la Task 8 (gestion de usuarios): creacion con limite de plan, unicidad de
+ * correo por tenant, rechazo de SUPER_ADMIN, desactivacion logica con sus dos protecciones
+ * (auto-desactivacion y ultimo administrador) y aislamiento multi-tenant en esta capa.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -60,8 +59,14 @@ class UserControllerTest {
 
     @BeforeEach
     void seed() {
-        tenant = onboardingService.onboard("Usuarios Test", "usuarios-test",
-                "admin@usuarios.com", "Admin", "Mantel-Azul-47", "FREE");
+        tenant =
+                onboardingService.onboard(
+                        "Usuarios Test",
+                        "usuarios-test",
+                        "admin@usuarios.com",
+                        "Admin",
+                        "Mantel-Azul-47",
+                        "FREE");
         admin = persistedUser(tenant.getId(), "admin@usuarios.com");
     }
 
@@ -85,26 +90,39 @@ class UserControllerTest {
         return new Cookie("access_token", testSessions.accessTokenFor(user));
     }
 
-    private UUID createUserAs(User caller, String email, String role, String fullName) throws Exception {
-        String body = mockMvc.perform(post("/api/v1/users")
-                        .cookie(cookieFor(caller))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"" + email + "\",\"fullName\":\"" + fullName
-                                + "\",\"role\":\"" + role + "\",\"password\":\"Mantel-Azul-47\"}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+    private UUID createUserAs(User caller, String email, String role, String fullName)
+            throws Exception {
+        String body =
+                mockMvc.perform(
+                                post("/api/v1/users")
+                                        .cookie(cookieFor(caller))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                "{\"email\":\""
+                                                        + email
+                                                        + "\",\"fullName\":\""
+                                                        + fullName
+                                                        + "\",\"role\":\""
+                                                        + role
+                                                        + "\",\"password\":\"Mantel-Azul-47\"}"))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
         return UUID.fromString(body.replaceAll(".*\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
     }
 
     @Test
     @DisplayName("ADMIN puede crear un usuario y la contrasena queda hasheada")
     void creationSucceedsAndPasswordVerifiesThroughEncoder() throws Exception {
-        mockMvc.perform(post("/api/v1/users")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"email":"mesero@usuarios.com","fullName":"Mesero Uno","role":"WAITER","password":"Mantel-Azul-47"}
-                                """))
+        mockMvc.perform(
+                        post("/api/v1/users")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"email":"mesero@usuarios.com","fullName":"Mesero Uno","role":"WAITER","password":"Mantel-Azul-47"}
+                                        """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value("mesero@usuarios.com"))
                 .andExpect(jsonPath("$.role").value("WAITER"))
@@ -117,20 +135,24 @@ class UserControllerTest {
     @Test
     @DisplayName("una contrasena debil se rechaza con 400 en errors.password y no crea el usuario")
     void weakPasswordIsRejected() throws Exception {
-        mockMvc.perform(post("/api/v1/users")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"email":"debil@usuarios.com","fullName":"Mesero Debil","role":"WAITER","password":"qwerty123456"}
-                                """))
+        mockMvc.perform(
+                        post("/api/v1/users")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"email":"debil@usuarios.com","fullName":"Mesero Debil","role":"WAITER","password":"qwerty123456"}
+                                        """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors.password")
-                        .value("Esa contrasena es demasiado comun. Elige otra."));
+                .andExpect(
+                        jsonPath("$.errors.password")
+                                .value("Esa contrasena es demasiado comun. Elige otra."));
 
         TenantContext.set(tenant.getId());
         try {
-            boolean created = transactionTemplate.execute(
-                    status -> userRepository.findByEmail("debil@usuarios.com").isPresent());
+            boolean created =
+                    transactionTemplate.execute(
+                            status -> userRepository.findByEmail("debil@usuarios.com").isPresent());
             assertThat(created).isFalse();
         } finally {
             TenantContext.clear();
@@ -138,46 +160,61 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("un correo duplicado en el mismo restaurante da 409, pero en otro restaurante funciona")
+    @DisplayName(
+            "un correo duplicado en el mismo restaurante da 409, pero en otro restaurante funciona")
     void duplicateEmailInSameTenantConflictsButAnotherTenantSucceeds() throws Exception {
-        mockMvc.perform(post("/api/v1/users")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"email":"repetido@usuarios.com","fullName":"Uno","role":"WAITER","password":"Mantel-Azul-47"}
-                                """))
+        mockMvc.perform(
+                        post("/api/v1/users")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"email":"repetido@usuarios.com","fullName":"Uno","role":"WAITER","password":"Mantel-Azul-47"}
+                                        """))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/api/v1/users")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"email":"repetido@usuarios.com","fullName":"Dos","role":"WAITER","password":"Mantel-Azul-47"}
-                                """))
+        mockMvc.perform(
+                        post("/api/v1/users")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"email":"repetido@usuarios.com","fullName":"Dos","role":"WAITER","password":"Mantel-Azul-47"}
+                                        """))
                 .andExpect(status().isConflict());
 
-        Tenant otherTenant = onboardingService.onboard("Otro Restaurante", "usuarios-test-otro",
-                "admin@otro-usuarios.com", "Admin Otro", "Mantel-Azul-47", "FREE");
+        Tenant otherTenant =
+                onboardingService.onboard(
+                        "Otro Restaurante",
+                        "usuarios-test-otro",
+                        "admin@otro-usuarios.com",
+                        "Admin Otro",
+                        "Mantel-Azul-47",
+                        "FREE");
         User otherAdmin = persistedUser(otherTenant.getId(), "admin@otro-usuarios.com");
 
-        mockMvc.perform(post("/api/v1/users")
-                        .cookie(cookieFor(otherAdmin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"email":"repetido@usuarios.com","fullName":"Tres","role":"WAITER","password":"Mantel-Azul-47"}
-                                """))
+        mockMvc.perform(
+                        post("/api/v1/users")
+                                .cookie(cookieFor(otherAdmin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"email":"repetido@usuarios.com","fullName":"Tres","role":"WAITER","password":"Mantel-Azul-47"}
+                                        """))
                 .andExpect(status().isCreated());
     }
 
     @Test
     @DisplayName("SUPER_ADMIN no puede crearse desde un restaurante")
     void superAdminRoleIsRejected() throws Exception {
-        mockMvc.perform(post("/api/v1/users")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"email":"superadmin@usuarios.com","fullName":"Super","role":"SUPER_ADMIN","password":"Mantel-Azul-47"}
-                                """))
+        mockMvc.perform(
+                        post("/api/v1/users")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"email":"superadmin@usuarios.com","fullName":"Super","role":"SUPER_ADMIN","password":"Mantel-Azul-47"}
+                                        """))
                 .andExpect(status().isBadRequest());
     }
 
@@ -188,12 +225,14 @@ class UserControllerTest {
         createUserAs(admin, "u2@usuarios.com", "WAITER", "U2");
         createUserAs(admin, "u3@usuarios.com", "WAITER", "U3");
 
-        mockMvc.perform(post("/api/v1/users")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"email":"u4@usuarios.com","fullName":"U4","role":"WAITER","password":"Mantel-Azul-47"}
-                                """))
+        mockMvc.perform(
+                        post("/api/v1/users")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"email":"u4@usuarios.com","fullName":"U4","role":"WAITER","password":"Mantel-Azul-47"}
+                                        """))
                 .andExpect(status().isConflict());
     }
 
@@ -216,24 +255,27 @@ class UserControllerTest {
     @Test
     @DisplayName("un administrador no puede desactivarse a si mismo")
     void selfDeactivationIsRefused() throws Exception {
-        mockMvc.perform(patch("/api/v1/users/" + admin.getId())
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":false}"))
+        mockMvc.perform(
+                        patch("/api/v1/users/" + admin.getId())
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":false}"))
                 .andExpect(status().isConflict());
     }
 
     @Test
-    @DisplayName("el ultimo administrador activo no puede desactivarse, pero un segundo administrador si")
+    @DisplayName(
+            "el ultimo administrador activo no puede desactivarse, pero un segundo administrador si")
     void lastActiveAdminCannotBeDeactivatedButASecondAdminCan() throws Exception {
         UUID secondAdminId = createUserAs(admin, "admin2@usuarios.com", "ADMIN", "Admin Dos");
         User secondAdmin = persistedUser(tenant.getId(), "admin2@usuarios.com");
 
         // Con dos administradores activos, desactivar a uno de ellos es valido.
-        mockMvc.perform(patch("/api/v1/users/" + secondAdminId)
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":false}"))
+        mockMvc.perform(
+                        patch("/api/v1/users/" + secondAdminId)
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":false}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(false));
 
@@ -252,17 +294,20 @@ class UserControllerTest {
     void aDeactivatedUserCanNoLongerLogIn() throws Exception {
         UUID waiterId = createUserAs(admin, "mesero3@usuarios.com", "WAITER", "Mesero Tres");
 
-        mockMvc.perform(patch("/api/v1/users/" + waiterId)
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":false}"))
+        mockMvc.perform(
+                        patch("/api/v1/users/" + waiterId)
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":false}"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/api/v1/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"slug":"usuarios-test","email":"mesero3@usuarios.com","password":"Mantel-Azul-47"}
-                                """))
+        mockMvc.perform(
+                        post("/api/v1/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"slug":"usuarios-test","email":"mesero3@usuarios.com","password":"Mantel-Azul-47"}
+                                        """))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -272,29 +317,39 @@ class UserControllerTest {
         createUserAs(admin, "mesero4@usuarios.com", "WAITER", "Mesero Cuatro");
         User waiter = persistedUser(tenant.getId(), "mesero4@usuarios.com");
 
-        mockMvc.perform(post("/api/v1/users")
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"email":"otro@usuarios.com","fullName":"Otro","role":"WAITER","password":"Mantel-Azul-47"}
-                                """))
+        mockMvc.perform(
+                        post("/api/v1/users")
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        """
+                                        {"email":"otro@usuarios.com","fullName":"Otro","role":"WAITER","password":"Mantel-Azul-47"}
+                                        """))
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(get("/api/v1/users").cookie(cookieFor(waiter)))
                 .andExpect(status().isForbidden());
 
-        mockMvc.perform(patch("/api/v1/users/" + admin.getId())
-                        .cookie(cookieFor(waiter))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":false}"))
+        mockMvc.perform(
+                        patch("/api/v1/users/" + admin.getId())
+                                .cookie(cookieFor(waiter))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":false}"))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    @DisplayName("un administrador del restaurante A nunca ve ni modifica usuarios del restaurante B")
+    @DisplayName(
+            "un administrador del restaurante A nunca ve ni modifica usuarios del restaurante B")
     void crossTenantIsolationIsEnforced() throws Exception {
-        Tenant tenantB = onboardingService.onboard("Restaurante B", "usuarios-test-b",
-                "admin@b-usuarios.com", "Admin B", "Mantel-Azul-47", "FREE");
+        Tenant tenantB =
+                onboardingService.onboard(
+                        "Restaurante B",
+                        "usuarios-test-b",
+                        "admin@b-usuarios.com",
+                        "Admin B",
+                        "Mantel-Azul-47",
+                        "FREE");
         User adminB = persistedUser(tenantB.getId(), "admin@b-usuarios.com");
         UUID waiterBId = createUserAs(adminB, "meserob@usuarios.com", "WAITER", "Mesero B");
 
@@ -305,10 +360,11 @@ class UserControllerTest {
                 .andExpect(jsonPath("$[0].email").value("admin@usuarios.com"));
 
         // El admin de A no puede modificar al usuario de B: RLS lo oculta, 404.
-        mockMvc.perform(patch("/api/v1/users/" + waiterBId)
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":false}"))
+        mockMvc.perform(
+                        patch("/api/v1/users/" + waiterBId)
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":false}"))
                 .andExpect(status().isNotFound());
     }
 
@@ -326,14 +382,17 @@ class UserControllerTest {
 
         expectMe(phone.access(), 401);
         expectMe(tablet.access(), 401);
-        mockMvc.perform(post("/api/v1/auth/refresh").cookie(new Cookie("refresh_token", phone.refresh())))
+        mockMvc.perform(
+                        post("/api/v1/auth/refresh")
+                                .cookie(new Cookie("refresh_token", phone.refresh())))
                 .andExpect(status().isUnauthorized());
 
         // Reactivar no resucita las sesiones revocadas: hay que volver a entrar.
-        mockMvc.perform(patch("/api/v1/users/" + waiterId)
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":true}"))
+        mockMvc.perform(
+                        patch("/api/v1/users/" + waiterId)
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":true}"))
                 .andExpect(status().isOk());
         expectMe(phone.access(), 401);
         expectMe(login("usuarios-test", "mesero5@usuarios.com").access(), 200);
@@ -350,8 +409,7 @@ class UserControllerTest {
         deactivate(waiterId, adminCookie).andExpect(status().isOk());
 
         expectMe(otherWaiter.access(), 200);
-        mockMvc.perform(get("/api/v1/users").cookie(adminCookie))
-                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/users").cookie(adminCookie)).andExpect(status().isOk());
     }
 
     @Test
@@ -377,8 +435,14 @@ class UserControllerTest {
     @Test
     @DisplayName("intentar desactivar a un usuario de otro restaurante no revoca sus sesiones")
     void deactivationNeverReachesAnotherTenantsSessions() throws Exception {
-        Tenant tenantB = onboardingService.onboard("Restaurante B", "usuarios-test-b",
-                "admin@b-usuarios.com", "Admin B", "Secreto123!", "FREE");
+        Tenant tenantB =
+                onboardingService.onboard(
+                        "Restaurante B",
+                        "usuarios-test-b",
+                        "admin@b-usuarios.com",
+                        "Admin B",
+                        "Secreto123!",
+                        "FREE");
         User adminB = persistedUser(tenantB.getId(), "admin@b-usuarios.com");
         UUID waiterBId = createUserAs(adminB, "meserob2@usuarios.com", "WAITER", "Mesero B2");
         Session waiterB = login("usuarios-test-b", "meserob2@usuarios.com");
@@ -388,32 +452,36 @@ class UserControllerTest {
         expectMe(waiterB.access(), 200);
     }
 
-    private record Session(String access, String refresh) {
-    }
+    private record Session(String access, String refresh) {}
 
     private Session login(String slug, String email) throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/v1/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"slug":"%s","email":"%s","password":"Mantel-Azul-47"}
-                                """.formatted(slug, email)))
-                .andExpect(status().isOk())
-                .andReturn();
+        MvcResult result =
+                mockMvc.perform(
+                                post("/api/v1/auth/login")
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                """
+                                                {"slug":"%s","email":"%s","password":"Mantel-Azul-47"}
+                                                """
+                                                        .formatted(slug, email)))
+                        .andExpect(status().isOk())
+                        .andReturn();
         return new Session(
                 result.getResponse().getCookie("access_token").getValue(),
                 result.getResponse().getCookie("refresh_token").getValue());
     }
 
     private ResultActions deactivate(UUID userId, Cookie caller) throws Exception {
-        return mockMvc.perform(patch("/api/v1/users/" + userId)
-                .cookie(caller)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"active\":false}"));
+        return mockMvc.perform(
+                patch("/api/v1/users/" + userId)
+                        .cookie(caller)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"active\":false}"));
     }
 
     private User deactivateAsService(UUID targetId, UUID callerId) {
-        return TenantContext.callAs(tenant.getId(),
-                () -> userService.setActive(targetId, false, callerId));
+        return TenantContext.callAs(
+                tenant.getId(), () -> userService.setActive(targetId, false, callerId));
     }
 
     private void expectMe(String accessToken, int expectedStatus) throws Exception {

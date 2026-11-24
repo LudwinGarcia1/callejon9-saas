@@ -1,5 +1,9 @@
 package com.callejon9.auth;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.callejon9.auth.service.AuthService;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
@@ -17,14 +21,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 /**
- * GET /api/v1/auth/me: como el cookie del token es httpOnly, es la unica via
- * que tiene el frontend para recuperar quien esta autenticado tras refrescar
- * la pagina.
+ * GET /api/v1/auth/me: como el cookie del token es httpOnly, es la unica via que tiene el frontend
+ * para recuperar quien esta autenticado tras refrescar la pagina.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -43,8 +42,9 @@ class AuthControllerMeTest {
 
     @BeforeEach
     void seed() {
-        tenantA = onboardingService.onboard("Me Test", "me-test",
-                "admin@me.com", "Admin Me", "Secreto123!", "FREE");
+        tenantA =
+                onboardingService.onboard(
+                        "Me Test", "me-test", "admin@me.com", "Admin Me", "Secreto123!", "FREE");
 
         AuthService.AuthenticatedUser authenticated =
                 authService.authenticate("me-test", "admin@me.com", "Secreto123!");
@@ -74,8 +74,7 @@ class AuthControllerMeTest {
     @Test
     @DisplayName("sin cookie devuelve 401")
     void noCookieIsUnauthorized() throws Exception {
-        mockMvc.perform(get("/api/v1/auth/me"))
-                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/auth/me")).andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -88,8 +87,14 @@ class AuthControllerMeTest {
     @Test
     @DisplayName("una cookie del tenant A nunca devuelve datos del tenant B")
     void cookieFromTenantANeverReturnsTenantBData() throws Exception {
-        Tenant tenantB = onboardingService.onboard("Me Otro", "me-otro",
-                "admin@meotro.com", "Admin Otro", "Secreto123!", "FREE");
+        Tenant tenantB =
+                onboardingService.onboard(
+                        "Me Otro",
+                        "me-otro",
+                        "admin@meotro.com",
+                        "Admin Otro",
+                        "Secreto123!",
+                        "FREE");
         AuthService.AuthenticatedUser authenticatedB =
                 authService.authenticate("me-otro", "admin@meotro.com", "Secreto123!");
 
@@ -100,8 +105,9 @@ class AuthControllerMeTest {
                 .andExpect(jsonPath("$.slug").value("me-test"))
                 .andExpect(jsonPath("$.restaurantName").value("Me Test"));
 
-        mockMvc.perform(get("/api/v1/auth/me")
-                        .cookie(new Cookie("access_token", authenticatedB.accessToken())))
+        mockMvc.perform(
+                        get("/api/v1/auth/me")
+                                .cookie(new Cookie("access_token", authenticatedB.accessToken())))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userId").value(authenticatedB.user().getId().toString()))
                 .andExpect(jsonPath("$.tenantId").value(tenantB.getId().toString()))

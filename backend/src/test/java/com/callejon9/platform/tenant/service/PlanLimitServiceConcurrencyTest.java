@@ -1,5 +1,7 @@
 package com.callejon9.platform.tenant.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.shared.error.BusinessRuleException;
 import com.callejon9.tenancy.TenantContext;
@@ -22,23 +24,18 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 /**
- * Bajo READ COMMITTED, dos altas de usuario concurrentes en un tenant FREE
- * (limite de 3 usuarios) que ya tiene 2 pueden leer ambas
- * {@code currentUsers == 2 < 3} antes de que cualquiera inserte: las dos
- * pasan {@link PlanLimitService#assertCanAddUser} y el tenant termina con 4
- * usuarios, uno por encima del tope que este bloqueo existe para hacer
- * cumplir. Este test usa CountDownLatch para que los dos hilos esten
- * realmente en vuelo a la vez -- llamar al metodo dos veces en secuencia no
+ * Bajo READ COMMITTED, dos altas de usuario concurrentes en un tenant FREE (limite de 3 usuarios)
+ * que ya tiene 2 pueden leer ambas {@code currentUsers == 2 < 3} antes de que cualquiera inserte:
+ * las dos pasan {@link PlanLimitService#assertCanAddUser} y el tenant termina con 4 usuarios, uno
+ * por encima del tope que este bloqueo existe para hacer cumplir. Este test usa CountDownLatch para
+ * que los dos hilos esten realmente en vuelo a la vez -- llamar al metodo dos veces en secuencia no
  * reproduciria la carrera y pasaria incluso sin el arreglo.
  *
- * <p>Se ejercita a traves de {@link UserService#createUser}, la ruta real por
- * la que {@code PlanLimitService.assertCanAddUser} se invoca (POST
- * /api/v1/users): el "leer conteo, decidir" vive en el servicio de planes,
- * pero el "escribir" (el INSERT del usuario) vive en {@code UserService}, y
- * la carrera solo se reproduce cubriendo las dos mitades juntas.
+ * <p>Se ejercita a traves de {@link UserService#createUser}, la ruta real por la que {@code
+ * PlanLimitService.assertCanAddUser} se invoca (POST /api/v1/users): el "leer conteo, decidir" vive
+ * en el servicio de planes, pero el "escribir" (el INSERT del usuario) vive en {@code UserService},
+ * y la carrera solo se reproduce cubriendo las dos mitades juntas.
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -55,8 +52,14 @@ class PlanLimitServiceConcurrencyTest {
 
     @BeforeEach
     void seed() {
-        Tenant tenant = onboardingService.onboard("Concurrencia Plan", "concurrencia-plan",
-                "admin@concurrencia-plan.com", "Admin", "Secreto123!", "FREE");
+        Tenant tenant =
+                onboardingService.onboard(
+                        "Concurrencia Plan",
+                        "concurrencia-plan",
+                        "admin@concurrencia-plan.com",
+                        "Admin",
+                        "Secreto123!",
+                        "FREE");
         tenantId = tenant.getId();
 
         // El onboarding ya creo 1 administrador; el plan FREE permite 3. Se
@@ -64,8 +67,8 @@ class PlanLimitServiceConcurrencyTest {
         // de partida exacto que el escenario de la carrera describe.
         TenantContext.set(tenantId);
         try {
-            userService.createUser("mesero1@concurrencia-plan.com", "Mesero Uno",
-                    UserRole.WAITER, "Secreto123!");
+            userService.createUser(
+                    "mesero1@concurrencia-plan.com", "Mesero Uno", UserRole.WAITER, "Secreto123!");
         } finally {
             TenantContext.clear();
         }
@@ -78,9 +81,11 @@ class PlanLimitServiceConcurrencyTest {
     }
 
     @Test
-    @DisplayName("dos altas de usuario a la vez sobre el tercer cupo: exactamente una gana, "
-            + "la otra recibe el conflicto de negocio del limite del plan")
-    void exactlyOneUserCreationSucceedsWhenBothRaceForTheLastPlanSlot() throws InterruptedException {
+    @DisplayName(
+            "dos altas de usuario a la vez sobre el tercer cupo: exactamente una gana, "
+                    + "la otra recibe el conflicto de negocio del limite del plan")
+    void exactlyOneUserCreationSucceedsWhenBothRaceForTheLastPlanSlot()
+            throws InterruptedException {
         int threadCount = 2;
         CountDownLatch ready = new CountDownLatch(threadCount);
         CountDownLatch start = new CountDownLatch(1);
@@ -88,36 +93,44 @@ class PlanLimitServiceConcurrencyTest {
         AtomicInteger successes = new AtomicInteger();
         List<Throwable> failures = new CopyOnWriteArrayList<>();
 
-        Runnable createSecondWaiter = () -> {
-            TenantContext.set(tenantId);
-            try {
-                ready.countDown();
-                start.await();
-                userService.createUser("mesero2@concurrencia-plan.com", "Mesero Dos",
-                        UserRole.WAITER, "Secreto123!");
-                successes.incrementAndGet();
-            } catch (Throwable ex) {
-                failures.add(ex);
-            } finally {
-                TenantContext.clear();
-                done.countDown();
-            }
-        };
-        Runnable createThirdWaiter = () -> {
-            TenantContext.set(tenantId);
-            try {
-                ready.countDown();
-                start.await();
-                userService.createUser("mesero3@concurrencia-plan.com", "Mesero Tres",
-                        UserRole.WAITER, "Secreto123!");
-                successes.incrementAndGet();
-            } catch (Throwable ex) {
-                failures.add(ex);
-            } finally {
-                TenantContext.clear();
-                done.countDown();
-            }
-        };
+        Runnable createSecondWaiter =
+                () -> {
+                    TenantContext.set(tenantId);
+                    try {
+                        ready.countDown();
+                        start.await();
+                        userService.createUser(
+                                "mesero2@concurrencia-plan.com",
+                                "Mesero Dos",
+                                UserRole.WAITER,
+                                "Secreto123!");
+                        successes.incrementAndGet();
+                    } catch (Throwable ex) {
+                        failures.add(ex);
+                    } finally {
+                        TenantContext.clear();
+                        done.countDown();
+                    }
+                };
+        Runnable createThirdWaiter =
+                () -> {
+                    TenantContext.set(tenantId);
+                    try {
+                        ready.countDown();
+                        start.await();
+                        userService.createUser(
+                                "mesero3@concurrencia-plan.com",
+                                "Mesero Tres",
+                                UserRole.WAITER,
+                                "Secreto123!");
+                        successes.incrementAndGet();
+                    } catch (Throwable ex) {
+                        failures.add(ex);
+                    } finally {
+                        TenantContext.clear();
+                        done.countDown();
+                    }
+                };
 
         Thread t1 = new Thread(createSecondWaiter, "create-user-1");
         Thread t2 = new Thread(createThirdWaiter, "create-user-2");
@@ -138,8 +151,8 @@ class PlanLimitServiceConcurrencyTest {
 
         TenantContext.set(tenantId);
         try {
-            long totalUsers = transactionTemplate.execute(
-                    status -> userRepository.countByTenantId(tenantId));
+            long totalUsers =
+                    transactionTemplate.execute(status -> userRepository.countByTenantId(tenantId));
             assertThat(totalUsers)
                     .as("el tenant FREE nunca debe superar su tope de 3 usuarios")
                     .isEqualTo(3);

@@ -1,5 +1,8 @@
 package com.callejon9.auth;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.callejon9.auth.service.JwtService;
 import com.callejon9.user.domain.User;
 import com.callejon9.user.domain.UserRole;
@@ -16,27 +19,24 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 @SpringBootTest
 @ActiveProfiles("test")
 class JwtServiceTest {
 
-    @Autowired
-    private JwtService jwtService;
+    @Autowired private JwtService jwtService;
 
     @Value("${app.jwt.secret}")
     private String secret;
 
     private User sampleUser(UUID userId, UUID tenantId) {
-        User user = User.builder()
-                .email("demo@demo.com")
-                .passwordHash("x")
-                .fullName("Demo")
-                .role(UserRole.ADMIN)
-                .active(true)
-                .build();
+        User user =
+                User.builder()
+                        .email("demo@demo.com")
+                        .passwordHash("x")
+                        .fullName("Demo")
+                        .role(UserRole.ADMIN)
+                        .active(true)
+                        .build();
         user.setId(userId);
         user.setTenantId(tenantId);
         return user;
@@ -60,14 +60,15 @@ class JwtServiceTest {
     @Test
     @DisplayName("un access token sin sesion (sid) se rechaza: no habria forma de revocarlo")
     void accessTokenWithoutSessionIsRejected() {
-        String withoutSession = Jwts.builder()
-                .subject(UUID.randomUUID().toString())
-                .claim("tid", UUID.randomUUID().toString())
-                .claim("role", UserRole.ADMIN.name())
-                .claim("typ", "access")
-                .expiration(Date.from(Instant.now().plusSeconds(60)))
-                .signWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)))
-                .compact();
+        String withoutSession =
+                Jwts.builder()
+                        .subject(UUID.randomUUID().toString())
+                        .claim("tid", UUID.randomUUID().toString())
+                        .claim("role", UserRole.ADMIN.name())
+                        .claim("typ", "access")
+                        .expiration(Date.from(Instant.now().plusSeconds(60)))
+                        .signWith(Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8)))
+                        .compact();
 
         assertThatThrownBy(() -> jwtService.parse(withoutSession))
                 .isInstanceOf(io.jsonwebtoken.JwtException.class);
@@ -75,8 +76,9 @@ class JwtServiceTest {
 
     @Test
     void tamperedTokenIsRejected() {
-        String token = jwtService.generateAccessToken(
-                sampleUser(UUID.randomUUID(), UUID.randomUUID()), UUID.randomUUID());
+        String token =
+                jwtService.generateAccessToken(
+                        sampleUser(UUID.randomUUID(), UUID.randomUUID()), UUID.randomUUID());
         String tampered = token.substring(0, token.length() - 4) + "aaaa";
 
         assertThatThrownBy(() -> jwtService.parse(tampered))
@@ -88,8 +90,9 @@ class JwtServiceTest {
         UUID userId = UUID.randomUUID();
         UUID tenantId = UUID.randomUUID();
 
-        String token = jwtService.generateRefreshToken(
-                userId, tenantId, "secreto", Instant.now().plusSeconds(60));
+        String token =
+                jwtService.generateRefreshToken(
+                        userId, tenantId, "secreto", Instant.now().plusSeconds(60));
         JwtService.RefreshClaims claims = jwtService.parseRefreshToken(token);
 
         assertThat(claims.userId()).isEqualTo(userId);
@@ -99,8 +102,12 @@ class JwtServiceTest {
 
     @Test
     void refreshTokenIsNotAcceptedAsAccessToken() {
-        String refresh = jwtService.generateRefreshToken(
-                UUID.randomUUID(), UUID.randomUUID(), "secreto", Instant.now().plusSeconds(60));
+        String refresh =
+                jwtService.generateRefreshToken(
+                        UUID.randomUUID(),
+                        UUID.randomUUID(),
+                        "secreto",
+                        Instant.now().plusSeconds(60));
 
         assertThatThrownBy(() -> jwtService.parse(refresh))
                 .isInstanceOf(io.jsonwebtoken.JwtException.class);
@@ -108,8 +115,9 @@ class JwtServiceTest {
 
     @Test
     void accessTokenIsNotAcceptedAsRefreshToken() {
-        String access = jwtService.generateAccessToken(
-                sampleUser(UUID.randomUUID(), UUID.randomUUID()), UUID.randomUUID());
+        String access =
+                jwtService.generateAccessToken(
+                        sampleUser(UUID.randomUUID(), UUID.randomUUID()), UUID.randomUUID());
 
         assertThatThrownBy(() -> jwtService.parseRefreshToken(access))
                 .isInstanceOf(io.jsonwebtoken.JwtException.class);

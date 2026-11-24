@@ -31,9 +31,9 @@ public class Tenant extends BaseEntity {
     private boolean active;
 
     /**
-     * ID IANA de la zona en la que el restaurante corta sus dias de venta
-     * (ver {@link com.callejon9.shared.time.BusinessCalendar}). Debe coincidir
-     * con el default de la columna en V15.
+     * ID IANA de la zona en la que el restaurante corta sus dias de venta (ver {@link
+     * com.callejon9.shared.time.BusinessCalendar}). Debe coincidir con el default de la columna en
+     * V15.
      */
     @Column(nullable = false, length = 64)
     @Builder.Default

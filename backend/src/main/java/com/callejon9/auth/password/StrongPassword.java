@@ -9,10 +9,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Aplica {@link PasswordPolicy} a un {@link PasswordCandidate}. Es una
- * restriccion de clase -- no de campo -- porque la regla de datos personales
- * necesita ver el correo y el nombre ademas de la contrasena. El error se
- * reporta sobre el campo {@code password}, asi que el cliente lo recibe en
+ * Aplica {@link PasswordPolicy} a un {@link PasswordCandidate}. Es una restriccion de clase -- no
+ * de campo -- porque la regla de datos personales necesita ver el correo y el nombre ademas de la
+ * contrasena. El error se reporta sobre el campo {@code password}, asi que el cliente lo recibe en
  * {@code errors.password} igual que cualquier otra validacion.
  */
 @Documented

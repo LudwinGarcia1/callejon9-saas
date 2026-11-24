@@ -12,19 +12,17 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 
 /**
- * El equivalente en tiempo real a la Row-Level Security de PostgreSQL: valida
- * en cada SUBSCRIBE que el tenant codificado en el destino coincide con el
- * tenant del Principal autenticado en el handshake (ver
- * {@link JwtHandshakeInterceptor}).
+ * El equivalente en tiempo real a la Row-Level Security de PostgreSQL: valida en cada SUBSCRIBE que
+ * el tenant codificado en el destino coincide con el tenant del Principal autenticado en el
+ * handshake (ver {@link JwtHandshakeInterceptor}).
  *
- * Sin este interceptor, cualquier usuario autenticado de un restaurante
- * podria suscribirse al topico de cocina de otro simplemente adivinando su
- * tenantId — el mismo UUID que ya viaja, por ejemplo, en las respuestas de
- * la API. RLS protege las filas en la base de datos; esto protege los
+ * <p>Sin este interceptor, cualquier usuario autenticado de un restaurante podria suscribirse al
+ * topico de cocina de otro simplemente adivinando su tenantId — el mismo UUID que ya viaja, por
+ * ejemplo, en las respuestas de la API. RLS protege las filas en la base de datos; esto protege los
  * mensajes en el canal.
  *
- * <p>Solo cubre la suscripcion. Que un cliente no publique en el topico lo
- * impide {@link ClientSendInterceptor}.
+ * <p>Solo cubre la suscripcion. Que un cliente no publique en el topico lo impide {@link
+ * ClientSendInterceptor}.
  */
 @Component
 public class TenantSubscriptionInterceptor implements ChannelInterceptor {
@@ -47,9 +45,11 @@ public class TenantSubscriptionInterceptor implements ChannelInterceptor {
         }
 
         Matcher matcher = KITCHEN_TOPIC.matcher(destination);
-        if (!matcher.matches() || !matcher.group(1).equalsIgnoreCase(authenticated.tenantId().toString())) {
+        if (!matcher.matches()
+                || !matcher.group(1).equalsIgnoreCase(authenticated.tenantId().toString())) {
             throw new AccessDeniedException(
-                    "Suscripcion rechazada: el destino " + destination
+                    "Suscripcion rechazada: el destino "
+                            + destination
                             + " no corresponde al tenant autenticado.");
         }
 

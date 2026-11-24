@@ -1,5 +1,14 @@
 package com.callejon9.auth.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.callejon9.auth.domain.RefreshToken;
 import com.callejon9.auth.repository.RefreshTokenRepository;
 import com.callejon9.platform.tenant.domain.Tenant;
@@ -25,19 +34,9 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 /**
- * La sesión dura 7 días desde el login y renovar no la alarga. Con un reloj
- * fijo se prueba el borde exacto: un instante antes del vencimiento se renueva;
- * en el instante del vencimiento, ya no.
+ * La sesión dura 7 días desde el login y renovar no la alarga. Con un reloj fijo se prueba el borde
+ * exacto: un instante antes del vencimiento se renueva; en el instante del vencimiento, ya no.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -60,41 +59,61 @@ class RefreshTokenSessionExpiryTest {
 
     @BeforeEach
     void setUp() {
-        user = User.builder().email("mesero@pruebas.com").fullName("Mesero de piso").active(true).build();
+        user =
+                User.builder()
+                        .email("mesero@pruebas.com")
+                        .fullName("Mesero de piso")
+                        .active(true)
+                        .build();
         user.setId(UUID.randomUUID());
         user.setTenantId(tenantId);
-        Tenant tenant = Tenant.builder().name("Callejon 9 pruebas").slug("pruebas").active(true).build();
+        Tenant tenant =
+                Tenant.builder().name("Callejon 9 pruebas").slug("pruebas").active(true).build();
         tenant.setId(tenantId);
 
-        when(transactionTemplate.execute(any())).thenAnswer(invocation ->
-                invocation.<TransactionCallback<?>>getArgument(0).doInTransaction(null));
+        when(transactionTemplate.execute(any()))
+                .thenAnswer(invocation ->
+                        invocation.<TransactionCallback<?>>getArgument(0).doInTransaction(null));
         when(jwtService.refreshTokenTtl()).thenReturn(SESSION);
         when(jwtService.generateAccessToken(any(), any())).thenReturn("access-token");
-        when(jwtService.generateRefreshToken(any(), any(), anyString(), any())).thenReturn("refresh-token");
+        when(jwtService.generateRefreshToken(any(), any(), anyString(), any()))
+                .thenReturn("refresh-token");
         when(jwtService.parseRefreshToken("refresh-presentado"))
                 .thenReturn(new JwtService.RefreshClaims(user.getId(), tenantId, "secreto"));
         when(userRepository.findByIdForShare(user.getId())).thenReturn(Optional.of(user));
         when(tenantRepository.findById(tenantId)).thenReturn(Optional.of(tenant));
-        when(refreshTokenRepository.save(any())).thenAnswer(invocation -> {
-            RefreshToken saved = invocation.getArgument(0);
-            saved.setId(UUID.randomUUID());
-            return saved;
-        });
+        when(refreshTokenRepository.save(any()))
+                .thenAnswer(invocation -> {
+                    RefreshToken saved = invocation.getArgument(0);
+                    saved.setId(UUID.randomUUID());
+                    return saved;
+                });
         when(refreshTokenRepository.consume(any(), any())).thenReturn(1);
     }
 
     private RefreshTokenService serviceAt(Instant now) {
-        return new RefreshTokenService(refreshTokenRepository, userRepository, tenantRepository,
-                jwtService, transactionTemplate, Clock.fixed(now, ZoneOffset.UTC));
+        return new RefreshTokenService(
+                refreshTokenRepository,
+                userRepository,
+                tenantRepository,
+                jwtService,
+                transactionTemplate,
+                Clock.fixed(now, ZoneOffset.UTC));
     }
 
     /** Token vigente de la sesión que empezó en LOGIN, guardado con su vencimiento absoluto. */
     private void storedTokenExpiringAt(Instant expiresAt) {
-        RefreshToken token = RefreshToken.builder().userId(user.getId()).tokenHash(RefreshTokenService.hash("secreto"))
-                .familyId(familyId).expiresAt(expiresAt).build();
+        RefreshToken token =
+                RefreshToken.builder()
+                        .userId(user.getId())
+                        .tokenHash(RefreshTokenService.hash("secreto"))
+                        .familyId(familyId)
+                        .expiresAt(expiresAt)
+                        .build();
         token.setId(UUID.randomUUID());
         token.setTenantId(tenantId);
-        when(refreshTokenRepository.findByTokenHash(RefreshTokenService.hash("secreto"))).thenReturn(Optional.of(token));
+        when(refreshTokenRepository.findByTokenHash(RefreshTokenService.hash("secreto")))
+                .thenReturn(Optional.of(token));
     }
 
     @Test
@@ -103,29 +122,34 @@ class RefreshTokenSessionExpiryTest {
         RefreshTokenService.IssuedTokens issued = serviceAt(LOGIN).issueForLogin(user);
 
         assertThat(issued.sessionExpiresAt()).isEqualTo(SESSION_END);
-        verify(jwtService).generateRefreshToken(eq(user.getId()), eq(tenantId), anyString(), eq(SESSION_END));
+        verify(jwtService)
+                .generateRefreshToken(eq(user.getId()), eq(tenantId), anyString(), eq(SESSION_END));
         ArgumentCaptor<RefreshToken> saved = ArgumentCaptor.forClass(RefreshToken.class);
         verify(refreshTokenRepository).save(saved.capture());
         assertThat(saved.getValue().getExpiresAt()).isEqualTo(SESSION_END);
     }
 
     @Test
-    @DisplayName("un instante antes del vencimiento renueva y el token nuevo hereda el mismo vencimiento")
+    @DisplayName(
+            "un instante antes del vencimiento renueva y el token nuevo hereda el mismo vencimiento")
     void renewsJustBeforeTheEndWithoutExtendingTheSession() {
         storedTokenExpiringAt(SESSION_END);
 
-        RefreshTokenService.IssuedTokens rotated = serviceAt(SESSION_END.minusNanos(1)).rotate("refresh-presentado");
+        RefreshTokenService.IssuedTokens rotated =
+                serviceAt(SESSION_END.minusNanos(1)).rotate("refresh-presentado");
 
         assertThat(rotated.sessionExpiresAt()).isEqualTo(SESSION_END);
         ArgumentCaptor<RefreshToken> saved = ArgumentCaptor.forClass(RefreshToken.class);
         verify(refreshTokenRepository).save(saved.capture());
         assertThat(saved.getValue().getExpiresAt()).isEqualTo(SESSION_END);
         assertThat(saved.getValue().getFamilyId()).isEqualTo(familyId);
-        verify(jwtService).generateRefreshToken(eq(user.getId()), eq(tenantId), anyString(), eq(SESSION_END));
+        verify(jwtService)
+                .generateRefreshToken(eq(user.getId()), eq(tenantId), anyString(), eq(SESSION_END));
     }
 
     @Test
-    @DisplayName("en el instante exacto del vencimiento rechaza la renovación sin consumir el token")
+    @DisplayName(
+            "en el instante exacto del vencimiento rechaza la renovación sin consumir el token")
     void rejectsExactlyAtTheEnd() {
         storedTokenExpiringAt(SESSION_END);
 
@@ -151,12 +175,16 @@ class RefreshTokenSessionExpiryTest {
     void renewingMidSessionKeepsTheOriginalEnd() {
         storedTokenExpiringAt(SESSION_END);
 
-        RefreshTokenService.IssuedTokens rotated = serviceAt(LOGIN.plus(Duration.ofDays(3))).rotate("refresh-presentado");
+        RefreshTokenService.IssuedTokens rotated =
+                serviceAt(LOGIN.plus(Duration.ofDays(3))).rotate("refresh-presentado");
 
-        assertThat(rotated.sessionExpiresAt()).isEqualTo(SESSION_END).isNotEqualTo(LOGIN.plus(Duration.ofDays(10)));
+        assertThat(rotated.sessionExpiresAt())
+                .isEqualTo(SESSION_END)
+                .isNotEqualTo(LOGIN.plus(Duration.ofDays(10)));
         ArgumentCaptor<RefreshToken> saved = ArgumentCaptor.forClass(RefreshToken.class);
         verify(refreshTokenRepository).save(saved.capture());
         assertThat(saved.getValue().getExpiresAt()).isEqualTo(SESSION_END);
-        verify(jwtService).generateRefreshToken(eq(user.getId()), eq(tenantId), anyString(), eq(SESSION_END));
+        verify(jwtService)
+                .generateRefreshToken(eq(user.getId()), eq(tenantId), anyString(), eq(SESSION_END));
     }
 }

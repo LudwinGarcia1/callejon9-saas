@@ -1,5 +1,13 @@
 package com.callejon9.order.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.callejon9.catalog.domain.Product;
 import com.callejon9.catalog.repository.ProductRepository;
 import com.callejon9.order.domain.Order;
@@ -27,18 +35,9 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.context.ApplicationEventPublisher;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 /**
- * Agregar productos a una orden: el total lo calcula el servidor con sus
- * precios (el cliente solo envía producto y cantidad) y un producto inactivo
- * no entra a la comanda (CAL-10).
+ * Agregar productos a una orden: el total lo calcula el servidor con sus precios (el cliente solo
+ * envía producto y cantidad) y un producto inactivo no entra a la comanda (CAL-10).
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -59,25 +58,42 @@ class OrderServiceItemsTest {
 
     @BeforeEach
     void setUp() {
-        service = new OrderService(orderRepository, orderItemRepository, productRepository, tableService,
-                folioGenerator, eventPublisher);
-        order = Order.builder().folio("ORD-261021184954").waiterId(waiterId).guestCount(2)
-                .status(OrderStatus.NEW).total(BigDecimal.ZERO).openedAt(Instant.now()).build();
+        service =
+                new OrderService(
+                        orderRepository,
+                        orderItemRepository,
+                        productRepository,
+                        tableService,
+                        folioGenerator,
+                        eventPublisher);
+        order =
+                Order.builder()
+                        .folio("ORD-261021184954")
+                        .waiterId(waiterId)
+                        .guestCount(2)
+                        .status(OrderStatus.NEW)
+                        .total(BigDecimal.ZERO)
+                        .openedAt(Instant.now())
+                        .build();
         order.setId(UUID.randomUUID());
         order.setTenantId(UUID.randomUUID());
         stored.clear();
         when(orderRepository.findForCheckout(order.getId())).thenReturn(Optional.of(order));
-        when(orderItemRepository.saveAll(anyList())).thenAnswer(invocation -> {
-            List<OrderItem> items = invocation.getArgument(0);
-            stored.addAll(items);
-            return items;
-        });
-        when(orderItemRepository.findByOrderIdOrderByOrderedAt(order.getId())).thenAnswer(invocation -> List.copyOf(stored));
-        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(orderItemRepository.saveAll(anyList()))
+                .thenAnswer(invocation -> {
+                    List<OrderItem> items = invocation.getArgument(0);
+                    stored.addAll(items);
+                    return items;
+                });
+        when(orderItemRepository.findByOrderIdOrderByOrderedAt(order.getId()))
+                .thenAnswer(invocation -> List.copyOf(stored));
+        when(orderRepository.save(any(Order.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     private Product product(String name, String price, boolean active) {
-        Product product = Product.builder().name(name).price(new BigDecimal(price)).active(active).build();
+        Product product =
+                Product.builder().name(name).price(new BigDecimal(price)).active(active).build();
         product.setId(UUID.randomUUID());
         when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
         return product;
@@ -93,15 +109,21 @@ class OrderServiceItemsTest {
         Product guacamole = product("Guacamole con totopos", "95.00", true);
         Product margarita = product("Margarita", "135.00", true);
 
-        OrderWithItems result = service.addItems(order.getId(), List.of(
-                new NewOrderItem(guacamole.getId(), 2, null),
-                new NewOrderItem(margarita.getId(), 1, "sin sal")), waiter());
+        OrderWithItems result =
+                service.addItems(
+                        order.getId(),
+                        List.of(
+                                new NewOrderItem(guacamole.getId(), 2, null),
+                                new NewOrderItem(margarita.getId(), 1, "sin sal")),
+                        waiter());
 
         assertThat(result.order().getTotal()).isEqualByComparingTo("325.00");
-        assertThat(result.items()).extracting(OrderItem::getUnitPrice)
+        assertThat(result.items())
+                .extracting(OrderItem::getUnitPrice)
                 .usingElementComparator(BigDecimal::compareTo)
                 .containsExactly(new BigDecimal("95.00"), new BigDecimal("135.00"));
-        assertThat(result.items()).extracting(OrderItem::getProductName)
+        assertThat(result.items())
+                .extracting(OrderItem::getProductName)
                 .containsExactly("Guacamole con totopos", "Margarita");
         assertThat(result.items().get(1).getNotes()).isEqualTo("sin sal");
     }
@@ -113,7 +135,9 @@ class OrderServiceItemsTest {
         Product flan = product("Flan napolitano", "75.00", true);
         service.addItems(order.getId(), List.of(new NewOrderItem(sopa.getId(), 1, null)), waiter());
 
-        OrderWithItems result = service.addItems(order.getId(), List.of(new NewOrderItem(flan.getId(), 3, null)), waiter());
+        OrderWithItems result =
+                service.addItems(
+                        order.getId(), List.of(new NewOrderItem(flan.getId(), 3, null)), waiter());
 
         assertThat(result.order().getTotal()).isEqualByComparingTo("310.00");
         assertThat(result.items()).hasSize(2);
@@ -124,17 +148,24 @@ class OrderServiceItemsTest {
     void priceIsSnapshottedOnTheLine() {
         Product margarita = product("Margarita", "135.00", true);
         Product cerveza = product("Cerveza", "50.00", true);
-        service.addItems(order.getId(), List.of(new NewOrderItem(margarita.getId(), 1, null)), waiter());
+        service.addItems(
+                order.getId(), List.of(new NewOrderItem(margarita.getId(), 1, null)), waiter());
 
         // El producto cambia de precio en catálogo
         margarita.setPrice(new BigDecimal("150.00"));
 
         // Se agrega un segundo lote de otro producto
-        OrderWithItems result = service.addItems(order.getId(), List.of(new NewOrderItem(cerveza.getId(), 1, null)), waiter());
+        OrderWithItems result =
+                service.addItems(
+                        order.getId(),
+                        List.of(new NewOrderItem(cerveza.getId(), 1, null)),
+                        waiter());
 
-        // La primera línea conserva su precio snapshot y el total no se recalcula con el precio nuevo de catálogo
+        // La primera línea conserva su precio snapshot y el total no se recalcula con el precio
+        // nuevo de catálogo
         assertThat(stored.get(0).getUnitPrice()).isEqualByComparingTo("135.00");
-        assertThat(result.order().getTotal()).isEqualByComparingTo("185.00"); // 135 + 50, no 150 + 50
+        assertThat(result.order().getTotal())
+                .isEqualByComparingTo("185.00"); // 135 + 50, no 150 + 50
     }
 
     @Test
@@ -143,9 +174,13 @@ class OrderServiceItemsTest {
         Product sopa = product("Sopa de tortilla", "85.00", true);
         Product retirado = product("Pozole de temporada", "120.00", false);
 
-        assertThatThrownBy(() -> service.addItems(order.getId(), List.of(
-                new NewOrderItem(sopa.getId(), 1, null),
-                new NewOrderItem(retirado.getId(), 1, null)), waiter()))
+        assertThatThrownBy(() ->
+                        service.addItems(
+                                order.getId(),
+                                List.of(
+                                        new NewOrderItem(sopa.getId(), 1, null),
+                                        new NewOrderItem(retirado.getId(), 1, null)),
+                                waiter()))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessage("El producto Pozole de temporada esta inactivo.");
         verify(orderItemRepository, never()).saveAll(anyList());
@@ -158,7 +193,11 @@ class OrderServiceItemsTest {
         UUID unknown = UUID.randomUUID();
         when(productRepository.findById(unknown)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.addItems(order.getId(), List.of(new NewOrderItem(unknown, 1, null)), waiter()))
+        assertThatThrownBy(() ->
+                        service.addItems(
+                                order.getId(),
+                                List.of(new NewOrderItem(unknown, 1, null)),
+                                waiter()))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("no existe");
         verify(orderItemRepository, never()).saveAll(anyList());
@@ -170,7 +209,11 @@ class OrderServiceItemsTest {
         Product sopa = product("Sopa de tortilla", "85.00", true);
         for (OrderStatus closed : List.of(OrderStatus.PAID, OrderStatus.CANCELED)) {
             order.setStatus(closed);
-            assertThatThrownBy(() -> service.addItems(order.getId(), List.of(new NewOrderItem(sopa.getId(), 1, null)), waiter()))
+            assertThatThrownBy(() ->
+                            service.addItems(
+                                    order.getId(),
+                                    List.of(new NewOrderItem(sopa.getId(), 1, null)),
+                                    waiter()))
                     .isInstanceOf(BusinessRuleException.class)
                     .hasMessageContaining("no admite mas productos");
         }
@@ -183,7 +226,9 @@ class OrderServiceItemsTest {
         Product flan = product("Flan napolitano", "75.00", true);
         order.setStatus(OrderStatus.READY);
 
-        OrderWithItems result = service.addItems(order.getId(), List.of(new NewOrderItem(flan.getId(), 1, null)), waiter());
+        OrderWithItems result =
+                service.addItems(
+                        order.getId(), List.of(new NewOrderItem(flan.getId(), 1, null)), waiter());
 
         assertThat(result.order().getStatus()).isEqualTo(OrderStatus.SENT);
         verify(eventPublisher).publishEvent(any(OrderSentToKitchenEvent.class));

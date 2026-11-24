@@ -37,14 +37,13 @@ public class PlanLimitService {
     }
 
     /**
-     * Bloquea la fila del tenant ANTES de contar usuarios: sin este lock, dos
-     * altas concurrentes en un tenant a un usuario del tope pueden leer ambas
-     * el mismo conteo, pasar las dos la validacion e insertar una fila de mas
-     * sobre el limite del plan. Con el lock, la segunda espera a que la
-     * primera confirme y relee el conteo ya actualizado.
+     * Bloquea la fila del tenant ANTES de contar usuarios: sin este lock, dos altas concurrentes en
+     * un tenant a un usuario del tope pueden leer ambas el mismo conteo, pasar las dos la
+     * validacion e insertar una fila de mas sobre el limite del plan. Con el lock, la segunda
+     * espera a que la primera confirme y relee el conteo ya actualizado.
      *
-     * <p>No puede ser {@code readOnly}: Postgres rechaza {@code SELECT ... FOR
-     * UPDATE} dentro de una transaccion de solo lectura.
+     * <p>No puede ser {@code readOnly}: Postgres rechaza {@code SELECT ... FOR UPDATE} dentro de
+     * una transaccion de solo lectura.
      */
     @Transactional
     public void assertCanAddUser(UUID tenantId) {
@@ -55,14 +54,17 @@ public class PlanLimitService {
 
         if (currentUsers >= plan.getMaxUsers()) {
             throw new BusinessRuleException(
-                    "Alcanzaste el limite de " + plan.getMaxUsers()
-                            + " usuarios del plan " + plan.getCode() + ".");
+                    "Alcanzaste el limite de "
+                            + plan.getMaxUsers()
+                            + " usuarios del plan "
+                            + plan.getCode()
+                            + ".");
         }
     }
 
     /**
-     * Serializa las altas y reactivaciones de mesas por restaurante para que
-     * dos operaciones simultáneas no superen el máximo del plan.
+     * Serializa las altas y reactivaciones de mesas por restaurante para que dos operaciones
+     * simultáneas no superen el máximo del plan.
      */
     @Transactional
     public void assertCanAddTable(UUID tenantId) {
@@ -73,20 +75,27 @@ public class PlanLimitService {
 
         if (currentTables >= plan.getMaxTables()) {
             throw new BusinessRuleException(
-                    "Alcanzaste el limite de " + plan.getMaxTables()
-                            + " mesas del plan " + plan.getCode() + ".");
+                    "Alcanzaste el limite de "
+                            + plan.getMaxTables()
+                            + " mesas del plan "
+                            + plan.getCode()
+                            + ".");
         }
     }
 
     private Plan activePlanOf(UUID tenantId) {
-        var subscription = subscriptionRepository
-                .findByTenantIdAndStatusIn(tenantId,
-                        List.of(SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING))
-                .orElseThrow(() -> new BusinessRuleException(
-                        "El restaurante no tiene una suscripcion activa."));
+        var subscription =
+                subscriptionRepository
+                        .findByTenantIdAndStatusIn(
+                                tenantId,
+                                List.of(SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING))
+                        .orElseThrow(() ->
+                                new BusinessRuleException(
+                                        "El restaurante no tiene una suscripcion activa."));
 
-        return planRepository.findById(subscription.getPlanId())
-                .orElseThrow(() -> new BusinessRuleException(
-                        "La suscripcion apunta a un plan inexistente."));
+        return planRepository
+                .findById(subscription.getPlanId())
+                .orElseThrow(() ->
+                        new BusinessRuleException("La suscripcion apunta a un plan inexistente."));
     }
 }

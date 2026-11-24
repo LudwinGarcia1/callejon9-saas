@@ -6,5 +6,4 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public record AddOrderItemsRequest(
-        @NotEmpty @Size(max = 50) @Valid List<AddOrderItemRequest> items) {
-}
+        @NotEmpty @Size(max = 50) @Valid List<AddOrderItemRequest> items) {}

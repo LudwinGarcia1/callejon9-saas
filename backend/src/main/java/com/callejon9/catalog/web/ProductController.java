@@ -45,20 +45,31 @@ public class ProductController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN')")
     public ProductResponse create(@Valid @RequestBody CreateProductRequest request) {
-        return ProductResponse.from(productService.createProduct(
-                request.name(), request.description(), request.price(), request.categoryId()));
+        return ProductResponse.from(
+                productService.createProduct(
+                        request.name(),
+                        request.description(),
+                        request.price(),
+                        request.categoryId()));
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ProductResponse update(@PathVariable UUID id, @Valid @RequestBody UpdateProductRequest request) {
-        return ProductResponse.from(productService.updateProduct(
-                id, request.name(), request.description(), request.price(), request.categoryId()));
+    public ProductResponse update(
+            @PathVariable UUID id, @Valid @RequestBody UpdateProductRequest request) {
+        return ProductResponse.from(
+                productService.updateProduct(
+                        id,
+                        request.name(),
+                        request.description(),
+                        request.price(),
+                        request.categoryId()));
     }
 
     @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ProductResponse patch(@PathVariable UUID id, @Valid @RequestBody UpdateProductStatusRequest request) {
+    public ProductResponse patch(
+            @PathVariable UUID id, @Valid @RequestBody UpdateProductStatusRequest request) {
         return ProductResponse.from(productService.setActive(id, request.active()));
     }
 }

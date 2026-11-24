@@ -1,5 +1,9 @@
 package com.callejon9.realtime;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -11,18 +15,15 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.security.access.AccessDeniedException;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
-
 /**
- * Reglas del interceptor sobre tramas armadas a mano. Cubre los bordes que
- * un cliente STOMP de Spring no deja enviar, como un SEND sin destino.
+ * Reglas del interceptor sobre tramas armadas a mano. Cubre los bordes que un cliente STOMP de
+ * Spring no deja enviar, como un SEND sin destino.
  */
 @DisplayName("Guardia de SEND de clientes")
 class ClientSendInterceptorTest {
 
-    private static final String KITCHEN_TOPIC = "/topic/tenant.6f1c2a1e-0000-4000-8000-000000000001.kitchen";
+    private static final String KITCHEN_TOPIC =
+            "/topic/tenant.6f1c2a1e-0000-4000-8000-000000000001.kitchen";
 
     private final ClientSendInterceptor interceptor = new ClientSendInterceptor();
     private final MessageChannel channel = mock(MessageChannel.class);
@@ -37,7 +38,16 @@ class ClientSendInterceptorTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {KITCHEN_TOPIC, "/topic/cualquiera", "/queue/x", "/user/queue/x", "/app", "/application/x", ""})
+    @ValueSource(
+            strings = {
+                KITCHEN_TOPIC,
+                "/topic/cualquiera",
+                "/queue/x",
+                "/user/queue/x",
+                "/app",
+                "/application/x",
+                ""
+            })
     @DisplayName("rechaza un SEND fuera del prefijo de aplicacion")
     void rejectsSendOutsideTheApplicationPrefix(String destination) {
         Message<byte[]> message = frame(StompCommand.SEND, destination);

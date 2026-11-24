@@ -14,27 +14,24 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Politica de contrasenas para toda contrasena nueva (alta de restaurante y
- * alta de usuario). El login no la aplica: exigirla ahi revelaria la politica
- * y dejaria fuera a cuentas creadas antes de que existiera.
+ * Politica de contrasenas para toda contrasena nueva (alta de restaurante y alta de usuario). El
+ * login no la aplica: exigirla ahi revelaria la politica y dejaria fuera a cuentas creadas antes de
+ * que existiera.
  *
- * <p>Las reglas se evaluan en orden y se informa solo la primera que falla.
- * Los mensajes son fijos y nunca repiten la contrasena ni el dato personal
- * que coincidio.
+ * <p>Las reglas se evaluan en orden y se informa solo la primera que falla. Los mensajes son fijos
+ * y nunca repiten la contrasena ni el dato personal que coincidio.
  *
  * <ol>
- *   <li>Minimo {@value #MIN_LENGTH} caracteres.</li>
- *   <li>Maximo {@value #MAX_BYTES} bytes en UTF-8: bcrypt ignora en silencio
- *       todo lo que excede ese limite, asi que una contrasena mas larga
- *       aparentaria una fortaleza que no tiene.</li>
- *   <li>Al menos una letra y un numero.</li>
- *   <li>Al menos {@value #MIN_DISTINCT_CHARS} caracteres distintos, para
- *       descartar cadenas como {@code aaaaaaaaa1}.</li>
- *   <li>No figura en la lista de contrasenas comunes, ni tal cual ni sin los
- *       digitos y simbolos del final ({@code Password2024!} se reduce a
- *       {@code password}).</li>
- *   <li>No contiene datos de la propia cuenta: parte local del correo,
- *       identificador del restaurante, palabras del nombre.</li>
+ *   <li>Minimo {@value #MIN_LENGTH} caracteres.
+ *   <li>Maximo {@value #MAX_BYTES} bytes en UTF-8: bcrypt ignora en silencio todo lo que excede ese
+ *       limite, asi que una contrasena mas larga aparentaria una fortaleza que no tiene.
+ *   <li>Al menos una letra y un numero.
+ *   <li>Al menos {@value #MIN_DISTINCT_CHARS} caracteres distintos, para descartar cadenas como
+ *       {@code aaaaaaaaa1}.
+ *   <li>No figura en la lista de contrasenas comunes, ni tal cual ni sin los digitos y simbolos del
+ *       final ({@code Password2024!} se reduce a {@code password}).
+ *   <li>No contiene datos de la propia cuenta: parte local del correo, identificador del
+ *       restaurante, palabras del nombre.
  * </ol>
  */
 public final class PasswordPolicy {
@@ -51,28 +48,24 @@ public final class PasswordPolicy {
     static final String TOO_SHORT =
             "La contrasena debe tener al menos " + MIN_LENGTH + " caracteres.";
     static final String TOO_LONG =
-            "La contrasena no puede exceder " + MAX_BYTES
+            "La contrasena no puede exceder "
+                    + MAX_BYTES
                     + " caracteres (las letras acentuadas cuentan doble).";
-    static final String MISSING_LETTER_OR_DIGIT =
-            "La contrasena debe combinar letras y numeros.";
-    static final String TOO_REPETITIVE =
-            "La contrasena repite demasiado los mismos caracteres.";
-    static final String TOO_COMMON =
-            "Esa contrasena es demasiado comun. Elige otra.";
+    static final String MISSING_LETTER_OR_DIGIT = "La contrasena debe combinar letras y numeros.";
+    static final String TOO_REPETITIVE = "La contrasena repite demasiado los mismos caracteres.";
+    static final String TOO_COMMON = "Esa contrasena es demasiado comun. Elige otra.";
     static final String CONTAINS_PERSONAL_DATA =
             "La contrasena no debe incluir tu nombre, tu correo ni el identificador del restaurante.";
 
     private static final Set<String> COMMON_PASSWORDS = loadCommonPasswords();
 
-    private PasswordPolicy() {
-    }
+    private PasswordPolicy() {}
 
     /**
-     * Devuelve el mensaje de la primera regla incumplida, o vacio si la
-     * contrasena es aceptable.
+     * Devuelve el mensaje de la primera regla incumplida, o vacio si la contrasena es aceptable.
      *
-     * @param personalData datos de la cuenta que la contrasena no debe
-     *                     contener; se ignoran los nulos y los cortos.
+     * @param personalData datos de la cuenta que la contrasena no debe contener; se ignoran los
+     *     nulos y los cortos.
      */
     public static Optional<String> check(String password, Collection<String> personalData) {
         if (password.codePointCount(0, password.length()) < MIN_LENGTH) {
@@ -101,8 +94,8 @@ public final class PasswordPolicy {
         return Optional.empty();
     }
 
-    private static boolean containsPersonalData(String normalizedPassword,
-                                                Collection<String> personalData) {
+    private static boolean containsPersonalData(
+            String normalizedPassword, Collection<String> personalData) {
         for (String value : personalData) {
             if (value == null) {
                 continue;
@@ -141,8 +134,8 @@ public final class PasswordPolicy {
                     "No se encontro la lista de contrasenas comunes: " + COMMON_PASSWORDS_RESOURCE);
         }
         Set<String> passwords = new HashSet<>();
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+        try (BufferedReader reader =
+                new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
             reader.lines()
                     .map(String::strip)
                     .filter(line -> !line.isEmpty() && !line.startsWith("#"))

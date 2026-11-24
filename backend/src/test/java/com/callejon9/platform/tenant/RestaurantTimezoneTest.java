@@ -1,5 +1,13 @@
 package com.callejon9.platform.tenant;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.callejon9.cashier.service.CashSessionService;
 import com.callejon9.catalog.domain.Product;
 import com.callejon9.catalog.repository.ProductRepository;
@@ -40,19 +48,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 /**
- * Zona horaria por restaurante (CAL-19), contra PostgreSQL real: dos
- * restaurantes que cortan el dia en medianoches distintas, horario de
- * verano en la agregacion SQL, validacion de la zona y aislamiento de la
- * configuracion entre tenants.
+ * Zona horaria por restaurante (CAL-19), contra PostgreSQL real: dos restaurantes que cortan el dia
+ * en medianoches distintas, horario de verano en la agregacion SQL, validacion de la zona y
+ * aislamiento de la configuracion entre tenants.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -74,10 +73,18 @@ class RestaurantTimezoneTest {
     @Autowired private ObjectMapper objectMapper;
     @Autowired private CashSessionService cashSessionService;
 
-    /** Un restaurante con lo minimo para cobrar: mesero, cajero con caja abierta, ADMIN, mesa y producto. */
-    private record Restaurant(Tenant tenant, User admin, User waiter, User cashier, User kitchen,
-            RestaurantTable table, Product product) {
-    }
+    /**
+     * Un restaurante con lo minimo para cobrar: mesero, cajero con caja abierta, ADMIN, mesa y
+     * producto.
+     */
+    private record Restaurant(
+            Tenant tenant,
+            User admin,
+            User waiter,
+            User cashier,
+            User kitchen,
+            RestaurantTable table,
+            Product product) {}
 
     private Restaurant cdmx;
     private Restaurant cancun;
@@ -95,18 +102,38 @@ class RestaurantTimezoneTest {
     }
 
     private Restaurant seedRestaurant(String slug) {
-        Tenant tenant = onboardingService.onboard("Restaurante " + slug, slug,
-                "admin@" + slug + ".com", "Admin", "Secreto123!", "FREE");
+        Tenant tenant =
+                onboardingService.onboard(
+                        "Restaurante " + slug,
+                        slug,
+                        "admin@" + slug + ".com",
+                        "Admin",
+                        "Secreto123!",
+                        "FREE");
         TenantContext.set(tenant.getId());
         try {
             User admin = saveUser(slug, "gerente", UserRole.ADMIN);
             User waiter = saveUser(slug, "mesero", UserRole.WAITER);
             User cashier = saveUser(slug, "cajero", UserRole.CASHIER);
             User kitchen = saveUser(slug, "cocina", UserRole.KITCHEN);
-            RestaurantTable table = transactionTemplate.execute(status -> tableRepository.save(
-                    RestaurantTable.builder().number(1).capacity(4).status(TableStatus.FREE).active(true).build()));
-            Product product = transactionTemplate.execute(status -> productRepository.save(Product.builder()
-                    .name("Taco").description("Taco").price(new BigDecimal("25.00")).active(true).build()));
+            RestaurantTable table =
+                    transactionTemplate.execute(status ->
+                            tableRepository.save(
+                                    RestaurantTable.builder()
+                                            .number(1)
+                                            .capacity(4)
+                                            .status(TableStatus.FREE)
+                                            .active(true)
+                                            .build()));
+            Product product =
+                    transactionTemplate.execute(status ->
+                            productRepository.save(
+                                    Product.builder()
+                                            .name("Taco")
+                                            .description("Taco")
+                                            .price(new BigDecimal("25.00"))
+                                            .active(true)
+                                            .build()));
             CashSessionFixtures.openFor(cashSessionService, cashier);
             return new Restaurant(tenant, admin, waiter, cashier, kitchen, table, product);
         } finally {
@@ -115,9 +142,15 @@ class RestaurantTimezoneTest {
     }
 
     private User saveUser(String slug, String prefix, UserRole role) {
-        return transactionTemplate.execute(status -> userRepository.save(User.builder()
-                .email(prefix + "@" + slug + ".com").passwordHash("x").fullName(prefix)
-                .role(role).active(true).build()));
+        return transactionTemplate.execute(status ->
+                userRepository.save(
+                        User.builder()
+                                .email(prefix + "@" + slug + ".com")
+                                .passwordHash("x")
+                                .fullName(prefix)
+                                .role(role)
+                                .active(true)
+                                .build()));
     }
 
     private Cookie cookieFor(User user) {
@@ -126,33 +159,51 @@ class RestaurantTimezoneTest {
 
     /** Cobra una orden de un taco y fija el instante de la venta. */
     private UUID saleAt(Restaurant restaurant, Instant createdAt) throws Exception {
-        String orderBody = mockMvc.perform(post("/api/v1/orders")
-                        .cookie(cookieFor(restaurant.waiter()))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"tableId\":\"" + restaurant.table().getId() + "\",\"guestCount\":2}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        String orderBody =
+                mockMvc.perform(
+                                post("/api/v1/orders")
+                                        .cookie(cookieFor(restaurant.waiter()))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(
+                                                "{\"tableId\":\""
+                                                        + restaurant.table().getId()
+                                                        + "\",\"guestCount\":2}"))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
         UUID orderId = UUID.fromString(objectMapper.readTree(orderBody).get("id").asText());
 
-        mockMvc.perform(post("/api/v1/orders/" + orderId + "/items")
-                        .cookie(cookieFor(restaurant.waiter()))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"items\":[{\"productId\":\"" + restaurant.product().getId() + "\",\"quantity\":1}]}"))
+        mockMvc.perform(
+                        post("/api/v1/orders/" + orderId + "/items")
+                                .cookie(cookieFor(restaurant.waiter()))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"items\":[{\"productId\":\""
+                                                + restaurant.product().getId()
+                                                + "\",\"quantity\":1}]}"))
                 .andExpect(status().isOk());
 
-        String ticketBody = mockMvc.perform(post("/api/v1/orders/" + orderId + "/checkout")
-                        .cookie(cookieFor(restaurant.cashier()))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"paymentMethod\":\"CASH\",\"tipPercent\":0}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        String ticketBody =
+                mockMvc.perform(
+                                post("/api/v1/orders/" + orderId + "/checkout")
+                                        .cookie(cookieFor(restaurant.cashier()))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content("{\"paymentMethod\":\"CASH\",\"tipPercent\":0}"))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
         UUID saleId = UUID.fromString(objectMapper.readTree(ticketBody).get("saleId").asText());
 
         // RLS solo revela la fila con el tenant fijado en una transaccion real.
         TenantContext.set(restaurant.tenant().getId());
         try {
-            transactionTemplate.executeWithoutResult(status -> jdbcTemplate.update(
-                    "UPDATE sales SET created_at = ? WHERE id = ?", java.sql.Timestamp.from(createdAt), saleId));
+            transactionTemplate.executeWithoutResult(status ->
+                    jdbcTemplate.update(
+                            "UPDATE sales SET created_at = ? WHERE id = ?",
+                            java.sql.Timestamp.from(createdAt),
+                            saleId));
         } finally {
             TenantContext.clear();
         }
@@ -160,26 +211,33 @@ class RestaurantTimezoneTest {
     }
 
     private void setTimezone(Restaurant restaurant, String timezone) throws Exception {
-        mockMvc.perform(patch("/api/v1/settings")
-                        .cookie(cookieFor(restaurant.admin()))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"timezone\":\"" + timezone + "\"}"))
+        mockMvc.perform(
+                        patch("/api/v1/settings")
+                                .cookie(cookieFor(restaurant.admin()))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"timezone\":\"" + timezone + "\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.timezone").value(timezone));
     }
 
     private String storedTimezone(Restaurant restaurant) {
-        return jdbcTemplate.queryForObject("SELECT timezone FROM tenants WHERE id = ?", String.class,
+        return jdbcTemplate.queryForObject(
+                "SELECT timezone FROM tenants WHERE id = ?",
+                String.class,
                 restaurant.tenant().getId());
     }
 
     private JsonNode salesOn(Restaurant restaurant, LocalDate day) throws Exception {
-        String body = mockMvc.perform(get("/api/v1/sales")
-                        .param("from", day.toString())
-                        .param("to", day.toString())
-                        .cookie(cookieFor(restaurant.cashier())))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
+        String body =
+                mockMvc.perform(
+                                get("/api/v1/sales")
+                                        .param("from", day.toString())
+                                        .param("to", day.toString())
+                                        .cookie(cookieFor(restaurant.cashier())))
+                        .andExpect(status().isOk())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
         // Desde CAL-16 las filas llegan paginadas: { sales: { content: [...], page, ... } }.
         return objectMapper.readTree(body).get("sales").get("content");
     }
@@ -212,15 +270,25 @@ class RestaurantTimezoneTest {
         }
 
         @ParameterizedTest
-        @ValueSource(strings = {"Marte/Olympus", "-05:00", "UTC", "Etc/GMT+5", "EST", "Mexico/General", ""})
+        @ValueSource(
+                strings = {
+                    "Marte/Olympus",
+                    "-05:00",
+                    "UTC",
+                    "Etc/GMT+5",
+                    "EST",
+                    "Mexico/General",
+                    ""
+                })
         @DisplayName("una zona invalida se rechaza con 400 y la base conserva el valor previo")
         void invalidTimezoneIsRejectedAndPreviousValueKept(String timezone) throws Exception {
             setTimezone(cdmx, "America/Cancun");
 
-            mockMvc.perform(patch("/api/v1/settings")
-                            .cookie(cookieFor(cdmx.admin()))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"timezone\":\"" + timezone + "\"}"))
+            mockMvc.perform(
+                            patch("/api/v1/settings")
+                                    .cookie(cookieFor(cdmx.admin()))
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("{\"timezone\":\"" + timezone + "\"}"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.errors.timezone").exists());
 
@@ -228,31 +296,38 @@ class RestaurantTimezoneTest {
         }
 
         @Test
-        @DisplayName("la base rechaza una zona inexistente aunque se salte la API, y conserva la previa")
+        @DisplayName(
+                "la base rechaza una zona inexistente aunque se salte la API, y conserva la previa")
         void databaseRejectsUnknownTimezone() {
-            assertThatThrownBy(() -> jdbcTemplate.update(
-                    "UPDATE tenants SET timezone = 'Marte/Olympus' WHERE id = ?", cdmx.tenant().getId()))
+            assertThatThrownBy(() ->
+                            jdbcTemplate.update(
+                                    "UPDATE tenants SET timezone = 'Marte/Olympus' WHERE id = ?",
+                                    cdmx.tenant().getId()))
                     .isInstanceOf(DataIntegrityViolationException.class);
 
             assertThat(storedTimezone(cdmx)).isEqualTo("America/Mexico_City");
         }
 
         @ParameterizedTest
-        @EnumSource(value = UserRole.class, names = {"WAITER", "CASHIER", "KITCHEN"})
+        @EnumSource(
+                value = UserRole.class,
+                names = {"WAITER", "CASHIER", "KITCHEN"})
         @DisplayName("solo el ADMIN lee o cambia la configuracion")
         void nonAdminRolesAreForbidden(UserRole role) throws Exception {
-            User user = switch (role) {
-                case WAITER -> cdmx.waiter();
-                case CASHIER -> cdmx.cashier();
-                default -> cdmx.kitchen();
-            };
+            User user =
+                    switch (role) {
+                        case WAITER -> cdmx.waiter();
+                        case CASHIER -> cdmx.cashier();
+                        default -> cdmx.kitchen();
+                    };
 
             mockMvc.perform(get("/api/v1/settings").cookie(cookieFor(user)))
                     .andExpect(status().isForbidden());
-            mockMvc.perform(patch("/api/v1/settings")
-                            .cookie(cookieFor(user))
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"timezone\":\"America/Cancun\"}"))
+            mockMvc.perform(
+                            patch("/api/v1/settings")
+                                    .cookie(cookieFor(user))
+                                    .contentType(MediaType.APPLICATION_JSON)
+                                    .content("{\"timezone\":\"America/Cancun\"}"))
                     .andExpect(status().isForbidden());
 
             assertThat(storedTimezone(cdmx)).isEqualTo("America/Mexico_City");
@@ -275,7 +350,8 @@ class RestaurantTimezoneTest {
     class DayCutoff {
 
         @Test
-        @DisplayName("con una venta en la frontera, CDMX y Cancun la agrupan cada uno en su medianoche")
+        @DisplayName(
+                "con una venta en la frontera, CDMX y Cancun la agrupan cada uno en su medianoche")
         void eachRestaurantGroupsByItsOwnMidnight() throws Exception {
             setTimezone(cancun, "America/Cancun");
             LocalDate day = LocalDate.now(CDMX).minusDays(10);
@@ -284,18 +360,21 @@ class RestaurantTimezoneTest {
             UUID cdmxSale = saleAt(cdmx, boundary);
             UUID cancunSale = saleAt(cancun, boundary);
 
-            assertThat(salesOn(cdmx, day)).extracting(sale -> sale.get("id").asText())
+            assertThat(salesOn(cdmx, day))
+                    .extracting(sale -> sale.get("id").asText())
                     .containsExactly(cdmxSale.toString());
             assertThat(salesOn(cdmx, day.plusDays(1))).isEmpty();
             assertThat(salesOn(cancun, day)).isEmpty();
-            assertThat(salesOn(cancun, day.plusDays(1))).extracting(sale -> sale.get("id").asText())
+            assertThat(salesOn(cancun, day.plusDays(1)))
+                    .extracting(sale -> sale.get("id").asText())
                     .containsExactly(cancunSale.toString());
 
             // La agregacion SQL (AT TIME ZONE) usa la misma zona que el rango.
-            mockMvc.perform(get("/api/v1/analytics")
-                            .param("from", day.plusDays(1).toString())
-                            .param("to", day.plusDays(1).toString())
-                            .cookie(cookieFor(cancun.admin())))
+            mockMvc.perform(
+                            get("/api/v1/analytics")
+                                    .param("from", day.plusDays(1).toString())
+                                    .param("to", day.plusDays(1).toString())
+                                    .cookie(cookieFor(cancun.admin())))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.salesByDay.length()").value(1))
                     .andExpect(jsonPath("$.salesByDay[0].day").value(day.plusDays(1).toString()))
@@ -303,7 +382,8 @@ class RestaurantTimezoneTest {
         }
 
         @Test
-        @DisplayName("al cambiar la zona, el historial se reinterpreta sin reescribir los instantes")
+        @DisplayName(
+                "al cambiar la zona, el historial se reinterpreta sin reescribir los instantes")
         void changingTimezoneReinterpretsHistoryWithoutRewritingTimestamps() throws Exception {
             LocalDate day = LocalDate.now(CDMX).minusDays(10);
             Instant boundary = day.atTime(23, 30).atZone(CDMX).toInstant();
@@ -313,12 +393,19 @@ class RestaurantTimezoneTest {
             setTimezone(cdmx, "America/Cancun");
 
             assertThat(salesOn(cdmx, day)).isEmpty();
-            assertThat(salesOn(cdmx, day.plusDays(1))).extracting(sale -> sale.get("id").asText())
+            assertThat(salesOn(cdmx, day.plusDays(1)))
+                    .extracting(sale -> sale.get("id").asText())
                     .containsExactly(saleId.toString());
             TenantContext.set(cdmx.tenant().getId());
             try {
-                Instant stored = transactionTemplate.execute(status -> jdbcTemplate.queryForObject(
-                        "SELECT created_at FROM sales WHERE id = ?", java.sql.Timestamp.class, saleId)).toInstant();
+                Instant stored =
+                        transactionTemplate
+                                .execute(status ->
+                                        jdbcTemplate.queryForObject(
+                                                "SELECT created_at FROM sales WHERE id = ?",
+                                                java.sql.Timestamp.class,
+                                                saleId))
+                                .toInstant();
                 assertThat(stored).isEqualTo(boundary);
             } finally {
                 TenantContext.clear();
@@ -326,7 +413,8 @@ class RestaurantTimezoneTest {
         }
 
         @Test
-        @DisplayName("el dia de 25 horas del cambio de horario agrupa sus dos extremos en el mismo dia")
+        @DisplayName(
+                "el dia de 25 horas del cambio de horario agrupa sus dos extremos en el mismo dia")
         void daylightSavingFallBackDayKeepsBothEndsInTheSameDay() throws Exception {
             setTimezone(cdmx, "America/Tijuana");
             LocalDate fallBack = LocalDate.of(2025, 11, 2);
@@ -336,14 +424,16 @@ class RestaurantTimezoneTest {
             saleAt(cdmx, fallBack.plusDays(1).atTime(0, 30).atZone(TIJUANA).toInstant());
 
             assertThat(salesOn(cdmx, fallBack)).hasSize(2);
-            mockMvc.perform(get("/api/v1/analytics")
-                            .param("from", fallBack.toString())
-                            .param("to", fallBack.plusDays(1).toString())
-                            .cookie(cookieFor(cdmx.admin())))
+            mockMvc.perform(
+                            get("/api/v1/analytics")
+                                    .param("from", fallBack.toString())
+                                    .param("to", fallBack.plusDays(1).toString())
+                                    .cookie(cookieFor(cdmx.admin())))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.salesByDay[0].day").value(fallBack.toString()))
                     .andExpect(jsonPath("$.salesByDay[0].count").value(2))
-                    .andExpect(jsonPath("$.salesByDay[1].day").value(fallBack.plusDays(1).toString()))
+                    .andExpect(
+                            jsonPath("$.salesByDay[1].day").value(fallBack.plusDays(1).toString()))
                     .andExpect(jsonPath("$.salesByDay[1].count").value(1));
         }
     }

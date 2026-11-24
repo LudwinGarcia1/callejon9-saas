@@ -16,12 +16,11 @@ import java.util.UUID;
  * ADJUSTMENT          { movementType, countedStock: &gt;= 0, reason }
  * </pre>
  *
- * El delta de un ajuste lo calcula el servidor, no el cliente: un cliente
- * leeria un stock que quizas ya cambio y dejaria el inventario en un numero
- * que nadie conto.
+ * El delta de un ajuste lo calcula el servidor, no el cliente: un cliente leeria un stock que
+ * quizas ya cambio y dejaria el inventario en un numero que nadie conto.
  *
- * {@code reason} se limita a 150 caracteres para que el prefijo "Conteo
- * fisico: ..." quepa en el varchar(200) de la columna.
+ * <p>{@code reason} se limita a 150 caracteres para que el prefijo "Conteo fisico: ..." quepa en el
+ * varchar(200) de la columna.
  */
 @ValidMovementRequest
 public record RegisterMovementRequest(
@@ -29,5 +28,4 @@ public record RegisterMovementRequest(
         @NotNull InventoryMovementType movementType,
         @Positive BigDecimal quantity,
         @PositiveOrZero BigDecimal countedStock,
-        @Size(max = 150) String reason) {
-}
+        @Size(max = 150) String reason) {}

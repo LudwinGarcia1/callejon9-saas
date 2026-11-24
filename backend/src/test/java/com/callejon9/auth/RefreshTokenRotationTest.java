@@ -1,5 +1,12 @@
 package com.callejon9.auth;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.callejon9.auth.service.JwtService;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
@@ -26,17 +33,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 /**
- * Ciclo completo login → refresh → replay → logout contra PostgreSQL real.
- * Las filas de refresh_tokens se leen como callejon9_app con el tenant fijado,
- * igual que las ve la aplicacion.
+ * Ciclo completo login → refresh → replay → logout contra PostgreSQL real. Las filas de
+ * refresh_tokens se leen como callejon9_app con el tenant fijado, igual que las ve la aplicacion.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -57,8 +56,14 @@ class RefreshTokenRotationTest {
 
     @BeforeEach
     void seed() {
-        tenantA = onboardingService.onboard("Refresh Test", "refresh-test",
-                "admin@refresh.com", "Admin", "Secreto123!", "FREE");
+        tenantA =
+                onboardingService.onboard(
+                        "Refresh Test",
+                        "refresh-test",
+                        "admin@refresh.com",
+                        "Admin",
+                        "Secreto123!",
+                        "FREE");
     }
 
     @AfterEach
@@ -68,7 +73,8 @@ class RefreshTokenRotationTest {
     }
 
     @Test
-    @DisplayName("login emite access y refresh httpOnly, Secure, SameSite=Strict y el refresh con path minimo")
+    @DisplayName(
+            "login emite access y refresh httpOnly, Secure, SameSite=Strict y el refresh con path minimo")
     void loginIssuesBothCookiesWithSafeAttributes() throws Exception {
         mockMvc.perform(loginRequest("refresh-test", "admin@refresh.com"))
                 .andExpect(status().isOk())
@@ -150,8 +156,11 @@ class RefreshTokenRotationTest {
         Session session = login("refresh-test", "admin@refresh.com");
 
         // El logout exige sesion (CAL-5); el navegador envia ambas cookies.
-        mockMvc.perform(post("/api/v1/auth/logout")
-                        .cookie(new Cookie(ACCESS, session.access()), new Cookie(REFRESH, session.refresh())))
+        mockMvc.perform(
+                        post("/api/v1/auth/logout")
+                                .cookie(
+                                        new Cookie(ACCESS, session.access()),
+                                        new Cookie(REFRESH, session.refresh())))
                 .andExpect(status().isNoContent())
                 .andExpect(cookie().maxAge(ACCESS, 0))
                 .andExpect(cookie().maxAge(REFRESH, 0))
@@ -166,15 +175,18 @@ class RefreshTokenRotationTest {
     @Test
     @DisplayName("sin cookie, con un token basura o expirado, refresh responde 401")
     void missingOrInvalidRefreshIsUnauthorized() throws Exception {
-        mockMvc.perform(post("/api/v1/auth/refresh"))
-                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/v1/auth/refresh")).andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/v1/auth/refresh").cookie(new Cookie(REFRESH, "no-es-un-jwt")))
                 .andExpect(status().isUnauthorized());
 
         Session session = login("refresh-test", "admin@refresh.com");
         var claims = jwtService.parseRefreshToken(session.refresh());
-        String expired = jwtService.generateRefreshToken(claims.userId(), claims.tenantId(),
-                claims.secret(), Instant.now().minusSeconds(1));
+        String expired =
+                jwtService.generateRefreshToken(
+                        claims.userId(),
+                        claims.tenantId(),
+                        claims.secret(),
+                        Instant.now().minusSeconds(1));
         mockMvc.perform(post("/api/v1/auth/refresh").cookie(new Cookie(REFRESH, expired)))
                 .andExpect(status().isUnauthorized());
     }
@@ -186,8 +198,9 @@ class RefreshTokenRotationTest {
 
         TenantContext.set(tenantA.getId());
         try {
-            transactionTemplate.executeWithoutResult(status -> jdbcTemplate.update(
-                    "UPDATE users SET active = false WHERE email = 'admin@refresh.com'"));
+            transactionTemplate.executeWithoutResult(status ->
+                    jdbcTemplate.update(
+                            "UPDATE users SET active = false WHERE email = 'admin@refresh.com'"));
         } finally {
             TenantContext.clear();
         }
@@ -200,7 +213,8 @@ class RefreshTokenRotationTest {
     }
 
     @Test
-    @DisplayName("un restaurante desactivado ya no renueva: la regla del login tambien aplica al refresh")
+    @DisplayName(
+            "un restaurante desactivado ya no renueva: la regla del login tambien aplica al refresh")
     void inactiveTenantCannotRefresh() throws Exception {
         Session session = login("refresh-test", "admin@refresh.com");
 
@@ -215,7 +229,8 @@ class RefreshTokenRotationTest {
     }
 
     @Test
-    @DisplayName("los tokens no son intercambiables: ni el refresh autoriza la API ni el access renueva")
+    @DisplayName(
+            "los tokens no son intercambiables: ni el refresh autoriza la API ni el access renueva")
     void tokensAreNotInterchangeable() throws Exception {
         Session session = login("refresh-test", "admin@refresh.com");
 
@@ -228,26 +243,38 @@ class RefreshTokenRotationTest {
     @Test
     @DisplayName("un token del tenant A procesado con contexto B no lee ni modifica la sesion")
     void refreshFromTenantAIsInvisibleUnderTenantB() throws Exception {
-        Tenant tenantB = onboardingService.onboard("Refresh Otro", "refresh-otro",
-                "admin@refresh-otro.com", "Otro", "Secreto123!", "FREE");
+        Tenant tenantB =
+                onboardingService.onboard(
+                        "Refresh Otro",
+                        "refresh-otro",
+                        "admin@refresh-otro.com",
+                        "Otro",
+                        "Secreto123!",
+                        "FREE");
         Session sessionA = login("refresh-test", "admin@refresh.com");
         Session sessionB = login("refresh-otro", "admin@refresh-otro.com");
         var claimsA = jwtService.parseRefreshToken(sessionA.refresh());
 
         // Mismo secreto y usuario de A, pero firmado con el tenant B: la firma
         // es valida, asi que solo RLS puede impedir que se lea la fila de A.
-        String crossTenant = jwtService.generateRefreshToken(claimsA.userId(), tenantB.getId(),
-                claimsA.secret(), Instant.now().plusSeconds(3600));
-        mockMvc.perform(post("/api/v1/auth/refresh")
-                        .cookie(new Cookie(REFRESH, crossTenant))
-                        .cookie(new Cookie(ACCESS, sessionB.access())))
+        String crossTenant =
+                jwtService.generateRefreshToken(
+                        claimsA.userId(),
+                        tenantB.getId(),
+                        claimsA.secret(),
+                        Instant.now().plusSeconds(3600));
+        mockMvc.perform(
+                        post("/api/v1/auth/refresh")
+                                .cookie(new Cookie(REFRESH, crossTenant))
+                                .cookie(new Cookie(ACCESS, sessionB.access())))
                 .andExpect(status().isUnauthorized());
 
         // Un logout con el mismo token cruzado tampoco revoca nada en A. El
         // logout exige sesion (CAL-5), asi que va con la de B.
-        mockMvc.perform(post("/api/v1/auth/logout")
-                        .cookie(new Cookie(REFRESH, crossTenant))
-                        .cookie(new Cookie(ACCESS, sessionB.access())))
+        mockMvc.perform(
+                        post("/api/v1/auth/logout")
+                                .cookie(new Cookie(REFRESH, crossTenant))
+                                .cookie(new Cookie(ACCESS, sessionB.access())))
                 .andExpect(status().isNoContent());
 
         assertThat(tokensOf(tenantA.getId()))
@@ -255,8 +282,10 @@ class RefreshTokenRotationTest {
                 .satisfies(row -> assertThat(row.get("revoked_at")).isNull());
 
         // Sin contexto de tenant, RLS no revela ninguna fila.
-        Integer visibleWithoutTenant = transactionTemplate.execute(status ->
-                jdbcTemplate.queryForObject("SELECT count(*) FROM refresh_tokens", Integer.class));
+        Integer visibleWithoutTenant =
+                transactionTemplate.execute(status ->
+                        jdbcTemplate.queryForObject(
+                                "SELECT count(*) FROM refresh_tokens", Integer.class));
         assertThat(visibleWithoutTenant).isZero();
 
         // La sesion de A sigue intacta y renovable.
@@ -265,21 +294,21 @@ class RefreshTokenRotationTest {
 
     // ---------------------------------------------------------------------
 
-    private record Session(String access, String refresh) {
-    }
+    private record Session(String access, String refresh) {}
 
     private Session login(String slug, String email) throws Exception {
-        MvcResult result = mockMvc.perform(loginRequest(slug, email))
-                .andExpect(status().isOk())
-                .andReturn();
+        MvcResult result =
+                mockMvc.perform(loginRequest(slug, email)).andExpect(status().isOk()).andReturn();
         return sessionFrom(result);
     }
 
     private Session refresh(String refreshToken) throws Exception {
-        MvcResult result = mockMvc.perform(post("/api/v1/auth/refresh")
-                        .cookie(new Cookie(REFRESH, refreshToken)))
-                .andExpect(status().isNoContent())
-                .andReturn();
+        MvcResult result =
+                mockMvc.perform(
+                                post("/api/v1/auth/refresh")
+                                        .cookie(new Cookie(REFRESH, refreshToken)))
+                        .andExpect(status().isNoContent())
+                        .andReturn();
         return sessionFrom(result);
     }
 
@@ -289,29 +318,36 @@ class RefreshTokenRotationTest {
                 result.getResponse().getCookie(REFRESH).getValue());
     }
 
-    private static org.springframework.test.web.servlet.RequestBuilder loginRequest(String slug, String email) {
+    private static org.springframework.test.web.servlet.RequestBuilder loginRequest(
+            String slug, String email) {
         return post("/api/v1/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""
+                .content(
+                        """
                         {"slug":"%s","email":"%s","password":"Secreto123!"}
-                        """.formatted(slug, email));
+                        """
+                                .formatted(slug, email));
     }
 
     private List<Map<String, Object>> tokensOf(UUID tenantId) {
         TenantContext.set(tenantId);
         try {
-            return transactionTemplate.execute(status -> jdbcTemplate.queryForList("""
-                    SELECT id, token_hash, family_id, expires_at, revoked_at, replaced_by
-                      FROM refresh_tokens
-                     ORDER BY created_at
-                    """));
+            return transactionTemplate.execute(status ->
+                    jdbcTemplate.queryForList(
+                            """
+                            SELECT id, token_hash, family_id, expires_at, revoked_at, replaced_by
+                              FROM refresh_tokens
+                             ORDER BY created_at
+                            """));
         } finally {
             TenantContext.clear();
         }
     }
 
     private static String sha256(String value) throws Exception {
-        return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256")
-                .digest(value.getBytes(StandardCharsets.UTF_8)));
+        return HexFormat.of()
+                .formatHex(
+                        MessageDigest.getInstance("SHA-256")
+                                .digest(value.getBytes(StandardCharsets.UTF_8)));
     }
 }

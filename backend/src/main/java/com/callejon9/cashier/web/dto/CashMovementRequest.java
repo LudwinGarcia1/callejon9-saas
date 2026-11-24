@@ -11,5 +11,4 @@ import java.math.BigDecimal;
 public record CashMovementRequest(
         @NotNull CashMovementType type,
         @NotNull @DecimalMin("0.01") @Digits(integer = 8, fraction = 2) BigDecimal amount,
-        @NotBlank @Size(max = 250) String reason) {
-}
+        @NotBlank @Size(max = 250) String reason) {}

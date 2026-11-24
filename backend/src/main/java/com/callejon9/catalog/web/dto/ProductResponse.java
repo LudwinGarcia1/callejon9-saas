@@ -13,7 +13,12 @@ public record ProductResponse(
         boolean active) {
 
     public static ProductResponse from(Product product) {
-        return new ProductResponse(product.getId(), product.getName(), product.getDescription(),
-                product.getPrice(), product.getCategoryId(), product.isActive());
+        return new ProductResponse(
+                product.getId(),
+                product.getName(),
+                product.getDescription(),
+                product.getPrice(),
+                product.getCategoryId(),
+                product.isActive());
     }
 }

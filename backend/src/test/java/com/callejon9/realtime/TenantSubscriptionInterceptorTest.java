@@ -1,5 +1,7 @@
 package com.callejon9.realtime;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.callejon9.support.TestSessions;
 import com.callejon9.user.domain.User;
 import com.callejon9.user.domain.UserRole;
@@ -23,37 +25,31 @@ import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 /**
- * Prueba el equivalente en tiempo real de RLS: un usuario autenticado del
- * tenant A puede suscribirse al topico de cocina de SU tenant sin
- * problemas, pero el servidor rechaza la suscripcion (trama STOMP ERROR y
- * cierre de la conexion) cuando intenta suscribirse al topico del tenant B.
+ * Prueba el equivalente en tiempo real de RLS: un usuario autenticado del tenant A puede
+ * suscribirse al topico de cocina de SU tenant sin problemas, pero el servidor rechaza la
+ * suscripcion (trama STOMP ERROR y cierre de la conexion) cuando intenta suscribirse al topico del
+ * tenant B.
  *
- * <p>No hace falta persistir tenants ni usuarios: el handshake solo lee y
- * valida el JWT (ver {@link JwtHandshakeInterceptor}), y
- * {@link TenantSubscriptionInterceptor} solo compara el tenantId del token
- * contra el destino solicitado.
+ * <p>No hace falta persistir tenants ni usuarios: el handshake solo lee y valida el JWT (ver {@link
+ * JwtHandshakeInterceptor}), y {@link TenantSubscriptionInterceptor} solo compara el tenantId del
+ * token contra el destino solicitado.
  *
- * <p>El broker simple en memoria de Spring (enableSimpleBroker) nunca envia
- * RECEIPT para SUBSCRIBE (solo lo hace para DISCONNECT), asi que la prueba
- * no puede esperar un recibo de la suscripcion legitima; en vez de eso, deja
- * una ventana corta para que un rechazo indebido ya se hubiera manifestado
- * antes de intentar la suscripcion cruzada.
+ * <p>El broker simple en memoria de Spring (enableSimpleBroker) nunca envia RECEIPT para SUBSCRIBE
+ * (solo lo hace para DISCONNECT), asi que la prueba no puede esperar un recibo de la suscripcion
+ * legitima; en vez de eso, deja una ventana corta para que un rechazo indebido ya se hubiera
+ * manifestado antes de intentar la suscripcion cruzada.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @DisplayName("Aislamiento de tenants en el canal de tiempo real")
 class TenantSubscriptionInterceptorTest {
 
-    @LocalServerPort
-    private int port;
+    @LocalServerPort private int port;
 
     private static final String SLUG_PREFIX = "realtime-test";
 
-    @Autowired
-    private TestSessions testSessions;
+    @Autowired private TestSessions testSessions;
 
     @AfterEach
     void cleanUp() {
@@ -72,34 +68,37 @@ class TenantSubscriptionInterceptorTest {
         WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
 
         WebSocketHttpHeaders handshakeHeaders = new WebSocketHttpHeaders();
-        handshakeHeaders.add(HttpHeaders.COOKIE, "access_token=" + testSessions.accessTokenFor(adminA));
+        handshakeHeaders.add(
+                HttpHeaders.COOKIE, "access_token=" + testSessions.accessTokenFor(adminA));
 
         CompletableFuture<StompSession> connected = new CompletableFuture<>();
         CompletableFuture<String> errorReceived = new CompletableFuture<>();
 
-        StompSessionHandlerAdapter handler = new StompSessionHandlerAdapter() {
+        StompSessionHandlerAdapter handler =
+                new StompSessionHandlerAdapter() {
 
-            @Override
-            public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
-                connected.complete(session);
-            }
+                    @Override
+                    public void afterConnected(
+                            StompSession session, StompHeaders connectedHeaders) {
+                        connected.complete(session);
+                    }
 
-            @Override
-            public void handleFrame(StompHeaders headers, Object payload) {
-                // DefaultStompSession enruta las tramas ERROR al handler de
-                // sesion (no al de la suscripcion): cualquier invocacion
-                // aqui solo puede venir de un ERROR del servidor. El texto
-                // de la excepcion viaja en el encabezado STOMP "message" del
-                // frame ERROR (StompHeaderAccessor.setMessage), no en el
-                // body, que va vacio.
-                errorReceived.complete(headers.getFirst("message"));
-            }
+                    @Override
+                    public void handleFrame(StompHeaders headers, Object payload) {
+                        // DefaultStompSession enruta las tramas ERROR al handler de
+                        // sesion (no al de la suscripcion): cualquier invocacion
+                        // aqui solo puede venir de un ERROR del servidor. El texto
+                        // de la excepcion viaja en el encabezado STOMP "message" del
+                        // frame ERROR (StompHeaderAccessor.setMessage), no en el
+                        // body, que va vacio.
+                        errorReceived.complete(headers.getFirst("message"));
+                    }
 
-            @Override
-            public void handleTransportError(StompSession session, Throwable exception) {
-                errorReceived.completeExceptionally(exception);
-            }
-        };
+                    @Override
+                    public void handleTransportError(StompSession session, Throwable exception) {
+                        errorReceived.completeExceptionally(exception);
+                    }
+                };
 
         stompClient.connectAsync("ws://localhost:" + port + "/ws", handshakeHeaders, handler);
         StompSession session = connected.get(10, TimeUnit.SECONDS);

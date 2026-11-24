@@ -1,5 +1,7 @@
 package com.callejon9.platform.tenant.web.dto;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -13,18 +15,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 /**
  * Reglas del identificador (slug) del alta de restaurante: {@code @NotBlank} y
- * {@code @Pattern("^[a-z0-9-]{3,80}$")} de {@link SignupRequest}. Solo se valida
- * la propiedad: la politica de contrasenas (a nivel de clase) tiene su propia
- * prueba en {@code SignupPasswordPolicyTest}.
+ * {@code @Pattern("^[a-z0-9-]{3,80}$")} de {@link SignupRequest}. Solo se valida la propiedad: la
+ * politica de contrasenas (a nivel de clase) tiene su propia prueba en {@code
+ * SignupPasswordPolicyTest}.
  */
 @DisplayName("UT · identificador del alta de restaurante")
 class SignupRequestSlugTest {
 
-    private static final String PATTERN_MESSAGE = "Solo minusculas, numeros y guiones, entre 3 y 80 caracteres.";
+    private static final String PATTERN_MESSAGE =
+            "Solo minusculas, numeros y guiones, entre 3 y 80 caracteres.";
 
     private static ValidatorFactory factory;
     private static Validator validator;
@@ -54,8 +55,20 @@ class SignupRequestSlugTest {
     }
 
     @ParameterizedTest(name = "«{0}» se rechaza")
-    @ValueSource(strings = {"ab", "a", "La-Esquina", "la_esquina", "la esquina", "cafe-niño", "la.esquina", " abc", "abc/admin"})
-    @DisplayName("Inválido: menos de 3 caracteres, mayúsculas, guion bajo, espacios, acentos y símbolos")
+    @ValueSource(
+            strings = {
+                "ab",
+                "a",
+                "La-Esquina",
+                "la_esquina",
+                "la esquina",
+                "cafe-niño",
+                "la.esquina",
+                " abc",
+                "abc/admin"
+            })
+    @DisplayName(
+            "Inválido: menos de 3 caracteres, mayúsculas, guion bajo, espacios, acentos y símbolos")
     void rejectsInvalidSlugs(String slug) {
         assertThat(messagesFor(slug)).containsExactly(PATTERN_MESSAGE);
     }

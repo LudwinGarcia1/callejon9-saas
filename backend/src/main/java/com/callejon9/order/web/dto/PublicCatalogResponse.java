@@ -8,5 +8,4 @@ public record PublicCatalogResponse(
         String restaurantName,
         String slug,
         List<CategoryResponse> categories,
-        List<ProductResponse> products) {
-}
+        List<ProductResponse> products) {}

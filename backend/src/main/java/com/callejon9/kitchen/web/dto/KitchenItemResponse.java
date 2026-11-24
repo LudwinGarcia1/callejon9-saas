@@ -13,8 +13,13 @@ public record KitchenItemResponse(
         String notes) {
 
     public static KitchenItemResponse from(OrderItem item) {
-        return new KitchenItemResponse(item.getId(), item.getOrderId(), item.getProductId(),
-                item.getProductName(), item.getQuantity(), item.getKitchenStatus().name(),
+        return new KitchenItemResponse(
+                item.getId(),
+                item.getOrderId(),
+                item.getProductId(),
+                item.getProductName(),
+                item.getQuantity(),
+                item.getKitchenStatus().name(),
                 item.getNotes());
     }
 }

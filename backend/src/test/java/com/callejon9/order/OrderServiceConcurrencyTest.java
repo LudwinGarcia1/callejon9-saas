@@ -1,5 +1,7 @@
 package com.callejon9.order;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.callejon9.auth.service.AuthService;
 import com.callejon9.order.service.OrderService;
 import com.callejon9.platform.tenant.domain.Tenant;
@@ -23,16 +25,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 /**
- * Bajo READ COMMITTED, dos peticiones que abren una orden sobre la MISMA mesa
- * al mismo tiempo pueden leer ambas el estado FREE antes de que cualquiera
- * escriba OCCUPIED: no hay error, pero se crean dos ordenes para una sola
- * mesa (doble reservacion silenciosa). Este test usa CountDownLatch para que
- * los dos hilos esten realmente en vuelo a la vez -- llamar al metodo dos
- * veces en secuencia no reproduciria la carrera y pasaria incluso sin el
- * arreglo.
+ * Bajo READ COMMITTED, dos peticiones que abren una orden sobre la MISMA mesa al mismo tiempo
+ * pueden leer ambas el estado FREE antes de que cualquiera escriba OCCUPIED: no hay error, pero se
+ * crean dos ordenes para una sola mesa (doble reservacion silenciosa). Este test usa CountDownLatch
+ * para que los dos hilos esten realmente en vuelo a la vez -- llamar al metodo dos veces en
+ * secuencia no reproduciria la carrera y pasaria incluso sin el arreglo.
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -51,14 +49,23 @@ class OrderServiceConcurrencyTest {
 
     @BeforeEach
     void seed() {
-        Tenant tenant = onboardingService.onboard("Concurrencia Test", "concurrencia-test",
-                "admin@concurrencia.com", "Admin", "Secreto123!", "FREE");
+        Tenant tenant =
+                onboardingService.onboard(
+                        "Concurrencia Test",
+                        "concurrencia-test",
+                        "admin@concurrencia.com",
+                        "Admin",
+                        "Secreto123!",
+                        "FREE");
         tenantId = tenant.getId();
         // waiter_id referencia users(id): tiene que ser un usuario real, no
         // un UUID inventado, o el INSERT de la orden falla por FK antes de
         // siquiera llegar a la carrera que este test quiere reproducir.
-        waiterId = authService.authenticate(
-                "concurrencia-test", "admin@concurrencia.com", "Secreto123!").user().getId();
+        waiterId =
+                authService
+                        .authenticate("concurrencia-test", "admin@concurrencia.com", "Secreto123!")
+                        .user()
+                        .getId();
 
         TenantContext.set(tenantId);
         try {
@@ -76,9 +83,11 @@ class OrderServiceConcurrencyTest {
     }
 
     @Test
-    @DisplayName("dos meseros abriendo la orden a la vez: exactamente uno gana, "
-            + "el otro recibe el conflicto de negocio")
-    void exactlyOneThreadOccupiesTheTableWhenOpeningOrdersConcurrently() throws InterruptedException {
+    @DisplayName(
+            "dos meseros abriendo la orden a la vez: exactamente uno gana, "
+                    + "el otro recibe el conflicto de negocio")
+    void exactlyOneThreadOccupiesTheTableWhenOpeningOrdersConcurrently()
+            throws InterruptedException {
         int threadCount = 2;
         CountDownLatch ready = new CountDownLatch(threadCount);
         CountDownLatch start = new CountDownLatch(1);
@@ -86,20 +95,21 @@ class OrderServiceConcurrencyTest {
         AtomicInteger successes = new AtomicInteger();
         List<Throwable> failures = new CopyOnWriteArrayList<>();
 
-        Runnable openOrderTask = () -> {
-            TenantContext.set(tenantId);
-            try {
-                ready.countDown();
-                start.await();
-                orderService.openOrder(tableId, 2, waiterId);
-                successes.incrementAndGet();
-            } catch (Throwable ex) {
-                failures.add(ex);
-            } finally {
-                TenantContext.clear();
-                done.countDown();
-            }
-        };
+        Runnable openOrderTask =
+                () -> {
+                    TenantContext.set(tenantId);
+                    try {
+                        ready.countDown();
+                        start.await();
+                        orderService.openOrder(tableId, 2, waiterId);
+                        successes.incrementAndGet();
+                    } catch (Throwable ex) {
+                        failures.add(ex);
+                    } finally {
+                        TenantContext.clear();
+                        done.countDown();
+                    }
+                };
 
         Thread waiterOne = new Thread(openOrderTask, "waiter-1");
         Thread waiterTwo = new Thread(openOrderTask, "waiter-2");

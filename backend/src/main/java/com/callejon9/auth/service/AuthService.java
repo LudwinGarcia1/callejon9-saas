@@ -7,7 +7,6 @@ import com.callejon9.tenancy.TenantContext;
 import com.callejon9.user.domain.User;
 import com.callejon9.user.repository.UserRepository;
 import java.time.Instant;
-import java.util.Objects;
 import java.util.UUID;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,16 +18,14 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class AuthService {
 
     /**
-     * Resultado de una autenticacion exitosa: el par de tokens y el instante
-     * en que la sesion deja de poder renovarse.
+     * Resultado de una autenticacion exitosa: el par de tokens y el instante en que la sesion deja
+     * de poder renovarse.
      */
-    public record AuthenticatedUser(User user, String accessToken, String refreshToken,
-                                    Instant sessionExpiresAt) {
-    }
+    public record AuthenticatedUser(
+            User user, String accessToken, String refreshToken, Instant sessionExpiresAt) {}
 
     /** Identidad resuelta para GET /me: el usuario autenticado y su tenant. */
-    public record CurrentUser(User user, Tenant tenant) {
-    }
+    public record CurrentUser(User user, Tenant tenant) {}
 
     private final TenantRepository tenantRepository;
     private final UserRepository userRepository;
@@ -50,18 +47,16 @@ public class AuthService {
     }
 
     /**
-     * Resuelve el tenant por slug ANTES de buscar al usuario. Ese orden es lo que
-     * impide que un correo valido de otro restaurante sirva para entrar.
+     * Resuelve el tenant por slug ANTES de buscar al usuario. Ese orden es lo que impide que un
+     * correo valido de otro restaurante sirva para entrar.
      *
      * <p>La busqueda del usuario se abre con {@link TransactionTemplate} en vez de
-     * {@code @Transactional}, siguiendo el mismo patron que {@code
-     * TenantOnboardingService}: {@code TenantAwareTransactionManager} publica
-     * {@code app.tenant_id} al ABRIR la transaccion ({@code doBegin}), asi que el
-     * tenant debe quedar fijado en {@link TenantContext} antes de abrirla. Un
-     * {@code @Transactional} en un metodo de esta misma clase, llamado desde
-     * {@code authenticate}, tampoco serviria: el proxy de Spring no intercepta
-     * las llamadas de un objeto a si mismo (self-invocation), asi que la
-     * anotacion se ignoraria en silencio.
+     * {@code @Transactional}, siguiendo el mismo patron que {@code TenantOnboardingService}: {@code
+     * TenantAwareTransactionManager} publica {@code app.tenant_id} al ABRIR la transaccion ({@code
+     * doBegin}), asi que el tenant debe quedar fijado en {@link TenantContext} antes de abrirla. Un
+     * {@code @Transactional} en un metodo de esta misma clase, llamado desde {@code authenticate},
+     * tampoco serviria: el proxy de Spring no intercepta las llamadas de un objeto a si mismo
+     * (self-invocation), asi que la anotacion se ignoraria en silencio.
      */
     public AuthenticatedUser authenticate(String slug, String email, String rawPassword) {
         Tenant tenant = findActiveTenant(slug);
@@ -80,8 +75,8 @@ public class AuthService {
             // Mismo tenant ya fijado: la fila de refresh_tokens pasa el WITH
             // CHECK de RLS y queda en el restaurante del usuario.
             var issued = refreshTokenService.issueForLogin(user);
-            return new AuthenticatedUser(user, issued.accessToken(), issued.refreshToken(),
-                    issued.sessionExpiresAt());
+            return new AuthenticatedUser(
+                    user, issued.accessToken(), issued.refreshToken(), issued.sessionExpiresAt());
         } finally {
             TenantContext.clear();
         }
@@ -90,31 +85,37 @@ public class AuthService {
     /**
      * Resuelve al usuario autenticado y su tenant para GET /me.
      *
-     * <p>A diferencia de {@link #authenticate}, aqui si alcanza con
-     * {@code @Transactional} declarativo: {@link com.callejon9.tenancy.TenantFilter}
-     * ya fijo el {@link TenantContext} antes de que la peticion llegara al
-     * controller, es decir, antes de que esta transaccion se abra (regla que
-     * {@code TenantAwareTransactionManager} exige en su {@code doBegin}).
+     * <p>A diferencia de {@link #authenticate}, aqui si alcanza con {@code @Transactional}
+     * declarativo: {@link com.callejon9.tenancy.TenantFilter} ya fijo el {@link TenantContext}
+     * antes de que la peticion llegara al controller, es decir, antes de que esta transaccion se
+     * abra (regla que {@code TenantAwareTransactionManager} exige en su {@code doBegin}).
      */
     @Transactional(readOnly = true)
     public CurrentUser currentUser(UUID userId) {
         UUID tenantId = TenantContext.require();
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("El usuario no existe."));
-        Tenant tenant = tenantRepository.findById(tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("El restaurante no existe."));
+        User user =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("El usuario no existe."));
+        Tenant tenant =
+                tenantRepository
+                        .findById(tenantId)
+                        .orElseThrow(
+                                () -> new ResourceNotFoundException("El restaurante no existe."));
 
         return new CurrentUser(user, tenant);
     }
 
     private User loadUser(String email) {
-        return userRepository.findByEmail(email)
+        return userRepository
+                .findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException("Credenciales invalidas."));
     }
 
     private Tenant findActiveTenant(String slug) {
-        return tenantRepository.findBySlug(slug)
+        return tenantRepository
+                .findBySlug(slug)
                 .filter(Tenant::isActive)
                 .orElseThrow(() -> new BadCredentialsException("Credenciales invalidas."));
     }

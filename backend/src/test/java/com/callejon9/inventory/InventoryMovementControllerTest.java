@@ -1,5 +1,11 @@
 package com.callejon9.inventory;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.service.TenantOnboardingService;
 import com.callejon9.support.TestSessions;
@@ -22,17 +28,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 /**
- * Los usuarios se persisten de verdad, no se fabrican en memoria:
- * inventory_movements.user_id tiene FK a users, asi que un principal inventado
- * hace fallar el INSERT del movimiento. Mismo motivo que en
- * CheckoutControllerTest con waiter_id y cashier_id.
+ * Los usuarios se persisten de verdad, no se fabrican en memoria: inventory_movements.user_id tiene
+ * FK a users, asi que un principal inventado hace fallar el INSERT del movimiento. Mismo motivo que
+ * en CheckoutControllerTest con waiter_id y cashier_id.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -52,8 +51,14 @@ class InventoryMovementControllerTest {
 
     @BeforeEach
     void seed() {
-        tenant = onboardingService.onboard("Movimientos Test", "movimientos-test",
-                "admin@movimientos.com", "Admin", "Secreto123!", "FREE");
+        tenant =
+                onboardingService.onboard(
+                        "Movimientos Test",
+                        "movimientos-test",
+                        "admin@movimientos.com",
+                        "Admin",
+                        "Secreto123!",
+                        "FREE");
         admin = persistedUser(UserRole.ADMIN);
     }
 
@@ -68,36 +73,46 @@ class InventoryMovementControllerTest {
     }
 
     /**
-     * El correo lleva un dominio propio para no chocar con el admin que ya
-     * creo el onboarding. El nombre completo es el del rol porque el listado
-     * de movimientos lo muestra como autor.
+     * El correo lleva un dominio propio para no chocar con el admin que ya creo el onboarding. El
+     * nombre completo es el del rol porque el listado de movimientos lo muestra como autor.
      */
     private User persistedUser(UserRole role) {
         TenantContext.set(tenant.getId());
         try {
-            return transactionTemplate.execute(status -> userRepository.save(User.builder()
-                    .email(role.name().toLowerCase() + "@inventario.com").passwordHash("x")
-                    .fullName(role.name()).role(role).active(true).build()));
+            return transactionTemplate.execute(status ->
+                    userRepository.save(
+                            User.builder()
+                                    .email(role.name().toLowerCase() + "@inventario.com")
+                                    .passwordHash("x")
+                                    .fullName(role.name())
+                                    .role(role)
+                                    .active(true)
+                                    .build()));
         } finally {
             TenantContext.clear();
         }
     }
 
     private UUID createItem(String name) throws Exception {
-        String body = mockMvc.perform(post("/api/v1/inventory/items")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"" + name + "\",\"unit\":\"kg\"}"))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        String body =
+                mockMvc.perform(
+                                post("/api/v1/inventory/items")
+                                        .cookie(cookieFor(admin))
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content("{\"name\":\"" + name + "\",\"unit\":\"kg\"}"))
+                        .andExpect(status().isCreated())
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
         return UUID.fromString(body.replaceAll(".*\"id\":\"([0-9a-fA-F-]+)\".*", "$1"));
     }
 
     private void register(UUID itemId, String json) throws Exception {
-        mockMvc.perform(post("/api/v1/inventory/movements")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"inventoryItemId\":\"" + itemId + "\"," + json))
+        mockMvc.perform(
+                        post("/api/v1/inventory/movements")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"inventoryItemId\":\"" + itemId + "\"," + json))
                 .andExpect(status().isCreated());
     }
 
@@ -134,7 +149,9 @@ class InventoryMovementControllerTest {
         UUID itemId = createItem("Cebolla");
         register(itemId, "\"movementType\":\"IN\",\"quantity\":20.000}");
 
-        register(itemId, "\"movementType\":\"WASTE\",\"quantity\":2.000,\"reason\":\"Se echo a perder\"}");
+        register(
+                itemId,
+                "\"movementType\":\"WASTE\",\"quantity\":2.000,\"reason\":\"Se echo a perder\"}");
 
         expectStock(itemId, 18.000);
     }
@@ -158,11 +175,14 @@ class InventoryMovementControllerTest {
         UUID itemId = createItem("Cebolla");
         register(itemId, "\"movementType\":\"IN\",\"quantity\":11.000}");
 
-        mockMvc.perform(post("/api/v1/inventory/movements")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"inventoryItemId\":\"" + itemId
-                                + "\",\"movementType\":\"ADJUSTMENT\",\"countedStock\":8.000}"))
+        mockMvc.perform(
+                        post("/api/v1/inventory/movements")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"inventoryItemId\":\""
+                                                + itemId
+                                                + "\",\"movementType\":\"ADJUSTMENT\",\"countedStock\":8.000}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.quantity").value(-3.000))
                 .andExpect(jsonPath("$.reason").value("Conteo fisico: 8"));
@@ -176,15 +196,20 @@ class InventoryMovementControllerTest {
         UUID itemId = createItem("Cebolla");
         register(itemId, "\"movementType\":\"IN\",\"quantity\":10.000}");
 
-        mockMvc.perform(post("/api/v1/inventory/movements")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"inventoryItemId\":\"" + itemId + "\",\"movementType\":\"ADJUSTMENT\","
-                                + "\"countedStock\":12.000,\"reason\":\"Habia una caja sin registrar\"}"))
+        mockMvc.perform(
+                        post("/api/v1/inventory/movements")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"inventoryItemId\":\""
+                                                + itemId
+                                                + "\",\"movementType\":\"ADJUSTMENT\","
+                                                + "\"countedStock\":12.000,\"reason\":\"Habia una caja sin registrar\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.quantity").value(2.000))
-                .andExpect(jsonPath("$.reason")
-                        .value("Conteo fisico: 12 - Habia una caja sin registrar"));
+                .andExpect(
+                        jsonPath("$.reason")
+                                .value("Conteo fisico: 12 - Habia una caja sin registrar"));
     }
 
     @Test
@@ -193,11 +218,14 @@ class InventoryMovementControllerTest {
         UUID itemId = createItem("Cebolla");
         register(itemId, "\"movementType\":\"IN\",\"quantity\":10.000}");
 
-        mockMvc.perform(post("/api/v1/inventory/movements")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"inventoryItemId\":\"" + itemId
-                                + "\",\"movementType\":\"ADJUSTMENT\",\"countedStock\":10.000}"))
+        mockMvc.perform(
+                        post("/api/v1/inventory/movements")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"inventoryItemId\":\""
+                                                + itemId
+                                                + "\",\"movementType\":\"ADJUSTMENT\",\"countedStock\":10.000}"))
                 .andExpect(status().isConflict());
     }
 
@@ -206,11 +234,15 @@ class InventoryMovementControllerTest {
     void quantityWithAnAdjustmentIsRejected() throws Exception {
         UUID itemId = createItem("Cebolla");
 
-        mockMvc.perform(post("/api/v1/inventory/movements")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"inventoryItemId\":\"" + itemId + "\",\"movementType\":\"ADJUSTMENT\","
-                                + "\"countedStock\":8.000,\"quantity\":3.000}"))
+        mockMvc.perform(
+                        post("/api/v1/inventory/movements")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"inventoryItemId\":\""
+                                                + itemId
+                                                + "\",\"movementType\":\"ADJUSTMENT\","
+                                                + "\"countedStock\":8.000,\"quantity\":3.000}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.quantity").exists());
     }
@@ -220,11 +252,14 @@ class InventoryMovementControllerTest {
     void anAdjustmentWithoutTheCountIsRejected() throws Exception {
         UUID itemId = createItem("Cebolla");
 
-        mockMvc.perform(post("/api/v1/inventory/movements")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"inventoryItemId\":\"" + itemId
-                                + "\",\"movementType\":\"ADJUSTMENT\"}"))
+        mockMvc.perform(
+                        post("/api/v1/inventory/movements")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"inventoryItemId\":\""
+                                                + itemId
+                                                + "\",\"movementType\":\"ADJUSTMENT\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.countedStock").exists());
     }
@@ -234,11 +269,14 @@ class InventoryMovementControllerTest {
     void countedStockOnAnEntryIsRejected() throws Exception {
         UUID itemId = createItem("Cebolla");
 
-        mockMvc.perform(post("/api/v1/inventory/movements")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"inventoryItemId\":\"" + itemId
-                                + "\",\"movementType\":\"IN\",\"countedStock\":8.000}"))
+        mockMvc.perform(
+                        post("/api/v1/inventory/movements")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"inventoryItemId\":\""
+                                                + itemId
+                                                + "\",\"movementType\":\"IN\",\"countedStock\":8.000}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.countedStock").exists());
     }
@@ -248,11 +286,14 @@ class InventoryMovementControllerTest {
     void aWasteWithoutReasonIsRejected() throws Exception {
         UUID itemId = createItem("Cebolla");
 
-        mockMvc.perform(post("/api/v1/inventory/movements")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"inventoryItemId\":\"" + itemId
-                                + "\",\"movementType\":\"WASTE\",\"quantity\":2.000}"))
+        mockMvc.perform(
+                        post("/api/v1/inventory/movements")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"inventoryItemId\":\""
+                                                + itemId
+                                                + "\",\"movementType\":\"WASTE\",\"quantity\":2.000}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.reason").exists());
     }
@@ -262,11 +303,14 @@ class InventoryMovementControllerTest {
     void nonPositiveQuantityIsRejected() throws Exception {
         UUID itemId = createItem("Cebolla");
 
-        mockMvc.perform(post("/api/v1/inventory/movements")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"inventoryItemId\":\"" + itemId
-                                + "\",\"movementType\":\"IN\",\"quantity\":0}"))
+        mockMvc.perform(
+                        post("/api/v1/inventory/movements")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"inventoryItemId\":\""
+                                                + itemId
+                                                + "\",\"movementType\":\"IN\",\"quantity\":0}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors.quantity").exists());
     }
@@ -275,28 +319,35 @@ class InventoryMovementControllerTest {
     @DisplayName("un movimiento sobre un insumo dado de baja da 409")
     void aMovementOnAnInactiveItemIsRejected() throws Exception {
         UUID itemId = createItem("Cebolla");
-        mockMvc.perform(patch("/api/v1/inventory/items/" + itemId)
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"active\":false}"))
+        mockMvc.perform(
+                        patch("/api/v1/inventory/items/" + itemId)
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"active\":false}"))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(post("/api/v1/inventory/movements")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"inventoryItemId\":\"" + itemId
-                                + "\",\"movementType\":\"IN\",\"quantity\":5.000}"))
+        mockMvc.perform(
+                        post("/api/v1/inventory/movements")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"inventoryItemId\":\""
+                                                + itemId
+                                                + "\",\"movementType\":\"IN\",\"quantity\":5.000}"))
                 .andExpect(status().isConflict());
     }
 
     @Test
     @DisplayName("un movimiento sobre un insumo inexistente da 404")
     void aMovementOnANonexistentItemGives404() throws Exception {
-        mockMvc.perform(post("/api/v1/inventory/movements")
-                        .cookie(cookieFor(admin))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"inventoryItemId\":\"" + UUID.randomUUID()
-                                + "\",\"movementType\":\"IN\",\"quantity\":5.000}"))
+        mockMvc.perform(
+                        post("/api/v1/inventory/movements")
+                                .cookie(cookieFor(admin))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"inventoryItemId\":\""
+                                                + UUID.randomUUID()
+                                                + "\",\"movementType\":\"IN\",\"quantity\":5.000}"))
                 .andExpect(status().isNotFound());
     }
 
@@ -305,18 +356,24 @@ class InventoryMovementControllerTest {
     void kitchenCanRegisterAndWaiterCannot() throws Exception {
         UUID itemId = createItem("Cebolla");
 
-        mockMvc.perform(post("/api/v1/inventory/movements")
-                        .cookie(cookieFor(persistedUser(UserRole.KITCHEN)))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"inventoryItemId\":\"" + itemId
-                                + "\",\"movementType\":\"WASTE\",\"quantity\":1.000,\"reason\":\"Quemado\"}"))
+        mockMvc.perform(
+                        post("/api/v1/inventory/movements")
+                                .cookie(cookieFor(persistedUser(UserRole.KITCHEN)))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"inventoryItemId\":\""
+                                                + itemId
+                                                + "\",\"movementType\":\"WASTE\",\"quantity\":1.000,\"reason\":\"Quemado\"}"))
                 .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/api/v1/inventory/movements")
-                        .cookie(cookieFor(persistedUser(UserRole.WAITER)))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"inventoryItemId\":\"" + itemId
-                                + "\",\"movementType\":\"IN\",\"quantity\":1.000}"))
+        mockMvc.perform(
+                        post("/api/v1/inventory/movements")
+                                .cookie(cookieFor(persistedUser(UserRole.WAITER)))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(
+                                        "{\"inventoryItemId\":\""
+                                                + itemId
+                                                + "\",\"movementType\":\"IN\",\"quantity\":1.000}"))
                 .andExpect(status().isForbidden());
     }
 
@@ -344,9 +401,10 @@ class InventoryMovementControllerTest {
 
         // quantity guarda lo que se capturo (5, sin signo) y signedQuantity el
         // efecto (-5). Sin el segundo, la interfaz pintaria "+5" en una salida.
-        mockMvc.perform(get("/api/v1/inventory/movements")
-                        .param("itemId", itemId.toString())
-                        .cookie(cookieFor(admin)))
+        mockMvc.perform(
+                        get("/api/v1/inventory/movements")
+                                .param("itemId", itemId.toString())
+                                .cookie(cookieFor(admin)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].movementType").value("OUT"))
                 .andExpect(jsonPath("$[0].quantity").value(5.000))
@@ -363,9 +421,10 @@ class InventoryMovementControllerTest {
         register(onionId, "\"movementType\":\"IN\",\"quantity\":4.000}");
         register(tomatoId, "\"movementType\":\"IN\",\"quantity\":7.000}");
 
-        mockMvc.perform(get("/api/v1/inventory/movements")
-                        .param("itemId", onionId.toString())
-                        .cookie(cookieFor(admin)))
+        mockMvc.perform(
+                        get("/api/v1/inventory/movements")
+                                .param("itemId", onionId.toString())
+                                .cookie(cookieFor(admin)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].itemName").value("Cebolla"));
@@ -391,9 +450,11 @@ class InventoryMovementControllerTest {
         UUID itemId = createItem("Cebolla");
         register(itemId, "\"movementType\":\"IN\",\"quantity\":4.000}");
 
-        mockMvc.perform(get("/api/v1/inventory/movements")
-                        .param("from", "2020-01-01").param("to", "2020-01-31")
-                        .cookie(cookieFor(admin)))
+        mockMvc.perform(
+                        get("/api/v1/inventory/movements")
+                                .param("from", "2020-01-01")
+                                .param("to", "2020-01-31")
+                                .cookie(cookieFor(admin)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }

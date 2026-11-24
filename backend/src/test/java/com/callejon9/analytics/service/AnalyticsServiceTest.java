@@ -1,5 +1,9 @@
 package com.callejon9.analytics.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
 import com.callejon9.analytics.repository.AnalyticsRepository;
 import com.callejon9.analytics.web.dto.AnalyticsResponse;
 import com.callejon9.shared.time.BusinessCalendar;
@@ -14,16 +18,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UT · AnalyticsService")
 class AnalyticsServiceTest {
 
-    @Mock
-    private AnalyticsRepository analyticsRepository;
+    @Mock private AnalyticsRepository analyticsRepository;
 
     private BusinessCalendar businessCalendar;
     private AnalyticsService analyticsService;
@@ -35,7 +34,8 @@ class AnalyticsServiceTest {
     }
 
     @Test
-    @DisplayName("Periodo sin ventas retorna respuesta con listas vacías y totales en cero sin errores")
+    @DisplayName(
+            "Periodo sin ventas retorna respuesta con listas vacías y totales en cero sin errores")
     void periodWithNoSalesReturnsEmptyResponseWithoutErrors() {
         LocalDate from = LocalDate.of(2026, 10, 1);
         LocalDate to = LocalDate.of(2026, 10, 7);
@@ -49,7 +49,8 @@ class AnalyticsServiceTest {
         assertThat(response).isNotNull();
         assertThat(response.pareto()).isEmpty();
         assertThat(response.salesByDay()).hasSize(7); // 7 días generados con cero
-        assertThat(response.salesByDay()).allMatch(row -> row.total().compareTo(BigDecimal.ZERO) == 0);
+        assertThat(response.salesByDay())
+                .allMatch(row -> row.total().compareTo(BigDecimal.ZERO) == 0);
         assertThat(response.salesByDay()).allMatch(row -> row.count() == 0);
         assertThat(response.paymentMix()).isEmpty();
     }

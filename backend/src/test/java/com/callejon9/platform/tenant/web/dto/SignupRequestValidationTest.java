@@ -1,5 +1,7 @@
 package com.callejon9.platform.tenant.web.dto;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
@@ -9,8 +11,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("UT · Validación del identificador de alta")
 class SignupRequestValidationTest {
@@ -49,7 +49,8 @@ class SignupRequestValidationTest {
                             (jakarta.validation.ConstraintViolation<?>) violation;
                     assertThat(typedViolation.getPropertyPath().toString()).isEqualTo("slug");
                     assertThat(typedViolation.getMessage())
-                            .isEqualTo("Solo minusculas, numeros y guiones, entre 3 y 80 caracteres.");
+                            .isEqualTo(
+                                    "Solo minusculas, numeros y guiones, entre 3 y 80 caracteres.");
                 });
     }
 

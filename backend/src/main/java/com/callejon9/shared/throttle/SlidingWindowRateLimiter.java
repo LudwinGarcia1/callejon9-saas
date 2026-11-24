@@ -10,19 +10,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Cupo de operaciones por llave dentro de una ventana deslizante. No sabe que
- * es la llave (una IP, una cuenta) ni que operacion cuenta: eso lo decide
- * quien lo usa.
+ * Cupo de operaciones por llave dentro de una ventana deslizante. No sabe que es la llave (una IP,
+ * una cuenta) ni que operacion cuenta: eso lo decide quien lo usa.
  *
- * <p>{@link #tryAcquire} comprueba y registra en un solo paso, bajo el candado
- * de la llave: dos peticiones simultaneas de la misma llave no pueden leer
- * ambas "queda un lugar" y entrar las dos. Cada cola solo se toca dentro de
- * {@code compute}/{@code computeIfPresent} del mapa, que es ese candado.
+ * <p>{@link #tryAcquire} comprueba y registra en un solo paso, bajo el candado de la llave: dos
+ * peticiones simultaneas de la misma llave no pueden leer ambas "queda un lugar" y entrar las dos.
+ * Cada cola solo se toca dentro de {@code compute}/{@code computeIfPresent} del mapa, que es ese
+ * candado.
  *
- * <p>El estado vive en memoria del proceso. Alcanza para una sola instancia
- * del backend; con varias, cada una contaria por su lado y el limite efectivo
- * se multiplicaria. En ese caso el contador debe moverse a un almacen
- * compartido (Redis o una tabla).
+ * <p>El estado vive en memoria del proceso. Alcanza para una sola instancia del backend; con
+ * varias, cada una contaria por su lado y el limite efectivo se multiplicaria. En ese caso el
+ * contador debe moverse a un almacen compartido (Redis o una tabla).
  */
 public class SlidingWindowRateLimiter {
 
@@ -49,8 +47,8 @@ public class SlidingWindowRateLimiter {
     }
 
     /**
-     * Si la llave aun tiene cupo, registra el uso y devuelve cero. Si no, no
-     * registra nada y devuelve cuanto falta para que se libere un lugar.
+     * Si la llave aun tiene cupo, registra el uso y devuelve cero. Si no, no registra nada y
+     * devuelve cuanto falta para que se libere un lugar.
      */
     public Duration tryAcquire(String key) {
         Instant now = clock.instant();
@@ -59,18 +57,20 @@ public class SlidingWindowRateLimiter {
         // (computeIfPresent) no puede sacar la cola entre que se lee y se
         // registra el uso, cosa que si podia pasar con computeIfAbsent seguido
         // de un synchronized aparte.
-        usesByKey.compute(key, (ignored, existing) -> {
-            Deque<Instant> uses = existing != null ? existing : new ArrayDeque<>();
-            prune(uses, now);
-            if (uses.size() < maxPerWindow) {
-                uses.addLast(now);
-                wait[0] = Duration.ZERO;
-            } else {
-                // Se libera cuando el uso mas antiguo de la ventana sale de ella.
-                wait[0] = Duration.between(now, uses.peekFirst().plus(window));
-            }
-            return uses;
-        });
+        usesByKey.compute(
+                key,
+                (ignored, existing) -> {
+                    Deque<Instant> uses = existing != null ? existing : new ArrayDeque<>();
+                    prune(uses, now);
+                    if (uses.size() < maxPerWindow) {
+                        uses.addLast(now);
+                        wait[0] = Duration.ZERO;
+                    } else {
+                        // Se libera cuando el uso mas antiguo de la ventana sale de ella.
+                        wait[0] = Duration.between(now, uses.peekFirst().plus(window));
+                    }
+                    return uses;
+                });
         maybeCleanUp(now);
         return wait[0];
     }
@@ -89,10 +89,12 @@ public class SlidingWindowRateLimiter {
         }
         for (String key : usesByKey.keySet()) {
             // Devolver null quita la llave, atomicamente respecto de tryAcquire.
-            usesByKey.computeIfPresent(key, (ignored, uses) -> {
-                prune(uses, now);
-                return uses.isEmpty() ? null : uses;
-            });
+            usesByKey.computeIfPresent(
+                    key,
+                    (ignored, uses) -> {
+                        prune(uses, now);
+                        return uses.isEmpty() ? null : uses;
+                    });
         }
     }
 }

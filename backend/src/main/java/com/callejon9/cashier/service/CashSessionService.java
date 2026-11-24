@@ -56,25 +56,31 @@ public class CashSessionService {
         if (cashSessionRepository.findByCashierIdAndClosedAtIsNull(cashierId).isPresent()) {
             throw new BusinessRuleException("Ya tienes un turno de caja abierto.");
         }
-        CashSession session = cashSessionRepository.saveAndFlush(CashSession.builder()
-                .cashierId(cashierId)
-                .openingFund(money(request.openingFund()))
-                .openedAt(Instant.now())
-                .build());
+        CashSession session =
+                cashSessionRepository.saveAndFlush(
+                        CashSession.builder()
+                                .cashierId(cashierId)
+                                .openingFund(money(request.openingFund()))
+                                .openedAt(Instant.now())
+                                .build());
         return response(session);
     }
 
     @Transactional(readOnly = true)
     public CashSessionListResponse list(UUID viewerId, boolean administrator) {
-        List<CashSession> sessions = administrator
-                ? cashSessionRepository.findAllByOrderByOpenedAtDesc()
-                : cashSessionRepository.findAllByCashierIdOrderByOpenedAtDesc(viewerId);
-        List<UUID> cashierIds = sessions.stream().map(CashSession::getCashierId).distinct().toList();
-        Map<UUID, User> cashiers = userRepository.findAllById(cashierIds).stream()
-                .collect(Collectors.toMap(User::getId, Function.identity()));
-        return new CashSessionListResponse(sessions.stream()
-                .map(session -> listItem(session, cashiers.get(session.getCashierId())))
-                .toList());
+        List<CashSession> sessions =
+                administrator
+                        ? cashSessionRepository.findAllByOrderByOpenedAtDesc()
+                        : cashSessionRepository.findAllByCashierIdOrderByOpenedAtDesc(viewerId);
+        List<UUID> cashierIds =
+                sessions.stream().map(CashSession::getCashierId).distinct().toList();
+        Map<UUID, User> cashiers =
+                userRepository.findAllById(cashierIds).stream()
+                        .collect(Collectors.toMap(User::getId, Function.identity()));
+        return new CashSessionListResponse(
+                sessions.stream()
+                        .map(session -> listItem(session, cashiers.get(session.getCashierId())))
+                        .toList());
     }
 
     @Transactional(readOnly = true)
@@ -120,13 +126,14 @@ public class CashSessionService {
                 && amount.compareTo(expectedCash(session)) > 0) {
             throw new BusinessRuleException("El retiro excede el efectivo esperado en caja.");
         }
-        cashMovementRepository.saveAndFlush(CashMovement.builder()
-                .cashSessionId(session.getId())
-                .movementType(request.type())
-                .amount(amount)
-                .reason(request.reason().trim())
-                .recordedBy(actorId)
-                .build());
+        cashMovementRepository.saveAndFlush(
+                CashMovement.builder()
+                        .cashSessionId(session.getId())
+                        .movementType(request.type())
+                        .amount(amount)
+                        .reason(request.reason().trim())
+                        .recordedBy(actorId)
+                        .build());
         return response(session);
     }
 
@@ -145,45 +152,77 @@ public class CashSessionService {
         CashPaymentTotals payments = paymentRepository.cashTotalsForSession(session.getId());
         BigDecimal received = payments == null ? ZERO : zeroIfNull(payments.receivedAmount());
         BigDecimal change = payments == null ? ZERO : zeroIfNull(payments.changeAmount());
-        BigDecimal deposits = zeroIfNull(cashMovementRepository.sumAmountByCashSessionIdAndMovementType(
-                session.getId(), CashMovementType.DEPOSIT));
-        BigDecimal withdrawals = zeroIfNull(cashMovementRepository.sumAmountByCashSessionIdAndMovementType(
-                session.getId(), CashMovementType.WITHDRAWAL));
+        BigDecimal deposits =
+                zeroIfNull(
+                        cashMovementRepository.sumAmountByCashSessionIdAndMovementType(
+                                session.getId(), CashMovementType.DEPOSIT));
+        BigDecimal withdrawals =
+                zeroIfNull(
+                        cashMovementRepository.sumAmountByCashSessionIdAndMovementType(
+                                session.getId(), CashMovementType.WITHDRAWAL));
         return CashDrawerCalculator.expectedCash(
                 session.getOpeningFund(), received, change, deposits, withdrawals);
     }
 
     private CashSessionResponse response(CashSession session) {
-        String cashierName = userRepository.findById(session.getCashierId())
-                .map(User::getFullName).orElse("Usuario dado de baja");
+        String cashierName =
+                userRepository
+                        .findById(session.getCashierId())
+                        .map(User::getFullName)
+                        .orElse("Usuario dado de baja");
         List<CashPaymentMethodSummary> paymentSummary =
                 paymentRepository.paymentSummaryForSession(session.getId());
-        List<CashMovementResponse> movements = cashMovementRepository
-                .findAllByCashSessionIdOrderByCreatedAtDesc(session.getId()).stream()
-                .map(movement -> new CashMovementResponse(
-                        movement.getId(), movement.getMovementType(), movement.getAmount(),
-                        movement.getReason(), movement.getRecordedBy(), movement.getCreatedAt()))
-                .toList();
-        BigDecimal expectedCash = session.isOpen() ? expectedCash(session) : session.getExpectedCash();
+        List<CashMovementResponse> movements =
+                cashMovementRepository
+                        .findAllByCashSessionIdOrderByCreatedAtDesc(session.getId())
+                        .stream()
+                        .map(movement ->
+                                new CashMovementResponse(
+                                        movement.getId(),
+                                        movement.getMovementType(),
+                                        movement.getAmount(),
+                                        movement.getReason(),
+                                        movement.getRecordedBy(),
+                                        movement.getCreatedAt()))
+                        .toList();
+        BigDecimal expectedCash =
+                session.isOpen() ? expectedCash(session) : session.getExpectedCash();
         return new CashSessionResponse(
-                session.getId(), session.getCashierId(), cashierName, session.getOpeningFund(),
-                session.getOpenedAt(), session.getClosedAt(), session.getClosedBy(),
-                expectedCash, session.getCountedCash(), session.getDifference(),
-                session.getClosureReason(), paymentSummary, movements);
+                session.getId(),
+                session.getCashierId(),
+                cashierName,
+                session.getOpeningFund(),
+                session.getOpenedAt(),
+                session.getClosedAt(),
+                session.getClosedBy(),
+                expectedCash,
+                session.getCountedCash(),
+                session.getDifference(),
+                session.getClosureReason(),
+                paymentSummary,
+                movements);
     }
 
     private CashSessionListItem listItem(CashSession session, User cashier) {
         return new CashSessionListItem(
-                session.getId(), session.getCashierId(),
+                session.getId(),
+                session.getCashierId(),
                 cashier == null ? "Usuario dado de baja" : cashier.getFullName(),
-                session.getOpeningFund(), session.getOpenedAt(), session.getClosedAt(),
-                session.getExpectedCash(), session.getCountedCash(), session.getDifference(),
+                session.getOpeningFund(),
+                session.getOpenedAt(),
+                session.getClosedAt(),
+                session.getExpectedCash(),
+                session.getCountedCash(),
+                session.getDifference(),
                 session.getClosureReason());
     }
 
     private CashSession findVisibleSession(UUID sessionId, UUID viewerId, boolean administrator) {
-        CashSession session = cashSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new ResourceNotFoundException("El turno de caja no existe."));
+        CashSession session =
+                cashSessionRepository
+                        .findById(sessionId)
+                        .orElseThrow(
+                                () -> new ResourceNotFoundException("El turno de caja no existe."));
         if (!administrator) {
             requireOwner(session, viewerId);
         }
@@ -191,7 +230,8 @@ public class CashSessionService {
     }
 
     private CashSession lockSession(UUID sessionId) {
-        return cashSessionRepository.findByIdForUpdate(sessionId)
+        return cashSessionRepository
+                .findByIdForUpdate(sessionId)
                 .orElseThrow(() -> new ResourceNotFoundException("El turno de caja no existe."));
     }
 

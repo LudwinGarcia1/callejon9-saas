@@ -19,7 +19,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** El principal autenticado es el UUID del usuario (ver TenantFilter); nunca se confia en el body. */
+/**
+ * El principal autenticado es el UUID del usuario (ver TenantFilter); nunca se confia en el body.
+ */
 @RestController
 @RequestMapping("/api/v1/users")
 @PreAuthorize("hasRole('ADMIN')")
@@ -34,16 +36,15 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse create(@Valid @RequestBody CreateUserRequest request) {
-        var user = userService.createUser(
-                request.email(), request.fullName(), request.role(), request.password());
+        var user =
+                userService.createUser(
+                        request.email(), request.fullName(), request.role(), request.password());
         return UserResponse.from(user);
     }
 
     @GetMapping
     public List<UserResponse> list() {
-        return userService.listUsers().stream()
-                .map(UserResponse::from)
-                .toList();
+        return userService.listUsers().stream().map(UserResponse::from).toList();
     }
 
     @PatchMapping("/{id}")

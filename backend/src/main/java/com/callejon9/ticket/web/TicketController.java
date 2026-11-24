@@ -12,7 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-/** Los tickets los consulta quien cobra y quien administra: caja al reimprimir y el historial de ventas. */
+/**
+ * Los tickets los consulta quien cobra y quien administra: caja al reimprimir y el historial de
+ * ventas.
+ */
 @PreAuthorize("hasAnyRole('CASHIER','ADMIN')")
 @RestController
 @RequestMapping("/api/v1/tickets")
@@ -38,8 +41,6 @@ public class TicketController {
     @GetMapping(value = "/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> pdf(@PathVariable UUID id) {
         byte[] pdf = ticketService.generatePdf(id);
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(pdf);
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(pdf);
     }
 }

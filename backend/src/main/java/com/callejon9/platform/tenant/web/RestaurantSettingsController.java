@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Configuracion del restaurante activo. Sin id en la ruta: el recurso es
- * siempre el del tenant de la sesion.
+ * Configuracion del restaurante activo. Sin id en la ruta: el recurso es siempre el del tenant de
+ * la sesion.
  */
 @RestController
 @RequestMapping("/api/v1/settings")
@@ -33,7 +33,8 @@ public class RestaurantSettingsController {
 
     @PatchMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public RestaurantSettingsResponse update(@Valid @RequestBody UpdateRestaurantSettingsRequest request) {
+    public RestaurantSettingsResponse update(
+            @Valid @RequestBody UpdateRestaurantSettingsRequest request) {
         return RestaurantSettingsResponse.from(settingsService.updateTimezone(request.timezone()));
     }
 }

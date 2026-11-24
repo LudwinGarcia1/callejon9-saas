@@ -1,5 +1,9 @@
 package com.callejon9.auth.throttle;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -7,10 +11,6 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("Limitador de intentos de login")
 class LoginAttemptLimiterTest {
@@ -67,9 +67,12 @@ class LoginAttemptLimiterTest {
         fail("10.0.0.3", "ana@esquina.mx");
 
         assertThatThrownBy(() -> limiter.checkAllowed("10.0.0.4", "la-esquina", "ANA@esquina.mx"))
-                .isInstanceOfSatisfying(LoginThrottledException.class, exception ->
-                        // El primer fallo salio hace 5 minutos: faltan 10.
-                        assertThat(exception.getRetryAfter()).isEqualTo(Duration.ofMinutes(10)));
+                .isInstanceOfSatisfying(
+                        LoginThrottledException.class,
+                        exception ->
+                                // El primer fallo salio hace 5 minutos: faltan 10.
+                                assertThat(exception.getRetryAfter())
+                                        .isEqualTo(Duration.ofMinutes(10)));
     }
 
     @Test

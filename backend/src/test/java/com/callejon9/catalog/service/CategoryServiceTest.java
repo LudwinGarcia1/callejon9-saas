@@ -1,5 +1,12 @@
 package com.callejon9.catalog.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.callejon9.catalog.domain.Category;
 import com.callejon9.catalog.repository.CategoryRepository;
 import com.callejon9.shared.error.BusinessRuleException;
@@ -14,22 +21,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UT · CategoryService")
 class CategoryServiceTest {
 
-    @Mock
-    private CategoryRepository categoryRepository;
+    @Mock private CategoryRepository categoryRepository;
 
-    @InjectMocks
-    private CategoryService categoryService;
+    @InjectMocks private CategoryService categoryService;
 
     @Test
     @DisplayName("listCategories devuelve las categorias ordenadas por sortOrder y nombre")
@@ -109,7 +107,8 @@ class CategoryServiceTest {
     }
 
     @Test
-    @DisplayName("updateCategory arroja BusinessRuleException si el nuevo nombre ya pertenece a otra categoria")
+    @DisplayName(
+            "updateCategory arroja BusinessRuleException si el nuevo nombre ya pertenece a otra categoria")
     void updateCategoryThrowsWhenDuplicateNameOnOtherCategory() {
         UUID id = UUID.randomUUID();
         Category existing = Category.builder().name("Entrada").sortOrder(1).build();

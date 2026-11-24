@@ -18,9 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Administra los usuarios del restaurante activo (el tenant ya lo fijo
- * {@code TenantFilter} antes de llegar aqui, asi que un simple
- * {@code @Transactional} basta: no hay dos transacciones como en
+ * Administra los usuarios del restaurante activo (el tenant ya lo fijo {@code TenantFilter} antes
+ * de llegar aqui, asi que un simple {@code @Transactional} basta: no hay dos transacciones como en
  * {@code TenantOnboardingService}, que corre antes de que exista tenant.
  */
 @Service
@@ -60,14 +59,15 @@ public class UserService {
 
         planLimitService.assertCanAddUser(TenantContext.require());
 
-        return userRepository.save(User.builder()
-                .email(email)
-                .passwordHash(passwordEncoder.encode(rawPassword))
-                .fullName(fullName)
-                .role(role)
-                .active(true)
-                .totpEnabled(false)
-                .build());
+        return userRepository.save(
+                User.builder()
+                        .email(email)
+                        .passwordHash(passwordEncoder.encode(rawPassword))
+                        .fullName(fullName)
+                        .role(role)
+                        .active(true)
+                        .totpEnabled(false)
+                        .build());
     }
 
     @Transactional(readOnly = true)
@@ -76,29 +76,29 @@ public class UserService {
     }
 
     /**
-     * Activa o desactiva a un usuario. La desactivacion es siempre logica
-     * (active = false): el usuario queda referenciado por las ordenes que
-     * tomo y las ventas que cobro, y borrarlo perderia esa atribucion.
+     * Activa o desactiva a un usuario. La desactivacion es siempre logica (active = false): el
+     * usuario queda referenciado por las ordenes que tomo y las ventas que cobro, y borrarlo
+     * perderia esa atribucion.
      *
-     * <p>Bloquea la fila del tenant ANTES de contar administradores activos:
-     * sin este lock, dos peticiones concurrentes que desactivan a dos
-     * administradores distintos pueden leer ambas el mismo conteo (2), pasar
-     * las dos la validacion y dejar el restaurante sin ningun administrador
-     * activo. Con el lock, la segunda espera a que la primera confirme y
-     * relee el conteo ya actualizado.
+     * <p>Bloquea la fila del tenant ANTES de contar administradores activos: sin este lock, dos
+     * peticiones concurrentes que desactivan a dos administradores distintos pueden leer ambas el
+     * mismo conteo (2), pasar las dos la validacion y dejar el restaurante sin ningun administrador
+     * activo. Con el lock, la segunda espera a que la primera confirme y relee el conteo ya
+     * actualizado.
      *
-     * <p>Desactivar revoca ademas todas las sesiones del usuario: sin esto,
-     * su access token seguiria autorizando hasta 15 minutos despues de la
-     * baja. La revocacion va despues de las reglas de negocio y en la misma
-     * transaccion, asi que una desactivacion rechazada no cierra ninguna
-     * sesion. Reactivar no las restaura: el usuario vuelve a iniciar sesion.
+     * <p>Desactivar revoca ademas todas las sesiones del usuario: sin esto, su access token
+     * seguiria autorizando hasta 15 minutos despues de la baja. La revocacion va despues de las
+     * reglas de negocio y en la misma transaccion, asi que una desactivacion rechazada no cierra
+     * ninguna sesion. Reactivar no las restaura: el usuario vuelve a iniciar sesion.
      */
     @Transactional
     public User setActive(UUID userId, boolean active, UUID callerId) {
         tenantRepository.findByIdForUpdate(TenantContext.require());
 
-        User target = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("El usuario no existe."));
+        User target =
+                userRepository
+                        .findById(userId)
+                        .orElseThrow(() -> new ResourceNotFoundException("El usuario no existe."));
 
         if (!active) {
             if (target.getId().equals(callerId)) {

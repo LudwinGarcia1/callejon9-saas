@@ -24,32 +24,33 @@ public class SignupController {
     private final SignupRateLimiter signupRateLimiter;
     private final ClientIp clientIp;
 
-    public SignupController(TenantOnboardingService onboardingService,
-                            SignupRateLimiter signupRateLimiter,
-                            ClientIp clientIp) {
+    public SignupController(
+            TenantOnboardingService onboardingService,
+            SignupRateLimiter signupRateLimiter,
+            ClientIp clientIp) {
         this.onboardingService = onboardingService;
         this.signupRateLimiter = signupRateLimiter;
         this.clientIp = clientIp;
     }
 
     /**
-     * El cupo se consume antes de crear nada: un alta rechazada por limite no
-     * toca la base ni calcula bcrypt. Un 400 por formato invalido no llega
-     * aqui, asi que no consume cupo.
+     * El cupo se consume antes de crear nada: un alta rechazada por limite no toca la base ni
+     * calcula bcrypt. Un 400 por formato invalido no llega aqui, asi que no consume cupo.
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public SignupResponse signup(@Valid @RequestBody SignupRequest request,
-                                 HttpServletRequest httpRequest) {
+    public SignupResponse signup(
+            @Valid @RequestBody SignupRequest request, HttpServletRequest httpRequest) {
         signupRateLimiter.acquire(clientIp.of(httpRequest));
 
-        Tenant tenant = onboardingService.onboard(
-                request.restaurantName(),
-                request.slug(),
-                request.adminEmail(),
-                request.adminFullName(),
-                request.password(),
-                request.planCode());
+        Tenant tenant =
+                onboardingService.onboard(
+                        request.restaurantName(),
+                        request.slug(),
+                        request.adminEmail(),
+                        request.adminFullName(),
+                        request.password(),
+                        request.planCode());
 
         return new SignupResponse(tenant.getId(), tenant.getSlug(), request.adminEmail());
     }

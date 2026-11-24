@@ -1,9 +1,8 @@
 package com.callejon9.sale.repository;
 
-import com.callejon9.sale.domain.Payment;
 import com.callejon9.cashier.web.dto.CashPaymentMethodSummary;
 import com.callejon9.cashier.web.dto.CashPaymentTotals;
-import java.math.BigDecimal;
+import com.callejon9.sale.domain.Payment;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,7 +11,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface PaymentRepository extends JpaRepository<Payment, UUID> {
 
-    @Query("""
+    @Query(
+            """
             select new com.callejon9.cashier.web.dto.CashPaymentTotals(
                 coalesce(sum(payment.receivedAmount), 0),
                 coalesce(sum(payment.receivedAmount - payment.amount), 0))
@@ -24,7 +24,8 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
             """)
     CashPaymentTotals cashTotalsForSession(@Param("cashSessionId") UUID cashSessionId);
 
-    @Query("""
+    @Query(
+            """
             select new com.callejon9.cashier.web.dto.CashPaymentMethodSummary(
                 payment.method, count(payment), coalesce(sum(payment.amount), 0),
                 coalesce(sum(payment.receivedAmount), 0),

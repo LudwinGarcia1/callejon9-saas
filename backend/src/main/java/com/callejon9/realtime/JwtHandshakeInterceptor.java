@@ -17,16 +17,14 @@ import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
 /**
- * Autentica el handshake de WebSocket con la misma cookie que usa
- * {@link TenantFilter} para HTTP. Sin ella (ausente o invalida) la conexion
- * se rechaza aqui mismo, antes de que el protocolo STOMP siquiera comience:
- * no hay "conexion anonima" en el canal en tiempo real como si la hay,
+ * Autentica el handshake de WebSocket con la misma cookie que usa {@link TenantFilter} para HTTP.
+ * Sin ella (ausente o invalida) la conexion se rechaza aqui mismo, antes de que el protocolo STOMP
+ * siquiera comience: no hay "conexion anonima" en el canal en tiempo real como si la hay,
  * momentaneamente, en HTTP.
  *
- * La regla es la misma de HTTP ({@link AccessTokenVerifier}): un token de una
- * sesion revocada por logout no abre el canal aunque su JWT siga vigente. Una
- * conexion ya abierta cuya sesion se revoca despues la cierra
- * {@link RevokedSessionSweeper}.
+ * <p>La regla es la misma de HTTP ({@link AccessTokenVerifier}): un token de una sesion revocada
+ * por logout no abre el canal aunque su JWT siga vigente. Una conexion ya abierta cuya sesion se
+ * revoca despues la cierra {@link RevokedSessionSweeper}.
  */
 @Component
 public class JwtHandshakeInterceptor implements HandshakeInterceptor {
@@ -58,9 +56,13 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
             return false;
         }
 
-        attributes.put(ATTR_PRINCIPAL, new AuthenticatedPrincipal(
-                claims.get().userId(), claims.get().tenantId(), claims.get().role(),
-                claims.get().sessionId()));
+        attributes.put(
+                ATTR_PRINCIPAL,
+                new AuthenticatedPrincipal(
+                        claims.get().userId(),
+                        claims.get().tenantId(),
+                        claims.get().role(),
+                        claims.get().sessionId()));
         return true;
     }
 

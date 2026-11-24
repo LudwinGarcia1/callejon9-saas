@@ -1,5 +1,7 @@
 package com.callejon9.order;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.callejon9.auth.service.AuthService;
 import com.callejon9.order.domain.Order;
 import com.callejon9.order.domain.OrderStatus;
@@ -10,7 +12,6 @@ import com.callejon9.platform.tenant.service.TenantOnboardingService;
 import com.callejon9.tenancy.TenantContext;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -30,39 +31,41 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 @SpringBootTest
 @ActiveProfiles("test")
 @DisplayName("CAL-13: Concurrencia de folios unicos entre instancias en PostgreSQL")
 class FolioConcurrencyTest {
 
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
+    @Autowired private JdbcTemplate jdbcTemplate;
 
-    @Autowired
-    private OrderRepository orderRepository;
+    @Autowired private OrderRepository orderRepository;
 
-    @Autowired
-    private TenantOnboardingService onboardingService;
+    @Autowired private TenantOnboardingService onboardingService;
 
-    @Autowired
-    private AuthService authService;
+    @Autowired private AuthService authService;
 
-    @Autowired
-    private TransactionTemplate transactionTemplate;
+    @Autowired private TransactionTemplate transactionTemplate;
 
     private UUID tenantId;
     private UUID waiterId;
 
     @BeforeEach
     void seed() {
-        Tenant tenant = onboardingService.onboard(
-                "Folio Concurrency Test", "folio-concurrency",
-                "admin@folioconcurrency.com", "Admin", "Secreto123!", "FREE");
+        Tenant tenant =
+                onboardingService.onboard(
+                        "Folio Concurrency Test",
+                        "folio-concurrency",
+                        "admin@folioconcurrency.com",
+                        "Admin",
+                        "Secreto123!",
+                        "FREE");
         tenantId = tenant.getId();
-        waiterId = authService.authenticate(
-                "folio-concurrency", "admin@folioconcurrency.com", "Secreto123!").user().getId();
+        waiterId =
+                authService
+                        .authenticate(
+                                "folio-concurrency", "admin@folioconcurrency.com", "Secreto123!")
+                        .user()
+                        .getId();
     }
 
     @AfterEach
@@ -72,16 +75,17 @@ class FolioConcurrencyTest {
     }
 
     @Test
-    @DisplayName("multiples instancias generan folios estrictamente unicos bajo trafico concurrente")
+    @DisplayName(
+            "multiples instancias generan folios estrictamente unicos bajo trafico concurrente")
     void multipleInstancesGenerateUniqueFoliosConcurrently() throws InterruptedException {
         // Simulamos 5 instancias independientes de FolioGenerator (como tareas ECS distintas)
-        List<FolioGenerator> instances = List.of(
-                new FolioGenerator(jdbcTemplate),
-                new FolioGenerator(jdbcTemplate),
-                new FolioGenerator(jdbcTemplate),
-                new FolioGenerator(jdbcTemplate),
-                new FolioGenerator(jdbcTemplate)
-        );
+        List<FolioGenerator> instances =
+                List.of(
+                        new FolioGenerator(jdbcTemplate),
+                        new FolioGenerator(jdbcTemplate),
+                        new FolioGenerator(jdbcTemplate),
+                        new FolioGenerator(jdbcTemplate),
+                        new FolioGenerator(jdbcTemplate));
 
         int totalThreads = 30;
         ExecutorService executor = Executors.newFixedThreadPool(totalThreads);
@@ -106,14 +110,15 @@ class FolioConcurrencyTest {
 
                             // Guardamos la orden en PostgreSQL para demostrar que no colisiona
                             // con el indice UNIQUE (tenant_id, folio)
-                            orderRepository.save(Order.builder()
-                                    .folio(folio)
-                                    .waiterId(waiterId)
-                                    .guestCount(2)
-                                    .status(OrderStatus.NEW)
-                                    .total(BigDecimal.ZERO)
-                                    .openedAt(Instant.now())
-                                    .build());
+                            orderRepository.save(
+                                    Order.builder()
+                                            .folio(folio)
+                                            .waiterId(waiterId)
+                                            .guestCount(2)
+                                            .status(OrderStatus.NEW)
+                                            .total(BigDecimal.ZERO)
+                                            .openedAt(Instant.now())
+                                            .build());
                         });
                     } finally {
                         TenantContext.clear();
@@ -170,9 +175,11 @@ class FolioConcurrencyTest {
                 assertThat(ticketFolio).matches("TCK-\\d{12}");
 
                 // Ambos registros se crean en tenant_folio_sequences con prefijos distintos
-                Integer sequenceRows = jdbcTemplate.queryForObject(
-                        "SELECT count(*) FROM tenant_folio_sequences WHERE tenant_id = ?",
-                        Integer.class, tenantId);
+                Integer sequenceRows =
+                        jdbcTemplate.queryForObject(
+                                "SELECT count(*) FROM tenant_folio_sequences WHERE tenant_id = ?",
+                                Integer.class,
+                                tenantId);
                 assertThat(sequenceRows).isEqualTo(2);
             });
         } finally {
@@ -184,9 +191,14 @@ class FolioConcurrencyTest {
     @DisplayName("el aislamiento por RLS impide que un inquilino vea o altere secuencias de otro")
     void tenantIsolationAppliesToFolioSequences() {
         // Creamos un segundo tenant
-        Tenant tenant2 = onboardingService.onboard(
-                "Tenant Secundario", "tenant-secundario",
-                "admin@secundario.com", "Admin", "Secreto123!", "FREE");
+        Tenant tenant2 =
+                onboardingService.onboard(
+                        "Tenant Secundario",
+                        "tenant-secundario",
+                        "admin@secundario.com",
+                        "Admin",
+                        "Secreto123!",
+                        "FREE");
         UUID tenant2Id = tenant2.getId();
 
         FolioGenerator generator = new FolioGenerator(jdbcTemplate);
@@ -207,9 +219,9 @@ class FolioConcurrencyTest {
                     generator.next("ORD-");
 
                     // Tenant 2 solo ve 1 fila en tenant_folio_sequences (la suya propia)
-                    Integer visibleRows = jdbcTemplate.queryForObject(
-                            "SELECT count(*) FROM tenant_folio_sequences",
-                            Integer.class);
+                    Integer visibleRows =
+                            jdbcTemplate.queryForObject(
+                                    "SELECT count(*) FROM tenant_folio_sequences", Integer.class);
                     assertThat(visibleRows).isEqualTo(1);
                 });
             } finally {
@@ -219,9 +231,9 @@ class FolioConcurrencyTest {
             // Sin tenant no se ve ninguna fila (fail-closed de RLS)
             TenantContext.clear();
             transactionTemplate.executeWithoutResult(status -> {
-                Integer visibleRows = jdbcTemplate.queryForObject(
-                        "SELECT count(*) FROM tenant_folio_sequences",
-                        Integer.class);
+                Integer visibleRows =
+                        jdbcTemplate.queryForObject(
+                                "SELECT count(*) FROM tenant_folio_sequences", Integer.class);
                 assertThat(visibleRows).isEqualTo(0);
             });
         } finally {

@@ -16,7 +16,12 @@ public record KitchenOrderResponse(
     public static KitchenOrderResponse from(OrderWithItems orderWithItems) {
         var order = orderWithItems.order();
         var items = orderWithItems.items().stream().map(KitchenItemResponse::from).toList();
-        return new KitchenOrderResponse(order.getId(), order.getFolio(), order.getTableId(),
-                order.getStatus().name(), order.getSentToKitchenAt(), items);
+        return new KitchenOrderResponse(
+                order.getId(),
+                order.getFolio(),
+                order.getTableId(),
+                order.getStatus().name(),
+                order.getSentToKitchenAt(),
+                items);
     }
 }
