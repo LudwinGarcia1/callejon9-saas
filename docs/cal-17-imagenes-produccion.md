@@ -130,7 +130,7 @@ Frontend, en dependencias transitivas de Next:
 
 ## Migración a Spring Boot 3.5 (CAL-107)
 
-La actualización usa [Spring Boot 3.5.16, última publicación OSS de la serie 3.5](https://spring.io/blog/2026/06/25/spring-boot-3-5-16-available-now/), con Java 21. El [BOM oficial](https://central.sonatype.com/artifact/org.springframework.boot/spring-boot-dependencies/3.5.16) incorpora Spring Security 6.5.11, posterior a la corrección de CVE-2026-22732 en 6.5.9, y Spring Framework 6.2.19. Se conserva Tomcat 10.1.61 porque el BOM gestiona 10.1.55.
+La actualización usa [Spring Boot 3.5.16, última publicación OSS de la serie 3.5](https://spring.io/blog/2026/06/25/spring-boot-3-5-16-available-now/), con Java 21. El [BOM oficial](https://central.sonatype.com/artifact/org.springframework.boot/spring-boot-dependencies/3.5.16) incorpora Spring Security 6.5.11, posterior a la corrección de CVE-2026-22732 en 6.5.9, y Spring Framework 6.2.19. Se conserva Tomcat 10.1.61 porque el BOM gestiona 10.1.55. El primer escaneo de la imagen candidata detectó hallazgos en Jackson 2.21.4 y PostgreSQL JDBC 42.7.11. Se fijaron el BOM de Jackson en 2.21.7 y PostgreSQL JDBC en 42.7.12, dentro de las mismas series menores.
 
 Se revisaron las [notas de migración de Spring Boot 3.5](https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.5-Release-Notes) en las áreas de configuración, Actuator y dependencias gestionadas. Las verificaciones de regresión son las pruebas de cabeceras HTTP, sondas y persistencia sobre PostgreSQL real que ejecuta Maven verify. Se mantienen las excepciones de XsltView y SSE con fragmentos de vista mientras el proyecto siga en Spring Framework 6 y no use esas funciones.
 

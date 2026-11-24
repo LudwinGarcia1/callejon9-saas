@@ -26,6 +26,9 @@
 		<findsecbugs.version>1.13.0</findsecbugs.version>
 		<!-- Spring Boot 3.5.16 gestiona Tomcat 10.1.55; conservar el parche de CAL-17. -->
 		<tomcat.version>10.1.61</tomcat.version>
+		<!-- Parches de seguridad de las mismas ramas que gestiona Spring Boot 3.5.16 (CAL-107). -->
+		<jackson-bom.version>2.21.7</jackson-bom.version>
+		<postgresql.version>42.7.12</postgresql.version>
 	</properties>
 
 	<dependencies>
