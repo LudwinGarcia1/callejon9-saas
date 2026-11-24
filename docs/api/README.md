@@ -2,7 +2,25 @@
 
 Guía para quien construye o despliega un frontend contra el backend. El contrato completo, con cada cuerpo y respuesta, está en [`openapi.json`](openapi.json) (OpenAPI 3). Se puede abrir en <https://editor.swagger.io> o importar en Postman o Insomnia.
 
-`openapi.json` se exportó de `/v3/api-docs` con el backend en local el 2026-10-25. Si cambia un controller, hay que volver a exportarlo.
+## Verificar y actualizar el contrato
+
+La prueba `OpenApiConfigTest` consulta `/v3/api-docs` con Springdoc y el perfil de pruebas. Genera `backend/target/openapi.json` con claves ordenadas y compara el resultado con el contrato versionado. Maven `verify` ejecuta la comprobación y Jenkins conserva la exportación para revisar diferencias.
+
+Desde `backend`, con Java 21 y Docker para PostgreSQL de pruebas, ejecuta:
+
+```powershell
+.\mvnw.cmd -B "-Dtest=OpenApiConfigTest" test
+```
+
+Para actualizar el contrato tras un cambio intencional:
+
+```powershell
+.\mvnw.cmd -B "-Dtest=OpenApiConfigTest" "-Dopenapi.update=true" test
+git diff -- ../docs/api/openapi.json
+.\mvnw.cmd -B verify
+```
+
+Si el entorno de pruebas usa una base externa preparada, añade los parámetros indicados en el [README raíz](../../README.md). Incluye el cambio del contrato en el mismo PR que modifica la API. Declara si el cambio es compatible. Una ruta agregada que conserva las existentes suele ser compatible. Eliminar una ruta, cambiar la forma de una respuesta o volver obligatorio un dato antes opcional puede romper consumidores. En ese caso, explica la ruta o esquema, los consumidores afectados y la migración en el PR.
 
 Para explorar y probar la API en el navegador, usa Swagger UI:
 
