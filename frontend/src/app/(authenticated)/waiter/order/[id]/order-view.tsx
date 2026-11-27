@@ -20,11 +20,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Money } from "@/components/shared/money";
 import { QueryState } from "@/components/shared/query-state";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { useKitchenChannel } from "@/hooks/use-kitchen-channel";
 import { useSession } from "@/hooks/use-session";
 import { ApiError, api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { formatShortTime } from "@/lib/format";
 import { queryKeys } from "@/lib/query-keys";
+import { kitchenEventOrderId } from "@/lib/realtime";
 import type {
   AddOrderItemsRequest,
   CategoryResponse,
@@ -48,6 +50,13 @@ const ADMIN_CANCELABLE_ORDER_STATUSES = new Set<OrderStatus>(["NEW", "SENT", "RE
 /** Mismo tope que {@code AddOrderItemRequest.quantity} en el backend. */
 const MAX_LINE_QUANTITY = 99;
 
+/** Estados en los que cocina puede cambiar la orden sin que el mesero haga nada. */
+const IN_KITCHEN_ORDER_STATUSES = new Set<OrderStatus>(["SENT", "READY"]);
+
+/** Respaldo del canal en tiempo real mientras la orden esta en cocina (CAL-170). */
+const IN_KITCHEN_POLL_INTERVAL_MS = 10_000;
+const IN_KITCHEN_POLL_INTERVAL_LIVE_MS = 30_000;
+
 /**
  * Pantalla de una orden. La orden manda y ocupa la columna ancha; el catalogo
  * es un panel de apoyo de 430px a la derecha. El carrito nunca se envia
@@ -62,9 +71,26 @@ export function OrderView({ orderId }: OrderViewProps) {
   const nextLineKey = useRef(0);
   const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
 
+  // Cocina avanza los productos desde otra pantalla: el evento de esta orden
+  // la vuelve a pedir, y con ella su estado («Lista» cuando todo esta listo).
+  const { connected } = useKitchenChannel((event) => {
+    if (kitchenEventOrderId(event) === orderId) {
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.open() });
+    }
+  });
+
   const orderQuery = useQuery({
     queryKey: queryKeys.orders.detail(orderId),
     queryFn: () => api.get<OrderResponse>(endpoints.orders.detail(orderId)),
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      if (!status || !IN_KITCHEN_ORDER_STATUSES.has(status)) {
+        return false;
+      }
+      return connected ? IN_KITCHEN_POLL_INTERVAL_LIVE_MS : IN_KITCHEN_POLL_INTERVAL_MS;
+    },
+    refetchIntervalInBackground: false,
   });
   const tablesQuery = useQuery({
     queryKey: queryKeys.tables.all(),
@@ -274,6 +300,11 @@ export function OrderView({ orderId }: OrderViewProps) {
                           <p className="text-xs text-muted-foreground">{item.notes}</p>
                         )}
                       </div>
+                      {/* Antes de enviar a cocina todo esta "Pendiente": solo
+                          aporta una vez que cocina puede moverlo. */}
+                      {order.status !== "NEW" && (
+                        <StatusBadge kind="kitchen" status={item.kitchenStatus} />
+                      )}
                       <Money
                         amount={item.unitPrice}
                         className="hidden font-mono text-[13px] text-muted-foreground sm:inline"

@@ -18,6 +18,9 @@ importers:
       '@sentry/nextjs':
         specifier: 11.19.0
         version: 11.19.0(next@15.5.28(@babel/core@7.29.7)(@opentelemetry/api@1.10.0)(@types/node@20.19.43)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)(vite@7.3.8(@types/node@20.19.43)(jiti@2.7.0)(lightningcss@1.32.0))
+      '@stomp/stompjs':
+        specifier: 7.1.1
+        version: 7.1.1
       '@tanstack/react-query':
         specifier: ^5.101.4
         version: 5.101.4(react@19.1.0)
@@ -1911,6 +1914,9 @@ packages:
   '@sindresorhus/merge-streams@4.0.0':
     resolution: {integrity: sha512-tlqY9xq5ukxTUZBmoOp+m61cqwQD5pHJtFY3Mn8CA8ps6yghLH/Hw8UPdqg4OLmFW3IFlcXnQNmo/dh8HzXYIQ==}
     engines: {node: '>=18'}
+
+  '@stomp/stompjs@7.1.1':
+    resolution: {integrity: sha512-chcDs6YkAnKp1FqzwhGvh3i7v0+/ytzqWdKYw6XzINEKAzke/iD00dNgFPWSZEqktHOK+C1gSzXhLkLbARIaZw==}
 
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
@@ -6558,6 +6564,8 @@ snapshots:
       '@sentry/server-utils': 11.19.0
 
   '@sindresorhus/merge-streams@4.0.0': {}
+
+  '@stomp/stompjs@7.1.1': {}
 
   '@swc/helpers@0.5.15':
     dependencies:

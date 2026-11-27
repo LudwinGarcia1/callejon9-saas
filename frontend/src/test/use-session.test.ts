@@ -8,7 +8,7 @@ import { api, ApiError } from "@/lib/api";
 import { queryKeys } from "@/lib/query-keys";
 import type { SessionResponse } from "@/lib/types";
 
-const navigation = vi.hoisted(() => ({ push: vi.fn() }));
+const navigation = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => navigation }));
 vi.mock("@/lib/api", async (original) => ({ ...await original<typeof import("@/lib/api")>(),
   api: { get: vi.fn(), post: vi.fn() } }));
@@ -46,24 +46,24 @@ describe("session lifecycle", () => {
     expect(navigation.push).not.toHaveBeenCalled();
   });
 
-  it.each([false, true])("clears tenant cache and navigates after logout (failure=%s)", async (failure) => {
+  it.each([false, true])("replaces the history entry with login after logout (failure=%s)", async (failure) => {
     vi.mocked(api.get).mockResolvedValue(session);
     let settle!: () => void;
     vi.mocked(api.post).mockReturnValue(new Promise<void>((resolve, reject) => {
       settle = () => failure ? reject(new Error("offline")) : resolve();
     }));
     client.setQueryData(queryKeys.orders.detail("order-1"), { id: "order-1" });
-    const { result, unmount } = renderHook(useSession, { wrapper });
-    // La navegación real desmonta los consumidores de sesión de la ruta protegida.
-    navigation.push.mockImplementation(() => unmount());
+    const { result } = renderHook(useSession, { wrapper });
     await waitFor(() => expect(result.current.user).toEqual(session));
     act(() => result.current.logout());
     await waitFor(() => expect(api.post).toHaveBeenCalledWith("/api/v1/auth/logout"));
-    expect(navigation.push).not.toHaveBeenCalled();
-    expect(client.getQueryData(queryKeys.orders.detail("order-1"))).toBeDefined();
+    expect(navigation.replace).not.toHaveBeenCalled();
     await act(async () => settle());
-    await waitFor(() => expect(navigation.push).toHaveBeenCalledWith("/login"));
-    expect(client.getQueryData(queryKeys.orders.detail("order-1"))).toBeUndefined();
-    expect(client.getQueryData(queryKeys.session.me())).toBeUndefined();
+    // CAL-194: replace, para que Atras no regrese a la pantalla protegida.
+    await waitFor(() => expect(navigation.replace).toHaveBeenCalledWith("/login"));
+    expect(navigation.push).not.toHaveBeenCalled();
+    // El cache lo limpia providers.tsx al llegar al login, con la pantalla ya
+    // desmontada; limpiarlo aqui hacia que sus consultas pidieran de nuevo.
+    expect(client.getQueryData(queryKeys.orders.detail("order-1"))).toBeDefined();
   });
 });

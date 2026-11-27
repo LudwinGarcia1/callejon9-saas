@@ -80,3 +80,30 @@ resource "azurerm_key_vault_secret" "backend" {
   # RBAC role assignments can take a minute to propagate; re-run apply on a 403.
   depends_on = [azurerm_role_assignment.key_vault_admin]
 }
+
+# Replaces the published password that V6 seeds for super@callejon9.com: the prod
+# profile swaps it at startup with PLATFORM_ADMIN_PASSWORD and refuses to start
+# without it (CAL-109). Once the hash is no longer the published one, the app never
+# touches it again, so this value only matters for a new database.
+resource "random_password" "platform_admin" {
+  length  = 32
+  special = false
+}
+
+# Separate from the map above because of the lifecycle rule. The environment of
+# 2026-10-16 already had this secret, created by hand: it is imported (see
+# README.md) and keeps its value. A new environment gets the random one.
+resource "azurerm_key_vault_secret" "platform_admin" {
+  name         = "platform-admin-password"
+  value        = random_password.platform_admin.result
+  key_vault_id = azurerm_key_vault.backend.id
+  content_type = "text/plain"
+
+  lifecycle {
+    # The imported value is the one that works in that database; replacing it
+    # here would leave Key Vault out of sync with the stored hash.
+    ignore_changes = [value]
+  }
+
+  depends_on = [azurerm_role_assignment.key_vault_admin]
+}
