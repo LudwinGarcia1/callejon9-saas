@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Roles y responsabilidades del equipo</title>
+<style>
+  :root {
+    --guinda: #5B1631; --guinda-2: #7A1F44; --guinda-osc: #43101F;
+    --oro: #B08D57; --oro-claro: #F3EBDD;
+    --texto: #3A3A3A; --suave: #6B6B6B; --linea: #E7E1D8; --fondo-tarjeta: #F8F6F2;
+    --verde: #1E7F4F; --rojo: #A3263A; --azul: #2F4E8C;
+  }
+  @page { size: letter; margin: 0.85in 0.95in 0.8in;
+    @bottom-left { content: "RestoHub · Roles y responsabilidades del equipo"; font: 9px "Avenir Next", sans-serif; color: #8A8A8A; }
+    @bottom-right { content: counter(page) " / " counter(pages); font: 9px "Avenir Next", sans-serif; color: #8A8A8A; }
+  }
+  @page portada { margin: 0; @bottom-left { content: none } @bottom-right { content: none } }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font-family: "Avenir Next", "Avenir", "Helvetica Neue", sans-serif; color: var(--texto); font-size: 10.5pt; line-height: 1.55; }
+  h1, h2, h3 { color: var(--guinda); margin: 0; line-height: 1.2; }
+  h2 { font-size: 19pt; font-weight: 700; padding-bottom: 8px; border-bottom: 2px solid var(--oro); margin: 0 0 14px; break-after: avoid; }
+  h2 .num { color: var(--oro); font-size: 14pt; margin-right: 8px; }
+  h3 { font-size: 12.5pt; margin: 18px 0 8px; break-after: avoid; color: var(--guinda-2); }
+  p { margin: 0 0 10px; }
+  code, .mono { font-family: "SF Mono", Menlo, monospace; font-size: 8.6pt; }
+  .seccion { break-before: page; }
+  .sin-salto { break-inside: avoid; }
+
+  /* ---------- Portada ---------- */
+  .portada { page: portada; display: grid; grid-template-columns: 2.55in 1fr; height: 11in; width: 8.5in; }
+  .lateral { background: linear-gradient(180deg, #7C1D43 0%, #5B1631 45%, #4A1027 100%); color: #fff; padding: 0.95in 0.4in 0.9in; display: flex; flex-direction: column; justify-content: space-between; }
+  .lateral .etiqueta { font-size: 8.5pt; letter-spacing: 2.5px; text-transform: uppercase; opacity: .85; }
+  .lateral .grande { font-size: 50pt; font-weight: 700; line-height: 1; }
+  .lateral .grande + div { font-size: 8.5pt; letter-spacing: 2.5px; opacity: .85; margin-top: 8px; text-transform: uppercase; }
+  .ilustracion { display: flex; justify-content: center; }
+  .principal { padding: 0.8in 0.75in 0.75in 1.4in; display: flex; flex-direction: column; }
+  .logos { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid var(--linea); }
+  .logo-edomex { width: 132px; height: 32px; background: url(assets/edomex.png) center/contain no-repeat;
+    -webkit-mask: url(assets/edomex-mask.png) center/contain no-repeat; mask: url(assets/edomex-mask.png) center/contain no-repeat; mask-mode: luminance; }
+  .logos .sep { width: 1px; height: 40px; background: var(--linea); }
+  .logos .utvt b { color: var(--guinda); font-size: 10pt; display: block; }
+  .logos .utvt span { color: var(--suave); font-size: 8.5pt; line-height: 1.35; display: block; }
+  .carrera { margin-top: 1.25in; color: var(--oro); font-size: 8.5pt; letter-spacing: 2.2px; font-weight: 600; text-transform: uppercase; }
+  .portada h1 { font-size: 30pt; font-weight: 700; margin: 10px 0 14px; color: var(--guinda); }
+  .subtitulo { color: var(--suave); font-size: 12.5pt; line-height: 1.5; }
+  .raya { width: 50px; height: 4px; background: var(--oro); border-radius: 2px; margin: 22px 0 18px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--linea); border-radius: 999px; padding: 4px 11px; font-size: 8pt; font-weight: 600; color: #555; }
+  .datos { margin-top: auto; border-top: 1px solid var(--linea); padding-top: 14px; display: grid; grid-template-columns: 1.4in 1fr; row-gap: 8px; font-size: 9.5pt; }
+  .datos dt { color: #8A8A8A; font-size: 7.5pt; letter-spacing: 1.8px; text-transform: uppercase; padding-top: 2px; }
+  .datos dd { margin: 0; font-weight: 600; color: #2A2A2A; }
+
+  /* ---------- Tablas ---------- */
+  table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 9pt; margin: 6px 0 14px; }
+  thead th { background: var(--guinda-osc); color: #fff; text-align: left; font-weight: 600; padding: 8px 10px; }
+  thead th:first-child { border-top-left-radius: 6px; } thead th:last-child { border-top-right-radius: 6px; }
+  tbody td { padding: 8px 10px; border-bottom: 1px solid var(--linea); vertical-align: top; }
+  tbody tr:nth-child(even) td { background: var(--fondo-tarjeta); }
+  tbody td:first-child { font-weight: 600; color: var(--guinda); }
+  tr { break-inside: avoid; }
+  .ok { color: var(--verde); font-weight: 700; }
+  .ficha td:first-child { width: 34%; }
+
+  /* ---------- Tarjetas y avisos ---------- */
+  .tarjetas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 8px 0 14px; }
+  .tarjetas.dos { grid-template-columns: repeat(2, 1fr); }
+  .tarjeta { background: var(--fondo-tarjeta); border: 1px solid var(--linea); border-radius: 10px; padding: 12px 14px; break-inside: avoid; font-size: 9.3pt; }
+  .tarjeta .k { font-size: 7.5pt; letter-spacing: 1.6px; text-transform: uppercase; color: var(--oro); font-weight: 700; }
+  .tarjeta .v { font-size: 15pt; font-weight: 700; color: var(--guinda); line-height: 1.25; margin: 2px 0 4px; }
+  .nota { border-left: 4px solid var(--guinda-2); background: var(--fondo-tarjeta); border-radius: 0 10px 10px 0; padding: 10px 14px; margin: 8px 0 14px; font-size: 9.3pt; break-inside: avoid; }
+  .terminal { background: #1E1A1C; color: #EDE6DF; border-radius: 10px; padding: 12px 14px; font-family: "SF Mono", Menlo, monospace; font-size: 8pt; line-height: 1.5; white-space: pre-wrap; word-break: break-all; margin: 8px 0 14px; break-inside: avoid; }
+  .terminal .c { color: #C9A877; } .terminal .g { color: #8FD3A6; } .terminal .d { color: #9C9198; }
+
+  /* ---------- Figuras ---------- */
+  .figuras { display: grid; gap: 12px; margin: 8px 0 14px; }
+  .figuras.f2 { grid-template-columns: repeat(2, 1fr); } .figuras.f3 { grid-template-columns: repeat(3, 1fr); } .figuras.f4 { grid-template-columns: repeat(4, 1fr); }
+  figure { margin: 0; break-inside: avoid; text-align: center; }
+  figure img { width: 100%; border: 1px solid var(--linea); border-radius: 8px; display: block; }
+  figure.tel img { border-radius: 14px; }
+  figure:not(.tel) img { max-height: 2.35in; object-fit: cover; object-position: top; }
+  figcaption { font-size: 8pt; color: var(--suave); margin-top: 5px; line-height: 1.35; }
+  figcaption b { color: var(--guinda); }
+
+  .conclusion { background: linear-gradient(180deg, #FBF8F3, #F5EFE4); border: 1px solid var(--linea); border-radius: 12px; padding: 16px 18px; }
+  ul { margin: 4px 0 10px; padding-left: 18px; } li { margin-bottom: 4px; }
+  .fuentes li { font-size: 9pt; color: var(--suave); } .fuentes a { color: var(--guinda-2); text-decoration: none; }
+  /* ---------- Agregados para este documento ---------- */
+  .pend { color: #9A6B12; font-weight: 700; }
+  .no { color: var(--rojo); font-weight: 700; }
+  .indice { columns: 2; column-gap: 28px; font-size: 9.5pt; margin: 6px 0 14px; padding-left: 0; list-style: none; }
+  .indice li { break-inside: avoid; margin-bottom: 5px; }
+  .indice b { color: var(--oro); display: inline-block; width: 26px; }
+  .parte { font-size: 8pt; letter-spacing: 2.2px; text-transform: uppercase; color: var(--oro); font-weight: 700; margin: 0 0 4px; }
+  table.compacta { font-size: 8.6pt; }
+  table.compacta td, table.compacta th { padding: 6px 8px; }
+  .datos dd small { font-weight: 400; color: var(--suave); }
+  td ul { padding-left: 14px; } td ul li { margin-bottom: 1px; line-height: 1.4; }
+</style>
+</head>
+
+<body>
+
+<!-- ===================== PORTADA ===================== -->
+<section class="portada">
+  <div class="lateral">
+    <div class="etiqueta">Entrega por equipo</div>
+    <div class="ilustracion">
+      <svg width="150" height="170" viewBox="0 0 150 170" aria-hidden="true">
+        <circle cx="45" cy="40" r="20" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="3"/>
+        <path d="M12 104c0-20 15-34 33-34s33 14 33 34" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="3" stroke-linecap="round"/>
+        <rect x="58" y="62" width="84" height="100" rx="12" fill="#B08D57"/>
+        <circle cx="82" cy="88" r="7" fill="#F7EFE4"/><path d="M96 88h32" stroke="#F7EFE4" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="82" cy="112" r="7" fill="#F7EFE4"/><path d="M96 112h26" stroke="#F7EFE4" stroke-width="5" stroke-linecap="round"/>
+        <circle cx="82" cy="136" r="7" fill="#F7EFE4"/><path d="M96 136h20" stroke="#F7EFE4" stroke-width="5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div><div class="grande">10°</div><div>Cuatrimestre · 2026</div></div>
+  </div>
+  <div class="principal">
+    <div class="logos">
+      <svg width="132" height="32" viewBox="0 0 322 77" role="img" aria-label="Gobierno del Estado de México">
+        <defs><mask id="m-edomex" maskUnits="userSpaceOnUse" x="0" y="0" width="322" height="77"><image href="assets/edomex-mask.png" width="322" height="77"/></mask></defs>
+        <image href="assets/edomex.png" width="322" height="77" mask="url(#m-edomex)"/>
+      </svg>
+      <div class="sep"></div>
+      <div class="utvt"><b>UTVT</b><span>Universidad Tecnológica<br>del Valle de Toluca</span></div>
+    </div>
+    <div class="carrera">Ingeniería en Desarrollo y Gestión de Software</div>
+    <h1>Roles y responsabilidades del equipo</h1>
+    <div class="subtitulo">Asignación del rol de cada integrante en el desarrollo de <b>RestoHub</b>, la plataforma SaaS multi-restaurante Callejón 9.</div>
+    <div class="raya"></div>
+    <div class="chips"><span class="chip">Scrum</span><span class="chip">Product Owner</span><span class="chip">Scrum Master</span><span class="chip">Equipo de desarrollo</span></div>
+    <dl class="datos">
+      <dt>Proyecto</dt><dd>Restaurant Hub (RestoHub) · plataforma SaaS Callejón 9</dd>
+      <dt>Equipo</dt><dd>García Gaytán Ludwin <small>· 222310777</small><br>Duarte Villavicencio Octavio <small>· 222310422</small><br>Mercado Serrano Valeria <small>· 222310838</small><br>Hernández Mejía Braulio <small>· 222310435</small></dd>
+      <dt>Grupo</dt><dd>IDGS 101</dd>
+      <dt>Lugar y fecha</dt><dd>Santa María Atarasquillo, Lerma, México · 25 de noviembre de 2026</dd>
+    </dl>
+  </div>
+</section>
+
+<!-- ===================== 01 ROLES ===================== -->
+<section class="seccion">
+  <h2><span class="num">01</span>Asignación de roles</h2>
+  <p>El equipo trabaja con <b>Scrum</b>. Cada integrante tiene un rol de Scrum y un área técnica de la que es responsable. Las responsabilidades de la tabla son las que cada persona tiene a su cargo dentro del proyecto.</p>
+
+  <table class="compacta">
+    <thead><tr><th style="width:24%">Integrante</th><th style="width:20%">Rol</th><th>Responsabilidades dentro del proyecto</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>García Gaytán Ludwin<br><span style="font-weight:400;color:var(--suave)">222310777</span></td>
+        <td style="font-weight:600;color:#2A2A2A">Product Owner<br><span style="font-weight:400;color:var(--suave)">Integración y despliegue continuos</span></td>
+        <td><ul style="margin:0">
+          <li>Prioriza el Product Backlog y acepta o rechaza cada incremento contra sus criterios.</li>
+          <li>Es dueño del repositorio en GitHub y administra su acceso.</li>
+          <li>Opera el pipeline de integración continua en Jenkins y publica sus checks en los pull requests.</li>
+          <li>Mide la cobertura de pruebas con JaCoCo y prepara el retiro de GitHub Actions.</li>
+          <li>Automatiza el despliegue desde <code>main</code> con rollback y documenta el runbook de operación.</li>
+          <li>Responsable de la PWA y del documento de normas, estándares y leyes.</li>
+        </ul></td>
+      </tr>
+      <tr>
+        <td>Duarte Villavicencio Octavio<br><span style="font-weight:400;color:var(--suave)">222310422</span></td>
+        <td style="font-weight:600;color:#2A2A2A">Scrum Master<br><span style="font-weight:400;color:var(--suave)">Desarrollo móvil y frontend</span></td>
+        <td><ul style="margin:0">
+          <li>Facilita la planeación, el daily, la revisión y la retrospectiva de cada sprint.</li>
+          <li>Atiende bloqueos y reasigna trabajo según el plan de bloqueos y el de ausencias.</li>
+          <li>Desarrolla las apps móviles: RestoHub Meseros, con notificaciones push, y RestoHub Clientes.</li>
+          <li>Desarrolla el frontend web: monetización, accesibilidad y captura de errores del cliente.</li>
+          <li>Ejecuta las pruebas de integración (SIT) en Azure y verifica el entorno de extremo a extremo.</li>
+        </ul></td>
+      </tr>
+      <tr>
+        <td>Hernández Mejía Braulio<br><span style="font-weight:400;color:var(--suave)">222310435</span></td>
+        <td style="font-weight:600;color:#2A2A2A">Equipo de desarrollo<br><span style="font-weight:400;color:var(--suave)">QA · calidad y pruebas</span></td>
+        <td><ul style="margin:0">
+          <li>Escribe las pruebas unitarias por módulo y revisa las evidencias de prueba del equipo.</li>
+          <li>Incorpora el formato y el análisis estático del código, y versiona el contrato OpenAPI en CI.</li>
+          <li>Coordina las pruebas de aceptación (UAT) con usuarios, incluida la de la app móvil.</li>
+          <li>Respalda la base de datos de Azure y demuestra su restauración.</li>
+          <li>Automatiza los recorridos críticos con Selenium y actualiza las dependencias del backend.</li>
+        </ul></td>
+      </tr>
+      <tr>
+        <td>Mercado Serrano Valeria<br><span style="font-weight:400;color:var(--suave)">222310838</span></td>
+        <td style="font-weight:600;color:#2A2A2A">Equipo de desarrollo<br><span style="font-weight:400;color:var(--suave)">Backend, infraestructura y seguridad</span></td>
+        <td><ul style="margin:0">
+          <li>Publica el backend en Azure App Service con PostgreSQL gestionado y Key Vault, provisionados con Terraform.</li>
+          <li>Endurece la seguridad de la API: límites de intentos por IP, HSTS y credenciales del super-administrador.</li>
+          <li>Implementa la suscripción de los restaurantes, la paginación de listados y la zona horaria por restaurante.</li>
+          <li>Responsable de la observabilidad (logs estructurados y métricas) y de la optimización de consultas.</li>
+          <li>Define la política de datos personales por restaurante.</li>
+        </ul></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>1.1 Responsabilidades compartidas</h3>
+  <ul>
+    <li><b>Los cuatro integrantes</b> forman el equipo de desarrollo: estiman en la planeación, revisan los pull requests de otros e integran en <code>main</code> solo lo aprobado. Nadie revisa su propio cambio (decisión del 20 de octubre de 2026).</li>
+    <li>Cada persona tiene como máximo dos issues en progreso y avisa sus ausencias con 12 a 24 horas de anticipación.</li>
+    <li>Los entregables académicos se reparten en Linear con la misma regla: el asignado es quien hace el trabajo.</li>
+  </ul>
+
+  <h3>1.2 Partes interesadas</h3>
+  <table class="compacta">
+    <thead><tr><th>Parte</th><th>Papel en el proyecto</th></tr></thead>
+    <tbody>
+      <tr><td>Docentes evaluadores</td><td>Validan que cada entregable cumpla la guía de su asignatura.</td></tr>
+      <tr><td>Restaurantes usuarios</td><td>Administradores, meseros, cocina y caja que usan la plataforma y participan en las pruebas de aceptación.</td></tr>
+      <tr><td>Comensales</td><td>Usan el menú QR y la app de comensales, sin cuenta.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+</body>
+</html>
