@@ -70,11 +70,38 @@ Se levantó la aplicación como arranca normalmente (API con `docker compose`, w
 | API (Spring Boot) | `RESTOHUB-SERVER-1` | Llegó; sin IP, cookies ni cuerpo |
 | Servidor de Next | `RESTOHUB-FRONTEND-1` | Llegó |
 | Navegador | `RESTOHUB-FRONTEND-2` | Llegó por `/sentry-tunnel`; traza legible hasta `page.tsx` |
-| Apps móviles | — | Pendiente: requiere un dispositivo o emulador |
+| App de meseros (emulador Android 17) | `RESTOHUB-MESEROS-1` | Llegó; sin IP; traza hasta `index.ts` |
+| App de clientes (emulador Android 17) | `RESTOHUB-CLIENTES-1` | Llegó; sin IP; traza hasta `index.ts` |
+| Web en producción (`restohub.azurewebsites.net`) | `RESTOHUB-FRONTEND-3` | Llegó por el túnel con `environment: production` y `release: callejon9-frontend@5e63176`; sin IP |
 
 El primer evento del navegador llegó con la IP del cliente. Por eso se activó **Prevent Storing of IP Addresses** en los cuatro proyectos; el evento siguiente llegó sin IP.
 
-Pendiente para producción: subir source maps (`SENTRY_AUTH_TOKEN` en el build), crear la alerta de issue nuevo en producción y decidir la tasa de trazas (hoy 0).
+Las apps se probaron con una build de desarrollo (`expo run:android`) y un error temporal en `index.ts`, ya eliminado. El de producción se disparó desde la consola de la página publicada, sin desplegar código de prueba.
+
+## Alertas
+
+Cada proyecto tiene la regla **Issue nuevo o regresión en producción**: cuando aparece un issue nuevo o vuelve uno resuelto en eventos con la etiqueta `environment: production`, Sentry envía un correo al equipo `restohub`, como máximo cada 30 minutos. Corresponde a la alerta P3 del plan de monitoreo. Se listan con `sentry alert issues list restohub/`.
+
+Los cuatro componentes reportan producción con el mismo nombre de entorno, `production`: el frontend y las apps por defecto, y la API porque Terraform traduce `environment = "prod"` a `production`.
+
+## Source maps
+
+Hacen falta para leer los errores de producción del frontend y de las apps, que llegan minificados. La subida usa un token de organización con el alcance `org:ci`, que crea una persona del equipo y nunca se versiona:
+
+```sh
+sentry token create restohub/sourcemaps-ci   # imprime el token una sola vez
+export SENTRY_AUTH_TOKEN=<token>
+```
+
+- **Frontend en Azure:** con `SENTRY_AUTH_TOKEN` en el entorno, `deploy-frontend-azure.ps1` lo pasa al contenedor temporal que hace la compilación publicada, y `withSentryConfig` sube los source maps a `restohub/restohub-frontend`. El contenedor se borra al terminar.
+- **Imagen Docker:** `docker build --secret id=sentry_auth_token,env=SENTRY_AUTH_TOKEN …`. El secreto solo existe durante el `RUN` de la compilación y no queda en la imagen.
+- **Apps:** el plugin de `app.json` ya trae la organización y el proyecto. Una build de release con `SENTRY_AUTH_TOKEN` sube los source maps sola; sin token, usa `SENTRY_DISABLE_AUTO_UPLOAD=true`.
+
+## Estado del despliegue (27 de noviembre de 2026)
+
+- **Web:** publicada desde `main` (`5e63176`) con Sentry activo. Sin token, todavía sin source maps.
+- **API:** no se pudo desplegar. La suscripción de Azure donde vive `app-callejon9-api-prod-3878c6` está deshabilitada y en solo lectura, y PostgreSQL está detenido. Cuando se reactive, se despliega con `TF_VAR_sentry_dsn` (DSN de `restohub-server`) y `terraform apply`, o con `az webapp config appsettings set` si se aplica fuera de Terraform.
+- La tasa de trazas sigue en 0 en producción.
 
 ## Consultar errores desde la terminal
 

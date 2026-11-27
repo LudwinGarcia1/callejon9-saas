@@ -38,7 +38,7 @@
           "barcodeScannerEnabled": true
         }
       ],
-      "@sentry/react-native"
+      ["@sentry/react-native", {"organization": "restohub", "project": "restohub-clientes", "url": "https://sentry.io/"}]
     ]
   }
 }

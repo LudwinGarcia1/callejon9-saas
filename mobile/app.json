@@ -32,7 +32,7 @@
           "defaultChannel": "solicitudes"
         }
       ],
-      "@sentry/react-native"
+      ["@sentry/react-native", {"organization": "restohub", "project": "restohub-meseros", "url": "https://sentry.io/"}]
     ],
     "extra": {
       "eas": {
