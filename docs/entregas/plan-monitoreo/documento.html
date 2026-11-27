@@ -222,9 +222,9 @@
 
   <h3>1.4 Fuera del alcance</h3>
   <ul>
-    <li>Trazas distribuidas entre servicios: con una sola API no aportan lo que cuestan. Sentry las soporta, pero su tasa de muestreo se deja en 0 en producción.</li>
+    <li>Perfilado de CPU y grabación de sesiones (Session Replay): con el volumen actual no aportan lo que cuestan en cuota.</li>
     <li>Alertas de negocio (ventas, tickets promedio): dependen de tener operación real sostenida.</li>
-    <li>Otras plataformas de observabilidad de terceros. La única excepción es Sentry, que se usa solo para errores (sección 03), porque Application Insights no recibe los errores del navegador ni de las apps móviles.</li>
+    <li>Otras plataformas de observabilidad de terceros. La única excepción es Sentry, que recibe errores, trazas, logs y métricas de aplicación (sección 03), porque Application Insights no ve el navegador ni las apps móviles.</li>
   </ul>
 </section>
 
@@ -259,7 +259,7 @@
     <thead><tr><th style="width:24%">Herramienta</th><th>Uso en el plan</th><th style="width:20%">Estado</th></tr></thead>
     <tbody>
       <tr><td>Application Insights</td><td>Peticiones, excepciones, dependencias (SQL) y latencia de la API, con el agente Java 3.x; telemetría de la web.</td><td class="ok">✔ Provisionado</td></tr>
-      <tr><td>Sentry</td><td>Errores de la API, de la web (navegador y servidor) y de las dos apps móviles, agrupados por versión del commit. Organización <code>restohub</code> con un proyecto por componente (sección 3.2).</td><td class="ok">✔ Configurado y verificado el 27-nov en los cuatro componentes; web en producción</td></tr>
+      <tr><td>Sentry</td><td>Errores, trazas (10 % de las peticiones), logs y métricas de negocio de la API, la web y las dos apps móviles, ligados entre sí por la traza y a la versión del commit. Organización <code>restohub</code> con un proyecto por componente (sección 3.2).</td><td class="ok">✔ Configurado y verificado el 27-nov en los cuatro componentes; web en producción</td></tr>
       <tr><td>Log Analytics</td><td>Destino central de logs y telemetría; consultas KQL. Retención de 30 días y tope de 0.1 GB diarios para no salir del uso gratuito.</td><td class="ok">✔ Provisionado</td></tr>
       <tr><td>Health check de App Service</td><td>Saca de rotación una instancia que no responde: API en <code>/actuator/health/liveness</code>, web en <code>/login</code>.</td><td class="ok">✔ Configurado</td></tr>
       <tr><td>Presupuesto de Azure</td><td>Correo al 80 % del gasto real y al 100 % del gasto pronosticado del presupuesto mensual.</td><td class="ok">✔ Configurado</td></tr>
@@ -275,7 +275,7 @@
   <ul>
     <li><b>Servicios nativos de Azure:</b> la nube del proyecto es Azure desde el 17 de octubre de 2026. Application Insights se conecta a App Service sin instalar agentes propios y comparte el control de acceso de la suscripción.</li>
     <li><b>Topes de ingesta:</b> el tope diario protege el crédito de estudiante. Si se alcanza, se pierde telemetría del resto del día, no servicio; por eso la prueba de disponibilidad y las alertas de métricas, que no dependen de la ingesta de logs, son la primera línea de detección.</li>
-    <li><b>Sentry para los errores:</b> Application Insights solo ve lo que pasa en los servidores de Azure. Un error en el navegador del mesero o en la app del comensal nunca llega ahí. Sentry los recibe de los cuatro componentes, los agrupa en un solo issue por causa y los liga al commit que los introdujo. Como no mide disponibilidad ni latencia, no sustituye a Application Insights ni entra en el cálculo del SLA.</li>
+    <li><b>Sentry para errores, trazas, logs y métricas de aplicación:</b> Application Insights solo ve lo que pasa en los servidores de Azure. Un error o una pantalla lenta en el navegador del mesero o en la app del comensal nunca llega ahí. Sentry recibe de los cuatro componentes los errores agrupados por causa, la traza completa de una petición (de la app o el navegador hasta la consulta SQL), los logs ligados a esa traza y conteos de negocio. No sustituye a la prueba de disponibilidad de Application Insights ni entra en el cálculo del SLA.</li>
     <li><b>Medición desde fuera:</b> la disponibilidad que se reporta en el SLA viene de la prueba sintética, no de los logs de la propia API, que callan justo cuando la API está caída.</li>
   </ul>
 
@@ -291,6 +291,16 @@
     </tbody>
   </table>
   <p>La prueba del 27 de noviembre corrió cada componente como arranca normalmente (la API en Docker, la web con <code>pnpm dev</code> y las dos apps en un emulador de Android), disparó un error identificable y lo confirmó en Sentry con el CLI. Las trazas apuntaron a la línea original del código fuente. Ese mismo día la web se publicó en Azure con Sentry activo, y un error disparado en la página de producción llegó con el entorno <code>production</code> y la versión del commit desplegado. La API no se pudo publicar porque su suscripción de Azure está deshabilitada (sección 11).</p>
+  <p>Además de los errores, los cuatro componentes envían:</p>
+  <table class="compacta">
+    <thead><tr><th style="width:14%">Señal</th><th>API</th><th>Web</th><th>Apps</th></tr></thead>
+    <tbody>
+      <tr><td>Trazas</td><td>Cada petición con sus consultas SQL, al 10 %</td><td>Carga de página, navegación y llamadas a <code>/api/v1</code>, en la misma traza que la API; Web Vitals</td><td>Arranque de la app y una transacción por pantalla</td></tr>
+      <tr><td>Logs</td><td>Todo log de INFO en adelante, ligado a su traza</td><td><code>console.warn</code> y <code>console.error</code></td><td><code>console.warn</code> y <code>console.error</code></td></tr>
+      <tr><td>Métricas</td><td>Órdenes abiertas, órdenes enviadas a cocina, cobros y logins fallidos</td><td>Sesiones vencidas que regresan al login</td><td>Pedidos guardados sin conexión, enviados al reconectar y rechazados; registros de notificaciones push</td></tr>
+    </tbody>
+  </table>
+  <p>Las métricas son solo conteos, sin montos ni identificadores de restaurante. Se verificaron el 27 de noviembre: la API, la web y la app de clientes enviaron trazas, logs y métricas, y una petición del navegador quedó en la misma traza que su procesamiento en la API.</p>
   <p>Cada proyecto tiene la regla <b>Issue nuevo o regresión en producción</b>, que envía un correo al equipo <code>restohub</code> como máximo cada 30 minutos. Es la alerta P3 de la sección 7.1.</p>
 </section>
 
@@ -367,7 +377,7 @@
       <tr><td>Telemetría de la aplicación</td><td>Agente Java de Application Insights: cada petición, excepción y consulta SQL, con su duración.</td><td>Continua</td></tr>
       <tr><td>Métricas de plataforma</td><td>Azure Monitor recoge CPU, memoria, conexiones, créditos y almacenamiento de App Service y PostgreSQL sin configuración adicional.</td><td>Cada 1 min</td></tr>
       <tr><td>Registros</td><td>Logs JSON de la API enviados a Log Analytics (sección 08).</td><td>Continua</td></tr>
-      <tr><td>Errores de aplicación</td><td>SDK de Sentry en la API, la web y las dos apps: cada error no atendido, con su traza y la versión del commit.</td><td>Continua</td></tr>
+      <tr><td>Errores, trazas, logs y métricas de aplicación</td><td>SDK de Sentry en la API, la web y las dos apps: errores no atendidos, una de cada diez peticiones o pantallas trazada de punta a punta, logs ligados a la traza y conteos de negocio.</td><td>Continua</td></tr>
       <tr><td>Entrega</td><td>Resultado de cada etapa del <code>Jenkinsfile</code>, SHA desplegado y resultado de la verificación posterior.</td><td>Por despliegue</td></tr>
       <tr><td>Costo</td><td>Gestión de costos de Azure sobre toda la suscripción.</td><td>Diaria</td></tr>
       <tr><td>Aislamiento</td><td><code>TenantIsolationTest</code> en CI y <code>scripts/verify-rls.sql</code> como <code>callejon9_app</code>.</td><td>Por cambio y por restauración</td></tr>
@@ -574,7 +584,7 @@ requests
     </tbody>
   </table>
   <h3>Sentry</h3>
-  <p>Sentry es un servicio externo: lo que se le envía sale de Azure. Por eso los cuatro SDK tienen <code>sendDefaultPii</code> en <code>false</code>, que impide enviar cookies, cabeceras de sesión, IP y usuario, y la API tampoco envía el cuerpo de las peticiones. Aun así, la prueba del 27 de noviembre mostró que el túnel de la web reenvía la IP del navegador y Sentry la guardaba con el evento. Se activó <b>Prevent Storing of IP Addresses</b> en los cuatro proyectos y la repetición de la prueba llegó sin IP. Las pruebas automatizadas <code>SentryConfigurationTest</code> y <code>sentry.test.ts</code> fallan si alguien activa el envío de datos personales.</p>
+  <p>Sentry es un servicio externo: lo que se le envía sale de Azure. Por eso los cuatro SDK tienen <code>sendDefaultPii</code> en <code>false</code>, que impide enviar cookies, cabeceras de sesión, IP y usuario, y la API tampoco envía el cuerpo de las peticiones. Aun así, la prueba del 27 de noviembre mostró que el túnel de la web reenvía la IP del navegador y Sentry la guardaba con el evento. Se activó <b>Prevent Storing of IP Addresses</b> en los cuatro proyectos y la repetición de la prueba llegó sin IP. Los logs y errores pasan además por un filtro que tacha correos y JWT del texto antes de enviarlo: un detalle de PostgreSQL como <code>(email)=(ana@restaurante.mx)</code> llega como <code>(email)=([correo])</code>. Las pruebas automatizadas <code>SentryConfigurationTest</code>, <code>SentryPrivacyConfigTest</code> y <code>sentry.test.ts</code> fallan si alguien activa el envío de datos personales o quita ese filtro.</p>
   <p>El acceso de lectura a Log Analytics se limita a los cuatro integrantes del equipo mediante el control de acceso de Azure; ningún restaurante tiene acceso a la telemetría. Sentry sigue la misma regla: solo los integrantes del equipo invitados a la organización <code>restohub</code>.</p>
 </section>
 
@@ -641,6 +651,7 @@ requests
       <tr><td>CAL-58</td><td>Restauración de la base medida contra el RTO del SLA, con <code>verify-rls.sql</code> en verde.</td><td>3 dic</td><td>—</td></tr>
       <tr><td>—</td><td>Sentry en la API, la web y las dos apps, con los proyectos de la sección 3.2 y las IP descartadas. Rama <code>feat/sentry-observabilidad</code>.</td><td class="ok">Hecho 27 nov</td><td>—</td></tr>
       <tr><td>—</td><td>Sentry: apps probadas en emulador, web publicada en producción con Sentry, alerta de issue nuevo en producción (P3) y build preparado para subir source maps.</td><td class="ok">Hecho 27 nov</td><td>—</td></tr>
+      <tr><td>—</td><td>Sentry: trazas al 10 %, logs y métricas de negocio en los cuatro componentes, con filtro de correos y JWT. Rama <code>feat/sentry-trazas-logs-metricas</code>.</td><td class="ok">Hecho 27 nov</td><td>—</td></tr>
       <tr><td>—</td><td>Sentry: publicar la API con su DSN y crear el token de <code>SENTRY_AUTH_TOKEN</code> para subir source maps en el siguiente despliegue.</td><td>3 dic</td><td>Reactivar la suscripción de la API</td></tr>
       <tr><td>CAL-30</td><td>Runbook de operación con los procedimientos de las secciones 07 y 09.</td><td>3 dic</td><td>CAL-56, CAL-57, CAL-58</td></tr>
     </tbody>

@@ -1,6 +1,6 @@
-# Sentry: reporte de errores
+# Sentry: errores, trazas, logs y métricas
 
-RestoHub envía sus errores a Sentry desde los cuatro componentes. Sin DSN, ningún SDK se inicializa: desarrollo, pruebas y CI no mandan nada y no hace falta cuenta de Sentry para trabajar.
+RestoHub envía a Sentry sus errores, trazas, logs y métricas desde los cuatro componentes. Sin DSN, ningún SDK se inicializa: desarrollo, pruebas y CI no mandan nada y no hace falta cuenta de Sentry para trabajar.
 
 ## Proyectos en Sentry
 
@@ -43,16 +43,9 @@ Cada componente es un proyecto distinto en Sentry, con su propio DSN. El DSN no 
 | Frontend | `NEXT_PUBLIC_SENTRY_DSN`, `NEXT_PUBLIC_SENTRY_ENVIRONMENT`, `NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE` | Al compilar, como `BACKEND_ORIGIN`. `deploy-frontend-azure.ps1 -SentryDsn …` o argumento de build de la imagen |
 | Apps móviles | `EXPO_PUBLIC_SENTRY_DSN`, `EXPO_PUBLIC_SENTRY_ENVIRONMENT`, `EXPO_PUBLIC_SENTRY_TRACES_SAMPLE_RATE` | Al compilar el bundle, desde `.env` |
 
-Las trazas de rendimiento están apagadas (tasa 0). Con `0.1` se traza una de cada diez peticiones.
+Las trazas usan una tasa de `0.1` por defecto: una de cada diez peticiones, navegaciones o pantallas. Con `1.0` se trazan todas (útil en local para verificar) y con `0` se apagan. El backend acepta además `SENTRY_LOGS_ENABLED=false` para dejar de enviar logs.
 
 La versión (`release`) sale del commit: `callejon9-backend@<sha>` y `callejon9-frontend@<sha>` en las imágenes Docker; las apps usan su versión de Expo.
-
-## Source maps
-
-Sin source maps los errores del frontend y de las apps llegan con el código minificado. Para subirlos, el build necesita `SENTRY_AUTH_TOKEN`, `SENTRY_ORG` y `SENTRY_PROJECT` en el entorno. El token es secreto: nunca va en `.env.example`, en un argumento de `docker build` ni en el repositorio.
-
-- Frontend: sin token, `withSentryConfig` no sube nada y la compilación no contacta a Sentry.
-- Apps: `metro.config.js` agrega los Debug IDs. En una build nativa de release sin token, define `SENTRY_DISABLE_AUTO_UPLOAD=true` para que Gradle no intente la subida. Después de agregar el plugin hay que regenerar `android/` con `npx expo prebuild --clean`.
 
 ## Probar la conexión
 
@@ -78,6 +71,37 @@ El primer evento del navegador llegó con la IP del cliente. Por eso se activó 
 
 Las apps se probaron con una build de desarrollo (`expo run:android`) y un error temporal en `index.ts`, ya eliminado. El de producción se disparó desde la consola de la página publicada, sin desplegar código de prueba.
 
+## Trazas, logs y métricas
+
+| Señal | Backend | Web | Apps |
+|---|---|---|---|
+| **Trazas** | Cada petición HTTP con sus consultas; `GET /actuator/health` se ignora | Carga de página, navegación, middleware y llamadas a `/api/v1`; Web Vitals | Arranque (`App Start`) y una transacción por pantalla con sus llamadas a la API |
+| **Logs** | Logback: todo log de `INFO` en adelante, vía `sentry-logback` | `console.warn` y `console.error` del navegador y del servidor | `console.warn` y `console.error` de JavaScript |
+| **Métricas** | `orders_opened`, `orders_sent_to_kitchen`, `checkouts_completed`, `login_failures` | `session_refresh_failures` (la sesión venció y el usuario vuelve al login) | Clientes: `offline_orders_queued`, `offline_orders_sent`, `orders_rejected`. Meseros: `push_registrations` con `status` |
+
+- **Traza distribuida:** el navegador agrega `sentry-trace` y `baggage` a sus llamadas a `/api/v1`, y el rewrite de Next las entrega a la API. Las apps hacen lo mismo hacia `EXPO_PUBLIC_API_URL`. Así, una petición lenta se ve completa del navegador o la app a la consulta SQL.
+- **Logs ligados:** cada log lleva el identificador de la traza en la que ocurrió.
+- **Métricas:** son solo conteos, sin montos ni identificadores de restaurante, porque las cifras de venta de cada restaurante no salen hacia un servicio externo. En el backend se registran al confirmarse la transacción (`BusinessMetrics`), para no contar operaciones revertidas.
+- **Privacidad:** el backend (`SentryPrivacyConfig`), la web y las apps (`redactLog`) tachan correos y JWT de cada log y de cada error antes de enviarlo. Un log como `Alta fallida de ana@restaurante.mx` llega como `Alta fallida de [correo]`.
+
+Verificación del 27 de noviembre, con la API en Docker, la web compilada para producción y la app de clientes en el emulador:
+
+| Componente | Trazas | Logs | Métricas |
+|---|---|---|---|
+| API | `POST /api/v1/auth/login` y las demás peticiones | 29 logs de Spring, todos con traza y sin correos | `login_failures` = 3 |
+| Web | Carga de `/login`, middleware y llamadas a `/api/v1`, en la misma traza que la API | `console.warn` con el correo tachado | `session_refresh_failures` = 2, más Web Vitals |
+| App de clientes | `App Start`, `boot` y `setup` | `console.warn` con el correo tachado | Métrica de prueba temporal, ya eliminada |
+
+La app de meseros comparte el mismo código de configuración y no se probó por separado.
+
+Consultas útiles con el CLI de Sentry (`sentry api` devuelve JSON):
+
+```sh
+sentry trace list restohub/restohub-server --period 1h --fresh
+sentry api organizations/restohub/events/ -X GET -f dataset=ourlogs -f field=message -f statsPeriod=1h
+sentry api organizations/restohub/events/ -X GET -f dataset=tracemetrics -f field=metric.name -f 'field=count(metric.name)' -f statsPeriod=24h
+```
+
 ## Alertas
 
 Cada proyecto tiene la regla **Issue nuevo o regresión en producción**: cuando aparece un issue nuevo o vuelve uno resuelto en eventos con la etiqueta `environment: production`, Sentry envía un correo al equipo `restohub`, como máximo cada 30 minutos. Corresponde a la alerta P3 del plan de monitoreo. Se listan con `sentry alert issues list restohub/`.
@@ -101,7 +125,7 @@ export SENTRY_AUTH_TOKEN=<token>
 
 - **Web:** publicada desde `main` (`5e63176`) con Sentry activo. Sin token, todavía sin source maps.
 - **API:** no se pudo desplegar. La suscripción de Azure donde vive `app-callejon9-api-prod-3878c6` está deshabilitada y en solo lectura, y PostgreSQL está detenido. Cuando se reactive, se despliega con `TF_VAR_sentry_dsn` (DSN de `restohub-server`) y `terraform apply`, o con `az webapp config appsettings set` si se aplica fuera de Terraform.
-- La tasa de trazas sigue en 0 en producción.
+- La web publicada se compiló con trazas en 0 y antes de los logs y métricas; los activa el próximo despliegue.
 
 ## Consultar errores desde la terminal
 

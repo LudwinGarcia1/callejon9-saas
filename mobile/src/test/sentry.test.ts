@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sentryOptions } from '../monitoring/sentryOptions';
+import { redactLog, sentryOptions } from '../monitoring/sentryOptions';
 
 describe('sentryOptions', () => {
   it('no inicializa Sentry sin DSN', () => {
@@ -13,10 +13,23 @@ describe('sentryOptions', () => {
       dsn,
       environment: 'production',
       sendDefaultPii: false,
-      tracesSampleRate: 0,
+      tracesSampleRate: 0.1,
+      enableLogs: true,
+      logsOrigin: 'js',
+      enableAutoConsoleLogs: false,
+      beforeSendLog: redactLog,
     });
     expect(sentryOptions({ dsn }, true)?.environment).toBe('development');
     expect(sentryOptions({ dsn, environment: 'staging' }, false)?.environment).toBe('staging');
+  });
+
+  it('tacha correos y JWT de los logs', () => {
+    const log = redactLog({
+      message: 'Fallo el registro de ana@restaurante.mx',
+      attributes: { token: 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.firma', mesa: 4 },
+    });
+    expect(log.message).toBe('Fallo el registro de [correo]');
+    expect(log.attributes).toEqual({ token: '[jwt]', mesa: 4 });
   });
 
   it('acepta solo tasas de trazas entre 0 y 1', () => {

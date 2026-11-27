@@ -49,8 +49,17 @@ class SentryConfigurationTest {
     }
 
     @Test
-    @DisplayName("las trazas de rendimiento estan apagadas por defecto")
-    void tracingOffByDefault() throws IOException {
-        assertThat(bind().getTracesSampleRate()).isZero();
+    @DisplayName("traza una de cada diez peticiones por defecto")
+    void tracesTenPercentByDefault() throws IOException {
+        assertThat(bind().getTracesSampleRate()).isEqualTo(0.1);
+    }
+
+    @Test
+    @DisplayName("envia los logs de INFO en adelante a Sentry Logs")
+    void sendsLogsFromInfo() throws IOException {
+        SentryProperties properties = bind();
+
+        assertThat(properties.getLogs().isEnabled()).isTrue();
+        assertThat(properties.getLogging().getMinimumLevel()).hasToString("INFO");
     }
 }

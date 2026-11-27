@@ -1,11 +1,14 @@
 import * as Sentry from "@sentry/nextjs";
 
-import { sentryOptions } from "@/lib/sentry";
+import { SENTRY_CONSOLE_LEVELS, sentryOptions } from "@/lib/sentry";
 
 /** Inicializa Sentry en el servidor de Next (Node) y en el runtime edge del middleware. */
 export function register() {
   if (process.env.NEXT_RUNTIME === "nodejs" || process.env.NEXT_RUNTIME === "edge") {
-    Sentry.init(sentryOptions);
+    Sentry.init({
+      ...sentryOptions,
+      integrations: [Sentry.consoleLoggingIntegration({ levels: [...SENTRY_CONSOLE_LEVELS] })],
+    });
   }
 }
 

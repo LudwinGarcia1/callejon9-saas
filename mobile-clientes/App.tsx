@@ -18,6 +18,7 @@ import { MenuScreen, type Notice } from './src/screens/MenuScreen';
 import { ScannerScreen } from './src/screens/ScannerScreen';
 import { SetupScreen } from './src/screens/SetupScreen';
 import { OUTBOX_AUTO_SEND_WINDOW_MS } from './src/config';
+import { countMetric, traceScreen } from './src/monitoring/sentry';
 import { colors } from './src/ui/theme';
 
 const store: KeyValueStore = AsyncStorage;
@@ -39,6 +40,7 @@ function errorText(error: unknown): string {
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('boot');
+  useEffect(() => traceScreen(screen), [screen]);
   const [table, setTable] = useState<TableRef | null>(null);
   const [loaded, setLoaded] = useState<LoadedCatalog | null>(null);
   const [cart, setCart] = useState<Cart>([]);
@@ -73,6 +75,7 @@ export default function App() {
       });
       setPending(result.remaining);
       if (result.sent.length > 0) {
+        for (let i = 0; i < result.sent.length; i++) countMetric('offline_orders_sent');
         await reloadHistory();
         const folios = result.sent.map((s) => s.order.folio).join(', ');
         setNotice({ tone: 'success', text: `Volvió la conexión: enviamos tu pedido a cocina (folio ${folios}).` });
@@ -245,6 +248,7 @@ export default function App() {
       });
       if (!onlineRef.current) {
         // Sin red no se intenta la petición: el pedido queda guardado y sale al reconectar.
+        countMetric('offline_orders_queued');
         updateCart([]);
         setPending(await listPending(store));
         setNotice({ tone: 'info', text: 'Sin conexión: guardamos tu pedido y lo enviaremos a cocina en cuanto vuelva la señal.' });
@@ -262,6 +266,7 @@ export default function App() {
         setScreen('menu');
       } else if (left?.status === 'rejected') {
         // El servidor lo rechazó (producto agotado, mesa inactiva…): se conserva el carrito para corregirlo.
+        countMetric('orders_rejected');
         setPending(await discard(store, queued.localId));
         setNotice({ tone: 'error', text: left.message ?? 'No se pudo enviar el pedido.' });
       } else {

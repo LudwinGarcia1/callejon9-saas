@@ -46,22 +46,25 @@ Ese cuarto punto no es teórico: la migración `V6` tuvo que publicar el inquili
 ## Arquitectura
 
 ```
-┌─────────────────────────────┐
-│  Next.js 15 · React 19      │  8 pantallas
-└──────────┬──────────────────┘
-           │ /api/v1/*  reescrito por Next hacia :8080
-           │ (mismo origen: no hace falta CORS)
-┌──────────▼──────────────────┐
-│  Spring Boot 3.4 · Java 21  │
-│    Controller  → solo HTTP
-│    Service     → negocio, @Transactional
-│    Repository  → Spring Data JPA
-│  TenantFilter → TenantContext
-└──────────┬──────────────────┘
-           │ set_config('app.tenant_id', …, true)
-┌──────────▼──────────────────┐
-│  PostgreSQL 16 + RLS        │
-└─────────────────────────────┘
+┌────────────────────────────┐      ┌────────────────────────────┐
+│  Next.js 15 · React 19     │      │  Apps Expo (React Native)  │
+│  web del personal + QR     │      │  Meseros · Clientes        │
+└─────────────┬──────────────┘      └─────────────┬──────────────┘
+              │ /api/v1/* reescrito por Next      │ HTTPS directo
+              │ (mismo origen: sin CORS)          │ a la API
+┌─────────────▼───────────────────────────────────▼──────────────┐
+│  Spring Boot 3.4 · Java 21                                     │
+│    Controller → solo HTTP                                      │
+│    Service    → negocio, @Transactional                        │
+│    Repository → Spring Data JPA                                │
+│    TenantFilter → TenantContext                                │
+└─────────────────────────────┬──────────────────────────────────┘
+                              │ set_config('app.tenant_id', …, true)
+┌─────────────────────────────▼──────────────────────────────────┐
+│  PostgreSQL 16 + Row Level Security en 17 tablas               │
+└────────────────────────────────────────────────────────────────┘
+
+La web, las dos apps y la API envían errores, trazas, logs y métricas a Sentry.
 ```
 
 El frontend nunca llama a `:8080` directamente. Un `rewrites()` en `next.config.ts` hace que el navegador solo hable con `:3000`, lo que elimina CORS por completo y deja la cookie de sesión como estrictamente de primera parte.
@@ -69,13 +72,35 @@ El frontend nunca llama a `:8080` directamente. Un `rewrites()` en `next.config.
 ### Estructura
 
 ```
-backend/    Spring Boot · Maven Wrapper · 174 tests · 31 rutas de API
-frontend/   Next.js · TypeScript · Tailwind · shadcn/ui · 9 pantallas
-scripts/    setup-db.sql, verify-rls.sql, run-dev.ps1
-docs/       glosario, guion de demo, specs y planes de implementación
+backend/          Spring Boot · Maven Wrapper · 840 pruebas en 96 clases · 53 rutas de API
+frontend/         Next.js · TypeScript · Tailwind · shadcn/ui · 15 pantallas
+mobile/           App Expo de meseros: mesas, comandas, catálogo y notificaciones push
+mobile-clientes/  App Expo de comensales: menú, pedido y llamada al mesero, sin conexión
+infra/            Terraform de Azure (API, web, CI) y Jenkins como código
+scripts/          setup-db.sql, verify-rls.sql, verify-images.sh, despliegue y operación
+docs/             pruebas (UT, SIT, UAT), operación, entregas, specs y planes
 ```
 
+Las cifras son de `main` al 27 de noviembre de 2026. Cada app móvil tiene su propio README con instrucciones para ejecutarla y generar el APK.
+
 Los paquetes del backend se organizan por funcionalidad, no por capa: `auth`, `user`, `table`, `catalog`, `order`, `kitchen`, `sale`, `ticket`, `inventory`, `analytics`, `realtime`, `platform`, más `tenancy` y `shared`. Cada uno contiene `web/`, `domain/`, `service/` y `repository/`.
+
+---
+
+## Producción en Azure
+
+| Componente | Recurso | Dirección |
+|---|---|---|
+| Web | App Service Linux (Node 24), plan F1 | https://restohub.azurewebsites.net |
+| API | App Service Java 21, plan B1, con health check en `/actuator/health/liveness` | `app-callejon9-api-prod-3878c6.azurewebsites.net` |
+| Base de datos | Azure Database for PostgreSQL Flexible Server 16 (B1ms), respaldo de 7 días | Privada para la API |
+| Secretos | Key Vault, leído con la identidad administrada de la API | — |
+| Monitoreo | Application Insights y Log Analytics para la API; Sentry para los cuatro componentes | — |
+| CI | GitHub Actions y Jenkins en una VM de Azure | Checks en cada PR |
+
+Todo se provisiona con Terraform (`infra/terraform/azure-backend`, `azure-frontend` y `azure-ci`); los procedimientos están en el README de cada carpeta. La web se publica con `scripts/deploy-frontend-azure.ps1`. El monitoreo está descrito en [`docs/operacion-sentry.md`](docs/operacion-sentry.md) y en el plan de monitoreo de `docs/entregas/`.
+
+> **Estado al 27 de noviembre de 2026.** La web está publicada con Sentry activo. La suscripción de Azure de la API y de PostgreSQL está deshabilitada (solo lectura), así que la API no responde hasta reactivarla o moverla a otra suscripción con el mismo Terraform.
 
 ---
 
@@ -255,15 +280,30 @@ Las que más importan:
 
 **Correcciones.** Editar y dar de baja productos, categorías y mesas; cancelar una comanda y liberar su mesa. Nada se borra físicamente: los productos y las mesas están referenciados por el histórico.
 
-**Infraestructura.** Autenticación con JWT en cookie `httpOnly`, canal STOMP con validación de inquilino por suscripción, y documentación OpenAPI navegable.
+**Caja.** Turnos de caja con arqueo, pagos mixtos y divididos, cambio y propina.
+
+**Inventario y reportes.** Movimientos de inventario, historial de ventas paginado y analítica de ventas.
+
+**Tiempo real.** Cocina y meseros reciben las comandas por WebSocket (STOMP) sin recargar la página.
+
+**Apps móviles.** App de meseros con sesión, mesas, comandas, catálogo y notificaciones push; app de comensales que pide desde la mesa y guarda los pedidos sin conexión hasta que vuelve la red.
+
+**Infraestructura.** Autenticación con JWT en cookie `httpOnly` y rotación de tokens de refresco, canal STOMP con validación de inquilino por suscripción, documentación OpenAPI navegable, despliegue en Azure con Terraform, CI en GitHub Actions y Jenkins, y observabilidad con Sentry.
 
 ### Diferido, con su diseño
 
-Delivery y rastreo en vivo; analítica y aprendizaje automático (K-means, RandomForest, Apriori, Pareto); sensores IoT; integración real con MercadoPago; segundo factor TOTP —el servicio existe, falta el endpoint—; rotación de tokens de refresco; inventario con descuento por receta; notificaciones push; y el ETL de migración desde MongoDB.
+Delivery y rastreo en vivo; aprendizaje automático (K-means, RandomForest, Apriori, Pareto); sensores IoT; integración real con MercadoPago; segundo factor TOTP —el servicio existe, falta el endpoint—; inventario con descuento por receta; envío automático de notificaciones push desde la API —hoy se envían con `pnpm push:send` desde `mobile/`—; y el ETL de migración desde MongoDB.
 
 ### Deuda registrada
 
-`addItems` no verifica que el producto siga activo, así que un platillo retirado puede agregarse a una comanda si se conoce su identificador. `GET /orders` y `GET /orders/{id}` no llevan `@PreAuthorize`: cualquier rol autenticado lee cualquier comanda de su propio inquilino. No hay cambio de contraseña por el propio usuario ni recuperación de contraseña. (La colisión de folios entre instancias de `FolioGenerator` fue resuelta en CAL-13 mediante secuencias atómicas en PostgreSQL con RLS).
+| Defecto o limitación | Impacto | Por qué sigue abierto |
+|---|---|---|
+| CAL-180: el correo distingue mayúsculas al iniciar sesión y al validar duplicados | Bajo: `Ana@…` y `ana@…` cuentan como cuentas distintas; el usuario debe escribirlo igual que al darse de alta | Requiere normalizar los correos existentes con una migración. Las dos pruebas que lo cubren están marcadas `@Disabled` con la referencia y se activan con la corrección |
+| `GET /orders` y `GET /orders/{id}` permiten a mesero, caja y administración leer cualquier comanda de su restaurante, no solo las propias | Bajo: no cruza restaurantes, que lo impide RLS | Caja y cocina necesitan ver las comandas de todos los meseros |
+| No hay cambio de contraseña por el propio usuario ni recuperación por correo | Medio: un administrador debe restablecerla | Requiere un servicio de correo transaccional, fuera del alcance |
+| La web corre en plan F1 de App Service | Medio: Azure descarga la app inactiva y limita la CPU a 60 minutos al día | Costo; para el SLA hace falta B1 (ver `docs/entregas/`) |
+
+Ya resueltos y que antes figuraban aquí: los productos inactivos se rechazan al agregarse a una comanda (CAL-10), las rutas de comandas exigen rol (`@PreAuthorize`) y la colisión de folios entre instancias se corrigió con secuencias atómicas en PostgreSQL (CAL-13).
 
 Tres carencias que sí se cerraron y vale la pena nombrar, porque marcaban la diferencia entre una demostración y un sistema: no existía forma de crear usuarios —los cinco roles eran teoría—, nada podía editarse ni darse de baja, y `PlanLimitService` estaba escrito sin que ningún endpoint lo llamara.
 
@@ -274,7 +314,9 @@ Tres carencias que sí se cerraron y vale la pena nombrar, porque marcaban la di
 - [`docs/glosario-es-en.md`](docs/glosario-es-en.md) — correspondencia entre el modelado original en español y el código en inglés
 - [`docs/guion-demo.md`](docs/guion-demo.md) — recorrido paso a paso
 - [`docs/operacion-probes.md`](docs/operacion-probes.md) — probes de vida y disponibilidad para el orquestador
-- [`docs/operacion-sentry.md`](docs/operacion-sentry.md) — reporte de errores a Sentry: variables, privacidad y cómo probar la conexión
+- [`docs/operacion-sentry.md`](docs/operacion-sentry.md) — errores, trazas, logs y métricas en Sentry: variables, privacidad y cómo probar la conexión
+- [`docs/pruebas/`](docs/pruebas/) — evidencia de pruebas unitarias, de integración (SIT) y de aceptación (UAT)
+- [`docs/entregas/`](docs/entregas/) — entregables: plan de monitoreo, SLA, integración y liberación, roles del equipo
 - [`docs/superpowers/specs/`](docs/superpowers/specs/) — diseño y decisiones de arquitectura
 - [`docs/superpowers/plans/`](docs/superpowers/plans/) — plan de implementación
 

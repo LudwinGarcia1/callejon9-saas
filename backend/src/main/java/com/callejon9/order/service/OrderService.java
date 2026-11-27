@@ -12,6 +12,7 @@ import com.callejon9.order.repository.OrderRepository;
 import com.callejon9.order.web.dto.OrderResponse;
 import com.callejon9.shared.error.BusinessRuleException;
 import com.callejon9.shared.error.ResourceNotFoundException;
+import com.callejon9.shared.observability.BusinessMetrics;
 import com.callejon9.shared.web.InvalidPageRequestException;
 import com.callejon9.table.service.TableService;
 import java.math.BigDecimal;
@@ -67,6 +68,7 @@ public class OrderService {
         // Ocupar la mesa PRIMERO: si esta ocupada, el 409 sale de aqui y la
         // orden nunca se crea.
         tableService.occupy(tableId, waiterId);
+        BusinessMetrics.orderOpened();
 
         Instant now = Instant.now();
         return orderRepository.save(Order.builder()
@@ -249,6 +251,7 @@ public class OrderService {
         OrderWithItems result = new OrderWithItems(order, items);
         eventPublisher.publishEvent(
                 new OrderSentToKitchenEvent(order.getTenantId(), OrderResponse.from(result)));
+        BusinessMetrics.orderSentToKitchen();
         return result;
     }
 
