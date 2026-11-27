@@ -30,7 +30,7 @@ locals {
   # Without a DSN the Sentry SDK stays off (application.yml).
   sentry_settings = var.sentry_dsn == "" ? {} : {
     SENTRY_DSN                = var.sentry_dsn
-    SENTRY_ENVIRONMENT        = var.environment
+    SENTRY_ENVIRONMENT        = var.environment == "prod" ? "production" : var.environment
     SENTRY_TRACES_SAMPLE_RATE = tostring(var.sentry_traces_sample_rate)
   }
 

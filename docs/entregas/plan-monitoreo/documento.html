@@ -259,7 +259,7 @@
     <thead><tr><th style="width:24%">Herramienta</th><th>Uso en el plan</th><th style="width:20%">Estado</th></tr></thead>
     <tbody>
       <tr><td>Application Insights</td><td>Peticiones, excepciones, dependencias (SQL) y latencia de la API, con el agente Java 3.x; telemetría de la web.</td><td class="ok">✔ Provisionado</td></tr>
-      <tr><td>Sentry</td><td>Errores de la API, de la web (navegador y servidor) y de las dos apps móviles, agrupados por versión del commit. Organización <code>restohub</code> con un proyecto por componente (sección 3.2).</td><td class="ok">✔ Configurado y verificado el 27-nov en API y web</td></tr>
+      <tr><td>Sentry</td><td>Errores de la API, de la web (navegador y servidor) y de las dos apps móviles, agrupados por versión del commit. Organización <code>restohub</code> con un proyecto por componente (sección 3.2).</td><td class="ok">✔ Configurado y verificado el 27-nov en los cuatro componentes; web en producción</td></tr>
       <tr><td>Log Analytics</td><td>Destino central de logs y telemetría; consultas KQL. Retención de 30 días y tope de 0.1 GB diarios para no salir del uso gratuito.</td><td class="ok">✔ Provisionado</td></tr>
       <tr><td>Health check de App Service</td><td>Saca de rotación una instancia que no responde: API en <code>/actuator/health/liveness</code>, web en <code>/login</code>.</td><td class="ok">✔ Configurado</td></tr>
       <tr><td>Presupuesto de Azure</td><td>Correo al 80 % del gasto real y al 100 % del gasto pronosticado del presupuesto mensual.</td><td class="ok">✔ Configurado</td></tr>
@@ -285,12 +285,13 @@
     <thead><tr><th style="width:24%">Proyecto</th><th style="width:20%">Plataforma</th><th>Qué reporta</th><th style="width:20%">Prueba real</th></tr></thead>
     <tbody>
       <tr><td><code>restohub-server</code></td><td>Spring Boot</td><td>Excepciones que ningún <code>@ExceptionHandler</code> atiende (los 500) y cada <code>log.error</code>. Los 4xx esperados no se reportan.</td><td class="ok">✔ RESTOHUB-SERVER-1</td></tr>
-      <tr><td><code>restohub-frontend</code></td><td>Next.js</td><td>Errores del navegador, de Server Components, Route Handlers y middleware. El navegador envía sus eventos a <code>/sentry-tunnel</code> del propio sitio, nunca directo a Sentry.</td><td class="ok">✔ RESTOHUB-FRONTEND-1 (servidor) y -2 (navegador)</td></tr>
-      <tr><td><code>restohub-meseros</code></td><td>React Native</td><td>Errores de JavaScript y fallos nativos de la app de meseros.</td><td class="pend">◐ Falta probar en un dispositivo</td></tr>
-      <tr><td><code>restohub-clientes</code></td><td>React Native</td><td>Errores de JavaScript y fallos nativos de la app de comensales.</td><td class="pend">◐ Falta probar en un dispositivo</td></tr>
+      <tr><td><code>restohub-frontend</code></td><td>Next.js</td><td>Errores del navegador, de Server Components, Route Handlers y middleware. El navegador envía sus eventos a <code>/sentry-tunnel</code> del propio sitio, nunca directo a Sentry.</td><td class="ok">✔ RESTOHUB-FRONTEND-1 (servidor), -2 (navegador) y -3 (producción)</td></tr>
+      <tr><td><code>restohub-meseros</code></td><td>React Native</td><td>Errores de JavaScript y fallos nativos de la app de meseros.</td><td class="ok">✔ RESTOHUB-MESEROS-1 (emulador)</td></tr>
+      <tr><td><code>restohub-clientes</code></td><td>React Native</td><td>Errores de JavaScript y fallos nativos de la app de comensales.</td><td class="ok">✔ RESTOHUB-CLIENTES-1 (emulador)</td></tr>
     </tbody>
   </table>
-  <p>La prueba del 27 de noviembre corrió la aplicación como arranca normalmente (la API en Docker y la web con <code>pnpm dev</code>), disparó un error identificable en cada componente y lo confirmó en Sentry con el CLI. La traza del navegador apuntó a la línea original del código fuente. En producción eso requiere subir los source maps durante el build, que queda pendiente (sección 11).</p>
+  <p>La prueba del 27 de noviembre corrió cada componente como arranca normalmente (la API en Docker, la web con <code>pnpm dev</code> y las dos apps en un emulador de Android), disparó un error identificable y lo confirmó en Sentry con el CLI. Las trazas apuntaron a la línea original del código fuente. Ese mismo día la web se publicó en Azure con Sentry activo, y un error disparado en la página de producción llegó con el entorno <code>production</code> y la versión del commit desplegado. La API no se pudo publicar porque su suscripción de Azure está deshabilitada (sección 11).</p>
+  <p>Cada proyecto tiene la regla <b>Issue nuevo o regresión en producción</b>, que envía un correo al equipo <code>restohub</code> como máximo cada 30 minutos. Es la alerta P3 de la sección 7.1.</p>
 </section>
 
 <!-- ===================== 04 MEDIR ===================== -->
@@ -639,7 +640,8 @@ requests
       <tr><td>CAL-57</td><td>Prueba de disponibilidad, reglas de alerta (incluidas las de consumo del presupuesto de error y las de anticipación), grupos de acciones y búsqueda por <code>requestId</code>. Al menos una alerta disparada como ensayo.</td><td>3 dic</td><td>CAL-23, CAL-24</td></tr>
       <tr><td>CAL-58</td><td>Restauración de la base medida contra el RTO del SLA, con <code>verify-rls.sql</code> en verde.</td><td>3 dic</td><td>—</td></tr>
       <tr><td>—</td><td>Sentry en la API, la web y las dos apps, con los proyectos de la sección 3.2 y las IP descartadas. Rama <code>feat/sentry-observabilidad</code>.</td><td class="ok">Hecho 27 nov</td><td>—</td></tr>
-      <tr><td>—</td><td>Sentry: probar las dos apps en un dispositivo, subir source maps en el build (<code>SENTRY_AUTH_TOKEN</code>) y crear la alerta de issue nuevo en producción (P3).</td><td>3 dic</td><td>Despliegue con DSN</td></tr>
+      <tr><td>—</td><td>Sentry: apps probadas en emulador, web publicada en producción con Sentry, alerta de issue nuevo en producción (P3) y build preparado para subir source maps.</td><td class="ok">Hecho 27 nov</td><td>—</td></tr>
+      <tr><td>—</td><td>Sentry: publicar la API con su DSN y crear el token de <code>SENTRY_AUTH_TOKEN</code> para subir source maps en el siguiente despliegue.</td><td>3 dic</td><td>Reactivar la suscripción de la API</td></tr>
       <tr><td>CAL-30</td><td>Runbook de operación con los procedimientos de las secciones 07 y 09.</td><td>3 dic</td><td>CAL-56, CAL-57, CAL-58</td></tr>
     </tbody>
   </table>
@@ -649,7 +651,7 @@ requests
     <li>Una petición con error en Azure se encuentra completa por su <code>requestId</code>.</li>
     <li>Una alerta P1 de ensayo llegó a la persona de guardia y se reconoció en menos de 30 minutos.</li>
     <li>Ningún registro almacenado contiene contraseñas, cookies ni tokens.</li>
-    <li>Un error real de cada componente llegó a Sentry sin IP y con la traza legible (API y web: 27 de noviembre; apps: pendiente).</li>
+    <li>Un error real de cada componente llegó a Sentry sin IP y con la traza legible (los cuatro el 27 de noviembre; en producción, solo la web hasta que se publique la API).</li>
     <li>El panel muestra datos reales del entorno productivo y el primer reporte mensual de disponibilidad está emitido.</li>
     <li>La primera revisión semanal registró en Linear al menos una decisión tomada con la matriz de la sección 07.</li>
   </ul>

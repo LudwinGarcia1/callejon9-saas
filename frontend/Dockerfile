@@ -27,7 +27,9 @@ COPY . .
 ARG BACKEND_ORIGIN=http://backend:8080
 # Sentry: el DSN es publico (viaja al navegador) y se fija al compilar, como
 # el rewrite. Vacio, el SDK queda apagado. El token para subir source maps no
-# se pasa como argumento: quedaria en el historial de la imagen.
+# se pasa como argumento: quedaria en el historial de la imagen. Llega como
+# secreto de BuildKit (--secret id=sentry_auth_token,env=SENTRY_AUTH_TOKEN)
+# y solo existe durante el RUN de la compilacion.
 ARG NEXT_PUBLIC_SENTRY_DSN=
 ARG NEXT_PUBLIC_SENTRY_ENVIRONMENT=production
 ARG NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE=0
@@ -40,7 +42,8 @@ ENV BACKEND_ORIGIN=${BACKEND_ORIGIN} \
     NEXT_OUTPUT=standalone \
     NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1
-RUN pnpm build
+RUN --mount=type=secret,id=sentry_auth_token,required=false \
+    SENTRY_AUTH_TOKEN="$(cat /run/secrets/sentry_auth_token 2>/dev/null || true)" pnpm build
 
 # --- Ejecucion: solo la salida standalone, sin toolchain --------------------
 FROM ${NODE_IMAGE} AS runner
