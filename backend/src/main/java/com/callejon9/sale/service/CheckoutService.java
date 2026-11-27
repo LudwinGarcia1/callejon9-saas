@@ -14,6 +14,7 @@ import com.callejon9.sale.domain.SaleStatus;
 import com.callejon9.sale.repository.SaleRepository;
 import com.callejon9.shared.error.BusinessRuleException;
 import com.callejon9.shared.error.ResourceNotFoundException;
+import com.callejon9.shared.observability.BusinessMetrics;
 import com.callejon9.table.service.TableService;
 import com.callejon9.ticket.domain.Ticket;
 import com.callejon9.ticket.domain.TicketItemSnapshot;
@@ -154,6 +155,7 @@ public class CheckoutService {
             tableService.free(order.getTableId());
         }
 
+        BusinessMetrics.checkoutCompleted();
         return ticket;
     }
 

@@ -289,7 +289,7 @@ sin contar el mantenimiento programado ni las exclusiones de la sección 09.</sp
 <section class="seccion">
   <h2><span class="num">05</span>Soporte e incidentes</h2>
   <div class="rail"><span class="r1">Métricas crudas</span><span class="r2">SLI</span><span class="r3">SLO</span><span class="r4">Presupuesto de error</span><span class="r5 on">SLA</span></div>
-  <p>El restaurante reporta por el correo de soporte que recibe al contratar. Cada reporte recibe un folio y una severidad, que el equipo puede subir o bajar al revisarlo, explicando el motivo.</p>
+  <p>El restaurante reporta por el correo de soporte que recibe al contratar. Cada reporte recibe un folio y una severidad, que el equipo puede subir o bajar al revisarlo, explicando el motivo. El equipo también detecta fallas sin esperar el reporte: las alertas del plan de monitoreo, incluido el aviso de Sentry cuando aparece un error nuevo en producción, abren un folio con las mismas reglas.</p>
 
   <table class="compacta">
     <thead><tr><th style="width:9%">Sev.</th><th style="width:31%">Definición</th><th style="width:18%">Primera respuesta</th><th style="width:20%">Restablecimiento objetivo</th><th>Horario</th></tr></thead>
@@ -376,14 +376,14 @@ sin contar el mantenimiento programado ni las exclusiones de la sección 09.</sp
     <tbody>
       <tr><td>Disponibilidad</td><td>Pruebas de disponibilidad de Application Insights, 3 regiones, cada 5 minutos.</td><td>30 días en Log Analytics; el resumen mensual, permanente.</td></tr>
       <tr><td>Desempeño</td><td>Telemetría de peticiones de Application Insights.</td><td>30 días; el resumen mensual, permanente.</td></tr>
-      <tr><td>Errores de la aplicación</td><td>Sentry, en la API, la web y las apps: cada error agrupado por causa y ligado a la versión que lo introdujo. Sirve para detectar y reportar incidentes; no entra en el cálculo de disponibilidad.</td><td>La del plan de Sentry; los errores de cada incidente quedan en su reporte.</td></tr>
+      <tr><td>Errores de la aplicación</td><td>Sentry, en la API, la web y las apps: cada error agrupado por causa y ligado a la versión que lo introdujo. Un error nuevo o que reaparece en producción avisa por correo al equipo. Sirve para detectar y reportar incidentes; no entra en el cálculo de disponibilidad.</td><td>La del plan de Sentry; los errores de cada incidente quedan en su reporte.</td></tr>
       <tr><td>Soporte</td><td>Folios de soporte con hora de reporte, primera respuesta y restablecimiento.</td><td>Permanente.</td></tr>
       <tr><td>Respaldo</td><td>Historial de respaldos de Azure y bitácora de ensayos de restauración.</td><td>Permanente para los ensayos.</td></tr>
     </tbody>
   </table>
 
   <h3>8.1 Confiabilidad de la medición</h3>
-  <p>Una cifra de disponibilidad solo vale si la herramienta que la mide funciona. Por eso, cada mes el equipo dispara una alerta de ensayo y comprueba que llega, contrasta la disponibilidad de las pruebas externas con el éxito de las peticiones reales (si difieren más de 0.5 puntos, revisa la prueba antes de emitir el reporte) y confirma que la telemetría no se interrumpió por la cuota diaria de ingesta. Si un periodo quedó sin medición, se informa en el reporte y no se cuenta en contra del restaurante.</p>
+  <p>Una cifra de disponibilidad solo vale si la herramienta que la mide funciona. Por eso, cada mes el equipo dispara una alerta de ensayo y comprueba que llega, contrasta la disponibilidad de las pruebas externas con el éxito de las peticiones reales (si difieren más de 0.5 puntos, revisa la prueba antes de emitir el reporte), confirma que la telemetría no se interrumpió por la cuota diaria de ingesta y que Sentry sigue recibiendo los errores de producción. Si un periodo quedó sin medición, se informa en el reporte y no se cuenta en contra del restaurante.</p>
 
   <h3>8.2 Reporte mensual</h3>
   <p>En los primeros <b>5 días hábiles</b> de cada mes, RestoHub publica para cada restaurante un reporte con la disponibilidad del mes anterior, los incidentes P1 y P2 con su duración y los errores que los causaron según Sentry, el cumplimiento de los tiempos de soporte, el mantenimiento realizado y los créditos que correspondan.</p>

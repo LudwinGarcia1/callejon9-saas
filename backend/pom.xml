@@ -65,6 +65,13 @@
 			<artifactId>sentry-spring-boot-starter-jakarta</artifactId>
 			<version>${sentry.version}</version>
 		</dependency>
+		<!-- Engancha Logback: los logs de INFO en adelante van a Sentry Logs y
+		     cada log.error crea ademas un evento de error. -->
+		<dependency>
+			<groupId>io.sentry</groupId>
+			<artifactId>sentry-logback</artifactId>
+			<version>${sentry.version}</version>
+		</dependency>
 
 		<!-- Migraciones: el esquema lo define Flyway, nunca Hibernate. -->
 		<dependency>

@@ -1,3 +1,5 @@
+import * as Sentry from "@sentry/nextjs";
+
 import { endpoints } from "./endpoints";
 import type { ProblemDetail } from "./types";
 
@@ -143,13 +145,13 @@ async function send(
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 
-  if (
-    response.status === 401 &&
-    allowRefresh &&
-    canRefresh(path) &&
-    (await refreshSession())
-  ) {
-    return send(path, options, false);
+  if (response.status === 401 && allowRefresh && canRefresh(path)) {
+    if (await refreshSession()) {
+      return send(path, options, false);
+    }
+    // La sesion vencio de verdad: el usuario vuelve al login. Se cuenta en
+    // Sentry para ver si las sesiones caen mas de lo esperado.
+    Sentry.metrics.count("session_refresh_failures", 1);
   }
 
   return response;

@@ -111,7 +111,7 @@ variable "sentry_dsn" {
 variable "sentry_traces_sample_rate" {
   description = "Fraction of requests traced by Sentry (0 to 1). 0 turns performance tracing off."
   type        = number
-  default     = 0
+  default     = 0.1
 
   validation {
     condition     = var.sentry_traces_sample_rate >= 0 && var.sentry_traces_sample_rate <= 1

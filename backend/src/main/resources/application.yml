@@ -150,13 +150,18 @@ sentry:
   # los datos del restaurante no salen hacia Sentry.
   send-default-pii: false
   max-request-body-size: none
-  # Trazas de rendimiento apagadas por defecto; 0.1 envia una de cada diez.
-  traces-sample-rate: ${SENTRY_TRACES_SAMPLE_RATE:0.0}
+  # Trazas: una de cada diez peticiones por defecto. Con 1.0 se trazan todas
+  # (util en local para verificar) y con 0 se apagan.
+  traces-sample-rate: ${SENTRY_TRACES_SAMPLE_RATE:0.1}
   ignored-transactions:
     - "GET /actuator/health"
     - "GET /actuator/health/**"
-  # Un log.error tambien crea un evento; los niveles menores solo quedan
-  # como contexto (breadcrumbs) del siguiente error.
+  # Logs de Sentry: cada log de INFO en adelante se envia a Sentry Logs,
+  # ligado a la traza de su peticion. SentryPrivacyConfig tacha correos y JWT
+  # antes de enviarlos. Un log.error ademas crea un evento de error.
+  logs:
+    enabled: ${SENTRY_LOGS_ENABLED:true}
   logging:
+    minimum-level: info
     minimum-event-level: error
     minimum-breadcrumb-level: info
