@@ -330,6 +330,7 @@ Si el corte dejó en Azure algo que el estado no registra, el siguiente `apply` 
 | `SERVER_PORT` | `80` | Puerto en el que App Service enruta a Java SE |
 | `JAVA_OPTS` | `-XX:+UseG1GC -XX:MaxRAMPercentage=75.0` | Mismas opciones que `JAVA_TOOL_OPTIONS` en `backend/Dockerfile` |
 | `SPRINGDOC_APIDOCS_ENABLED`, `SPRINGDOC_SWAGGERUI_ENABLED` | `true` | Solo con `swagger_enabled = true`. Encienden OpenAPI y Swagger UI, que `prod` apaga |
+| `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE` | `sentry_dsn`, `environment`, `sentry_traces_sample_rate` | Solo si `sentry_dsn` no está vacío. DSN del proyecto `restohub-server`; pásalo con `TF_VAR_sentry_dsn`, sin versionarlo. Ver `docs/operacion-sentry.md` |
 
 ## Puerta de calidad
 

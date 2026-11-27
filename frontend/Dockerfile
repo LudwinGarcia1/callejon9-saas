@@ -25,7 +25,18 @@ COPY . .
 # el nombre interno "backend", que Compose ya usa; cada entorno debe publicar
 # el backend con ese nombre o compilar con otro valor.
 ARG BACKEND_ORIGIN=http://backend:8080
+# Sentry: el DSN es publico (viaja al navegador) y se fija al compilar, como
+# el rewrite. Vacio, el SDK queda apagado. El token para subir source maps no
+# se pasa como argumento: quedaria en el historial de la imagen.
+ARG NEXT_PUBLIC_SENTRY_DSN=
+ARG NEXT_PUBLIC_SENTRY_ENVIRONMENT=production
+ARG NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE=0
+ARG VCS_REF=unknown
 ENV BACKEND_ORIGIN=${BACKEND_ORIGIN} \
+    NEXT_PUBLIC_SENTRY_DSN=${NEXT_PUBLIC_SENTRY_DSN} \
+    NEXT_PUBLIC_SENTRY_ENVIRONMENT=${NEXT_PUBLIC_SENTRY_ENVIRONMENT} \
+    NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE=${NEXT_PUBLIC_SENTRY_TRACES_SAMPLE_RATE} \
+    NEXT_PUBLIC_SENTRY_RELEASE=callejon9-frontend@${VCS_REF} \
     NEXT_OUTPUT=standalone \
     NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1

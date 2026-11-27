@@ -12,6 +12,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@sentry/nextjs": "11.19.0",
     "@tanstack/react-query": "^5.101.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -44,6 +45,7 @@
   },
   "pnpm": {
     "overrides": {
+      "vite": "^7.3.7",
       "nanoid": ">=3.3.18",
       "postcss": ">=8.5.25",
       "sharp": ">=0.35.5",

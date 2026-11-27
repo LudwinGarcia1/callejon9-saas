@@ -31,7 +31,8 @@
           "color": "#2B2723",
           "defaultChannel": "solicitudes"
         }
-      ]
+      ],
+      "@sentry/react-native"
     ],
     "extra": {
       "eas": {

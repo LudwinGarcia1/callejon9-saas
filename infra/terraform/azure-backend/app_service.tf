@@ -23,6 +23,13 @@ locals {
     ApplicationInsightsAgent_EXTENSION_VERSION = "~3"
   } : {}
 
+  # Without a DSN the Sentry SDK stays off (application.yml).
+  sentry_settings = var.sentry_dsn == "" ? {} : {
+    SENTRY_DSN                = var.sentry_dsn
+    SENTRY_ENVIRONMENT        = var.environment
+    SENTRY_TRACES_SAMPLE_RATE = tostring(var.sentry_traces_sample_rate)
+  }
+
   # Environment variables take precedence over application-prod.yml.
   swagger_settings = var.swagger_enabled ? {
     SPRINGDOC_APIDOCS_ENABLED   = "true"
@@ -96,7 +103,7 @@ resource "azurerm_linux_web_app" "api" {
     # independent of its outbound IPs. Ignored until the frontend sends it; give
     # the same value to BACKEND_PROXY_SECRET of the frontend (CAL-169).
     APP_PROXY_SECRET = local.key_vault_reference["proxy-secret"]
-  }, local.monitoring_settings, local.swagger_settings)
+  }, local.monitoring_settings, local.swagger_settings, local.sentry_settings)
 
   logs {
     detailed_error_messages = false

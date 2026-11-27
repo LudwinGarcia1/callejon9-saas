@@ -41,7 +41,7 @@ describe("rutas privadas", () => {
     },
   );
 
-  it.each(["/_next/static/chunk.js", "/_next/image", "/favicon.ico"])(
+  it.each(["/_next/static/chunk.js", "/_next/image", "/favicon.ico", "/sentry-tunnel"])(
     "el middleware no intercepta el asset %s",
     (pathname) => {
       expect(matchesMiddleware(pathname)).toBe(false);

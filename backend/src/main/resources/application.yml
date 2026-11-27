@@ -137,3 +137,26 @@ management:
 logging:
   level:
     org.flywaydb: INFO
+
+# Reporte de errores a Sentry. Con SENTRY_DSN vacio el SDK no se inicializa:
+# pruebas, CI y desarrollo local no envian nada. Solo llegan las excepciones
+# que ningun @ExceptionHandler atiende (los 500); los 4xx de
+# GlobalExceptionHandler son respuestas esperadas y no se reportan.
+sentry:
+  dsn: ${SENTRY_DSN:}
+  environment: ${SENTRY_ENVIRONMENT:local}
+  release: ${SENTRY_RELEASE:}
+  # Sin cookies, cabeceras de sesion, IP ni cuerpo de la peticion: el JWT y
+  # los datos del restaurante no salen hacia Sentry.
+  send-default-pii: false
+  max-request-body-size: none
+  # Trazas de rendimiento apagadas por defecto; 0.1 envia una de cada diez.
+  traces-sample-rate: ${SENTRY_TRACES_SAMPLE_RATE:0.0}
+  ignored-transactions:
+    - "GET /actuator/health"
+    - "GET /actuator/health/**"
+  # Un log.error tambien crea un evento; los niveles menores solo quedan
+  # como contexto (breadcrumbs) del siguiente error.
+  logging:
+    minimum-event-level: error
+    minimum-breadcrumb-level: info

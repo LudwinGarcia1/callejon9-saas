@@ -1,3 +1,4 @@
+import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
 import { COMMON_SECURITY_HEADERS, HSTS_POLICY } from "./src/lib/security-headers";
 
@@ -49,4 +50,13 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+/**
+ * Sentry envuelve la configuracion para instrumentar la compilacion. Los
+ * source maps solo se suben cuando el build tiene SENTRY_AUTH_TOKEN (junto con
+ * SENTRY_ORG y SENTRY_PROJECT); sin token, la compilacion no contacta a Sentry.
+ */
+export default withSentryConfig(nextConfig, {
+  silent: !process.env.CI,
+  telemetry: false,
+  sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
+});
