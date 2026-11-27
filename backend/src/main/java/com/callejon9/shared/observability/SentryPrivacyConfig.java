@@ -9,6 +9,7 @@ import io.sentry.protocol.SentryException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -45,12 +46,14 @@ public class SentryPrivacyConfig {
         if (message != null) {
             message.setFormatted(SentryRedaction.redact(message.getFormatted()));
             message.setMessage(SentryRedaction.redact(message.getMessage()));
-            if (message.getParams() != null) {
-                message.setParams(message.getParams().stream().map(SentryRedaction::redact).toList());
+            List<String> params = message.getParams();
+            if (params != null) {
+                message.setParams(params.stream().map(SentryRedaction::redact).toList());
             }
         }
-        if (event.getExceptions() != null) {
-            for (SentryException exception : event.getExceptions()) {
+        List<SentryException> exceptions = event.getExceptions();
+        if (exceptions != null) {
+            for (SentryException exception : exceptions) {
                 exception.setValue(SentryRedaction.redact(exception.getValue()));
             }
         }
