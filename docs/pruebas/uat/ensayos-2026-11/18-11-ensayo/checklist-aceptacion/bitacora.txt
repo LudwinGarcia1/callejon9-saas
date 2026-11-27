@@ -1,0 +1,291 @@
+2026-11-18 12:34:07 === Prueba 1 · Inicio y cierre de sesión (CAL-146)
+2026-11-18 12:34:12   API POST /api/v1/auth/login -> 200
+2026-11-18 12:34:12 login mesero@pruebas.com: HTTP 200
+2026-11-18 12:34:12 1.1 mesero@pruebas.com llega a /waiter
+2026-11-18 12:34:14 captura P1.1-mesero-pantalla-inicial.png · /waiter
+2026-11-18 12:34:16   API POST /api/v1/auth/login -> 200
+2026-11-18 12:34:16 login cocina@pruebas.com: HTTP 200
+2026-11-18 12:34:17 1.2a cocina@pruebas.com llega a /kitchen
+2026-11-18 12:34:19 captura P1.2a-cocina-pantalla-inicial.png · /kitchen
+2026-11-18 12:34:21   API POST /api/v1/auth/login -> 200
+2026-11-18 12:34:21 login caja@pruebas.com: HTTP 200
+2026-11-18 12:34:22 1.2b caja@pruebas.com llega a /cashier
+2026-11-18 12:34:24 captura P1.2b-caja-pantalla-inicial.png · /cashier
+2026-11-18 12:34:29   API POST /api/v1/auth/login -> 200
+2026-11-18 12:34:29 login admin@pruebas.com: HTTP 200
+2026-11-18 12:34:30 1.2c admin@pruebas.com llega a /admin
+2026-11-18 12:34:32 captura P1.2c-admin-pantalla-inicial.png · /admin
+2026-11-18 12:34:36   API POST /api/v1/auth/login -> 401
+2026-11-18 12:34:36 login mesero@pruebas.com: HTTP 401
+2026-11-18 12:34:38 1.3 login con contraseña equivocada: HTTP 401; mensaje: ["Sesión expirada\nTu sesión expiró por inactividad.","No se pudo iniciar sesión\nRestaurante, correo o contraseña incorrectos.","Bienvenido de vuelta"]; campo de contraseña vacío: true
+2026-11-18 12:34:38 captura P1.3-contrasena-equivocada.png · /login
+2026-11-18 12:34:40   API POST /api/v1/auth/login -> 200
+2026-11-18 12:34:40 login mesero@pruebas.com: HTTP 200
+2026-11-18 12:34:43   API POST /api/v1/auth/logout -> 204
+2026-11-18 12:34:43 1.4 tras Cerrar sesión: /login
+2026-11-18 12:34:43   API POST /api/v1/auth/refresh -> 401
+2026-11-18 12:34:44 captura P1.4a-tras-cerrar-sesion.png · /login
+2026-11-18 12:34:44   API POST /api/v1/auth/refresh -> 401
+2026-11-18 12:34:47 1.4 tras Atrás (antes estaba en /waiter): /waiter
+2026-11-18 12:34:47 captura P1.4b-boton-atras.png · /waiter
+2026-11-18 12:35:14   API POST /api/v1/auth/login -> 200
+2026-11-18 12:35:14 login mesero@pruebas.com: HTTP 200
+2026-11-18 12:35:36 === Prueba 2 · Pedido del mesero en la web (CAL-151)
+2026-11-18 12:35:38   API POST /api/v1/auth/login -> 200
+2026-11-18 12:35:39 login mesero@pruebas.com: HTTP 200
+2026-11-18 12:35:43 captura P2.1a-abrir-mesa-dialogo.png · /waiter
+2026-11-18 12:35:44   API POST /api/v1/orders -> 201
+2026-11-18 12:35:45 2.1 aviso: ["Mesa 5 ocupada. Orden ORD-261118183542 abierta."] · url /waiter/order/b714df5e-b794-4ea2-8f72-ad4c49d5fbf6
+2026-11-18 12:35:46 captura P2.1b-orden-abierta.png · /waiter/order/b714df5e-b794-4ea2-8f72-ad4c49d5fbf6
+2026-11-18 12:35:46 botones orden: ["AUTO Automático: esta pantalla va en claro","CLARO Fijar modo claro","OSCURO Fijar modo oscuro","Cerrar sesión","Enviar a cocina","Cancelar orden","Entradas","Platos fuertes","Bebidas","Postres","Agregar Guacamole con totopos","Agregar Prueba totopos con salsa roja","Agregar Queso fundido","Agregar Sopa de tortilla","Agregar a la orden"]
+2026-11-18 12:35:46 campos orden: []
+2026-11-18 12:36:21 2.2 campos de nota visibles: 0
+2026-11-18 12:36:21 2.2 botones con el carrito lleno: ["AUTO Automático: esta pantalla va en claro","CLARO Fijar modo claro","OSCURO Fijar modo oscuro","Cerrar sesión","Enviar a cocina","Cancelar orden","Entradas","Platos fuertes","Bebidas","Postres","Agregar Flan napolitano","Agregar Pastel de tres leches","Quitar una unidad","Agregar una unidad","Quitar del carrito","Quitar una unidad","Agregar una unidad","Quitar del carrito","Quitar una unidad","Agregar una unidad","Quitar del carrito","Quitar una unidad","Agregar una unidad","Quitar del carrito","Quitar una unidad","Agregar una unidad","Quitar del carrito","Agregar a la orden"]
+2026-11-18 12:36:22 captura P2.2a-carrito-por-agregar.png · /waiter/order/b714df5e-b794-4ea2-8f72-ad4c49d5fbf6
+2026-11-18 12:36:23   API POST /api/v1/orders/b714df5e-b794-4ea2-8f72-ad4c49d5fbf6/items -> 200
+2026-11-18 12:36:25 2.2 aviso: ["Productos agregados a la orden."]
+2026-11-18 12:36:25 captura P2.2b-productos-en-la-orden.png · /waiter/order/b714df5e-b794-4ea2-8f72-ad4c49d5fbf6
+2026-11-18 12:36:25 2.3 botones para quitar o reducir en la comanda: []
+2026-11-18 12:36:26 captura P2.3-sin-opcion-para-quitar.png · /waiter/order/b714df5e-b794-4ea2-8f72-ad4c49d5fbf6
+2026-11-18 12:36:26   API POST /api/v1/orders/b714df5e-b794-4ea2-8f72-ad4c49d5fbf6/send-to-kitchen -> 200
+2026-11-18 12:36:28 2.4 aviso: ["Orden enviada a cocina."]
+2026-11-18 12:36:29 captura P2.4-orden-enviada.png · /waiter/order/b714df5e-b794-4ea2-8f72-ad4c49d5fbf6
+2026-11-18 12:36:32 captura P2.5-mesa-5-ocupada.png · /waiter
+2026-11-18 12:36:53   API POST /api/v1/orders -> 201
+2026-11-18 12:36:58   API POST /api/v1/orders/997353e3-46d0-4d91-ac50-a7f8622f4cf7/items -> 200
+2026-11-18 12:37:01 captura P2.6a-mesa-6-con-horchata.png · /waiter/order/997353e3-46d0-4d91-ac50-a7f8622f4cf7
+2026-11-18 12:37:02 captura P2.6b-confirmar-cancelacion.png · /waiter/order/997353e3-46d0-4d91-ac50-a7f8622f4cf7
+2026-11-18 12:37:02   API POST /api/v1/orders/997353e3-46d0-4d91-ac50-a7f8622f4cf7/cancel -> 200
+2026-11-18 12:37:05 2.6 aviso: ["Orden cancelada. La mesa quedó libre."] · url /waiter
+2026-11-18 12:37:05 captura P2.6c-orden-cancelada-mesa-libre.png · /waiter
+
+2026-11-18 12:37:52 === Prueba 3 � App m�vil de meseros (CAL-152)
+2026-11-18 12:37:59 captura P3.1a-app-login-lleno.png
+2026-11-18 12:38:07 captura P3.1b-app-mesas.png
+2026-11-18 12:39:27 captura P3.1a-app-login-lleno.png
+2026-11-18 12:39:39 captura P3.1a-app-login-lleno.png
+2026-11-18 12:39:47 captura P3.1b-app-mesas.png
+2026-11-18 12:40:00 captura P3.1c-app-mesa-7.png
+2026-11-18 12:40:14 captura P3.1d-app-pedido-capturado.png
+2026-11-18 12:40:32 captura P3.2a-app-pedido-registrado.png
+2026-11-18 12:40:49 captura P3.2a-app-pedido-registrado.png
+2026-11-18 12:41:12 captura P3.2a-app-pedido-registrado.png
+2026-11-18 12:41:26 captura P3.2b-app-enviado-a-cocina.png
+2026-11-18 12:41:40   API POST /api/v1/auth/login -> 200
+2026-11-18 12:41:40 login cocina@pruebas.com: HTTP 200
+2026-11-18 12:41:43 3.2 cocina: ORD-261118184104 visible=true
+2026-11-18 12:41:43 3.2 cocina: ORD-261118183542 visible=true
+2026-11-18 12:41:44 captura P3.2c-cocina-web-recibe-pedidos.png · /kitchen
+modo avion: enable
+2026-11-18 12:42:05 captura P3.3-app-sin-senal.png
+2026-11-18 12:42:28 captura P3.3-app-sin-senal.png
+modo avion: disable
+2026-11-18 12:42:55 captura P3.4-app-recupera-con-reintentar.png
+2026-11-18 12:43:14 === Prueba 4 · Tickets (CAL-155)
+2026-11-18 12:43:16   API POST /api/v1/auth/login -> 200
+2026-11-18 12:43:16 login caja@pruebas.com: HTTP 200
+2026-11-18 12:43:22 4.1 botones con la venta elegida: ["Imprimir Ticket Térmico (80mm)","Descargar ticket en PDF"]
+2026-11-18 12:43:23 captura P4.1a-venta-cobrada-ticket.png · /history
+2026-11-18 12:43:24 4.1 PDF descargado: ticket-TCK-261028201211.pdf (1334 bytes)
+2026-11-18 12:43:28 4.2 ¿aparece el folio TCK-261028201211? true
+2026-11-18 12:43:29 captura P4.2-busqueda-por-folio.png · /history
+2026-11-18 12:44:06 === Prueba 5 · Aislamiento y permisos (CAL-158)
+2026-11-18 12:44:09   API POST /api/v1/auth/login -> 200
+2026-11-18 12:44:09 login mesero@pruebas.com: HTTP 200
+2026-11-18 12:44:13 5.1 mesero@pruebas.com abre /admin: url final /admin; mensaje de permiso visible=false; API con error: ["/api/v1/sales 403","/api/v1/users 403"]
+2026-11-18 12:44:13 captura P5.1-mesero-abre-admin.png · /admin
+2026-11-18 12:44:17 5.1 mesero@pruebas.com abre /cashier: url final /cashier; mensaje de permiso visible=false; API con error: []
+2026-11-18 12:44:17 captura P5.1-mesero-abre-cashier.png · /cashier
+2026-11-18 12:44:19   API POST /api/v1/auth/login -> 200
+2026-11-18 12:44:19 login caja@pruebas.com: HTTP 200
+2026-11-18 12:44:23 5.2a caja@pruebas.com abre /admin: url final /admin; mensaje de permiso visible=false; API con error: ["/api/v1/users 403"]
+2026-11-18 12:44:23 captura P5.2a-caja-abre-admin.png · /admin
+2026-11-18 12:44:26   API POST /api/v1/auth/login -> 200
+2026-11-18 12:44:26 login cocina@pruebas.com: HTTP 200
+2026-11-18 12:44:31 5.2b cocina@pruebas.com abre /waiter: url final /waiter; mensaje de permiso visible=false; API con error: ["/api/v1/orders 403"]
+2026-11-18 12:44:31 captura P5.2b-cocina-abre-waiter.png · /waiter
+2026-11-18 12:45:08   API POST /api/v1/auth/login -> 200
+2026-11-18 12:45:09 login admin@pruebas.com: HTTP 200
+2026-11-18 12:45:09 limpieza: GET /orders -> 400 (0 ordenes)
+2026-11-18 12:45:09 limpieza: ORD-261118183542: no encontrada en la lista
+2026-11-18 12:45:09 limpieza: ORD-261118184104: no encontrada en la lista
+2026-11-18 12:45:23   API POST /api/v1/auth/login -> 200
+2026-11-18 12:45:23 login admin@pruebas.com: HTTP 200
+2026-11-18 12:45:24   API POST /api/v1/orders/b714df5e-b794-4ea2-8f72-ad4c49d5fbf6/cancel -> 200
+2026-11-18 12:45:24   API POST /api/v1/orders/85b7781e-c4f9-4aae-bbb5-65d4e58513e8/cancel -> 200
+2026-11-18 12:45:24 limpieza: GET /orders -> 200 (6 ordenes)
+2026-11-18 12:45:24 limpieza: ORD-261118183542 (Mesa ?, SENT): cancelar -> 200 
+2026-11-18 12:45:24 limpieza: ORD-261118184104 (Mesa ?, SENT): cancelar -> 200 
+2026-11-18 12:57:59   API POST /api/v1/auth/login -> 200
+2026-11-18 12:57:59 login admin@pruebas.com: HTTP 200
+2026-11-18 12:58:42   API POST /api/v1/auth/login -> 200
+2026-11-18 12:58:42 login admin@pruebas.com: HTTP 200
+2026-11-18 12:58:58   API POST /api/v1/auth/login -> 200
+2026-11-18 12:58:58 login caja@pruebas.com: HTTP 200
+2026-11-18 12:59:15   API POST /api/v1/auth/login -> 200
+2026-11-18 12:59:15 login cocina@pruebas.com: HTTP 200
+2026-11-18 13:00:23 === Ensayo 2 · UAT-02 Alta de restaurantes y planes (CAL-147)
+2026-11-18 13:00:26 captura ..\ensayo-uat2\A1-pagina-de-alta.png · /signup
+2026-11-18 13:00:26 A2 planes disponibles: ["FREE:true","PRO:false","PREMIUM:false"]
+2026-11-18 13:00:27 captura ..\ensayo-uat2\A2-formulario-lleno-plan-gratis.png · /signup
+2026-11-18 13:00:28   API POST /api/v1/signup -> 201
+2026-11-18 13:00:28 A3 POST /api/v1/signup -> 201
+2026-11-18 13:00:31 A3 tras crear cuenta: url /login · 8 s · texto: RestoHub OPERACIÓN DE RESTAURANTES Mesas, comandas, cocina y caja en un solo turno. Cada restaurante trabaja aislado: sus datos no se cruzan con los de nadie más, y la base de datos lo garantiza. INICIAR SESIÓN Bienvenido de vuelta Tu correo es único dentro de tu restaurante, no en toda la plataforma: por eso pedimos el identificador antes. RESTAURANTE restohub / CORREO CONTRASEÑA Mostrar Ingresar ¿No tienes cuenta? Registra tu restaurante
+2026-11-18 13:00:32 captura ..\ensayo-uat2\A3-tras-crear-cuenta.png · /login
+2026-11-18 13:00:56   API POST /api/v1/auth/login -> 200
+2026-11-18 13:00:56 login admin@ensayo-uat-1118.test: HTTP 200
+2026-11-18 13:00:58 A4 el administrador nuevo llega a /admin
+2026-11-18 13:00:59 captura ..\ensayo-uat2\A4-admin-nuevo-restaurante-vacio.png · /admin
+2026-11-18 13:01:01 A5 pestaña Restaurante: Administración Resumen del restaurante; alta de mesas, categorías, productos y usuarios, y su zona horaria. COBRADO HOY $0.00 MESAS 0 CATEGORÍAS 0 PRODUCTOS 0 USUARIOS 1 VENTAS DE HOY 0 Total: $0.00 Mesas Categorías Productos Usuarios Restaurante Zona horaria El historial de ventas, la analítica y el inventario cortan el día a la medianoche de esta zona. Cambiarla no modifica ventas registradas: el historial se vuelve a agrupar con la zona nueva. ZONA DEL RESTAURANTE Centro — Ciudad de México, G
+2026-11-18 13:01:02 captura ..\ensayo-uat2\A5-admin-nuevo-restaurante-plan.png · /admin
+2026-11-18 13:01:03 5.3/5.4 API vista por el admin del restaurante nuevo: ["/tables 200 n=0","/products 200 n=0","/categories 200 n=0","/users 200 n=1","/orders 200 n=0","/sales 200 n={\"sales\":{\"content\":[],\"page\":0,\"size\":20,\"totalElements\":0,\"totalPages\":0},\"sum"]
+2026-11-18 13:01:07 5.4 ¿aparece TCK-261028201211 en el restaurante nuevo? false; texto: Historial de ventas Consulta lo que se ha cobrado en un rango de fechas o encuentra un ticket por folio. VENTAS EN EL RANGO 0 TOTAL COBRADO $0.00 Rango de fechas DESDE HASTA Buscar Buscar ticket por folio FOLIO Buscar Ventas SIN DATOS No hay ventas en el rango seleccionado. Selecciona una venta de l
+2026-11-18 13:01:08 captura ..\ensayo-uat2\P5.4-folio-de-pruebas-no-aparece.png · /history
+2026-11-18 13:01:39 === Ensayo 2 · UAT-03 Usuarios y roles (CAL-148)
+2026-11-18 13:01:41   API POST /api/v1/auth/login -> 200
+2026-11-18 13:01:41 login admin@pruebas.com: HTTP 200
+2026-11-18 13:01:44 captura ..\ensayo-uat2\U1-usuarios-antes.png · /admin
+2026-11-18 13:01:45 U2 roles del formulario: ["ADMIN=Administrador","WAITER=Mesero","KITCHEN=Cocina","CASHIER=Cajero"]
+2026-11-18 13:01:47 U2 contraseña débil: mensajes visibles: Nuevo usuario Da de alta a un miembro del equipo del restaurante. NOMBRE COMPLETO CORREO CONTRASEÑA Al menos 10 caracteres (pendiente) Letras y números (cumplido) Sin repetir los mismos caracteres (cumplido) Sin tu nombre, correo ni identificador (cumplido) La contraseña debe tener al menos 10 caracteres. ROL Mesero Administrador Mesero Cocina Cajero Crear usuario Close · avisos: []
+2026-11-18 13:01:48 captura ..\ensayo-uat2\U2-contrasena-debil.png · /admin
+2026-11-18 13:01:48   API POST /api/v1/users -> 201
+2026-11-18 13:01:50 U3 alta de mesero.ensayo@pruebas.com (WAITER=Mesero): HTTP 201 · avisos: ["Usuario \"Mesero Ensayo\" creado."]
+2026-11-18 13:01:51   API POST /api/v1/users -> 201
+2026-11-18 13:01:53 U3 alta de cocina.ensayo@pruebas.com (KITCHEN=Cocina): HTTP 201 · avisos: ["Usuario \"Cocinero Ensayo\" creado."]
+2026-11-18 13:01:54   API POST /api/v1/users -> 201
+2026-11-18 13:01:56 U3 alta de caja.ensayo@pruebas.com (CASHIER=Cajero): HTTP 201 · avisos: ["Usuario \"Cajero Ensayo\" creado."]
+2026-11-18 13:01:57 captura ..\ensayo-uat2\U3-usuarios-creados.png · /admin
+2026-11-18 13:02:00   API POST /api/v1/auth/login -> 200
+2026-11-18 13:02:00 login mesero.ensayo@pruebas.com: HTTP 200
+2026-11-18 13:02:03 U4 mesero.ensayo@pruebas.com entra y llega a /waiter (esperado /waiter)
+2026-11-18 13:02:04 captura ..\ensayo-uat2\U4-mesero-nuevo-entra.png · /waiter
+2026-11-18 13:02:06   API POST /api/v1/auth/login -> 200
+2026-11-18 13:02:06 login cocina.ensayo@pruebas.com: HTTP 200
+2026-11-18 13:02:08 U4 cocina.ensayo@pruebas.com entra y llega a /kitchen (esperado /kitchen)
+2026-11-18 13:02:09 captura ..\ensayo-uat2\U4-cocinero-nuevo-entra.png · /kitchen
+2026-11-18 13:02:14   API POST /api/v1/auth/login -> 200
+2026-11-18 13:02:14 login caja.ensayo@pruebas.com: HTTP 200
+2026-11-18 13:02:17 U4 caja.ensayo@pruebas.com entra y llega a /cashier (esperado /cashier)
+2026-11-18 13:02:18 captura ..\ensayo-uat2\U4-cajero-nuevo-entra.png · /cashier
+2026-11-18 13:02:24   API PATCH /api/v1/users/e2a32374-d075-4d15-98fa-c57e9b7cb6e3 -> 200
+2026-11-18 13:02:25 U5 desactivar mesero.ensayo: PATCH /api/v1/users/e2a32374-d075-4d15-98fa-c57e9b7cb6e3 -> 200 · avisos: ["Usuario \"Mesero Ensayo\" desactivado."]
+2026-11-18 13:02:26 captura ..\ensayo-uat2\U5-mesero-desactivado.png · /admin
+2026-11-18 13:02:27   API POST /api/v1/auth/refresh -> 401
+2026-11-18 13:02:28   API POST /api/v1/auth/refresh -> 401
+2026-11-18 13:02:31 U6 sesión abierta del mesero desactivado: GET /tables -> 401; tras recargar está en /login
+2026-11-18 13:02:32 captura ..\ensayo-uat2\U6-mesero-desactivado-sesion-abierta.png · /login
+2026-11-18 13:02:34   API POST /api/v1/auth/login -> 401
+2026-11-18 13:02:34 login mesero.ensayo@pruebas.com: HTTP 401
+2026-11-18 13:02:35 U7 nuevo intento de entrar del mesero desactivado: url /login; avisos: ["Sesión expirada Tu sesión expiró por inactividad.","No se pudo iniciar sesión Restaurante, correo o contraseña incorrectos."]
+2026-11-18 13:02:36 captura ..\ensayo-uat2\U7-mesero-desactivado-no-entra.png · /login
+2026-11-18 13:03:27 === Ensayo 2 · UAT-05 Mesas (CAL-150)
+2026-11-18 13:03:29   API POST /api/v1/auth/login -> 200
+2026-11-18 13:03:29 login admin@pruebas.com: HTTP 200
+2026-11-18 13:03:30 captura ..\ensayo-uat2\M1-nueva-mesa-13.png · /admin
+2026-11-18 13:03:31   API POST /api/v1/tables -> 201
+2026-11-18 13:03:32 M1 alta de la mesa 13 (capacidad 2): HTTP 201 · avisos ["Mesa 13 creada."]
+2026-11-18 13:03:33   API POST /api/v1/tables -> 201
+2026-11-18 13:03:34 M1 alta de la mesa 14 (capacidad 4): HTTP 201 · avisos ["Mesa 14 creada.","Mesa 13 creada."]
+2026-11-18 13:03:35   API POST /api/v1/tables -> 201
+2026-11-18 13:03:36 M1 alta de la mesa 15 (capacidad 6): HTTP 201 · avisos ["Mesa 15 creada.","Mesa 14 creada."]
+2026-11-18 13:03:37 captura ..\ensayo-uat2\M2-admin-tres-mesas-nuevas.png · /admin
+2026-11-18 13:03:39   API POST /api/v1/auth/login -> 200
+2026-11-18 13:03:39 login mesero@pruebas.com: HTTP 200
+2026-11-18 13:03:42 captura ..\ensayo-uat2\M3-mesero-ve-mesas-nuevas.png · /waiter
+2026-11-18 13:03:42 M3 el mesero ve la mesa 13: true
+2026-11-18 13:03:42 M3 el mesero ve la mesa 14: true
+2026-11-18 13:03:42 M3 el mesero ve la mesa 15: true
+2026-11-18 13:03:42 === Ensayo 2 · UAT-08 Cocina y tiempo real (CAL-153)
+2026-11-18 13:03:45   API POST /api/v1/auth/login -> 200
+2026-11-18 13:03:45 login cocina@pruebas.com: HTTP 200
+2026-11-18 13:03:49 captura ..\ensayo-uat2\K1-cocina-antes-de-los-pedidos.png · /kitchen
+2026-11-18 13:03:52   API POST /api/v1/orders -> 201
+2026-11-18 13:03:57   API POST /api/v1/orders/40647559-cd22-4970-82ac-2241c0089270/items -> 200
+2026-11-18 13:03:59   API POST /api/v1/orders/40647559-cd22-4970-82ac-2241c0089270/send-to-kitchen -> 200
+2026-11-18 13:04:01 K2 mesa 13: Mesa 13 ocupada. Orden ORD-261118190351 abierta. · enviada a cocina (["Orden enviada a cocina.","Productos agregados a la orden."])
+2026-11-18 13:04:02 captura ..\ensayo-uat2\M4-mesero-ocupa-mesa-13.png · /waiter/order/40647559-cd22-4970-82ac-2241c0089270
+2026-11-18 13:04:03 K3 ORD-261118190351 (Mesa 13) aparece en cocina sin recargar: sí, a los 2 s
+2026-11-18 13:04:20   API POST /api/v1/orders -> 201
+2026-11-18 13:04:25   API POST /api/v1/orders/63af1836-1a92-4ae4-a652-e2134e7252a0/items -> 200
+2026-11-18 13:04:27   API POST /api/v1/orders/63af1836-1a92-4ae4-a652-e2134e7252a0/send-to-kitchen -> 200
+2026-11-18 13:04:29 K2 mesa 14: Mesa 14 ocupada. Orden ORD-261118190419 abierta. · enviada a cocina (["Orden enviada a cocina.","Productos agregados a la orden."])
+2026-11-18 13:04:29 K3 ORD-261118190419 (Mesa 14) aparece en cocina sin recargar: sí, a los 0 s
+2026-11-18 13:04:29 K3 GET de la cocina durante la espera: 8; websockets: []
+2026-11-18 13:04:30 captura ..\ensayo-uat2\K2-cocina-con-dos-pedidos-sin-recargar.png · /kitchen
+2026-11-18 13:04:30 K4 tarjeta Mesa 13: ORD-261118190351 Mesa 13 recién enviada ENVIADA A COCINA 1× Guacamole con totopos PENDIENTE Marcar como En preparación 2× Agua de horchata PENDIENTE Marcar como En preparación
+2026-11-18 13:04:30 K4 tarjeta Mesa 14: ORD-261118190419 Mesa 14 recién enviada ENVIADA A COCINA 1× Sopa de tortilla PENDIENTE Marcar como En preparación 1× Margarita PENDIENTE Marcar como En preparación
+2026-11-18 13:04:33 K5 orden de la Mesa 13 en el mesero antes: ORD-261118190351 · ABIERTA 01:03 P.M. Mesa 13 · 2 comensales ENVIADA A COCINA CANT PRODUCTO PRECIO SUBTOTAL 1× Guacamole con totopos $95.00 $95.00 2× Agua de horchata $45.00 $90.00 TOTAL DE LA ORDEN $185.00 Ya está en cocina Se envió a cocina a las 01:03 p.m..
+2026-11-18 13:04:33   API POST /api/v1/kitchen/items/be39d06a-e4cf-4f32-ba39-4f948cad8eb8/status -> 200
+2026-11-18 13:04:35   API POST /api/v1/kitchen/items/a06ea78e-94b0-42c7-ab2f-4446a537291a/status -> 200
+2026-11-18 13:04:37 captura ..\ensayo-uat2\K3-cocina-en-preparacion.png · /kitchen
+2026-11-18 13:04:38   API POST /api/v1/kitchen/items/be39d06a-e4cf-4f32-ba39-4f948cad8eb8/status -> 200
+2026-11-18 13:04:39   API POST /api/v1/kitchen/items/a06ea78e-94b0-42c7-ab2f-4446a537291a/status -> 200
+2026-11-18 13:04:40 K5 cocina marcó listo el pedido ORD-261118190351
+2026-11-18 13:04:42 captura ..\ensayo-uat2\K4-cocina-marca-listo.png · /kitchen
+2026-11-18 13:05:27 K6 el mesero ve el pedido listo sin recargar: NO en 45 s
+2026-11-18 13:05:28 captura ..\ensayo-uat2\K5-mesero-sin-recargar.png · /waiter/order/40647559-cd22-4970-82ac-2241c0089270
+2026-11-18 13:05:32 K6 tras recargar, la orden del mesero: ORD-261118190351 · ABIERTA 01:03 P.M. Mesa 13 · 2 comensales LISTA CANT PRODUCTO PRECIO SUBTOTAL 2× Agua de horchata $45.00 $90.00 1× Guacamole con totopos $95.00 $95.00 TOTAL DE LA ORDEN $185.00 Ya está en cocina Se envió a cocina a las 01:03 p.m.. AGREGAR PRODUCTOS Esta orden ya está en cocina Lo 
+2026-11-18 13:05:33 captura ..\ensayo-uat2\K5b-mesero-tras-recargar.png · /waiter/order/40647559-cd22-4970-82ac-2241c0089270
+2026-11-18 13:05:58   API POST /api/v1/auth/login -> 200
+2026-11-18 13:05:58 login caja@pruebas.com: HTTP 200
+2026-11-18 13:06:34 === Ensayo 2 · UAT-09 Cobro y pagos (CAL-154)
+2026-11-18 13:06:37   API POST /api/v1/auth/login -> 200
+2026-11-18 13:06:37 login caja@pruebas.com: HTTP 200
+2026-11-18 13:06:42 C1 pagos insuficientes (efectivo 100 + tarjeta 50, propina 10 %): Confirmar cobro deshabilitado=true; pantalla: idir en partes iguales Método 1 Efectivo Tarjeta Transferencia MercadoPago Monto recibido 1 Quitar Método 2 Efectivo Tarjeta Transferencia MercadoPago Monto recibido 2 Quitar Agregar pago por monto libre Los montos incluyen propina. Si cambias la propina, ajusta los pagos. Solo el efectivo admite cambio. Subtotal $185.00 Propina $0.00 TOTAL A COBRAR $185.00 Falta cubrir $35.00 Cambio de efectivo $0.00 Confirmar cobro
+2026-11-18 13:06:43 captura ..\ensayo-uat2\C1-pagos-insuficientes.png · /cashier
+2026-11-18 13:06:44 C2 pagos completos (efectivo recibido 150 + tarjeta 103.50): idir en partes iguales Método 1 Efectivo Tarjeta Transferencia MercadoPago Monto recibido 1 Quitar Método 2 Efectivo Tarjeta Transferencia MercadoPago Monto recibido 2 Quitar Agregar pago por monto libre Los montos incluyen propina. Si cambias la propina, ajusta los pagos. Solo el efectivo admite cambio. Subtotal $185.00 Propina $0.00 TOTAL A COBRAR $185.00 Falta cubrir $0.00 Cambio de efectivo $68.50 Confirmar cobro
+2026-11-18 13:06:45 captura ..\ensayo-uat2\C2-pagos-completos-con-cambio.png · /cashier
+2026-11-18 13:06:45   API POST /api/v1/orders/40647559-cd22-4970-82ac-2241c0089270/checkout -> 201
+2026-11-18 13:06:48 C3 confirmar cobro: POST /api/v1/orders/40647559-cd22-4970-82ac-2241c0089270/checkout -> 201 · ticket TCK-261118190644 · avisos ["Cobro registrado. Ticket TCK-261118190644."]
+2026-11-18 13:06:48 C3 cuerpo (montos): {"saleId":"c3aa9450-82a5-4928-9dbf-ad22608f20b9","orderId":"40647559-cd22-4970-82ac-2241c0089270","folio":"TCK-261118190644","items":[{"productId":"b66b9716-0a91-4d16-91c7-35756dcac0e8","productName":"Agua de horchata","unitPrice":45,"quantity":2,"subtotal":90},{"productId":"33dafe69-08e7-4c4d-b1b4-d99902472968","productName":"Guacamole con totopos","unitPrice":95,"quantity":1,"subtotal":95}],"subtotal":185,"tip":0,"tipPercent":0,"total":185,"paymentMethod":"MIXED","closedAt":"2026-11-18T19:06:44.289641649Z","payments":[{"method":"CASH","amount":81.5,"receivedAmount":150,"change":68.5},{"metho
+2026-11-18 13:06:49 captura ..\ensayo-uat2\C3-cobro-confirmado.png · /cashier
+2026-11-18 13:06:53   API POST /api/v1/auth/login -> 200
+2026-11-18 13:06:53 login mesero@pruebas.com: HTTP 200
+2026-11-18 13:06:56 C4 el mesero ve la mesa 13: «MESA 13 LIBRE 2»
+2026-11-18 13:06:57 captura ..\ensayo-uat2\C4-mesero-mesa-13-tras-cobro.png · /waiter
+2026-11-18 13:06:57 === Ensayo 2 · UAT-12 Ventas, historial y analítica (CAL-157)
+2026-11-18 13:07:02 V1 historial de hoy (caja): Historial de ventas Consulta lo que se ha cobrado en un rango de fechas o encuentra un ticket por folio. VENTAS EN EL RANGO 1 TOTAL COBRADO $185.00 TARJETA 1 pagos · $103.50 EFECTIVO 1 pagos · $81.50 Rango de fechas DESDE HASTA Buscar Buscar ticket por folio FOLIO Buscar Ventas ORDEN MESA CAJERO PAGO TOTAL FECHA ORD-261118190351 Mesa 13 Cajero de turno MIXTO $185.00 18/11/2026 01:06 p.m. Selecciona una venta de la lista para ver su ticket.
+2026-11-18 13:07:03 captura ..\ensayo-uat2\V1-historial-del-dia.png · /history
+2026-11-18 13:07:03 V1 API ventas del rango por defecto: {"sales":{"content":[{"orderFolio":"ORD-261118190351","tableNumber":13,"cashierName":"Cajero de turno","ticketId":"0b49e5a2-650c-4b7b-a885-6c2c18b7aadb","paymentMethod":"MIXED","subtotal":185,"tip":0,"total":185,"createdAt":"2026-11-18T19:06:44.290290Z"}],"page":0,"size":50,"totalElements":1,"totalPages":1},"summary":{"count":1,"total":185},"paymentMix":[{"method":"CARD","count":1,"total":103.5},{"method":"CASH","count":1,"total":81.5}]}
+2026-11-18 13:07:13   API POST /api/v1/auth/login -> 200
+2026-11-18 13:07:13 login admin@pruebas.com: HTTP 200
+2026-11-18 13:07:20 V2 analítica (admin, rango por defecto): Analítica Pareto de productos, ventas por día y mezcla de métodos de pago del rango seleccionado. Rango de fechas Por defecto, los últimos 7 días terminando hoy. DESDE HASTA Buscar Pareto de productos Participación de ingresos por producto y su acumulado, con referencia en 80%. Grafica Tabla Participación de ingresos Acumulado 80% 0 20 40 60 100 Guacamole con… Agua de horch… Ventas por día Total cobrado cada día del rango. Grafica Tabla $0.00 $101.75 $203.50 12/11/2026 13/11/2026 14/11/2026 15/11/2026 16/11/2026 17/11/2026 $185.00 18/11/2026 Métodos de pago Pagos e ingreso aplicado por método de pago. Grafica Tabla Tarjeta $103.50 Efectivo $81.50
+2026-11-18 13:07:22 captura ..\ensayo-uat2\V2-analitica-del-periodo.png · /analytics
+2026-11-18 13:07:56 === Ensayo 2 · UAT-09 Cobro y pagos, corrida 2 con propina (CAL-154)
+2026-11-18 13:07:58   API POST /api/v1/auth/login -> 200
+2026-11-18 13:07:58 login caja@pruebas.com: HTTP 200
+2026-11-18 13:08:01 C5 campo de propina: valor inicial 0
+2026-11-18 13:08:02 C5 tras escribir 10 %: Subtotal $220.00 Propina $22.00 TOTAL A COBRAR $242.00 Falta cubrir $242.00 Cambio de efectivo $0.00
+2026-11-18 13:08:04 C6 pagos insuficientes (efectivo 100 + tarjeta 100): Confirmar deshabilitado=true · Subtotal $220.00 Propina $22.00 TOTAL A COBRAR $242.00 Falta cubrir $42.00 Cambio de efectivo $0.00
+2026-11-18 13:08:05 captura ..\ensayo-uat2\C6-propina-y-pagos-insuficientes.png · /cashier
+2026-11-18 13:08:06 C7 pagos completos (efectivo recibido 200 + tarjeta 142.00): Subtotal $220.00 Propina $22.00 TOTAL A COBRAR $242.00 Falta cubrir $0.00 Cambio de efectivo $100.00
+2026-11-18 13:08:07 captura ..\ensayo-uat2\C7-propina-pagos-completos-con-cambio.png · /cashier
+2026-11-18 13:08:07   API POST /api/v1/orders/63af1836-1a92-4ae4-a652-e2134e7252a0/checkout -> 201
+2026-11-18 13:08:09 C8 confirmar cobro: HTTP 201 · ticket TCK-261118190805 · subtotal 220 propina 22 total 242 · pagos [{"method":"CASH","amount":100,"receivedAmount":200,"change":100},{"method":"CARD","amount":142,"receivedAmount":142,"change":0}] · avisos ["Cobro registrado. Ticket TCK-261118190805."]
+2026-11-18 13:08:10 captura ..\ensayo-uat2\C8-cobro-con-propina-confirmado.png · /cashier
+2026-11-18 13:08:16 captura ..\ensayo-uat2\C9-ticket-con-propina.png · /history
+2026-11-18 13:08:16 V1b historial tras los dos cobros: Historial de ventas Consulta lo que se ha cobrado en un rango de fechas o encuentra un ticket por folio. VENTAS EN EL RANGO 2 TOTAL COBRADO $427.00 TARJETA 2 pagos · $245.50 EFECTIVO 2 pagos · $181.50 Rango de fechas DESDE HASTA Buscar Buscar ticket por folio FOLIO Buscar Ventas ORDEN MESA CAJERO PAGO TOTAL FECHA ORD-261118190419 Mesa 14 Cajero de turno MIXT
+2026-11-18 13:08:19   API POST /api/v1/auth/login -> 200
+2026-11-18 13:08:19 login mesero@pruebas.com: HTTP 200
+2026-11-18 13:08:20 C10 el mesero ve la mesa 14: «MESA 14 LIBRE»
+2026-11-18 13:08:21 captura ..\ensayo-uat2\C10-mesero-mesa-14-libre.png · /waiter
+2026-11-18 13:08:23   API POST /api/v1/auth/login -> 200
+2026-11-18 13:08:23 login admin@pruebas.com: HTTP 200
+2026-11-18 13:08:28 V2b analítica tras los dos cobros:  Participación de ingresos por producto y su acumulado, con referencia en 80%. Grafica Tabla Participación de ingresos Acumulado 80% 0 20 40 60 100 Margarita Guacamole con… Agua de horch… Sopa de torti… Ventas por día Total cobrado cada día del rango. Grafica Tabla $0.00 $234.85 $469.70 12/11/2026 13/11/2026 14/11/2026 15/11/2026 16/11/2026 17/11/2026 $427.00 18/11/2026 Métodos de pago Pagos e ingreso aplicado por método de pago. Grafica Tabla Tarjeta $245.50 Efectivo $181.50
+2026-11-18 13:08:29 captura ..\ensayo-uat2\V2b-analitica-tras-dos-cobros.png · /analytics
+2026-11-18 13:08:32 V2c tablero admin: Administración Resumen del restaurante; alta de mesas, categorías, productos y usuarios, y su zona horaria. COBRADO HOY $427.00 MESAS 15 CATEGORÍAS 4 PRODUCTOS 18 USUARIOS 11 VENTAS DE HOY 2 Total: $4
+2026-11-18 13:08:33 captura ..\ensayo-uat2\V2c-admin-cobrado-hoy.png · /admin
+2026-11-18 13:08:59   API POST /api/v1/auth/login -> 200
+2026-11-18 13:08:59 login admin@pruebas.com: HTTP 200
+2026-11-18 13:09:00   API PATCH /api/v1/users/a82c6e17-7df3-49a9-ac8b-f536bcf2e596 -> 200
+2026-11-18 13:09:01   API PATCH /api/v1/users/a6c949cb-fdf7-4184-85f2-2632743544dc -> 200
+2026-11-18 13:09:01   API PATCH /api/v1/tables/2664b5ac-c5b3-43a1-92a6-3d6a74a97b05 -> 200
+2026-11-18 13:09:01   API PATCH /api/v1/tables/f7c8259e-c7ff-49ae-8bb2-bb986e62fd1d -> 200
+2026-11-18 13:09:01   API PATCH /api/v1/tables/d5d6871d-698a-45dd-a6be-66c2dd930288 -> 200
+2026-11-18 13:09:01 limpieza 2: caja.ensayo@pruebas.com: desactivar -> 200
+2026-11-18 13:09:01 limpieza 2: cocina.ensayo@pruebas.com: desactivar -> 200
+2026-11-18 13:09:01 limpieza 2: mesero.ensayo@pruebas.com: ya inactivo
+2026-11-18 13:09:01 limpieza 2: campos de mesa: id,number,capacity,status,waiterId,active
+2026-11-18 13:09:01 limpieza 2: mesa 13: baja -> 200
+2026-11-18 13:09:01 limpieza 2: mesa 14: baja -> 200
+2026-11-18 13:09:01 limpieza 2: mesa 15: baja -> 200

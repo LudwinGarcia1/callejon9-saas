@@ -1,0 +1,126 @@
+2026-11-19 12:11:39 === Reensayo P1 · Inicio y cierre de sesión (CAL-146, CAL-194)
+2026-11-19 12:11:45   API POST /api/v1/auth/login -> 401
+2026-11-19 12:11:45 login mesero@pruebas.com: HTTP 401
+2026-11-19 12:11:47 R1.3 contraseña equivocada: HTTP 401; mensajes ["No se pudo iniciar sesión\nRestaurante, correo o contraseña incorrectos.",""]; aviso «Sesión expirada» visible=false; contraseña vacía=true
+2026-11-19 12:11:48 captura R1.3-contrasena-equivocada.png · /login
+2026-11-19 12:11:58   API POST /api/v1/auth/login -> 200
+2026-11-19 12:11:58 login mesero@pruebas.com: HTTP 200
+2026-11-19 12:12:01   API POST /api/v1/auth/logout -> 204
+2026-11-19 12:12:02 captura R1.4a-tras-cerrar-sesion.png · /login
+2026-11-19 12:12:07 R1.4a mesero@pruebas.com: estaba en /waiter; tras Atrás llega a /login; error genérico visible=false
+2026-11-19 12:12:07 captura R1.4a-atras-mesero.png · /login
+2026-11-19 12:12:16   API POST /api/v1/auth/login -> 200
+2026-11-19 12:12:16 login cocina@pruebas.com: HTTP 200
+2026-11-19 12:12:20   API POST /api/v1/auth/logout -> 204
+2026-11-19 12:12:24 R1.4b cocina@pruebas.com: estaba en /kitchen; tras Atrás llega a /login; error genérico visible=false
+2026-11-19 12:12:24 captura R1.4b-atras-cocina.png · /login
+2026-11-19 12:12:27   API POST /api/v1/auth/login -> 200
+2026-11-19 12:12:27 login caja@pruebas.com: HTTP 200
+2026-11-19 12:12:30   API POST /api/v1/auth/logout -> 204
+2026-11-19 12:12:34 R1.4c caja@pruebas.com: estaba en /cashier; tras Atrás llega a /login; error genérico visible=false
+2026-11-19 12:12:34 captura R1.4c-atras-caja.png · /login
+2026-11-19 12:12:37   API POST /api/v1/auth/login -> 200
+2026-11-19 12:12:37 login admin@pruebas.com: HTTP 200
+2026-11-19 12:12:40   API POST /api/v1/auth/logout -> 204
+2026-11-19 12:12:44 R1.4d admin@pruebas.com: estaba en /admin; tras Atrás llega a /login; error genérico visible=false
+2026-11-19 12:12:45 captura R1.4d-atras-admin.png · /login
+2026-11-19 12:12:45 === Reensayo P2 · Notas y quitar productos (CAL-151) y canal /ws de cocina (CAL-172)
+2026-11-19 12:12:47   API POST /api/v1/auth/login -> 200
+2026-11-19 12:12:47 login cocina@pruebas.com: HTTP 200
+2026-11-19 12:12:54 R8 cocina abre /kitchen: WebSocket ["/ws","/ws"]; tramas recibidas 0; CONNECTED=false
+2026-11-19 12:12:56   API POST /api/v1/auth/login -> 200
+2026-11-19 12:12:56 login mesero@pruebas.com: HTTP 200
+2026-11-19 12:13:00   API POST /api/v1/orders -> 201
+2026-11-19 12:13:02 R2.1 mesa abierta (MESA 5 LIBRE 4 lugares — Lista para sent): ["Mesa 5 ocupada. Orden ORD-261119181259 abierta."]
+2026-11-19 12:13:03 R2.2 campos de nota en el carrito: 3
+2026-11-19 12:13:03 captura R2.2a-carrito-con-notas.png · /waiter/order/250e1f9c-6b32-4542-81d4-dc527ed6b2dc
+2026-11-19 12:13:06   API POST /api/v1/orders/250e1f9c-6b32-4542-81d4-dc527ed6b2dc/items -> 200
+2026-11-19 12:13:07 R2.2 aviso ["Productos agregados a la orden."]; la orden muestra «sin crema»=true y «sin cebolla»=true
+2026-11-19 12:13:08 captura R2.2b-orden-con-notas.png · /waiter/order/250e1f9c-6b32-4542-81d4-dc527ed6b2dc
+2026-11-19 12:13:08 R2.3 botones «Quitar Sopa de tortilla de la orden»: 2
+2026-11-19 12:13:08   API DELETE /api/v1/orders/250e1f9c-6b32-4542-81d4-dc527ed6b2dc/items/9b2fd72a-3445-47a5-95ab-247f0d8a8b02 -> 200
+2026-11-19 12:13:10 R2.3 aviso ["Producto quitado de la orden."]; total antes «TOTAL DE LA ORDEN $265.00», después «TOTAL DE LA ORDEN $180.00»; quedan 1 sopas
+2026-11-19 12:13:11 captura R2.3-producto-quitado.png · /waiter/order/250e1f9c-6b32-4542-81d4-dc527ed6b2dc
+2026-11-19 12:13:12   API POST /api/v1/orders/250e1f9c-6b32-4542-81d4-dc527ed6b2dc/send-to-kitchen -> 200
+2026-11-19 12:13:17 R8 ORD-261119181259 enviado a cocina: 0 mensajes por /ws; primero a los - ms; menciona productos de la orden=false
+2026-11-19 12:13:18 captura R8-cocina-recibe-por-ws.png · /kitchen
+2026-11-19 12:13:18 === Reensayo P5 · Permisos por rol (CAL-158, CAL-195)
+2026-11-19 12:13:21   API POST /api/v1/auth/login -> 200
+2026-11-19 12:13:21 login mesero@pruebas.com: HTTP 200
+2026-11-19 12:13:26 R5.1 mesero@pruebas.com abre /admin: url final /admin; mensaje de permiso visible=true; enlace ["Ir a Mesas"]; API con error: []
+2026-11-19 12:13:26 captura R5.1-mesero-abre-admin.png · /admin
+2026-11-19 12:13:30 R5.1 mesero@pruebas.com abre /cashier: url final /cashier; mensaje de permiso visible=true; enlace ["Ir a Mesas"]; API con error: []
+2026-11-19 12:13:30 captura R5.1-mesero-abre-cashier.png · /cashier
+2026-11-19 12:13:33   API POST /api/v1/auth/login -> 200
+2026-11-19 12:13:33 login caja@pruebas.com: HTTP 200
+2026-11-19 12:13:38 R5.2a caja@pruebas.com abre /admin: url final /admin; mensaje de permiso visible=true; enlace ["Ir a Caja"]; API con error: []
+2026-11-19 12:13:38 captura R5.2a-caja-abre-admin.png · /admin
+2026-11-19 12:13:41   API POST /api/v1/auth/login -> 200
+2026-11-19 12:13:41 login cocina@pruebas.com: HTTP 200
+2026-11-19 12:13:46 R5.2b cocina@pruebas.com abre /waiter: url final /waiter; mensaje de permiso visible=true; enlace ["Ir a Cocina"]; API con error: []
+2026-11-19 12:13:46 captura R5.2b-cocina-abre-waiter.png · /waiter
+2026-11-19 12:13:49   API POST /api/v1/auth/login -> 200
+2026-11-19 12:13:49 login admin@pruebas.com: HTTP 200
+2026-11-19 12:13:49   API POST /api/v1/orders/250e1f9c-6b32-4542-81d4-dc527ed6b2dc/cancel -> 200
+2026-11-19 12:13:49 limpieza: cancelar ORD-261119181259 -> 200
+2026-11-19 12:14:16   API POST /api/v1/auth/login -> 200
+2026-11-19 12:14:16 login cocina@pruebas.com: HTTP 200
+2026-11-19 12:14:17 ws +3.6s abre /ws
+2026-11-19 12:14:17 ws +3.9s error Error during WebSocket handshake: Unexpected response code: 403
+2026-11-19 12:14:17 ws +3.9s consola error: WebSocket connection to 'wss://restohub.azurewebsites.net/ws' failed: Error during WebSocket handshake: Unexpected response code: 403
+2026-11-19 12:14:17 ws +3.9s cierra
+2026-11-19 12:14:22 ws +8.9s abre /ws
+2026-11-19 12:14:22 ws +9.2s error Error during WebSocket handshake: Unexpected response code: 403
+2026-11-19 12:14:22 ws +9.2s consola error: WebSocket connection to 'wss://restohub.azurewebsites.net/ws' failed: Error during WebSocket handshake: Unexpected response code: 403
+2026-11-19 12:14:22 ws +9.2s cierra
+2026-11-19 12:14:27 ws +14.2s abre /ws
+2026-11-19 12:14:28 ws +14.5s error Error during WebSocket handshake: Unexpected response code: 403
+2026-11-19 12:14:28 ws +14.5s consola error: WebSocket connection to 'wss://restohub.azurewebsites.net/ws' failed: Error during WebSocket handshake: Unexpected response code: 403
+2026-11-19 12:14:28 ws +14.5s cierra
+2026-11-19 12:14:33 ws +19.5s abre /ws
+2026-11-19 12:14:33 ws +19.9s error Error during WebSocket handshake: Unexpected response code: 403
+2026-11-19 12:14:33 ws +19.9s consola error: WebSocket connection to 'wss://restohub.azurewebsites.net/ws' failed: Error during WebSocket handshake: Unexpected response code: 403
+2026-11-19 12:14:33 ws +19.9s cierra
+2026-11-19 12:14:38 ws +24.9s abre /ws
+2026-11-19 12:14:38 ws +25.1s error Error during WebSocket handshake: Unexpected response code: 403
+2026-11-19 12:14:38 ws +25.1s consola error: WebSocket connection to 'wss://restohub.azurewebsites.net/ws' failed: Error during WebSocket handshake: Unexpected response code: 403
+2026-11-19 12:14:38 ws +25.1s cierra
+2026-11-19 12:14:41 cookies: ["refresh_token path=/api/v1/auth sameSite=Strict","access_token path=/ sameSite=Strict"]
+2026-11-19 12:27:50 === Reensayo canal /ws (CAL-171, CAL-172)
+2026-11-19 12:27:58   API POST /api/v1/auth/login -> 200
+2026-11-19 12:27:58 login cocina@pruebas.com: HTTP 200
+2026-11-19 12:28:06 W1 cocina en /kitchen: eventos ["abre","error Error during WebSocket handshake: Unexpected response code: 403","cierra","abre","error Error during WebSocket handshake: Unexpected response code: 403","cierra"]; CONNECTED=false
+2026-11-19 12:28:07 W2 handshake directo a la API con sesión de cocina: Origin restohub -> 403; Origin https://example.com -> 403
+2026-11-19 12:28:13   API POST /api/v1/auth/login -> 200
+2026-11-19 12:28:13 login mesero@pruebas.com: HTTP 200
+2026-11-19 12:28:17   API POST /api/v1/orders -> 201
+2026-11-19 12:28:22   API POST /api/v1/orders/ed18df71-0d89-4f92-bb31-05900af9b0c9/items -> 200
+2026-11-19 12:28:24   API POST /api/v1/orders/ed18df71-0d89-4f92-bb31-05900af9b0c9/send-to-kitchen -> 200
+2026-11-19 12:28:27 W3 ORD-261119182816 enviado a cocina: 0 mensajes por /ws; primero a los - ms; menciona el guacamole=false
+2026-11-19 12:28:27 W3 el tablero de cocina muestra ORD-261119182816=false (sin recargar)
+2026-11-19 12:28:28 captura W3-cocina-recibe-por-ws.png · /kitchen
+2026-11-19 12:28:31   API POST /api/v1/auth/login -> 200
+2026-11-19 12:28:31 login admin@pruebas.com: HTTP 200
+2026-11-19 12:28:33   API POST /api/v1/orders/ed18df71-0d89-4f92-bb31-05900af9b0c9/cancel -> 200
+2026-11-19 12:28:33 limpieza: cancelar ORD-261119182816 -> 200
+2026-11-19 12:29:24   API POST /api/v1/auth/login -> 200
+2026-11-19 12:29:24 login cocina@pruebas.com: HTTP 200
+2026-11-19 12:29:26 H API directa: Origin restohub -> 403; Origin example.com -> 403
+2026-11-19 12:29:27 H por restohub: Origin restohub -> 403
+2026-11-19 12:30:50 === Reensayo canal /ws (CAL-171, CAL-172)
+2026-11-19 12:30:56   API POST /api/v1/auth/login -> 200
+2026-11-19 12:30:56 login cocina@pruebas.com: HTTP 200
+2026-11-19 12:31:05 W1 cocina en /kitchen: eventos ["abre"]; CONNECTED=true
+2026-11-19 12:31:06 W2 handshake directo a la API con sesión de cocina: Origin restohub -> 101; Origin https://example.com -> 403
+2026-11-19 12:31:10   API POST /api/v1/auth/login -> 200
+2026-11-19 12:31:10 login mesero@pruebas.com: HTTP 200
+2026-11-19 12:31:14   API POST /api/v1/orders -> 201
+2026-11-19 12:31:21   API POST /api/v1/orders/99b52906-8a43-4a87-aa7e-422558acbfdf/items -> 200
+2026-11-19 12:31:21   API POST /api/v1/orders/99b52906-8a43-4a87-aa7e-422558acbfdf/send-to-kitchen -> 200
+2026-11-19 12:31:25 W3 ORD-261119183114 enviado a cocina: 1 mensajes por /ws; primero a los 705 ms; menciona el guacamole=false
+2026-11-19 12:31:25 W3 el tablero de cocina muestra ORD-261119183114=true (sin recargar)
+2026-11-19 12:31:25 captura W3-cocina-recibe-por-ws.png · /kitchen
+2026-11-19 12:31:28   API POST /api/v1/auth/login -> 200
+2026-11-19 12:31:28 login admin@pruebas.com: HTTP 200
+2026-11-19 12:31:29   API POST /api/v1/orders/99b52906-8a43-4a87-aa7e-422558acbfdf/cancel -> 200
+2026-11-19 12:31:29 limpieza: cancelar ORD-261119183114 -> 200
