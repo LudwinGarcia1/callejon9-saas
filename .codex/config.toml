@@ -5,6 +5,11 @@ max_concurrent_threads_per_session = 3
 [mcp_servers.linear_callejon9]
 url = "https://mcp.linear.app/mcp"
 
+# Sentry: errores de backend, frontend y apps moviles. Se autentica con
+# `codex mcp login sentry` (OAuth); no se guarda ningun token aqui.
+[mcp_servers.sentry]
+url = "https://mcp.sentry.dev/mcp"
+
 [mcp_servers.linear_callejon9.tools.save_milestone]
 approval_mode = "approve"
 

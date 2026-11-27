@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Desarrollo, integración y liberación del software</title>
+<style>
+  :root {
+    --guinda: #5B1631; --guinda-2: #7A1F44; --guinda-osc: #43101F;
+    --oro: #B08D57; --oro-claro: #F3EBDD;
+    --texto: #3A3A3A; --suave: #6B6B6B; --linea: #E7E1D8; --fondo-tarjeta: #F8F6F2;
+    --verde: #1E7F4F; --rojo: #A3263A; --azul: #2F4E8C;
+  }
+  @page { size: letter; margin: 0.85in 0.95in 0.8in;
+    @bottom-left { content: "RestoHub · Desarrollo, integración y liberación del software"; font: 9px "Avenir Next", sans-serif; color: #8A8A8A; }
+    @bottom-right { content: counter(page) " / " counter(pages); font: 9px "Avenir Next", sans-serif; color: #8A8A8A; }
+  }
+  @page portada { margin: 0; @bottom-left { content: none } @bottom-right { content: none } }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font-family: "Avenir Next", "Avenir", "Helvetica Neue", sans-serif; color: var(--texto); font-size: 10.5pt; line-height: 1.55; }
+  h1, h2, h3 { color: var(--guinda); margin: 0; line-height: 1.2; }
+  h2 { font-size: 19pt; font-weight: 700; padding-bottom: 8px; border-bottom: 2px solid var(--oro); margin: 0 0 14px; break-after: avoid; }
+  h2 .num { color: var(--oro); font-size: 14pt; margin-right: 8px; }
+  h3 { font-size: 12.5pt; margin: 18px 0 8px; break-after: avoid; color: var(--guinda-2); }
+  p { margin: 0 0 10px; }
+  code, .mono { font-family: "SF Mono", Menlo, monospace; font-size: 8.6pt; }
+  .seccion { break-before: page; }
+  .sin-salto { break-inside: avoid; }
+
+  /* ---------- Portada ---------- */
+  .portada { page: portada; display: grid; grid-template-columns: 2.55in 1fr; height: 11in; width: 8.5in; }
+  .lateral { background: linear-gradient(180deg, #7C1D43 0%, #5B1631 45%, #4A1027 100%); color: #fff; padding: 0.95in 0.4in 0.9in; display: flex; flex-direction: column; justify-content: space-between; }
+  .lateral .etiqueta { font-size: 8.5pt; letter-spacing: 2.5px; text-transform: uppercase; opacity: .85; }
+  .lateral .grande { font-size: 50pt; font-weight: 700; line-height: 1; }
+  .lateral .grande + div { font-size: 8.5pt; letter-spacing: 2.5px; opacity: .85; margin-top: 8px; text-transform: uppercase; }
+  .ilustracion { display: flex; justify-content: center; }
+  .principal { padding: 0.8in 0.75in 0.75in 1.4in; display: flex; flex-direction: column; }
+  .logos { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid var(--linea); }
+  .logo-edomex { width: 132px; height: 32px; background: url(assets/edomex.png) center/contain no-repeat;
+    -webkit-mask: url(assets/edomex-mask.png) center/contain no-repeat; mask: url(assets/edomex-mask.png) center/contain no-repeat; mask-mode: luminance; }
+  .logos .sep { width: 1px; height: 40px; background: var(--linea); }
+  .logos .utvt b { color: var(--guinda); font-size: 10pt; display: block; }
+  .logos .utvt span { color: var(--suave); font-size: 8.5pt; line-height: 1.35; display: block; }
+  .carrera { margin-top: 1.25in; color: var(--oro); font-size: 8.5pt; letter-spacing: 2.2px; font-weight: 600; text-transform: uppercase; }
+  .portada h1 { font-size: 30pt; font-weight: 700; margin: 10px 0 14px; color: var(--guinda); }
+  .subtitulo { color: var(--suave); font-size: 12.5pt; line-height: 1.5; }
+  .raya { width: 50px; height: 4px; background: var(--oro); border-radius: 2px; margin: 22px 0 18px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--linea); border-radius: 999px; padding: 4px 11px; font-size: 8pt; font-weight: 600; color: #555; }
+  .datos { margin-top: auto; border-top: 1px solid var(--linea); padding-top: 14px; display: grid; grid-template-columns: 1.4in 1fr; row-gap: 8px; font-size: 9.5pt; }
+  .datos dt { color: #8A8A8A; font-size: 7.5pt; letter-spacing: 1.8px; text-transform: uppercase; padding-top: 2px; }
+  .datos dd { margin: 0; font-weight: 600; color: #2A2A2A; }
+
+  /* ---------- Tablas ---------- */
+  table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 9pt; margin: 6px 0 14px; }
+  thead th { background: var(--guinda-osc); color: #fff; text-align: left; font-weight: 600; padding: 8px 10px; }
+  thead th:first-child { border-top-left-radius: 6px; } thead th:last-child { border-top-right-radius: 6px; }
+  tbody td { padding: 8px 10px; border-bottom: 1px solid var(--linea); vertical-align: top; }
+  tbody tr:nth-child(even) td { background: var(--fondo-tarjeta); }
+  tbody td:first-child { font-weight: 600; color: var(--guinda); }
+  tr { break-inside: avoid; }
+  .ok { color: var(--verde); font-weight: 700; }
+  .ficha td:first-child { width: 34%; }
+
+  /* ---------- Tarjetas y avisos ---------- */
+  .tarjetas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 8px 0 14px; }
+  .tarjetas.dos { grid-template-columns: repeat(2, 1fr); }
+  .tarjeta { background: var(--fondo-tarjeta); border: 1px solid var(--linea); border-radius: 10px; padding: 12px 14px; break-inside: avoid; font-size: 9.3pt; }
+  .tarjeta .k { font-size: 7.5pt; letter-spacing: 1.6px; text-transform: uppercase; color: var(--oro); font-weight: 700; }
+  .tarjeta .v { font-size: 15pt; font-weight: 700; color: var(--guinda); line-height: 1.25; margin: 2px 0 4px; }
+  .nota { border-left: 4px solid var(--guinda-2); background: var(--fondo-tarjeta); border-radius: 0 10px 10px 0; padding: 10px 14px; margin: 8px 0 14px; font-size: 9.3pt; break-inside: avoid; }
+  .terminal { background: #1E1A1C; color: #EDE6DF; border-radius: 10px; padding: 12px 14px; font-family: "SF Mono", Menlo, monospace; font-size: 8pt; line-height: 1.5; white-space: pre-wrap; word-break: break-all; margin: 8px 0 14px; break-inside: avoid; }
+  .terminal .c { color: #C9A877; } .terminal .g { color: #8FD3A6; } .terminal .d { color: #9C9198; }
+
+  /* ---------- Figuras ---------- */
+  .figuras { display: grid; gap: 12px; margin: 8px 0 14px; }
+  .figuras.f2 { grid-template-columns: repeat(2, 1fr); } .figuras.f3 { grid-template-columns: repeat(3, 1fr); } .figuras.f4 { grid-template-columns: repeat(4, 1fr); }
+  figure { margin: 0; break-inside: avoid; text-align: center; }
+  figure img { width: 100%; border: 1px solid var(--linea); border-radius: 8px; display: block; }
+  figure.tel img { border-radius: 14px; }
+  figure:not(.tel) img { max-height: 2.35in; object-fit: cover; object-position: top; }
+  figcaption { font-size: 8pt; color: var(--suave); margin-top: 5px; line-height: 1.35; }
+  figcaption b { color: var(--guinda); }
+
+  .conclusion { background: linear-gradient(180deg, #FBF8F3, #F5EFE4); border: 1px solid var(--linea); border-radius: 12px; padding: 16px 18px; }
+  ul { margin: 4px 0 10px; padding-left: 18px; } li { margin-bottom: 4px; }
+  .fuentes li { font-size: 9pt; color: var(--suave); } .fuentes a { color: var(--guinda-2); text-decoration: none; }
+  /* ---------- Agregados para este documento ---------- */
+  .pend { color: #9A6B12; font-weight: 700; }
+  .no { color: var(--rojo); font-weight: 700; }
+  .indice { columns: 2; column-gap: 28px; font-size: 9.5pt; margin: 6px 0 14px; padding-left: 0; list-style: none; }
+  .indice li { break-inside: avoid; margin-bottom: 5px; }
+  .indice b { color: var(--oro); display: inline-block; width: 26px; }
+  .parte { font-size: 8pt; letter-spacing: 2.2px; text-transform: uppercase; color: var(--oro); font-weight: 700; margin: 0 0 4px; }
+  table.compacta { font-size: 8.6pt; }
+  table.compacta td, table.compacta th { padding: 6px 8px; }
+  .datos dd small { font-weight: 400; color: var(--suave); }
+</style>
+</head>
+<body>
+
+<!-- ===================== PORTADA ===================== -->
+<section class="portada">
+  <div class="lateral">
+    <div class="etiqueta">Proyecto integrador</div>
+    <div class="ilustracion">
+      <svg width="150" height="190" viewBox="0 0 150 190" aria-hidden="true">
+        <rect x="6" y="10" width="96" height="70" rx="10" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="3"/>
+        <path d="M20 32h52M20 46h38M20 60h24" stroke="#fff" stroke-opacity=".45" stroke-width="4" stroke-linecap="round"/>
+        <rect x="70" y="62" width="70" height="120" rx="12" fill="#B08D57"/>
+        <rect x="82" y="80" width="46" height="62" rx="6" fill="#F7EFE4"/>
+        <path d="M92 100l8 8 16-16" fill="none" stroke="#4A1027" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M92 126h26" stroke="#B08D57" stroke-width="4" stroke-linecap="round"/>
+        <path d="M54 80v26h16" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div><div class="grande">10°</div><div>Cuatrimestre · 2026</div></div>
+  </div>
+  <div class="principal">
+    <div class="logos">
+      <svg width="132" height="32" viewBox="0 0 322 77" role="img" aria-label="Gobierno del Estado de México">
+        <defs><mask id="m-edomex" maskUnits="userSpaceOnUse" x="0" y="0" width="322" height="77"><image href="assets/edomex-mask.png" width="322" height="77"/></mask></defs>
+        <image href="assets/edomex.png" width="322" height="77" mask="url(#m-edomex)"/>
+      </svg>
+      <div class="sep"></div>
+      <div class="utvt"><b>UTVT</b><span>Universidad Tecnológica<br>del Valle de Toluca</span></div>
+    </div>
+    <div class="carrera">Ingeniería en Desarrollo y Gestión de Software</div>
+    <h1>Desarrollo, integración y liberación del software</h1>
+    <div class="subtitulo">Metodología, herramientas y normas de <b>RestoHub</b> (Callejón 9), sus dos apps móviles, los manuales y la versión estable integrada con entrega continua.</div>
+    <div class="raya"></div>
+    <div class="chips"><span class="chip">Scrum</span><span class="chip">Integración continua</span><span class="chip">Microsoft Azure</span><span class="chip">React Native · Expo</span><span class="chip">GitHub</span></div>
+    <dl class="datos">
+      <dt>Proyecto</dt><dd>Restaurant Hub (RestoHub) · plataforma SaaS Callejón 9</dd>
+      <dt>Equipo</dt><dd>García Gaytán Ludwin <small>· 222310777</small><br>Duarte Villavicencio Octavio <small>· 222310422</small><br>Mercado Serrano Valeria <small>· 222310838</small><br>Hernández Mejía Braulio <small>· 222310435</small></dd>
+      <dt>Grupo</dt><dd>IDGS 101</dd>
+      <dt>Lugar y fecha</dt><dd>Santa María Atarasquillo, Lerma, México · 25 de noviembre de 2026</dd>
+    </dl>
+  </div>
+</section>
+
+<!-- ===================== 00 CUMPLIMIENTO ===================== -->
+<section class="seccion">
+  <h2><span class="num">00</span>Contenido y mapa de cumplimiento</h2>
+  <p>El documento sigue el orden de la guía. La parte <b>A</b> determina metodología, herramientas y normas y describe las dos apps móviles. La parte <b>B</b> entrega los manuales, la versión estable integrada y la evidencia de versionamiento. Cada afirmación se puede comprobar en el repositorio público o en el servicio desplegado; las cifras se midieron el <b>25 de noviembre de 2026</b> sobre <code>main</code> en el commit <code>66f32e0</code> (19 de noviembre).</p>
+
+
+  <table class="compacta">
+    <thead><tr><th>Punto de la guía</th><th>Dónde se cumple</th><th>Estado</th></tr></thead>
+    <tbody>
+      <tr><td>A · Objetivos del desarrollo</td><td>Sección 01</td><td class="ok">✔ Cumple</td></tr>
+      <tr><td>A · Metas y alcances</td><td>Sección 02</td><td class="ok">✔ Cumple</td></tr>
+      <tr><td>A · Requerimientos funcionales y no funcionales</td><td>Sección 03 (21 RF y 12 RNF con su evidencia)</td><td class="ok">✔ Cumple</td></tr>
+      <tr><td>A · Justificación de la metodología</td><td>Sección 04 (Scrum con flujo Kanban en Linear)</td><td class="ok">✔ Cumple</td></tr>
+      <tr><td>A · Justificación de herramientas</td><td>Sección 05, por proceso: comunicación, desarrollo, CI y monitoreo</td><td class="ok">✔ Cumple</td></tr>
+      <tr><td>A · Normas, estándares, leyes y regulaciones</td><td>Sección 06 (resumen del documento completo CAL-69)</td><td class="ok">✔ Cumple</td></tr>
+      <tr><td>A.3 · App móvil: seguridad</td><td>Sección 07.4</td><td class="ok">✔ Cumple</td></tr>
+      <tr><td>A.3 · App móvil: APIs de terceros</td><td>Sección 07.5 (Expo Push, FCM, APNs)</td><td class="ok">✔ Cumple</td></tr>
+      <tr><td>A.3 · App móvil: servicios en la nube</td><td>Sección 07.6 (Microsoft Azure y Expo)</td><td class="ok">✔ Cumple</td></tr>
+      <tr><td>A.3 · Enlace del repositorio en funcionamiento</td><td>Sección 07.7 y 12</td><td class="ok">✔ Meseros<br><span class="pend">◐ Comensales</span></td></tr>
+      <tr><td>B.1 · Manuales del software</td><td>Secciones 08, 09 y 10</td><td class="ok">✔ Cumple</td></tr>
+      <tr><td>B.2 · Versión estable integrada</td><td>Sección 11</td><td class="pend">◐ Falta la etiqueta de versión</td></tr>
+      <tr><td>B.3 · Evidencia de código y documentación versionados</td><td>Sección 12</td><td class="ok">✔ Cumple</td></tr>
+    </tbody>
+  </table>
+  <div class="nota"><b>Lo que falta y por qué se dice aquí.</b> La app de comensales está completa y probada, pero al 25 de noviembre su código vive en la rama <code>feat/app-clientes-offline</code> sin commit: falta subirla y abrir su pull request. Tampoco existe todavía una etiqueta de versión (<code>git tag</code>) ni un <i>release</i> en GitHub que marque la versión estable. La sección 11 da el procedimiento para cerrar ambos puntos.</div>
+</section>
+
+<!-- ===================== 01 OBJETIVOS ===================== -->
+<section class="seccion">
+  <div class="parte">Parte A · Metodologías y herramientas</div>
+  <h2><span class="num">01</span>Objetivos del desarrollo de software</h2>
+  <p>RestoHub es una plataforma SaaS para que varios restaurantes administren su operación en una misma aplicación: personal, mesas, menú, comandas, cocina en tiempo real, caja, tickets, inventario y analítica. Nació como la migración del sistema Callejón 9, escrito en Flask con MongoDB, a una arquitectura multi-restaurante con Java y PostgreSQL.</p>
+
+  <h3>1.1 Objetivo general</h3>
+  <p>Desarrollar y liberar en la nube una plataforma multi-restaurante que cubra la operación diaria de un restaurante desde la web y desde el teléfono, y que garantice en la base de datos que ningún restaurante pueda leer ni modificar los datos de otro.</p>
+
+  <h3>1.2 Objetivos específicos</h3>
+  <table>
+    <thead><tr><th>#</th><th>Objetivo</th><th>Cómo se mide</th></tr></thead>
+    <tbody>
+      <tr><td>OE1</td><td>Aislar los datos de cada restaurante con Row Level Security (RLS) de PostgreSQL, sin depender de filtros en el código.</td><td><code>TenantIsolationTest</code> en verde en cada corrida de CI y <code>scripts/verify-rls.sql</code> ejecutado como el rol de la aplicación.</td></tr>
+      <tr><td>OE2</td><td>Cubrir el flujo completo de servicio: mesa → comanda → cocina → cobro → ticket → historial.</td><td>Pruebas SIT CAL-133 a CAL-145 y UAT por módulo en <code>docs/pruebas/</code>.</td></tr>
+      <tr><td>OE3</td><td>Llevar la operación al teléfono con dos apps: una para meseros y administradores y otra para comensales.</td><td>Apps en <code>mobile/</code> y <code>mobile-clientes/</code> con pruebas unitarias y de integración contra Azure.</td></tr>
+      <tr><td>OE4</td><td>Integrar cada cambio con un pipeline que compile y pruebe todos los componentes.</td><td>Corridas de GitHub Actions y Jenkins sobre cada pull request y sobre <code>main</code>.</td></tr>
+      <tr><td>OE5</td><td>Publicar el sistema en Microsoft Azure con infraestructura declarada como código y secretos fuera del repositorio.</td><td>Terraform en <code>infra/terraform/</code>; API y web respondiendo con TLS.</td></tr>
+      <tr><td>OE6</td><td>Cumplir las obligaciones legales y técnicas que aplican a un SaaS que maneja datos personales y cobros.</td><td>Matriz de obligaciones del documento CAL-69 (sección 06).</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===================== 02 METAS Y ALCANCES ===================== -->
+<section class="seccion">
+  <h2><span class="num">02</span>Metas y alcances</h2>
+  <h3>2.1 Metas</h3>
+  <p>El proyecto se organizó en cuatro fases de resultado (registradas en <code>workflow/plan/roadmap.md</code> y en el proyecto de Linear «Ruta a producción y entrega académica»). Cada una tiene una meta verificable.</p>
+  <table class="compacta">
+    <thead><tr><th>Fase</th><th>Meta</th><th>Estado al 25-nov</th></tr></thead>
+    <tbody>
+      <tr><td>1 · Base segura y estable</td><td>Rutas y roles críticos protegidos por pruebas, reglas de negocio validadas en backend y <code>main</code> compilable.</td><td class="ok">✔ Cerrada</td></tr>
+      <tr><td>2 · Plataforma reproducible y CI</td><td>Docker, imágenes de producción no root, pipeline en GitHub Actions y Jenkins, PostgreSQL real con Testcontainers.</td><td class="ok">✔ Cerrada</td></tr>
+      <tr><td>3 · Despliegue seguro y calidad exigible</td><td>Backend y web en Azure con PostgreSQL gestionado y Key Vault; paginación, zona horaria, checks de Jenkins en los PR.</td><td class="pend">◐ En cierre: cobertura (CAL-18), contrato OpenAPI (CAL-55)</td></tr>
+      <tr><td>4 · Entorno productivo observable</td><td>Logs centralizados, alarmas, respaldos con restauración probada y despliegue automático con rollback.</td><td class="pend">◐ En curso: CAL-56, CAL-57, CAL-58</td></tr>
+    </tbody>
+  </table>
+  <p>La replanificación del 6 de noviembre fija el cierre del alcance técnico el <b>11 de diciembre de 2026</b>, con una capacidad de 80 puntos por ciclo de dos semanas (20 por integrante). La liberación del proyecto integrador corre del 1 al 5 de diciembre.</p>
+
+  <h3>2.2 Alcance</h3>
+  <table class="compacta">
+    <thead><tr><th>Dentro del alcance</th><th>Fuera del alcance (con su motivo)</th></tr></thead>
+    <tbody>
+      <tr><td style="font-weight:400;color:inherit">Alta de restaurantes y planes con límites · personal por rol · mesas · menú · comandas · cocina en tiempo real (WebSocket) · cobro con propina y pagos divididos · turnos de caja · ticket PDF · historial y analítica · inventario · menú QR público · app de meseros · app de comensales sin conexión · notificaciones push · despliegue en Azure.</td>
+      <td style="font-weight:400;color:inherit">Cobro recurrente con Mercado Pago (CAL-29, en curso) · facturación CFDI · delivery y rastreo · segundo factor TOTP · recuperación de contraseña (CAL-33) · impresión térmica · publicación en Google Play o App Store (requiere cuentas de desarrollador y firma propia).</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.3 Delimitación</h3>
+  <ul>
+    <li><b>Usuarios:</b> super-administrador de la plataforma, y por restaurante administrador, mesero, cocina y caja. El comensal no tiene cuenta: usa el menú QR o la app de comensales.</li>
+    <li><b>Plataformas:</b> navegador moderno (web y PWA); Android 7.0 o superior e iOS para la app de meseros; Android para la app de comensales.</li>
+    <li><b>Infraestructura:</b> Microsoft Azure con el crédito de Azure for Students; SKUs mínimos y un presupuesto con alertas declarado en Terraform.</li>
+  </ul>
+</section>
+
+<!-- ===================== 03 REQUERIMIENTOS ===================== -->
+<section class="seccion">
+  <h2><span class="num">03</span>Requerimientos funcionales y no funcionales</h2>
+  <p>Cada requerimiento apunta a la parte del sistema que lo implementa. Los identificadores de pantalla son las rutas de la web (<code>frontend/src/app</code>) y las pantallas de las apps.</p>
+  <h3>3.1 Requerimientos funcionales</h3>
+  <table class="compacta">
+    <thead><tr><th>ID</th><th>Requerimiento</th><th>Dónde</th></tr></thead>
+    <tbody>
+      <tr><td>RF-01</td><td>Registrar un restaurante con su administrador y plan (máx. 5 altas por IP por hora).</td><td><code>/signup</code></td></tr>
+      <tr><td>RF-02</td><td>Iniciar sesión con restaurante, correo y contraseña; cerrar sesión en el servidor.</td><td><code>/login</code>, app de meseros</td></tr>
+      <tr><td>RF-03</td><td>Administrar planes y restaurantes de la plataforma.</td><td><code>/platform</code> (SUPER_ADMIN)</td></tr>
+      <tr><td>RF-04</td><td>Dar de alta, editar y desactivar personal por rol; no dejar al restaurante sin administrador.</td><td><code>/admin</code></td></tr>
+      <tr><td>RF-05</td><td>Administrar categorías y productos; activar o desactivar productos.</td><td><code>/admin</code>, app de meseros (ADMIN)</td></tr>
+      <tr><td>RF-06</td><td>Administrar mesas e imprimir su código QR.</td><td><code>/admin</code></td></tr>
+      <tr><td>RF-07</td><td>Abrir una mesa, capturar una comanda y enviarla a cocina.</td><td><code>/waiter</code>, app de meseros</td></tr>
+      <tr><td>RF-08</td><td>Agregar productos a una mesa ocupada y cancelar una comanda liberando la mesa.</td><td><code>/waiter/order/[id]</code></td></tr>
+      <tr><td>RF-09</td><td>Ver en cocina las partidas en tiempo real y avanzarlas solo hacia adelante.</td><td><code>/kitchen</code></td></tr>
+      <tr><td>RF-10</td><td>Cobrar con propina y pagos divididos; impedir modificar una orden mientras se cobra.</td><td><code>/cashier</code></td></tr>
+      <tr><td>RF-11</td><td>Abrir y cerrar turnos de caja con su arqueo.</td><td><code>/cash-sessions</code></td></tr>
+      <tr><td>RF-12</td><td>Generar el ticket en PDF y buscarlo por folio.</td><td><code>/history</code></td></tr>
+      <tr><td>RF-13</td><td>Consultar ventas y analítica del día por restaurante y en su zona horaria.</td><td><code>/history</code>, <code>/analytics</code></td></tr>
+      <tr><td>RF-14</td><td>Registrar movimientos de inventario.</td><td><code>/inventory</code></td></tr>
+      <tr><td>RF-15</td><td>Mostrar el menú público por QR y recibir pedidos de la mesa sin cuenta.</td><td><code>/m/[slug]/[table]</code></td></tr>
+      <tr><td>RF-16</td><td>Llamar al mesero desde la mesa.</td><td>Menú QR, app de comensales</td></tr>
+      <tr><td>RF-17</td><td>Escanear el QR de la mesa desde la app de comensales.</td><td><code>ScannerScreen</code></td></tr>
+      <tr><td>RF-18</td><td>Consultar el menú y armar un pedido sin conexión; enviarlo al volver la red.</td><td><code>offline/</code> de la app de comensales</td></tr>
+      <tr><td>RF-19</td><td>Consultar «Mi pedido» con los pedidos enviados en las últimas 24 horas.</td><td><code>CartScreen</code></td></tr>
+      <tr><td>RF-20</td><td>Recibir notificaciones push del seguimiento de solicitudes.</td><td><code>NotificationsScreen</code> (app de meseros)</td></tr>
+      <tr><td>RF-21</td><td>Paginar y ordenar los listados que crecen sin límite (órdenes y ventas).</td><td>API <code>/api/v1/orders</code>, <code>/sales</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.2 Requerimientos no funcionales</h3>
+  <table class="compacta">
+    <thead><tr><th>ID</th><th>Atributo (ISO/IEC 25010)</th><th>Requerimiento</th><th>Evidencia</th></tr></thead>
+    <tbody>
+      <tr><td>RNF-01</td><td>Seguridad · confidencialidad</td><td>Aislamiento entre restaurantes impuesto por PostgreSQL con RLS en las 17 tablas de datos.</td><td><code>TenantIsolationTest</code></td></tr>
+      <tr><td>RNF-02</td><td>Seguridad · autenticidad</td><td>JWT en cookie <code>httpOnly</code>, <code>Secure</code>, <code>SameSite=Strict</code>; token de 15 min con renovación rotada.</td><td>README, sección Backend</td></tr>
+      <tr><td>RNF-03</td><td>Seguridad · resistencia</td><td>Bloqueo tras 5 fallos por cuenta o 20 por IP en 15 min (HTTP 429).</td><td>SIT CAL-169/CAL-176</td></tr>
+      <tr><td>RNF-04</td><td>Seguridad · integridad</td><td>Autorización por rol en el backend en cada endpoint (<code>@PreAuthorize</code>).</td><td>Matriz de autorización, 109 pruebas</td></tr>
+      <tr><td>RNF-05</td><td>Seguridad · comunicación</td><td>Solo HTTPS en producción; HSTS y CSP con <i>nonce</i> en la web.</td><td>Cabeceras de <code>restohub.azurewebsites.net</code></td></tr>
+      <tr><td>RNF-06</td><td>Fiabilidad · tolerancia a fallos</td><td>La app de comensales funciona sin conexión y no duplica pedidos al reintentar.</td><td><code>outbox.test.ts</code></td></tr>
+      <tr><td>RNF-07</td><td>Mantenibilidad · modularidad</td><td>Paquetes por funcionalidad; controller → service → repository.</td><td><code>backend/src/main/java/com/callejon9</code></td></tr>
+      <tr><td>RNF-08</td><td>Mantenibilidad · capacidad de prueba</td><td>Pruebas automáticas contra PostgreSQL 16 real, nunca H2, y pruebas E2E sobre el entorno desplegado.</td><td>Testcontainers en CI; Playwright (sección 11.2)</td></tr>
+      <tr><td>RNF-09</td><td>Compatibilidad · interoperabilidad</td><td>API REST <code>/api/v1</code> con errores RFC 7807 y contrato OpenAPI.</td><td><code>docs/api/openapi.json</code></td></tr>
+      <tr><td>RNF-10</td><td>Portabilidad · adaptabilidad</td><td>Imágenes Docker no root (UID 10001) y despliegue en App Service.</td><td><code>scripts/verify-images.sh</code></td></tr>
+      <tr><td>RNF-11</td><td>Usabilidad · accesibilidad</td><td>Interfaz en español, accesible con teclado y lector de pantalla (WCAG 2.1 AA).</td><td>Auditoría CAL-60 en curso</td></tr>
+      <tr><td>RNF-12</td><td>Eficiencia · disponibilidad</td><td>Sondas de salud <i>liveness</i> y <i>readiness</i>; telemetría en Application Insights.</td><td><code>/actuator/health</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===================== 04 METODOLOGÍA ===================== -->
+<section class="seccion">
+  <h2><span class="num">04</span>Justificación de la metodología seleccionada</h2>
+  <p>El equipo trabaja con <b>Scrum</b>, con un flujo <b>Kanban</b> visible en Linear para el estado de cada issue y prácticas <b>DevOps</b> de integración continua. Scrum se eligió frente a cascada y frente a Kanban puro por tres razones observadas durante el cuatrimestre, no supuestas:</p>
+  <ul>
+    <li><b>El alcance cambió a mitad del camino.</b> El 4 de octubre se decidió no hacer app móvil y el 16 de octubre se construyó; la nube pasó de AWS a Azure el 17 de octubre. Con sprints cortos y un backlog priorizado, esos cambios se absorbieron replanificando el siguiente ciclo, sin rehacer el plan completo. En cascada habrían exigido volver a la fase de requisitos.</li>
+    <li><b>El equipo comparte el tiempo con otras seis asignaturas.</b> El ciclo fijo de dos semanas con capacidad medida (20 puntos por persona) hace visible cuándo no cabe algo, y la replanificación del 6 de noviembre movió seis issues a Backlog con esa cifra.</li>
+    <li><b>Las entregas académicas tienen fechas fijas.</b> Cada sprint termina en un incremento integrado en <code>main</code> y desplegable, así que siempre hay algo que mostrar en una revisión.</li>
+  </ul>
+
+  <table>
+    <thead><tr><th>Elemento</th><th>Cómo se aplica en RestoHub</th></tr></thead>
+    <tbody>
+      <tr><td>Roles</td><td>Product Owner: Ludwin García Gaytán · Scrum Master y desarrollo móvil y frontend: Octavio Duarte Villavicencio · Backend e infraestructura: Valeria Mercado Serrano · Calidad y pruebas (QA): Braulio Hernández Mejía.</td></tr>
+      <tr><td>Product Backlog</td><td>Proyecto de Linear con issues que llevan contexto, alcance, criterios Dado/Cuando/Entonces y definición de terminado.</td></tr>
+      <tr><td>Sprint</td><td>Ciclos de Linear: semanales hasta el sprint 4, de dos semanas desde el 5. Ciclo 7: 6–19 nov (79 pts); ciclo 8: 20 nov–3 dic (77 pts).</td></tr>
+      <tr><td>Eventos</td><td>Planeación al inicio del ciclo, daily, revisión cada viernes contra el objetivo del sprint y retrospectiva. De las retrospectivas salieron el plan de bloqueos y el de reasignación por ausencia.</td></tr>
+      <tr><td>Flujo Kanban</td><td>Backlog → Todo → In Progress → In review → For test → Done. Máximo dos issues en progreso por persona.</td></tr>
+      <tr><td>Definición de terminado</td><td><code>workflow/product/definition-of-done.md</code>: criterios cubiertos, pruebas nuevas, puertas de calidad en verde, sin debilitar RLS ni la autorización y evidencia honesta.</td></tr>
+      <tr><td>Integración continua</td><td>Cada cambio entra a <code>main</code> por pull request revisado por alguien distinto del autor y con el pipeline en verde.</td></tr>
+    </tbody>
+  </table>
+  <div class="nota">Scrum no reemplaza la planeación por fases: las cuatro fases de la sección 02 son hitos de resultado y los ciclos son la unidad de ejecución. Un issue conserva su ciclo para el corto plazo y su fase para mostrar a qué resultado contribuye.</div>
+</section>
+
+<!-- ===================== 05 HERRAMIENTAS ===================== -->
+<section class="seccion">
+  <h2><span class="num">05</span>Justificación de las herramientas</h2>
+  <p>Las herramientas se agrupan por el proceso que sostienen. El criterio común fue usar planes gratuitos o el crédito de Azure for Students, y que cada herramienta deje registro consultable para la evaluación.</p>
+
+  <h3>5.1 Comunicación y gestión</h3>
+  <table class="compacta">
+    <thead><tr><th>Herramienta</th><th>Uso</th><th>Por qué</th></tr></thead>
+    <tbody>
+      <tr><td>Linear</td><td>Backlog, ciclos, estimación, dependencias y discusión de cada issue.</td><td>Los ciclos y el flujo de estados son nativos; cada issue enlaza su rama y su PR, así que el rastreo issue → código → CI es automático.</td></tr>
+      <tr><td>GitHub Pull Requests</td><td>Revisión de código y discusión técnica sobre el diff.</td><td>La conversación queda junto al cambio y a sus checks de CI.</td></tr>
+      <tr><td>Documentos en <code>docs/</code> y <code>workflow/</code></td><td>Decisiones, planes, guiones de prueba y evidencia.</td><td>Versionados con el código: una decisión no se pierde en un chat.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>5.2 Desarrollo</h3>
+  <table class="compacta">
+    <thead><tr><th>Componente</th><th>Tecnología</th><th>Por qué</th></tr></thead>
+    <tbody>
+      <tr><td>Backend</td><td>Java 21, Spring Boot 3.4, Spring Security, Spring Data JPA, Flyway</td><td>Transacciones declarativas, seguridad por rol madura y migraciones versionadas; permite publicar el tenant por transacción para RLS.</td></tr>
+      <tr><td>Base de datos</td><td>PostgreSQL 16</td><td>Es el motor que impone RLS con <code>FORCE ROW LEVEL SECURITY</code>; ningún ORM ofrece esa garantía.</td></tr>
+      <tr><td>Web</td><td>Next.js 15, React 19, TypeScript estricto, TanStack Query, Tailwind CSS 4, shadcn/ui</td><td>El <i>rewrite</i> de Next sirve la API en el mismo origen: sin CORS y con cookie de primera parte.</td></tr>
+      <tr><td>Apps móviles</td><td>React Native con Expo (SDK 58), TypeScript</td><td>Un código para Android e iOS, mismo lenguaje que la web y pruebas en teléfono sin compilar con Expo Go.</td></tr>
+      <tr><td>Paquetes</td><td>pnpm (JS) y Maven Wrapper (Java)</td><td>Versiones fijadas por <i>lockfile</i>; nadie necesita instalar Maven.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>5.3 Integración continua</h3>
+  <table class="compacta">
+    <thead><tr><th>Herramienta</th><th>Uso</th><th>Por qué</th></tr></thead>
+    <tbody>
+      <tr><td>Git y GitHub</td><td>Repositorio público, ramas cortas y pull requests.</td><td>Historia auditable; el evaluador revisa todo sin pedir acceso.</td></tr>
+      <tr><td>Jenkins (VM privada en Azure)</td><td>Pipeline principal definido en <code>Jenkinsfile</code>: PostgreSQL, seguridad, backend, frontend, móvil e imágenes. Publica su estado en cada PR.</td><td>Servidor propio aprovisionado con Terraform, sin puertos entrantes (acceso por Tailscale) e identidad administrada de Azure en lugar de credenciales de larga duración.</td></tr>
+      <tr><td>GitHub Actions</td><td><code>.github/workflows/ci.yml</code> con las mismas puertas, en paralelo.</td><td>Respaldo mientras Jenkins se consolida; su retiro está planeado en CAL-90.</td></tr>
+      <tr><td>Testcontainers</td><td>Levanta PostgreSQL 16 real en cada corrida.</td><td>H2 no demuestra RLS; una prueba que pasa en H2 no prueba el aislamiento.</td></tr>
+      <tr><td>Vitest, Testing Library, JUnit 5</td><td>Pruebas unitarias de web, apps y backend.</td><td>Integradas al pipeline con cobertura.</td></tr>
+      <tr><td>Playwright</td><td>Pruebas de extremo a extremo (E2E): navegador real contra la web y la API de Azure, con varias sesiones y roles a la vez.</td><td>Prueba el sistema integrado tal como lo usa la gente, no componentes aislados; cada corrida guarda capturas y respuestas HTTP como evidencia.</td></tr>
+      <tr><td>Escaneo de secretos y de imágenes</td><td><code>scripts/security-scan.sh</code> y <code>scripts/verify-images.sh</code>.</td><td>Ningún secreto llega al repositorio y las imágenes corren sin root.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>5.4 Despliegue y monitoreo</h3>
+  <table class="compacta">
+    <thead><tr><th>Herramienta</th><th>Uso</th><th>Por qué</th></tr></thead>
+    <tbody>
+      <tr><td>Terraform (azurerm)</td><td>Tres módulos: <code>azure-backend</code>, <code>azure-frontend</code> y <code>azure-ci</code>.</td><td>Infraestructura reproducible y revisable en PR; estado remoto con bloqueo.</td></tr>
+      <tr><td>Azure App Service</td><td>Aloja la API (JAR de Java 21) y la web (Next.js <i>standalone</i>).</td><td>TLS y dominio incluidos sin balanceador ni gateway adicional.</td></tr>
+      <tr><td>Azure Key Vault</td><td>Secretos del JWT y de la base, leídos por referencia.</td><td>Los secretos no viven en variables de texto plano ni en el repositorio.</td></tr>
+      <tr><td>Application Insights</td><td>Telemetría de peticiones, errores y dependencias de la API y la web.</td><td>Monitoreo sin agentes propios; se activa por variable de Terraform.</td></tr>
+      <tr><td>Spring Boot Actuator</td><td><code>/actuator/health</code> con grupos <i>liveness</i> y <i>readiness</i>.</td><td>Sonda que usa App Service y que se verifica antes de cada demostración.</td></tr>
+      <tr><td>Presupuesto de Azure</td><td>Alertas de gasto y script <code>scripts/azure-backend-power.ps1</code>.</td><td>Protege el crédito de estudiante apagando la API cuando no se usa.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===================== 06 NORMAS ===================== -->
+<section class="seccion">
+  <h2><span class="num">06</span>Normas, estándares, leyes y regulaciones aplicables</h2>
+  <p>El análisis completo, con la obligación exacta de cada disposición y si ya está implementada o planeada, está en <code>docs/cal-69-normas-estandares-leyes.md</code>. Aquí se resume qué aplica y por qué.</p>
+  <table class="compacta">
+    <thead><tr><th>Disposición</th><th>Tipo</th><th>Por qué aplica a RestoHub</th></tr></thead>
+    <tbody>
+      <tr><td>Ley Federal de Protección de Datos Personales en Posesión de los Particulares (DOF 20-mar-2025)</td><td>Ley (México)</td><td>Se tratan nombres y correos del personal de cada restaurante. Exige aviso de privacidad, finalidades y derechos ARCO. Política por restaurante en CAL-62.</td></tr>
+      <tr><td>Código Fiscal de la Federación · CFDI 4.0</td><td>Ley y regulación (SAT)</td><td>El ticket de consumo no es comprobante fiscal; la facturación queda fuera de alcance y así se declara.</td></tr>
+      <tr><td>PCI-DSS v4.0</td><td>Estándar de la industria</td><td>RestoHub no captura ni almacena datos de tarjeta; el cobro recurrente se delega a Mercado Pago para quedar fuera del alcance de PCI.</td></tr>
+      <tr><td>Ley Federal de Protección al Consumidor y criterios de PROFECO</td><td>Ley (México)</td><td>Precios visibles y totales claros; la app de comensales muestra el total como estimado.</td></tr>
+      <tr><td>Ley Federal del Derecho de Autor</td><td>Ley (México)</td><td>Titularidad del código del equipo y respeto a las licencias de las dependencias.</td></tr>
+      <tr><td>ISO/IEC 25010:2023</td><td>Estándar internacional</td><td>Modelo de calidad que organiza los RNF de la sección 03.</td></tr>
+      <tr><td>ISO/IEC/IEEE 12207 y 29148</td><td>Estándar internacional</td><td>Procesos del ciclo de vida y forma de escribir requerimientos verificables.</td></tr>
+      <tr><td>OWASP API Security Top 10 (2023) y OWASP MASVS</td><td>Estándar de la industria</td><td>Autorización por objeto, límites de intentos y almacenamiento seguro en las apps.</td></tr>
+      <tr><td>WCAG 2.1 nivel AA</td><td>Estándar W3C</td><td>Accesibilidad de las pantallas operativas (auditoría CAL-60).</td></tr>
+      <tr><td>RFC 7807, RFC 6265 y RFC 6797</td><td>Estándares IETF</td><td>Formato de errores de la API, cookies seguras y HSTS.</td></tr>
+      <tr><td>OpenAPI 3, Semantic Versioning y Conventional Commits</td><td>Convenciones técnicas</td><td>Contrato de la API, numeración de versiones y mensajes de commit.</td></tr>
+      <tr><td>Políticas de Google Play y Apple App Store</td><td>Regulación de plataforma</td><td>Permisos justificados (cámara), aviso de privacidad y firma propia antes de publicar las apps.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===================== 07 APPS MÓVILES ===================== -->
+<section class="seccion">
+  <h2><span class="num">07</span>Aplicaciones móviles</h2>
+  <p>El caso de estudio es el restaurante que ya usa RestoHub. El <b>mesero</b> trabaja de pie y con una mano ocupada, y el <b>comensal</b> quiere pedir sin esperar a que llegue alguien a la mesa, aunque la señal del lugar sea mala. Para cada uno se hizo una app con React Native y Expo, ambas clientes de la misma API.</p>
+
+  <div class="tarjetas dos">
+    <div class="tarjeta"><div class="k">App 1 · mobile/</div><div class="v">RestoHub Meseros</div>Mesero y administrador: inicia sesión, ve mesas, toma y envía pedidos, mantiene el menú y recibe notificaciones push. Paquete <code>com.callejon9.meseros</code>, versión 1.0.0. Android e iOS.</div>
+    <div class="tarjeta"><div class="k">App 2 · mobile-clientes/</div><div class="v">RestoHub Clientes</div>Comensal: escanea el QR de la mesa, ve el menú y pide, también sin conexión. Sin cuenta ni datos personales. Paquete <code>com.callejon9.clientes</code>, versión 1.0.0 (1). Android.</div>
+  </div>
+
+  <h3>7.1 Arquitectura</h3>
+  <p>Cliente-servidor con <b>cliente delgado</b>: las apps no tienen backend propio; todo pasa por <code>/api/v1</code> sobre HTTPS. La app de meseros no guarda datos de negocio. La de comensales guarda solo una copia del menú y su bandeja de salida para funcionar sin red.</p>
+  <table class="compacta">
+    <thead><tr><th>Capa</th><th>Meseros</th><th>Comensales</th></tr></thead>
+    <tbody>
+      <tr><td>Presentación</td><td><code>App.tsx</code>, <code>src/screens/</code> (7 pantallas), <code>src/ui/</code></td><td><code>App.tsx</code>, <code>src/screens/</code> (4 pantallas), <code>src/ui/</code></td></tr>
+      <tr><td>Dominio y validación</td><td><code>src/validation/product.ts</code></td><td><code>src/domain/cart.ts</code>, <code>tableLink.ts</code></td></tr>
+      <tr><td>Datos sin conexión</td><td>—</td><td><code>src/offline/</code>: almacén, copia del menú, bandeja de salida e historial</td></tr>
+      <tr><td>Fachadas de la API</td><td><code>src/api/auth.ts</code>, <code>waiter.ts</code>, <code>catalog.ts</code></td><td><code>src/api/public.ts</code></td></tr>
+      <tr><td>Transporte</td><td><code>src/api/client.ts</code>: HTTPS, tiempo límite, renovación de sesión</td><td><code>src/api/client.ts</code>: HTTPS, tiempo límite de 12 s, sin credenciales</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7.2 Patrones de diseño</h3>
+  <table class="compacta">
+    <thead><tr><th>Patrón</th><th>Dónde</th><th>Para qué</th></tr></thead>
+    <tbody>
+      <tr><td>Fachada</td><td><code>src/api/*.ts</code> en ambas apps</td><td>Las pantallas llaman <code>createProduct()</code> o <code>sendOrder()</code> sin conocer URLs ni métodos HTTP.</td></tr>
+      <tr><td>Gateway / cliente único</td><td><code>request()</code> en <code>client.ts</code></td><td>Todas las peticiones comparten tiempo límite y manejo de errores.</td></tr>
+      <tr><td>Adaptador</td><td><code>toApiError()</code></td><td>Convierte el ProblemDetail (RFC 7807) en un mensaje en español.</td></tr>
+      <tr><td>Single-flight</td><td><code>refreshSession()</code> (meseros)</td><td>Varias respuestas 401 comparten una sola renovación, porque el servidor rota el token en cada uso.</td></tr>
+      <tr><td>Outbox (bandeja de salida)</td><td><code>offline/outbox.ts</code> (comensales)</td><td>El pedido se guarda primero y se envía cuando hay red; solo se reintenta si no llegó al servidor, para no duplicar.</td></tr>
+      <tr><td>Caché con respaldo</td><td><code>offline/catalogCache.ts</code></td><td>Si la red falla se usa la última copia del menú; un 404 la borra.</td></tr>
+      <tr><td>Observador</td><td><code>setSessionExpiredHandler()</code>, NetInfo</td><td>El transporte avisa a la interfaz cuando la sesión vence o cuando vuelve la red.</td></tr>
+      <tr><td>Máquina de estados</td><td>Tipo <code>Screen</code> en <code>App.tsx</code></td><td>Navegación como unión discriminada: TypeScript impide estados imposibles.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7.3 Frameworks y esquema de pruebas</h3>
+  <table class="compacta">
+    <thead><tr><th>Elemento</th><th>Meseros</th><th>Comensales</th></tr></thead>
+    <tbody>
+      <tr><td>Framework</td><td>Expo SDK 58, React Native, TypeScript</td><td>Expo SDK 58, React Native 0.88, React 19.3, TypeScript 6</td></tr>
+      <tr><td>Librerías nativas</td><td><code>expo-notifications</code>, <code>expo-device</code></td><td><code>expo-camera</code>, AsyncStorage, NetInfo</td></tr>
+      <tr><td>Pruebas unitarias (Vitest)</td><td class="ok" style="color:var(--verde)">6 archivos · 69 pruebas en verde</td><td class="ok" style="color:var(--verde)">6 archivos · 32 pruebas en verde</td></tr>
+      <tr><td>Tipos</td><td><code>tsc --noEmit</code> en Jenkins</td><td><code>tsc --noEmit</code></td></tr>
+      <tr><td>Extremo a extremo (Playwright)</td><td>CAL-139: lo que ve el mesero en el teléfono coincide con la web en Azure</td><td>—</td></tr>
+      <tr><td>Integración (SIT)</td><td>CAL-139 contra la API en Azure</td><td>Contra las rutas públicas del menú QR</td></tr>
+      <tr><td>Aceptación (UAT)</td><td>CAL-152 con un mesero en su teléfono</td><td>Pendiente</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:9pt;color:var(--suave)">Pruebas ejecutadas localmente con <code>pnpm test</code> el 25 de noviembre de 2026.</p>
+</section>
+
+<section class="seccion">
+  <h3 style="margin-top:0">7.4 Mecanismos de seguridad</h3>
+  <table class="compacta">
+    <thead><tr><th>Mecanismo</th><th>Cómo funciona</th><th>App</th></tr></thead>
+    <tbody>
+      <tr><td>Solo HTTPS</td><td>La app se niega a arrancar con una URL <code>http://</code>. La excepción para la red local solo aplica en desarrollo (<code>__DEV__</code>); en una build de producción se ignora.</td><td>Ambas</td></tr>
+      <tr><td>Token fuera de JavaScript</td><td>El JWT viaja en cookies <code>httpOnly</code>, <code>Secure</code> y <code>SameSite=Strict</code> que guarda el almacén nativo del sistema operativo.</td><td>Meseros</td></tr>
+      <tr><td>Sesión corta y revocable</td><td>Token de 15 minutos, renovación con rotación y detección de reutilización; el logout revoca la sesión en el servidor.</td><td>Meseros</td></tr>
+      <tr><td>Sin enumeración de cuentas</td><td>Un solo mensaje para usuario inexistente, contraseña incorrecta o restaurante equivocado.</td><td>Meseros</td></tr>
+      <tr><td>Freno a fuerza bruta</td><td>429 tras 5 fallos por cuenta o 20 por IP en 15 minutos; la app muestra el tiempo de espera.</td><td>Meseros</td></tr>
+      <tr><td>Autorización por rol</td><td>Solo entran WAITER y ADMIN; el backend lo exige de nuevo en cada endpoint.</td><td>Meseros</td></tr>
+      <tr><td>Aislamiento entre restaurantes</td><td>La app nunca envía el restaurante en peticiones de datos: el backend lo toma del JWT firmado y PostgreSQL lo impone con RLS.</td><td>Ambas</td></tr>
+      <tr><td>Mínimo de datos</td><td>Sin cuenta, sin cookies (<code>credentials: 'omit'</code>) y sin datos personales.</td><td>Comensales</td></tr>
+      <tr><td>Permisos mínimos</td><td>Cámara solo mientras se escanea; micrófono bloqueado; no se guardan imágenes.</td><td>Comensales</td></tr>
+      <tr><td>Contraseña protegida</td><td><code>secureTextEntry</code> y el campo se vacía en cuanto se envía.</td><td>Meseros</td></tr>
+      <tr><td>Secretos fuera del repositorio</td><td><code>.env</code> y <code>google-services.json</code> ignorados por git; <code>*.jks</code> nunca se versiona.</td><td>Ambas</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7.5 APIs de terceros</h3>
+  <table class="compacta">
+    <thead><tr><th>API</th><th>Proveedor</th><th>Uso</th></tr></thead>
+    <tbody>
+      <tr><td>Expo Push Service</td><td>Expo</td><td>Entrega los avisos de seguimiento de solicitudes. La app obtiene su <i>Expo push token</i> y el servicio remoto (<code>scripts/send-push.mts</code>) envía el mensaje.</td></tr>
+      <tr><td>Firebase Cloud Messaging (FCM)</td><td>Google</td><td>Transporte de las notificaciones en Android, configurado con <code>google-services.json</code>.</td></tr>
+      <tr><td>Apple Push Notification service (APNs)</td><td>Apple</td><td>Transporte de las notificaciones en iOS.</td></tr>
+      <tr><td>API REST de RestoHub</td><td>Propia, en Azure</td><td>Autenticación, mesas, pedidos y catálogo (meseros); rutas públicas del menú QR (comensales).</td></tr>
+      <tr><td>Cámara y estado de red del sistema</td><td>Android / iOS vía Expo</td><td>Lectura del QR (<code>expo-camera</code>) y detección de conexión (NetInfo).</td></tr>
+    </tbody>
+  </table>
+  <p>La evidencia completa de las notificaciones push en Android e iOS está en la entrega <i>Integración de notificaciones push</i> (CAL-193, PR #127) y en <code>docs/pruebas/notificaciones-push/</code>.</p>
+
+  <h3>7.6 Servicios en la nube</h3>
+  <table class="compacta">
+    <thead><tr><th>Servicio</th><th>Recurso</th><th>Función para las apps</th></tr></thead>
+    <tbody>
+      <tr><td>Azure App Service (Linux)</td><td>API: <code>app-callejon9-api-prod-3878c6</code>, Java 21</td><td>Servicio remoto que consumen las dos apps.</td></tr>
+      <tr><td>Azure Database for PostgreSQL</td><td>Servidor flexible B1ms, PostgreSQL 16</td><td>Datos con RLS; el rol de la app no es dueño de tablas.</td></tr>
+      <tr><td>Azure Key Vault</td><td>Secretos del JWT y de la base</td><td>Firma de los tokens que usa la app de meseros.</td></tr>
+      <tr><td>Application Insights</td><td>Telemetría de la API</td><td>Errores y latencia de las peticiones de las apps.</td></tr>
+      <tr><td>Azure App Service</td><td>Web <code>restohub.azurewebsites.net</code></td><td>Genera los QR que escanea la app de comensales.</td></tr>
+      <tr><td>Expo / EAS</td><td>Proyecto de Expo</td><td>Emisión de tokens push y envío de notificaciones.</td></tr>
+    </tbody>
+  </table>
+  <div class="terminal"><span class="c">$</span> curl -s https://app-callejon9-api-prod-3878c6.azurewebsites.net/actuator/health      <span class="d"># 25-nov-2026</span>
+{"status":"<span class="g">UP</span>","groups":["liveness","readiness"]}
+<span class="c">$</span> curl -sI https://restohub.azurewebsites.net/
+HTTP/2 <span class="g">200</span>
+strict-transport-security: max-age=31536000
+content-security-policy: default-src 'self'; script-src 'self' 'nonce-…' 'strict-dynamic'; … frame-ancestors 'none'</div>
+
+  <h3>7.7 Repositorio en funcionamiento</h3>
+  <table class="compacta">
+    <thead><tr><th>Qué</th><th>Enlace</th></tr></thead>
+    <tbody>
+      <tr><td>Repositorio (público)</td><td>github.com/LudwinGarcia1/callejon9-saas</td></tr>
+      <tr><td>App de meseros</td><td>github.com/LudwinGarcia1/callejon9-saas/tree/main/mobile</td></tr>
+      <tr><td>App de comensales</td><td><span class="pend">Pendiente de subir:</span> rama <code>feat/app-clientes-offline</code>, carpeta <code>mobile-clientes/</code></td></tr>
+      <tr><td>Web en producción</td><td>restohub.azurewebsites.net</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===================== 08 MANUAL WEB ===================== -->
+<section class="seccion">
+  <div class="parte">Parte B · Implementación y liberación</div>
+  <h2><span class="num">08</span>Manual de usuario de la plataforma web</h2>
+  <p>La plataforma se abre en <b>restohub.azurewebsites.net</b> desde cualquier navegador moderno. Cada persona entra con el código de su restaurante (<i>slug</i>), su correo y su contraseña, y ve solo las pantallas de su rol. Si abre por URL una pantalla de otro rol, ve un aviso de permiso en lugar de la pantalla.</p>
+
+  <h3>8.1 Primeros pasos</h3>
+  <ol>
+    <li><b>Registrar el restaurante.</b> En <code>/signup</code> escribe el nombre, el código (slug, por ejemplo <code>callejon-9</code>), el plan y los datos del administrador. Al terminar, la app te lleva al inicio de sesión.</li>
+    <li><b>Iniciar sesión.</b> En <code>/login</code> escribe el código del restaurante, tu correo y tu contraseña. Tras 5 intentos fallidos la cuenta espera 15 minutos.</li>
+    <li><b>Cerrar sesión.</b> Usa «Cerrar sesión» en el menú. La sesión se invalida en el servidor; el botón Atrás del navegador ya no regresa a la pantalla anterior.</li>
+  </ol>
+
+  <h3>8.2 Tareas por rol</h3>
+  <table class="compacta">
+    <thead><tr><th>Rol</th><th>Pantalla</th><th>Qué puede hacer</th></tr></thead>
+    <tbody>
+      <tr><td>Super-administrador</td><td><code>/platform</code></td><td>Ver los restaurantes registrados, sus planes y límites.</td></tr>
+      <tr><td>Administrador</td><td><code>/admin</code></td><td>Personal (alta por rol, edición, desactivación), categorías y productos, mesas y su QR, identidad del restaurante. No puede desactivarse a sí mismo ni dejar el restaurante sin administrador.</td></tr>
+      <tr><td>Administrador</td><td><code>/analytics</code>, <code>/inventory</code></td><td>Ventas y productos del día; entradas y salidas de inventario.</td></tr>
+      <tr><td>Mesero</td><td><code>/waiter</code></td><td>Ver mesas libres y ocupadas, abrir una mesa, agregar productos con notas, enviar a cocina, agregar a una mesa ocupada o cancelar la comanda.</td></tr>
+      <tr><td>Cocina</td><td><code>/kitchen</code></td><td>Ver las partidas en tiempo real y moverlas de «Pendiente» a «En preparación» y a «Listo». El mesero ve el cambio sin recargar.</td></tr>
+      <tr><td>Caja</td><td><code>/cashier</code>, <code>/cash-sessions</code></td><td>Abrir el turno, cobrar con propina y en uno o varios pagos, descargar el ticket PDF y cerrar el turno con su arqueo. Mientras se cobra, nadie puede modificar la orden.</td></tr>
+      <tr><td>Caja y administrador</td><td><code>/history</code></td><td>Buscar ventas y tickets por folio y descargar el PDF.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="figuras f2">
+    <figure><img src="../../pruebas/sit/CAL-136-catalogo/capturas/C01-P02-formulario-nuevo-producto.png"><figcaption><b>Administrador:</b> formulario de nuevo producto.</figcaption></figure>
+    <figure><img src="../../pruebas/sit/CAL-140-cocina-tiempo-real/capturas/C01-P04-cocina-recibe.png"><figcaption><b>Cocina:</b> la comanda llega en tiempo real.</figcaption></figure>
+  </div>
+  <div class="figuras f2">
+    <figure><img src="../../pruebas/sit/CAL-141-cobro-pagos/capturas/C01-P01-caja-pago-dividido.png"><figcaption><b>Caja:</b> cobro con pago dividido.</figcaption></figure>
+    <figure><img src="../../pruebas/sit/CAL-142-tickets/capturas/C01-P01-ticket-encontrado.png"><figcaption><b>Historial:</b> búsqueda de un ticket por folio.</figcaption></figure>
+  </div>
+
+  <h3>8.3 Menú QR para el comensal</h3>
+  <p>Cada mesa tiene un QR que abre <code>restohub.azurewebsites.net/m/{restaurante}/{mesa}</code>. El comensal ve el menú, arma su pedido, lo envía a cocina y puede llamar al mesero, sin crear una cuenta. Es el mismo QR que lee la app de comensales.</p>
+
+  <h3>8.4 Mensajes frecuentes</h3>
+  <table class="compacta">
+    <thead><tr><th>Mensaje</th><th>Qué significa</th><th>Qué hacer</th></tr></thead>
+    <tbody>
+      <tr><td>Credenciales inválidas</td><td>Restaurante, correo o contraseña no coinciden.</td><td>Revisa el código del restaurante; el sistema no dice cuál dato falló, por seguridad.</td></tr>
+      <tr><td>Demasiados intentos</td><td>Se activó el freno a fuerza bruta.</td><td>Espera el tiempo indicado.</td></tr>
+      <tr><td>No tienes permiso</td><td>La pantalla es de otro rol.</td><td>Vuelve a tu pantalla de inicio.</td></tr>
+      <tr><td>Producto no disponible</td><td>Se desactivó mientras armabas la comanda.</td><td>Quítalo y elige otro.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===================== 09 MANUALES APPS ===================== -->
+<section class="seccion">
+  <h2><span class="num">09</span>Manuales de usuario de las apps móviles</h2>
+  <h3 style="margin-top:0">9.1 RestoHub Meseros</h3>
+  <ol>
+    <li><b>Entrar.</b> Escribe el código del restaurante, tu correo y tu contraseña y toca «Entrar». Solo entran meseros y administradores. La sesión se conserva al cerrar la app.</li>
+    <li><b>Mesas.</b> Verás las mesas con su estado. Desliza hacia abajo para actualizar.</li>
+    <li><b>Tomar un pedido.</b> Toca una mesa libre, elige productos con «+» y «−», agrega notas para cocina y toca «Enviar a cocina». Si la mesa ya estaba ocupada, los productos se agregan a su comanda.</li>
+    <li><b>Productos (solo administrador).</b> En «Productos» consulta el catálogo, registra uno nuevo (nombre y precio obligatorios), edítalo o actívalo y desactívalo. El cambio aparece al instante en la web.</li>
+    <li><b>Avisos.</b> En «Avisos» acepta el permiso de notificaciones para recibir el seguimiento de solicitudes; al tocar una notificación se abre su detalle.</li>
+    <li><b>Sin conexión.</b> La app muestra «Sin conexión» y un botón para reintentar; no guarda pedidos sin red.</li>
+  </ol>
+  <div class="figuras f4">
+    <figure class="tel"><img src="../../pruebas/sit/CAL-139-app-movil/capturas/C01-P01-login-vacio.png"><figcaption><b>Inicio de sesión.</b></figcaption></figure>
+    <figure class="tel"><img src="../../pruebas/sit/CAL-139-app-movil/capturas/C02-P01a-telefono-mesas-1-10.png"><figcaption><b>Mesas</b> y su estado.</figcaption></figure>
+    <figure class="tel"><img src="../../pruebas/sit/CAL-139-app-movil/capturas/C02-P02a-telefono-menu.png"><figcaption><b>Menú</b> para armar el pedido.</figcaption></figure>
+    <figure class="tel"><img src="../../pruebas/sit/CAL-139-app-movil/capturas/C03-P03b-telefono-enviado-a-cocina.png"><figcaption><b>Pedido enviado</b> a cocina.</figcaption></figure>
+  </div>
+
+  <h3>9.2 RestoHub Clientes</h3>
+  <ol>
+    <li><b>Instalar.</b> Descarga el APK que te comparte el restaurante y permite la instalación desde ese origen.</li>
+    <li><b>Entrar a tu mesa.</b> En «¿Dónde estás comiendo?» toca «Escanear el QR de la mesa» y apunta la cámara al QR. También puedes escribir el código del restaurante y el número de mesa, o pegar el enlace del QR. La app recuerda la última mesa.</li>
+    <li><b>Pedir.</b> Busca en el menú, agrega productos y notas para cocina, revisa el <b>total estimado</b> y toca «Enviar a cocina». La cuenta final la entrega el mesero con los precios vigentes.</li>
+    <li><b>Llamar al mesero.</b> Toca «Llamar al mesero». Necesita señal: sin red el botón dice «Llamar (requiere señal)».</li>
+    <li><b>Mi pedido.</b> Muestra lo que enviaste en las últimas 24 horas, también sin conexión.</li>
+  </ol>
+  <table class="compacta">
+    <thead><tr><th>Estado del pedido</th><th>Qué significa</th><th>Qué hacer</th></tr></thead>
+    <tbody>
+      <tr><td>Esperando conexión</td><td>No hay red; el pedido está guardado en el teléfono.</td><td>Nada: se envía solo al volver la señal, o desliza para actualizar.</td></tr>
+      <tr><td>Sin confirmar</td><td>El servidor tardó y el pedido pudo haberse registrado.</td><td>Pregunta al mesero antes de «Enviar ahora», para no pedir dos veces.</td></tr>
+      <tr><td>Vencido</td><td>Lleva más de 30 minutos guardado.</td><td>Confirma si aún lo quieres o «Descartar».</td></tr>
+      <tr><td>Rechazado</td><td>Un producto se agotó o la mesa está inactiva.</td><td>Corrige el carrito, que se conserva, y vuelve a enviar.</td></tr>
+    </tbody>
+  </table>
+  <div class="nota">La primera vez se necesita conexión para descargar el menú. Después, la app muestra la copia guardada con la fecha en que se descargó.</div>
+</section>
+
+<!-- ===================== 10 MANUAL TÉCNICO ===================== -->
+<section class="seccion">
+  <h2><span class="num">10</span>Manual técnico y de instalación</h2>
+  <p>Este manual resume la puesta en marcha. El detalle paso a paso vive versionado en <code>README.md</code>, <code>mobile/README.md</code>, <code>mobile-clientes/README.md</code> e <code>infra/terraform/*/README.md</code>.</p>
+
+  <h3>10.1 Requisitos</h3>
+  <table class="compacta">
+    <thead><tr><th>Herramienta</th><th>Versión</th><th>Para qué</th></tr></thead>
+    <tbody>
+      <tr><td>JDK (Temurin)</td><td>21</td><td>Backend</td></tr>
+      <tr><td>PostgreSQL</td><td>16</td><td>Ejecutar la app local (las pruebas usan Docker)</td></tr>
+      <tr><td>Docker</td><td>Compatible con Testcontainers</td><td>Pruebas del backend e imágenes</td></tr>
+      <tr><td>Node.js y pnpm</td><td>Node 20+ (24 recomendado) · pnpm 10</td><td>Web y apps</td></tr>
+      <tr><td>Android SDK y JDK 17+</td><td>API 24 o superior</td><td>Generar el APK</td></tr>
+      <tr><td>Terraform y Azure CLI</td><td>Terraform ≥ 1.9 · az</td><td>Infraestructura y despliegue</td></tr>
+    </tbody>
+  </table>
+
+  <h3>10.2 Instalación local</h3>
+  <div class="terminal"><span class="d"># 1. Roles y bases (callejon9_owner migra, callejon9_app ejecuta sin BYPASSRLS)</span>
+<span class="c">$</span> psql -U postgres -f scripts/setup-db.sql
+<span class="d"># 2. Backend en :8080 (Flyway aplica las migraciones al arrancar)</span>
+<span class="c">$</span> cd backend &amp;&amp; ./mvnw spring-boot:run -Dspring-boot.run.profiles=demo
+<span class="d"># 3. Web en :3000 (reescribe /api/v1/* hacia el backend)</span>
+<span class="c">$</span> cd frontend &amp;&amp; pnpm install &amp;&amp; pnpm dev
+<span class="d"># 4. App de meseros (Expo Go o development build)</span>
+<span class="c">$</span> cd mobile &amp;&amp; pnpm install &amp;&amp; cp .env.example .env &amp;&amp; pnpm start
+<span class="d"># 5. App de comensales: APK de release</span>
+<span class="c">$</span> cd mobile-clientes &amp;&amp; pnpm install &amp;&amp; cp .env.example .env &amp;&amp; pnpm apk</div>
+
+  <h3>10.3 Variables de configuración</h3>
+  <table class="compacta">
+    <thead><tr><th>Variable</th><th>Componente</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td><code>JWT_SECRET</code></td><td>Backend</td><td>Firma de los tokens; mínimo 32 bytes. En Azure se lee de Key Vault.</td></tr>
+      <tr><td><code>DB_APP_PASSWORD</code>, <code>DB_OWNER_PASSWORD</code></td><td>Backend</td><td>Contraseñas de los dos roles de la base.</td></tr>
+      <tr><td><code>APP_ALLOWED_ORIGINS</code></td><td>Backend</td><td>Orígenes <code>https://</code> permitidos para el WebSocket; sin comodines.</td></tr>
+      <tr><td><code>SPRING_PROFILES_ACTIVE=prod</code></td><td>Backend</td><td>Exige secretos reales; sin ellos el backend no arranca.</td></tr>
+      <tr><td><code>EXPO_PUBLIC_API_URL</code></td><td>Apps</td><td>Raíz HTTPS del backend; se incrusta al compilar.</td></tr>
+      <tr><td><code>EXPO_PUBLIC_EAS_PROJECT_ID</code></td><td>Meseros</td><td>Proyecto de Expo para obtener el token push.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>10.4 Despliegue en Azure</h3>
+  <ol>
+    <li>Aplicar la infraestructura: <code>terraform -chdir=infra/terraform/azure-backend apply</code> (y <code>azure-frontend</code>). Crea App Service, PostgreSQL, Key Vault y Application Insights.</li>
+    <li>Preparar roles en la base gestionada con <code>scripts/setup-db-azure.sql</code>.</li>
+    <li>Publicar el backend: <code>./mvnw -B package</code> y <code>az webapp deploy --type jar</code>.</li>
+    <li>Publicar la web: <code>scripts/deploy-frontend-azure.ps1</code> (Next.js <i>standalone</i>).</li>
+    <li>Verificar: <code>/actuator/health</code> en <code>UP</code> y <code>scripts/verify-security-headers.ps1</code> sobre la web.</li>
+  </ol>
+
+  <h3>10.5 Operación y verificación</h3>
+  <table class="compacta">
+    <thead><tr><th>Tarea</th><th>Comando o lugar</th></tr></thead>
+    <tbody>
+      <tr><td>Puertas de calidad</td><td><code>./mvnw -B verify</code> · <code>pnpm lint</code> · <code>pnpm exec tsc --noEmit</code> · <code>pnpm build</code></td></tr>
+      <tr><td>Comprobar RLS</td><td><code>scripts/verify-rls.sql</code> como <code>callejon9_app</code>: el cuarto chequeo debe fallar a propósito.</td></tr>
+      <tr><td>Encender o apagar la API</td><td><code>scripts/azure-backend-power.ps1</code></td></tr>
+      <tr><td>Revisar errores y latencia</td><td>Application Insights del grupo de recursos.</td></tr>
+      <tr><td>Datos de demostración</td><td><code>scripts/seed-demo.ps1</code></td></tr>
+      <tr><td>Documentación de la API</td><td>Swagger UI en local (<code>/swagger-ui.html</code>); apagada en <code>prod</code>. Contrato en <code>docs/api/openapi.json</code>.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===================== 11 VERSIÓN ESTABLE ===================== -->
+<section class="seccion">
+  <h2><span class="num">11</span>Versión estable y plan de entregas continuas</h2>
+  <p>La versión estable es el estado de <code>main</code> en el commit <code>66f32e0</code> (19 de noviembre de 2026), con todos los componentes integrados y el pipeline de Jenkins en verde. Ese mismo código corre en Azure.</p>
+
+  <div class="tarjetas">
+    <div class="tarjeta"><div class="k">Commit estable</div><div class="v mono" style="font-size:13pt">66f32e0</div>Fusión del PR #124 (tiempo real en la web, CAL-172).</div>
+    <div class="tarjeta"><div class="k">Jenkins</div><div class="v" style="color:var(--verde)">success</div><code>continuous-integration/jenkins/branch</code> · 19-nov-2026 10:22 (hora del centro).</div>
+    <div class="tarjeta"><div class="k">En producción</div><div class="v">UP · 200</div>API y web en Azure respondiendo con TLS el 25 de noviembre.</div>
+  </div>
+
+  <h3>11.1 Componentes integrados</h3>
+  <table class="compacta">
+    <thead><tr><th>Componente</th><th>Versión</th><th>Dónde corre</th><th>Estado</th></tr></thead>
+    <tbody>
+      <tr><td>Backend</td><td>Spring Boot 3.4 · 15 migraciones Flyway</td><td>Azure App Service</td><td class="ok">✔ Desplegado</td></tr>
+      <tr><td>Web / PWA</td><td>Next.js 15.5</td><td>Azure App Service</td><td class="ok">✔ Desplegado</td></tr>
+      <tr><td>Base de datos</td><td>PostgreSQL 16 con RLS</td><td>Azure Database for PostgreSQL</td><td class="ok">✔ Desplegado</td></tr>
+      <tr><td>App de meseros</td><td>1.0.0</td><td>Expo Go / development build</td><td class="ok">✔ En <code>main</code></td></tr>
+      <tr><td>App de comensales</td><td>1.0.0 (versionCode 1)</td><td>APK de release</td><td class="pend">◐ APK generado; código sin subir</td></tr>
+      <tr><td>Infraestructura</td><td>Terraform azurerm</td><td>Azure</td><td class="ok">✔ En <code>main</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>11.2 Pruebas de extremo a extremo sobre Azure</h3>
+  <p>La integración de los componentes se comprueba con <b>10 suites E2E de Playwright</b> que abren el navegador, inician sesión con distintos roles y recorren la operación completa sobre la web y la API publicadas en Azure, no sobre un entorno local. Cada suite guarda capturas y respuestas HTTP en <code>docs/pruebas/sit/CAL-*/</code> (98 capturas en total).</p>
+  <table class="compacta">
+    <thead><tr><th>Suite</th><th>Recorrido de extremo a extremo</th><th>Capturas</th></tr></thead>
+    <tbody>
+      <tr><td>CAL-133 · Autenticación</td><td>Login, cuenta inexistente, logout, sesión de cocina abierta más de 15 min que renueva el token sola, y bloqueo con 429 tras seis contraseñas erróneas.</td><td>12</td></tr>
+      <tr><td>CAL-136 · Catálogo</td><td>El administrador da de alta un producto y el mesero lo ve; al darlo de baja con el producto en el carrito, no entra a la comanda.</td><td>9</td></tr>
+      <tr><td>CAL-137 · Mesas</td><td>Dos meseros en sesiones separadas ven la misma mesa ocupada y libre; abrir una mesa ya ocupada responde 409.</td><td>12</td></tr>
+      <tr><td>CAL-138 · Pedidos del mesero</td><td>Abrir, agregar y enviar a cocina; otro mesero no puede operar la orden (403); cantidad de 100 rechazada (400).</td><td>15</td></tr>
+      <tr><td>CAL-139 · App móvil</td><td>Mesas y productos que ve el mesero en la web, comparados con los del teléfono.</td><td>20</td></tr>
+      <tr><td>CAL-141 · Cobro y pagos</td><td>Mesero → cocina → caja: pago dividido con 10 % de propina libera la mesa; pago insuficiente da 422; la orden cobrada ya no acepta productos.</td><td>11</td></tr>
+      <tr><td>CAL-142 · Tickets</td><td>Buscar por folio y descargar el PDF; el folio de otro restaurante devuelve 404.</td><td>4</td></tr>
+      <tr><td>CAL-143 · Inventario</td><td>Cocina registra una salida y el administrador ve la existencia; un insumo dado de baja ya no acepta movimientos.</td><td>10</td></tr>
+      <tr><td>CAL-144 · Ventas y analítica</td><td>El cobro de CAL-141 aparece con el mismo total en el historial de caja, en el del administrador y en la analítica.</td><td>4</td></tr>
+      <tr><td>CAL-145 · Aislamiento</td><td>Un mesero intenta leer la orden y la mesa de otro restaurante: 404 y nada visible; el dueño sí la ve.</td><td>1</td></tr>
+    </tbody>
+  </table>
+  <div class="nota"><b>En el pipeline.</b> <code>ci/Jenkinsfile.pruebas-demo</code> corre las suites E2E de CAL-138 y CAL-139 contra Azure dentro de la imagen oficial <code>mcr.microsoft.com/playwright:v1.56.1-noble</code>, junto con las pruebas unitarias. <code>verificar.mjs</code> revisa los códigos HTTP guardados y pone el build en rojo si alguno no es el esperado. Las demás suites se ejecutan a mano porque modifican datos del entorno compartido; CAL-133 queda fuera porque sus intentos fallidos bloquean el login durante 15 minutos. La automatización de los recorridos críticos con Selenium (CAL-28) sigue pendiente.</div>
+
+  <h3>11.3 Paquete de la app de comensales</h3>
+  <div class="terminal"><span class="c">$</span> aapt2 dump badging app-release.apk
+package: name='com.callejon9.clientes' versionCode='<span class="g">1</span>' versionName='<span class="g">1.0.0</span>' compileSdkVersion='37'
+application-label:'RestoHub Clientes'
+native-code: 'arm64-v8a' 'armeabi-v7a' 'x86' 'x86_64'
+uses-permission: INTERNET · ACCESS_NETWORK_STATE · CAMERA · VIBRATE · ACCESS_WIFI_STATE
+<span class="c">$</span> apksigner verify --print-certs app-release.apk
+V2 Signer: certificate DN: CN=Android Debug, OU=Android …      <span class="d"># llave de depuración de Expo</span>
+<span class="c">$</span> shasum -a 256 app-release.apk      <span class="d"># 90.4 MB, compilado el 25-nov-2026</span>
+a43ae486a5f89002c9f3c7d3d18a9eb127aec29b0841055084a221ab780896b1</div>
+  <div class="nota">El APK se firmó con la llave de depuración que genera Expo: sirve para instalarlo directamente en un teléfono, no para Google Play. Antes de publicarlo en una tienda hace falta una keystore propia (que nunca se versiona) o la firma administrada por EAS.</div>
+
+  <h3>11.4 Plan de entregas continuas</h3>
+  <table class="compacta">
+    <thead><tr><th>Etapa</th><th>Qué pasa</th><th>Automatizado</th></tr></thead>
+    <tbody>
+      <tr><td>1 · Rama</td><td>Rama corta <code>feat/*</code>, <code>fix/*</code>, <code>docs/*</code> o <code>chore/*</code> con la clave del issue.</td><td>—</td></tr>
+      <tr><td>2 · Pull request</td><td>Jenkins y Actions corren seguridad, backend con PostgreSQL real, web, móvil e imágenes, y publican su estado en el PR.</td><td class="ok">✔ Sí</td></tr>
+      <tr><td>3 · Revisión</td><td>Otra persona revisa y aprueba; nadie fusiona su propio cambio.</td><td>—</td></tr>
+      <tr><td>4 · Integración</td><td>Fusión a <code>main</code>; el pipeline vuelve a correr sobre el resultado.</td><td class="ok">✔ Sí</td></tr>
+      <tr><td>5 · Despliegue</td><td>JAR y web a Azure App Service con los scripts de la sección 10.4.</td><td class="pend">◐ Manual con script (CAL-56 lo automatiza con rollback)</td></tr>
+      <tr><td>6 · Verificación</td><td>Salud, cabeceras de seguridad y suites E2E de Playwright sobre Azure (sección 11.2).</td><td class="pend">◐ Parcial: CAL-138 y CAL-139 en Jenkins</td></tr>
+      <tr><td>7 · Versión</td><td>Etiqueta SemVer en <code>main</code> y <i>release</i> en GitHub con notas y APK adjunto.</td><td class="pend">◐ Pendiente</td></tr>
+    </tbody>
+  </table>
+
+  <h3>11.5 Para cerrar la versión estable</h3>
+  <div class="terminal"><span class="d"># Subir la app de comensales y fusionarla por PR (revisión de otra persona)</span>
+<span class="c">$</span> git add mobile-clientes &amp;&amp; git commit -m "feat(mobile-clientes): app de comensales con menú y pedidos sin conexión"
+<span class="c">$</span> git push -u origin feat/app-clientes-offline &amp;&amp; gh pr create
+<span class="d"># Etiquetar la versión estable sobre main y publicar el release con el APK</span>
+<span class="c">$</span> git tag -a v1.0.0 -m "RestoHub 1.0.0" &lt;commit de main&gt; &amp;&amp; git push origin v1.0.0
+<span class="c">$</span> gh release create v1.0.0 restohub-clientes-1.0.0-1.apk --title "RestoHub 1.0.0" --notes-file NOTAS.md</div>
+</section>
+
+<!-- ===================== 12 VERSIONAMIENTO ===================== -->
+<section class="seccion">
+  <h2><span class="num">12</span>Evidencia de versionamiento de código y documentación</h2>
+  <p>Todo el código y la documentación del proyecto viven en el repositorio público <b>github.com/LudwinGarcia1/callejon9-saas</b>, rama base <code>main</code>. El historial empieza el 29 de julio de 2026.</p>
+
+  <div class="tarjetas">
+    <div class="tarjeta"><div class="k">Commits en main</div><div class="v">475</div>338 de trabajo y 137 de fusión.</div>
+    <div class="tarjeta"><div class="k">Pull requests</div><div class="v">122 fusionados</div>4 abiertos en revisión al 25-nov.</div>
+    <div class="tarjeta"><div class="k">Corridas de CI</div><div class="v">437</div>405 en verde, 31 en rojo y 1 cancelada (GitHub Actions).</div>
+  </div>
+
+  <table class="compacta">
+    <thead><tr><th>Métrica (git y API de GitHub, 25-nov-2026)</th><th>Valor</th></tr></thead>
+    <tbody>
+      <tr><td>Commits de trabajo con formato convencional</td><td>331 de 338 (97.9 %)</td></tr>
+      <tr><td>Tipos de commit</td><td>feat 121 · docs 86 · fix 71 · test 32 · chore 13 · ci 7 · refactor 1</td></tr>
+      <tr><td>Commits que tocan documentación (<code>*.md</code>, <code>docs/</code>, <code>workflow/</code>)</td><td>168</td></tr>
+      <tr><td>Ramas en GitHub</td><td>124</td></tr>
+      <tr><td>Integrantes con commits</td><td>Los cuatro</td></tr>
+      <tr><td>Pruebas del backend</td><td>545 métodos <code>@Test</code> en 100 archivos; 724 casos ejecutados al 28-oct (las parametrizadas cuentan varias veces)</td></tr>
+      <tr><td>Evidencia de pruebas versionada</td><td>13 carpetas SIT (10 con su suite E2E de Playwright), 5 UAT y 6 UT en <code>docs/pruebas/</code>, con 157 capturas</td></tr>
+    </tbody>
+  </table>
+
+  <h3>12.1 Documentación versionada</h3>
+  <table class="compacta">
+    <thead><tr><th>Documento</th><th>Ruta</th></tr></thead>
+    <tbody>
+      <tr><td>Guía del proyecto, arquitectura e instalación</td><td><code>README.md</code></td></tr>
+      <tr><td>Reglas del repositorio e invariantes</td><td><code>AGENTS.md</code></td></tr>
+      <tr><td>Hoja de ruta y replanificación</td><td><code>workflow/plan/roadmap.md</code></td></tr>
+      <tr><td>Producto y definición de terminado</td><td><code>workflow/product/</code></td></tr>
+      <tr><td>Normas, estándares y leyes</td><td><code>docs/cal-69-normas-estandares-leyes.md</code></td></tr>
+      <tr><td>Contrato de la API</td><td><code>docs/api/openapi.json</code></td></tr>
+      <tr><td>Infraestructura y Jenkins</td><td><code>infra/terraform/*/README.md</code>, <code>infra/jenkins/README.md</code></td></tr>
+      <tr><td>Apps móviles</td><td><code>mobile/README.md</code>, <code>mobile-clientes/README.md</code></td></tr>
+      <tr><td>Entregables anteriores</td><td><code>docs/entregas/</code></td></tr>
+    </tbody>
+  </table>
+
+  <h3>12.2 Integraciones recientes en main</h3>
+  <div class="terminal"><span class="c">$</span> git log --oneline -6 origin/main
+66f32e0 Merge pull request #124 from LudwinGarcia1/feat/cal-172-tiempo-real-web
+2b07484 Merge pull request #130 from LudwinGarcia1/fix/cal-195-permisos-por-ruta
+6b848cb Merge pull request #129 from LudwinGarcia1/fix/cal-194-atras-tras-cerrar-sesion
+c0f393d Merge pull request #128 from LudwinGarcia1/fix/cal-109-super-admin-contrasena-publicada
+49b25b6 Merge pull request #131 from LudwinGarcia1/fix/ci-pnpm-movil-jenkins
+fd5352b Merge pull request #127 from LudwinGarcia1/feat/mobile-notificaciones-push
+<span class="c">$</span> gh api repos/…/commits/66f32e0/status
+continuous-integration/jenkins/branch   <span class="g">success</span>   2026-11-19T16:22:58Z</div>
+  <p>Cada rama lleva la clave del issue de Linear (<code>fix/cal-195-…</code>) y el commit y el PR la citan, así que cualquier cambio se rastrea del requerimiento al código, a su revisión y a su corrida de CI.</p>
+</section>
+
+<!-- ===================== 13 CONCLUSIÓN ===================== -->
+<section class="seccion">
+  <h2><span class="num">13</span>Conclusión</h2>
+  <div class="conclusion">
+    <p>Scrum con integración continua resultó adecuado para un equipo de cuatro personas con tiempo parcial y un alcance que cambió dos veces en el cuatrimestre. Los ciclos de Linear absorbieron esos cambios, y el pipeline evitó que la velocidad debilitara la garantía central: un cambio que dejaba una tabla sin aislamiento entre restaurantes no pasó la integración.</p>
+    <p>Las dos apps móviles muestran que una misma API puede servir a usuarios muy distintos. La app de meseros confía en el servidor para todo y por eso no guarda datos. La de comensales no tiene cuenta y debe funcionar con mala señal, así que guarda el menú y una bandeja de salida que no duplica pedidos. En ambas, la seguridad sigue en el backend y en PostgreSQL, no en el teléfono.</p>
+    <p>Quedan tres pendientes para que la liberación sea completa: subir la app de comensales por pull request, etiquetar la versión <code>v1.0.0</code> con su <i>release</i>, y automatizar el despliegue con rollback (CAL-56). Además, las rutas públicas del menú QR no tienen límite de peticiones por IP, a diferencia del login y del alta; conviene agregarlo antes de abrir la app de comensales a más usuarios.</p>
+  </div>
+
+  <h2 style="margin-top:26px; border:0; padding:0">Fuentes de consulta</h2>
+  <ul class="fuentes">
+    <li><a>Schwaber, K. y Sutherland, J. (2020). <i>The Scrum Guide</i></a> · scrumguides.org</li>
+    <li><a>ISO/IEC 25010:2023 — Systems and software quality models</a> · iso.org</li>
+    <li><a>OWASP API Security Top 10 (2023) y Mobile Application Security Verification Standard</a> · owasp.org</li>
+    <li><a>PostgreSQL 16 Documentation — Row Security Policies</a> · postgresql.org/docs/16/ddl-rowsecurity.html</li>
+    <li><a>Microsoft Learn — Azure App Service, Azure Database for PostgreSQL y Key Vault references</a> · learn.microsoft.com</li>
+    <li><a>Expo — Push notifications overview y Build APKs</a> · docs.expo.dev</li>
+    <li><a>Jenkins — Pipeline syntax</a> · jenkins.io/doc/book/pipeline/syntax</li>
+    <li><a>Ley Federal de Protección de Datos Personales en Posesión de los Particulares</a> · DOF, 20 de marzo de 2025</li>
+    <li><a>W3C — Web Content Accessibility Guidelines 2.1</a> · w3.org/TR/WCAG21</li>
+    <li><a>Conventional Commits 1.0.0 y Semantic Versioning 2.0.0</a> · conventionalcommits.org · semver.org</li>
+  </ul>
+</section>
+
+</body>
+</html>

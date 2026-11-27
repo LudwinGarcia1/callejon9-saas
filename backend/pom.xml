@@ -24,6 +24,7 @@
 		<openpdf.version>2.4.0</openpdf.version>
 		<spotbugs.version>4.8.6.6</spotbugs.version>
 		<findsecbugs.version>1.13.0</findsecbugs.version>
+		<sentry.version>8.66.0</sentry.version>
 		<!-- Parche de la misma linea 10.1 sobre el que trae Spring Boot 3.4.13
 		     (10.1.50), que tiene vulnerabilidades criticas conocidas (CAL-17).
 		     Quitar al migrar a Spring Boot 3.5 si este ya trae una version
@@ -55,6 +56,14 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
+		<!-- Reporte de errores a Sentry. Sin SENTRY_DSN el SDK queda apagado,
+		     asi que pruebas, CI y desarrollo no envian nada. -->
+		<dependency>
+			<groupId>io.sentry</groupId>
+			<artifactId>sentry-spring-boot-starter-jakarta</artifactId>
+			<version>${sentry.version}</version>
 		</dependency>
 
 		<!-- Migraciones: el esquema lo define Flyway, nunca Hibernate. -->

@@ -14,7 +14,8 @@
     4. Espera a que /login responda 200.
 
     BACKEND_ORIGIN queda fijo en el rewrite de /api/v1/* al compilar: cambiar la API
-    exige volver a correr este script.
+    exige volver a correr este script. Lo mismo pasa con el DSN de Sentry
+    (-SentryDsn o $env:NEXT_PUBLIC_SENTRY_DSN); sin DSN, Sentry queda apagado.
 
     Los valores por defecto salen de `terraform output` en infra/terraform/azure-frontend.
 
@@ -29,6 +30,7 @@ param(
     [string]$ResourceGroup,
     [string]$WebAppName,
     [string]$BackendOrigin,
+    [string]$SentryDsn = $env:NEXT_PUBLIC_SENTRY_DSN,
     [int]$HealthTimeoutSeconds = 600
 )
 
@@ -116,6 +118,7 @@ try {
     $revision = (Invoke-Native 'git' @('-C', $repoRoot, 'rev-parse', '--short', 'HEAD'))
     Write-Host "== Compilando el frontend ($revision) contra $BackendOrigin"
     Invoke-Native 'docker' @('build', '--target', 'builder', '--build-arg', "BACKEND_ORIGIN=$BackendOrigin",
+        '--build-arg', "NEXT_PUBLIC_SENTRY_DSN=$SentryDsn", '--build-arg', "VCS_REF=$revision",
         '-t', $image, $frontendDir) | Out-Host
 
     # Se reinstala con node_modules plano y se recompila: con los enlaces de pnpm,

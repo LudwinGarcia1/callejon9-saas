@@ -46,6 +46,8 @@ ARG VCS_REF=unknown
 LABEL org.opencontainers.image.title="callejon9-backend" \
       org.opencontainers.image.source="https://github.com/LudwinGarcia1/callejon9-saas" \
       org.opencontainers.image.revision="${VCS_REF}"
+# Sentry agrupa los errores por la version exacta del commit.
+ENV SENTRY_RELEASE=callejon9-backend@${VCS_REF}
 
 USER 10001:10001
 EXPOSE 8080
