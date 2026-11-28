@@ -294,6 +294,26 @@ class KitchenControllerTest {
                 .andExpect(jsonPath("$.length()").value(0));
     }
 
+    @Test
+    @DisplayName("WAITER puede avanzar un item de READY a DELIVERED para entregarlo en mesa")
+    void waiterCanAdvanceReadyItemToDelivered() throws Exception {
+        Product taco = createProduct("Taco", "25.00");
+        UUID orderId = openOrderOn(createTable(1));
+        addItem(orderId, taco);
+        sendToKitchen(orderId);
+        String tacoId = firstItemIdOf(orderId).toString();
+
+        advance(tacoId, "IN_PREPARATION");
+        advance(tacoId, "READY");
+
+        mockMvc.perform(post("/api/v1/kitchen/items/" + tacoId + "/status")
+                        .cookie(cookieFor(waiter))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"DELIVERED\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.kitchenStatus").value("DELIVERED"));
+    }
+
     private void advance(String itemId, String newStatus) throws Exception {
         mockMvc.perform(post("/api/v1/kitchen/items/" + itemId + "/status")
                         .cookie(cookieFor(kitchenUser))

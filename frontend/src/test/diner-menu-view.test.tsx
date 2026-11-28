@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
-import { DinerMenuView } from "../app/m/[slug]/[table]/diner-menu-view";
+import { DinerMenuView, DEFAULT_MENU_ITEMS } from "../app/m/[slug]/[table]/diner-menu-view";
 
 afterEach(cleanup);
 
@@ -19,7 +19,7 @@ describe("DinerMenuView (Auto-pedido y Menú QR)", () => {
   });
 
   it("renderiza correctamente el slug del restaurante y el número de mesa", () => {
-    render(<DinerMenuView slug="los-taquitos" tableNumber="5" />);
+    render(<DinerMenuView slug="los-taquitos" tableNumber="5" initialMenuItems={DEFAULT_MENU_ITEMS} />);
 
     expect(screen.getByText("los taquitos")).toBeDefined();
     expect(screen.getByText("Mesa 5")).toBeDefined();
@@ -27,7 +27,7 @@ describe("DinerMenuView (Auto-pedido y Menú QR)", () => {
   });
 
   it("permite agregar productos a la comanda y actualiza la barra flotante", () => {
-    render(<DinerMenuView slug="los-taquitos" tableNumber="3" />);
+    render(<DinerMenuView slug="los-taquitos" tableNumber="3" initialMenuItems={DEFAULT_MENU_ITEMS} />);
 
     // Buscar botones de "Agregar"
     const addButtons = screen.getAllByRole("button", { name: /agregar/i });
