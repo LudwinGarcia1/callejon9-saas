@@ -528,9 +528,10 @@
     "produces": [],
     "roles": [
       "ADMIN",
-      "KITCHEN"
+      "KITCHEN",
+      "WAITER"
     ],
-    "reason": "CAL-5: permisos de KitchenController"
+    "reason": "CAL-5: permisos de KitchenController; el mesero solo entrega (READY a DELIVERED), lo impone el controller"
   },
   {
     "method": "GET",
