@@ -14,6 +14,8 @@ import {
   UtensilsCrossedIcon,
   ChevronRightIcon,
   StarIcon,
+  SunIcon,
+  MoonIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -24,6 +26,7 @@ import { MercadoPagoQrModal } from "@/components/shared/mercadopago-qr-modal";
 import { ApiError, api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { getFoodVisual, getCategoryEmoji } from "@/lib/food-images";
+import { getSmartPairings, classifyFoodType } from "@/lib/food-pairings";
 import type { KitchenItemStatus, OrderResponse, OrderStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -201,6 +204,30 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
   const [detailQty, setDetailQty] = useState<number>(1);
   const [detailNotes, setDetailNotes] = useState<string>("");
   const [dietaryFilter, setDietaryFilter] = useState<"ALL" | "POPULAR" | "VEGETARIAN" | "SPICY">("ALL");
+  const [themeMode, setThemeMode] = useState<"dark" | "light">("dark");
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("resto_qr_theme");
+      if (saved === "light" || saved === "dark") {
+        setThemeMode(saved);
+      }
+    } catch {
+      // Ignore if localStorage unavailable
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    const next = themeMode === "dark" ? "light" : "dark";
+    setThemeMode(next);
+    try {
+      localStorage.setItem("resto_qr_theme", next);
+    } catch {
+      // Ignore
+    }
+  };
+
+  const isLight = themeMode === "light";
 
   // Carga inicial del catálogo desde la API pública
   useEffect(() => {
@@ -499,46 +526,90 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
   };
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col pb-32 max-w-4xl mx-auto shadow-2xl selection:bg-amber-500 selection:text-neutral-950">
+    <div
+      className={cn(
+        "min-h-screen flex flex-col pb-32 max-w-4xl mx-auto shadow-2xl transition-colors duration-200",
+        isLight
+          ? "bg-[#faf7f2] text-stone-900 selection:bg-amber-500 selection:text-white"
+          : "bg-neutral-950 text-neutral-100 selection:bg-amber-500 selection:text-neutral-950"
+      )}
+    >
       {/* HEADER HERO SUPERIOR */}
-      <header className="relative sticky top-0 z-30 bg-neutral-900/90 backdrop-blur-xl border-b border-neutral-800/80 px-4 pt-4 pb-3.5 sm:px-6 shadow-lg shadow-black/40">
+      <header
+        className={cn(
+          "relative sticky top-0 z-30 backdrop-blur-xl border-b px-4 pt-4 pb-3.5 sm:px-6 transition-colors duration-200",
+          isLight
+            ? "bg-[#faf7f2]/95 border-stone-200/90 shadow-sm"
+            : "bg-neutral-900/90 border-neutral-800/80 shadow-lg shadow-black/40"
+        )}
+      >
         {/* Ambient Glow */}
         <div className="absolute top-0 right-1/4 w-72 h-36 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative flex items-center justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-[10px] sm:text-xs uppercase font-extrabold tracking-wider text-amber-400">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-[10px] sm:text-xs uppercase font-extrabold tracking-wider text-amber-500">
                 <SparklesIcon className="w-2.5 h-2.5" /> RestoHub
               </span>
-              <span className="text-neutral-600 text-xs">•</span>
-              <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 font-extrabold px-2 py-0.5 text-xs flex items-center gap-1.5 shadow-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-neutral-500 text-xs">•</span>
+              <Badge className="bg-emerald-500/15 text-emerald-500 border-emerald-500/30 font-extrabold px-2 py-0.5 text-xs flex items-center gap-1.5 shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Mesa {tableNumber}
               </Badge>
             </div>
-            <h1 className="text-xl sm:text-2xl font-black capitalize text-white tracking-tight leading-tight truncate mt-1">
+            <h1
+              className={cn(
+                "text-xl sm:text-2xl font-black capitalize tracking-tight leading-tight truncate mt-1",
+                isLight ? "text-stone-900" : "text-white"
+              )}
+            >
               {restaurantTitle}
             </h1>
           </div>
 
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {/* BOTÓN CONMUTADOR DE TEMA */}
+            <button
+              onClick={toggleTheme}
+              aria-label={isLight ? "Cambiar a modo oscuro" : "Cambiar a modo claro"}
+              title={isLight ? "Cambiar a modo oscuro" : "Cambiar a modo claro"}
+              className={cn(
+                "h-9 px-2.5 rounded-xl border flex items-center justify-center transition-all shadow-sm active:scale-95",
+                isLight
+                  ? "bg-amber-100/70 border-amber-300/80 text-amber-900 hover:bg-amber-100"
+                  : "bg-neutral-800/90 border-neutral-700/80 text-amber-400 hover:bg-neutral-800"
+              )}
+            >
+              {isLight ? <MoonIcon className="w-4 h-4 text-stone-700" /> : <SunIcon className="w-4 h-4 text-amber-400" />}
+            </button>
+
             <Button
               variant="outline"
               size="sm"
               onClick={handleCallWaiter}
-              className="h-9 px-3 bg-neutral-800/90 border-neutral-700/80 text-xs font-bold text-neutral-200 hover:text-amber-400 hover:border-amber-500/50 hover:bg-neutral-800 shadow-sm active:scale-95 transition-all"
+              className={cn(
+                "h-9 px-3 text-xs font-bold shadow-sm active:scale-95 transition-all",
+                isLight
+                  ? "bg-white border-stone-300 text-stone-800 hover:text-amber-800 hover:border-amber-400"
+                  : "bg-neutral-800/90 border-neutral-700/80 text-neutral-200 hover:text-amber-400 hover:border-amber-500/50 hover:bg-neutral-800"
+              )}
             >
-              <BellRingIcon className="w-3.5 h-3.5 mr-1.5 text-amber-400" />
+              <BellRingIcon className="w-3.5 h-3.5 mr-1.5 text-amber-500" />
               Mesero
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={handleAskBill}
-              className="h-9 px-3 bg-neutral-800/90 border-neutral-700/80 text-xs font-bold text-neutral-200 hover:text-emerald-400 hover:border-emerald-500/50 hover:bg-neutral-800 shadow-sm active:scale-95 transition-all"
+              className={cn(
+                "h-9 px-3 text-xs font-bold shadow-sm active:scale-95 transition-all",
+                isLight
+                  ? "bg-white border-stone-300 text-stone-800 hover:text-emerald-700 hover:border-emerald-400"
+                  : "bg-neutral-800/90 border-neutral-700/80 text-neutral-200 hover:text-emerald-400 hover:border-emerald-500/50 hover:bg-neutral-800"
+              )}
             >
-              <CreditCardIcon className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
+              <CreditCardIcon className="w-3.5 h-3.5 mr-1.5 text-emerald-500" />
               Cuenta
             </Button>
           </div>
@@ -546,12 +617,17 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
 
         {/* BUSCADOR MODERNO */}
         <div className="mt-3 relative">
-          <SearchIcon className="w-4 h-4 text-neutral-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <SearchIcon className={cn("w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2", isLight ? "text-stone-400" : "text-neutral-400")} />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar platillos, bebidas, postres..."
-            className="pl-10 pr-9 bg-neutral-950/60 border-neutral-800/90 text-xs text-neutral-100 placeholder:text-neutral-500 h-10 rounded-2xl focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-all shadow-inner"
+            className={cn(
+              "pl-10 pr-9 text-xs h-10 rounded-2xl transition-all shadow-inner",
+              isLight
+                ? "bg-white border-stone-300 text-stone-900 placeholder:text-stone-400 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20"
+                : "bg-neutral-950/60 border-neutral-800/90 text-neutral-100 placeholder:text-neutral-500 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30"
+            )}
           />
           {searchQuery && (
             <button
@@ -571,6 +647,8 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
               "px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5",
               selectedCategory === "ALL"
                 ? "bg-amber-500 text-neutral-950 shadow-md shadow-amber-500/25 scale-[1.02]"
+                : isLight
+                ? "bg-white border border-stone-200 text-stone-700 hover:text-stone-900 hover:bg-stone-100"
                 : "bg-neutral-800/80 border border-neutral-700/60 text-neutral-300 hover:text-white hover:bg-neutral-800"
             )}
           >
@@ -589,6 +667,8 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
                   "px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5",
                   isSelected
                     ? "bg-amber-500 text-neutral-950 shadow-md shadow-amber-500/25 scale-[1.02]"
+                    : isLight
+                    ? "bg-white border border-stone-200 text-stone-700 hover:text-stone-900 hover:bg-stone-100"
                     : "bg-neutral-800/80 border border-neutral-700/60 text-neutral-300 hover:text-white hover:bg-neutral-800"
                 )}
               >
@@ -600,8 +680,13 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
         </div>
 
         {/* FILTROS RÁPIDOS GASTRONÓMICOS */}
-        <div className="mt-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1 border-t border-neutral-800/50">
-          <span className="text-[10px] font-black text-neutral-500 uppercase tracking-wider pl-0.5">
+        <div
+          className={cn(
+            "mt-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1 border-t",
+            isLight ? "border-stone-200" : "border-neutral-800/50"
+          )}
+        >
+          <span className={cn("text-[10px] font-black uppercase tracking-wider pl-0.5", isLight ? "text-stone-500" : "text-neutral-500")}>
             Filtro rápido:
           </span>
           {[
@@ -616,7 +701,9 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
               className={cn(
                 "px-2.5 py-1 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all flex items-center gap-1",
                 dietaryFilter === f.id
-                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-xs"
+                  ? "bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/50 shadow-xs font-black"
+                  : isLight
+                  ? "bg-white text-stone-600 border border-stone-200 hover:text-stone-900"
                   : "bg-neutral-900/60 text-neutral-400 border border-neutral-800 hover:text-neutral-200"
               )}
             >
@@ -723,7 +810,12 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
         <section className="mx-4 mt-4">
           <div
             onClick={() => handleOpenDetail(featuredItem)}
-            className="group relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-950/40 via-neutral-900 to-neutral-900 border border-amber-500/30 p-4 shadow-xl cursor-pointer hover:border-amber-500/60 transition-all"
+            className={cn(
+              "group relative overflow-hidden rounded-3xl border p-4 shadow-xl cursor-pointer transition-all",
+              isLight
+                ? "bg-gradient-to-r from-amber-100/70 via-stone-50 to-white border-amber-300/80 hover:border-amber-400 shadow-stone-200/50"
+                : "bg-gradient-to-r from-amber-950/40 via-neutral-900 to-neutral-900 border-amber-500/30 hover:border-amber-500/60"
+            )}
           >
             <div className="flex flex-col sm:flex-row gap-4 items-center">
               <div className="relative w-full sm:w-44 h-36 sm:h-32 flex-shrink-0 rounded-2xl overflow-hidden bg-neutral-800 shadow-md">
@@ -742,17 +834,27 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
 
               <div className="flex-1 w-full flex flex-col justify-between">
                 <div>
-                  <h3 className="text-base sm:text-lg font-black text-white leading-snug group-hover:text-amber-300 transition-colors">
+                  <h3
+                    className={cn(
+                      "text-base sm:text-lg font-black leading-snug transition-colors",
+                      isLight ? "text-stone-900 group-hover:text-amber-800" : "text-white group-hover:text-amber-300"
+                    )}
+                  >
                     {featuredItem.name}
                   </h3>
-                  <p className="text-xs text-neutral-300 mt-1 line-clamp-2 leading-relaxed">
+                  <p className={cn("text-xs mt-1 line-clamp-2 leading-relaxed", isLight ? "text-stone-600" : "text-neutral-300")}>
                     {featuredItem.description || "Deliciosa receta artesanal preparada con ingredientes frescos del día."}
                   </p>
                 </div>
 
-                <div className="mt-3 flex items-center justify-between gap-2 pt-2 border-t border-neutral-800/80">
-                  <span className="text-lg font-black text-amber-400">
-                    ${featuredItem.price.toFixed(2)} <span className="text-xs font-normal text-neutral-400">MXN</span>
+                <div
+                  className={cn(
+                    "mt-3 flex items-center justify-between gap-2 pt-2 border-t",
+                    isLight ? "border-stone-200" : "border-neutral-800/80"
+                  )}
+                >
+                  <span className={cn("text-lg font-black", isLight ? "text-amber-800" : "text-amber-400")}>
+                    ${featuredItem.price.toFixed(2)} <span className={cn("text-xs font-normal", isLight ? "text-stone-500" : "text-neutral-400")}>MXN</span>
                   </span>
 
                   {(() => {
@@ -772,18 +874,24 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
                     ) : (
                       <div
                         onClick={(e) => e.stopPropagation()}
-                        className="flex items-center gap-2 bg-neutral-950 p-1 rounded-xl border border-amber-500/50 shadow-md"
+                        className={cn(
+                          "flex items-center gap-2 p-1 rounded-xl border shadow-md",
+                          isLight ? "bg-stone-100 border-amber-500/40" : "bg-neutral-950 border-amber-500/50"
+                        )}
                       >
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDecrement(featuredItem.id);
                           }}
-                          className="w-6 h-6 flex items-center justify-center rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 active:scale-90"
+                          className={cn(
+                            "w-6 h-6 flex items-center justify-center rounded-lg active:scale-90",
+                            isLight ? "bg-stone-200 text-stone-800 hover:bg-stone-300" : "bg-neutral-800 hover:bg-neutral-700 text-neutral-200"
+                          )}
                         >
                           <MinusIcon className="w-3 h-3" />
                         </button>
-                        <span className="text-xs font-black text-amber-400 px-1.5">{qty}</span>
+                        <span className={cn("text-xs font-black px-1.5", isLight ? "text-amber-800" : "text-amber-400")}>{qty}</span>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -806,10 +914,10 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
       {/* LISTADO DE PLATILLOS (GRID ADAPTATIVO: 1 COL EN MÓVIL, 2 COLS EN TABLET) */}
       <main className="p-4">
         <div className="flex items-center justify-between mb-3 px-1">
-          <h2 className="text-xs font-black uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
+          <h2 className={cn("text-xs font-black uppercase tracking-wider flex items-center gap-1.5", isLight ? "text-stone-500" : "text-neutral-400")}>
             <span>{selectedCategory === "ALL" ? "Menú Completo" : "Platillos Disponibles"}</span>
-            <span className="text-neutral-600">•</span>
-            <span className="text-amber-400/90 font-mono font-bold">{filteredItems.length} opciones</span>
+            <span className={isLight ? "text-stone-400" : "text-neutral-600"}>•</span>
+            <span className={cn("font-mono font-bold", isLight ? "text-amber-700" : "text-amber-400/90")}>{filteredItems.length} opciones</span>
           </h2>
         </div>
 
@@ -818,22 +926,30 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
             {[1, 2, 3, 4].map((n) => (
               <div
                 key={n}
-                className="p-3.5 rounded-3xl bg-neutral-900/40 border border-neutral-800/60 animate-pulse flex gap-3.5 items-center"
+                className={cn(
+                  "p-3.5 rounded-3xl border animate-pulse flex gap-3.5 items-center",
+                  isLight ? "bg-stone-100 border-stone-200" : "bg-neutral-900/40 border-neutral-800/60"
+                )}
               >
                 <div className="flex-1 space-y-2.5">
-                  <div className="h-4 bg-neutral-800 rounded-lg w-2/3" />
-                  <div className="h-3 bg-neutral-800/60 rounded-lg w-5/6" />
-                  <div className="h-5 bg-neutral-800/40 rounded-lg w-20" />
+                  <div className={cn("h-4 rounded-lg w-2/3", isLight ? "bg-stone-200" : "bg-neutral-800")} />
+                  <div className={cn("h-3 rounded-lg w-5/6", isLight ? "bg-stone-200/70" : "bg-neutral-800/60")} />
+                  <div className={cn("h-5 rounded-lg w-20", isLight ? "bg-stone-200/50" : "bg-neutral-800/40")} />
                 </div>
-                <div className="w-24 h-24 rounded-2xl bg-neutral-800/70 flex-shrink-0" />
+                <div className={cn("w-24 h-24 rounded-2xl flex-shrink-0", isLight ? "bg-stone-200" : "bg-neutral-800/70")} />
               </div>
             ))}
           </div>
         ) : filteredItems.length === 0 ? (
-          <div className="text-center py-16 text-neutral-500 bg-neutral-900/30 rounded-3xl border border-neutral-900">
-            <UtensilsCrossedIcon className="w-12 h-12 mx-auto text-neutral-600 mb-2 stroke-[1.5]" />
-            <p className="text-sm font-semibold text-neutral-300">No encontramos platillos disponibles</p>
-            <p className="text-xs text-neutral-500 mt-0.5">Intenta con otra búsqueda o selecciona otra categoría.</p>
+          <div
+            className={cn(
+              "text-center py-16 rounded-3xl border",
+              isLight ? "bg-white border-stone-200 text-stone-500" : "bg-neutral-900/30 border-neutral-900 text-neutral-500"
+            )}
+          >
+            <UtensilsCrossedIcon className={cn("w-12 h-12 mx-auto mb-2 stroke-[1.5]", isLight ? "text-stone-400" : "text-neutral-600")} />
+            <p className={cn("text-sm font-semibold", isLight ? "text-stone-800" : "text-neutral-300")}>No encontramos platillos disponibles</p>
+            <p className={cn("text-xs mt-0.5", isLight ? "text-stone-500" : "text-neutral-500")}>Intenta con otra búsqueda o selecciona otra categoría.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
@@ -846,47 +962,84 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
                 <div
                   key={item.id}
                   onClick={() => handleOpenDetail(item)}
-                  className="group relative p-3.5 rounded-3xl bg-gradient-to-br from-neutral-900/90 to-neutral-900/50 border border-neutral-800/80 hover:border-amber-500/40 transition-all duration-200 flex gap-3.5 items-stretch shadow-md hover:shadow-xl hover:shadow-black/50 cursor-pointer"
+                  className={cn(
+                    "group relative p-3.5 rounded-3xl border transition-all duration-200 flex gap-3.5 items-stretch cursor-pointer",
+                    isLight
+                      ? "bg-white border-stone-200/90 hover:border-amber-400/80 shadow-sm hover:shadow-md hover:shadow-stone-200"
+                      : "bg-gradient-to-br from-neutral-900/90 to-neutral-900/50 border-neutral-800/80 hover:border-amber-500/40 shadow-md hover:shadow-xl hover:shadow-black/50"
+                  )}
                 >
                   {/* COLUMNA DETALLES */}
                   <div className="flex-1 flex flex-col justify-between min-w-0">
                     <div>
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <h3 className="text-sm sm:text-base font-extrabold text-white group-hover:text-amber-300 transition-colors leading-tight">
+                        <h3
+                          className={cn(
+                            "text-sm sm:text-base font-extrabold transition-colors leading-tight",
+                            isLight
+                              ? "text-stone-900 group-hover:text-amber-800"
+                              : "text-white group-hover:text-amber-300"
+                          )}
+                        >
                           {item.name}
                         </h3>
                       </div>
 
                       <div className="flex items-center gap-1 mt-1 flex-wrap">
                         {item.popular && (
-                          <Badge className="bg-amber-500/20 text-amber-400 border-none px-1.5 py-0 text-[10px] font-bold flex items-center gap-0.5">
+                          <Badge className="bg-amber-500/20 text-amber-500 border-none px-1.5 py-0 text-[10px] font-bold flex items-center gap-0.5">
                             <SparklesIcon className="w-2.5 h-2.5" /> Popular
                           </Badge>
                         )}
                         {item.spicy && (
-                          <Badge className="bg-red-500/20 text-red-400 border-none px-1.5 py-0 text-[10px] font-bold flex items-center gap-0.5">
+                          <Badge className="bg-red-500/20 text-red-500 border-none px-1.5 py-0 text-[10px] font-bold flex items-center gap-0.5">
                             <FlameIcon className="w-2.5 h-2.5" /> Picante
                           </Badge>
                         )}
                         {visual.badge && !item.popular && (
-                          <span className="text-[10px] text-neutral-400 bg-neutral-800/70 px-1.5 py-0.5 rounded-md font-medium">
+                          <span
+                            className={cn(
+                              "text-[10px] px-1.5 py-0.5 rounded-md font-medium",
+                              isLight ? "bg-stone-100 text-stone-600 border border-stone-200" : "text-neutral-400 bg-neutral-800/70"
+                            )}
+                          >
                             {visual.badge}
                           </span>
                         )}
                         {visual.prepTime && (
-                          <span className="text-[10px] text-neutral-400 bg-neutral-900/80 border border-neutral-800 px-1.5 py-0.5 rounded-md font-medium">
+                          <span
+                            className={cn(
+                              "text-[10px] px-1.5 py-0.5 rounded-md font-medium border",
+                              isLight ? "bg-stone-100 text-stone-600 border-stone-200" : "text-neutral-400 bg-neutral-900/80 border-neutral-800"
+                            )}
+                          >
                             ⏱️ {visual.prepTime}
                           </span>
                         )}
                       </div>
 
-                      <p className="text-xs text-neutral-400 mt-1.5 line-clamp-2 leading-relaxed">
+                      <p
+                        className={cn(
+                          "text-xs mt-1.5 line-clamp-2 leading-relaxed",
+                          isLight ? "text-stone-600" : "text-neutral-400"
+                        )}
+                      >
                         {item.description || "Ingredientes seleccionados, preparado al momento para tu mesa."}
                       </p>
                     </div>
 
-                    <div className="mt-3 pt-2 border-t border-neutral-800/60 flex items-center justify-between">
-                      <span className="text-base font-black text-amber-400">
+                    <div
+                      className={cn(
+                        "mt-3 pt-2 border-t flex items-center justify-between",
+                        isLight ? "border-stone-200" : "border-neutral-800/60"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "text-base font-black",
+                          isLight ? "text-amber-800" : "text-amber-400"
+                        )}
+                      >
                         ${item.price.toFixed(2)}
                       </span>
 
@@ -904,18 +1057,29 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
                       ) : (
                         <div
                           onClick={(e) => e.stopPropagation()}
-                          className="flex items-center gap-2 bg-neutral-950 p-1 rounded-xl border border-amber-500/50 shadow-md"
+                          className={cn(
+                            "flex items-center gap-2 p-1 rounded-xl border shadow-md",
+                            isLight ? "bg-stone-100 border-amber-500/40" : "bg-neutral-950 border-amber-500/50"
+                          )}
                         >
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDecrement(item.id);
                             }}
-                            className="w-6 h-6 flex items-center justify-center rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 active:scale-90 font-bold"
+                            className={cn(
+                              "w-6 h-6 flex items-center justify-center rounded-lg active:scale-90 font-bold",
+                              isLight ? "bg-stone-200 hover:bg-stone-300 text-stone-800" : "bg-neutral-800 hover:bg-neutral-700 text-neutral-200"
+                            )}
                           >
                             <MinusIcon className="w-3 h-3" />
                           </button>
-                          <span className="text-xs font-black text-amber-400 px-1">
+                          <span
+                            className={cn(
+                              "text-xs font-black px-1",
+                              isLight ? "text-amber-800" : "text-amber-400"
+                            )}
+                          >
                             {qty}
                           </span>
                           <button
@@ -933,7 +1097,12 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
                   </div>
 
                   {/* COLUMNA FOTOGRAFÍA GASTRONÓMICA */}
-                  <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 rounded-2xl overflow-hidden bg-neutral-800 border border-neutral-700/60 shadow-md self-center">
+                  <div
+                    className={cn(
+                      "relative w-24 h-24 sm:w-28 sm:h-28 flex-shrink-0 rounded-2xl overflow-hidden border shadow-md self-center",
+                      isLight ? "bg-stone-100 border-stone-200" : "bg-neutral-800 border-neutral-700/60"
+                    )}
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={visual.image}
@@ -980,20 +1149,28 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
       {/* MODAL / DRAWER DE REVISIÓN DE COMANDA */}
       {isCartOpen && (
         <div className="fixed inset-0 z-50 bg-neutral-950/80 backdrop-blur-md flex flex-col justify-end sm:items-center sm:justify-center p-0 sm:p-4">
-          <div className="bg-neutral-900 border-t sm:border border-neutral-800 rounded-t-3xl sm:rounded-3xl p-5 max-w-lg w-full mx-auto max-h-[85vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+          <div
+            className={cn(
+              "border-t sm:border rounded-t-3xl sm:rounded-3xl p-5 max-w-lg w-full mx-auto max-h-[85vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-200",
+              isLight ? "bg-white border-stone-200 text-stone-900" : "bg-neutral-900 border-neutral-800 text-neutral-100"
+            )}
+          >
+            <div className={cn("flex items-center justify-between pb-3 border-b", isLight ? "border-stone-200" : "border-neutral-800")}>
               <div>
-                <h2 className="text-base font-bold text-neutral-100 flex items-center gap-2">
-                  <ShoppingBagIcon className="w-4 h-4 text-amber-400" />
+                <h2 className={cn("text-base font-bold flex items-center gap-2", isLight ? "text-stone-900" : "text-neutral-100")}>
+                  <ShoppingBagIcon className="w-4 h-4 text-amber-500" />
                   Comanda de Mesa {tableNumber}
                 </h2>
-                <p className="text-xs text-neutral-400">
+                <p className={cn("text-xs", isLight ? "text-stone-500" : "text-neutral-400")}>
                   Revisa tus platillos antes de mandarlos a preparación
                 </p>
               </div>
               <button
                 onClick={() => setIsCartOpen(false)}
-                className="w-8 h-8 rounded-full bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center text-neutral-400 hover:text-neutral-100 transition-colors"
+                className={cn(
+                  "w-8 h-8 rounded-full flex items-center justify-center transition-colors",
+                  isLight ? "bg-stone-100 hover:bg-stone-200 text-stone-600" : "bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-neutral-100"
+                )}
               >
                 <XIcon className="w-4 h-4" />
               </button>
@@ -1005,7 +1182,10 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
                 return (
                   <div
                     key={line.item.id}
-                    className="p-3 rounded-2xl bg-neutral-950/70 border border-neutral-800/80 flex flex-col gap-2 shadow-sm"
+                    className={cn(
+                      "p-3 rounded-2xl border flex flex-col gap-2 shadow-sm",
+                      isLight ? "bg-stone-50 border-stone-200" : "bg-neutral-950/70 border-neutral-800/80"
+                    )}
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-xl overflow-hidden bg-neutral-800 flex-shrink-0 border border-neutral-700/50">
@@ -1014,18 +1194,18 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-xs font-bold text-neutral-200 truncate">
+                        <h4 className={cn("text-xs font-bold truncate", isLight ? "text-stone-800" : "text-neutral-200")}>
                           {line.item.name}
                         </h4>
-                        <span className="text-xs font-black text-amber-400">
+                        <span className={cn("text-xs font-black", isLight ? "text-amber-800" : "text-amber-400")}>
                           ${(line.item.price * line.quantity).toFixed(2)}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-1.5 bg-neutral-900 p-1 rounded-xl border border-neutral-800">
+                      <div className={cn("flex items-center gap-1.5 p-1 rounded-xl border", isLight ? "bg-white border-stone-200" : "bg-neutral-900 border-neutral-800")}>
                         <button
                           onClick={() => handleDecrement(line.item.id)}
-                          className="w-6 h-6 flex items-center justify-center rounded-lg bg-neutral-800 text-neutral-200 active:scale-90"
+                          className={cn("w-6 h-6 flex items-center justify-center rounded-lg active:scale-90", isLight ? "bg-stone-200 text-stone-800" : "bg-neutral-800 text-neutral-200")}
                         >
                           <MinusIcon className="w-3 h-3" />
                         </button>
@@ -1049,18 +1229,71 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
                         onChange={(e) =>
                           handleUpdateNotes(line.item.id, e.target.value)
                         }
-                        className="w-full text-[11px] bg-neutral-900 border border-neutral-800 rounded-xl px-2.5 py-1.5 text-neutral-300 placeholder:text-neutral-600 focus:outline-none focus:border-amber-500"
+                        className={cn(
+                          "w-full text-[11px] border rounded-xl px-2.5 py-1.5 focus:outline-none focus:border-amber-500",
+                          isLight ? "bg-white border-stone-200 text-stone-900 placeholder:text-stone-400" : "bg-neutral-900 border-neutral-800 text-neutral-300 placeholder:text-neutral-600"
+                        )}
                       />
                     </div>
                   </div>
                 );
               })}
+
+              {/* SUGERENCIAS COMPLEMENTARIAS ANTES DE ENVIAR A COCINA (UPSELLING) */}
+              {(() => {
+                const hasDrink = cart.some((l) => {
+                  const t = classifyFoodType(l.item.name, l.item.categoryName);
+                  return t === "DRINK_COLD" || t === "COFFEE" || t === "ALCOHOL";
+                });
+                const hasDessert = cart.some((l) => classifyFoodType(l.item.name, l.item.categoryName) === "DESSERT");
+
+                const missingType = !hasDrink ? "DRINK_COLD" : !hasDessert ? "DESSERT" : null;
+                if (!missingType) return null;
+
+                const suggestions = menuItems
+                  .filter((it) => classifyFoodType(it.name, it.categoryName) === missingType && !cart.some((c) => c.item.id === it.id))
+                  .slice(0, 2);
+
+                if (suggestions.length === 0) return null;
+
+                return (
+                  <div className={cn("p-2.5 rounded-2xl border space-y-1.5 my-2", isLight ? "bg-amber-50/80 border-amber-200" : "bg-amber-500/10 border-amber-500/20")}>
+                    <p className={cn("text-xs font-black flex items-center gap-1", isLight ? "text-amber-900" : "text-amber-300")}>
+                      <span>💡</span>
+                      <span>{!hasDrink ? "¿Deseas agregar una bebida a tu orden?" : "¿Se te antoja un postre para cerrar?"}</span>
+                    </p>
+                    <div className="flex gap-2">
+                      {suggestions.map((sug) => {
+                        const sugVis = getFoodVisual(sug.name, sug.categoryName);
+                        return (
+                          <button
+                            key={sug.id}
+                            type="button"
+                            onClick={() => handleAddToCart(sug)}
+                            className={cn(
+                              "flex-1 p-2 rounded-xl border flex items-center gap-2 text-left active:scale-95 transition-all",
+                              isLight ? "bg-white border-amber-200 hover:border-amber-400 shadow-xs" : "bg-neutral-900 border-neutral-800 hover:border-amber-500/50"
+                            )}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={sugVis.image} alt={sug.name} className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <p className={cn("text-[11px] font-bold truncate", isLight ? "text-stone-800" : "text-neutral-200")}>{sug.name}</p>
+                              <span className="text-[10px] font-black text-amber-500">+${sug.price} MXN</span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
 
-            <div className="pt-3 border-t border-neutral-800 space-y-3">
+            <div className={cn("pt-3 border-t space-y-3", isLight ? "border-stone-200" : "border-neutral-800")}>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-neutral-400 font-medium">Total de la orden:</span>
-                <span className="text-lg font-black text-amber-400">
+                <span className={cn("font-medium", isLight ? "text-stone-500" : "text-neutral-400")}>Total de la orden:</span>
+                <span className={cn("text-lg font-black", isLight ? "text-amber-800" : "text-amber-400")}>
                   ${cartTotalAmount.toFixed(2)} MXN
                 </span>
               </div>
@@ -1079,20 +1312,28 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
       {/* MODAL / DRAWER DE CUENTA Y PAGO MERCADO PAGO */}
       {isBillOpen && (
         <div className="fixed inset-0 z-50 bg-neutral-950/80 backdrop-blur-md flex flex-col justify-end sm:items-center sm:justify-center p-0 sm:p-4">
-          <div className="bg-neutral-900 border-t sm:border border-neutral-800 rounded-t-3xl sm:rounded-3xl p-5 max-w-lg w-full mx-auto max-h-[85vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+          <div
+            className={cn(
+              "border-t sm:border rounded-t-3xl sm:rounded-3xl p-5 max-w-lg w-full mx-auto max-h-[85vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-200",
+              isLight ? "bg-white border-stone-200 text-stone-900" : "bg-neutral-900 border-neutral-800 text-neutral-100"
+            )}
+          >
+            <div className={cn("flex items-center justify-between pb-3 border-b", isLight ? "border-stone-200" : "border-neutral-800")}>
               <div>
-                <h2 className="text-base font-bold text-neutral-100 flex items-center gap-2">
+                <h2 className={cn("text-base font-bold flex items-center gap-2", isLight ? "text-stone-900" : "text-neutral-100")}>
                   <CreditCardIcon className="w-4 h-4 text-[#009ee3]" />
                   Cuenta de Mesa {tableNumber}
                 </h2>
-                <p className="text-xs text-neutral-400">
+                <p className={cn("text-xs", isLight ? "text-stone-500" : "text-neutral-400")}>
                   {tableOrderData ? `Comanda ${tableOrderData.folio}` : "Revisión de consumo"}
                 </p>
               </div>
               <button
                 onClick={() => setIsBillOpen(false)}
-                className="w-8 h-8 rounded-full bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center text-neutral-400 hover:text-neutral-100 transition-colors"
+                className={cn(
+                  "w-8 h-8 rounded-full flex items-center justify-center transition-colors",
+                  isLight ? "bg-stone-100 hover:bg-stone-200 text-stone-600" : "bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-neutral-100"
+                )}
               >
                 <XIcon className="w-4 h-4" />
               </button>
@@ -1100,15 +1341,15 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
 
             <div className="flex-1 overflow-y-auto py-3 space-y-3">
               {loadingBill ? (
-                <div className="py-12 text-center text-sm text-neutral-400">
+                <div className={cn("py-12 text-center text-sm", isLight ? "text-stone-500" : "text-neutral-400")}>
                   Consultando cuenta de la mesa...
                 </div>
               ) : !tableOrderData || tableOrderData.items.length === 0 ? (
                 <div className="py-10 text-center space-y-2">
-                  <p className="text-sm text-neutral-300 font-semibold">
+                  <p className={cn("text-sm font-semibold", isLight ? "text-stone-800" : "text-neutral-300")}>
                     No hay comanda activa para esta mesa
                   </p>
-                  <p className="text-xs text-neutral-500 max-w-xs mx-auto">
+                  <p className={cn("text-xs max-w-xs mx-auto", isLight ? "text-stone-500" : "text-neutral-500")}>
                     Selecciona platillos del menú y envíalos a cocina para iniciar tu cuenta.
                   </p>
                 </div>
@@ -1118,19 +1359,22 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
                     {tableOrderData.items.map((item) => (
                       <div
                         key={item.id}
-                        className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-950/60 border border-neutral-800/80 text-xs"
+                        className={cn(
+                          "flex items-center justify-between p-2.5 rounded-xl border text-xs",
+                          isLight ? "bg-stone-50 border-stone-200" : "bg-neutral-950/60 border-neutral-800/80"
+                        )}
                       >
                         <div>
-                          <p className="font-bold text-neutral-200">
+                          <p className={cn("font-bold", isLight ? "text-stone-800" : "text-neutral-200")}>
                             {item.quantity}× {item.productName}
                           </p>
                           {item.notes && (
-                            <p className="text-[10px] text-neutral-400 italic">
+                            <p className={cn("text-[10px] italic", isLight ? "text-stone-500" : "text-neutral-400")}>
                               Nota: {item.notes}
                             </p>
                           )}
                         </div>
-                        <span className="font-extrabold text-neutral-100">
+                        <span className={cn("font-extrabold", isLight ? "text-stone-900" : "text-neutral-100")}>
                           ${(item.unitPrice * item.quantity).toFixed(2)}
                         </span>
                       </div>
@@ -1139,7 +1383,7 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
 
                   {/* SELECCIÓN DE PROPINA */}
                   <div className="pt-2">
-                    <p className="text-xs text-neutral-400 mb-1.5 font-medium">
+                    <p className={cn("text-xs mb-1.5 font-medium", isLight ? "text-stone-600" : "text-neutral-400")}>
                       Agregar propina voluntaria:
                     </p>
                     <div className="grid grid-cols-4 gap-1.5">
@@ -1151,6 +1395,8 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
                             "py-2 rounded-xl text-xs font-bold border transition-all",
                             billTipPercent === pct
                               ? "bg-[#009ee3]/10 border-[#009ee3] text-[#009ee3]"
+                              : isLight
+                              ? "bg-stone-50 border-stone-200 text-stone-700 hover:border-stone-400"
                               : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700"
                           )}
                         >
@@ -1164,19 +1410,19 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
             </div>
 
             {tableOrderData && tableOrderData.items.length > 0 && (
-              <div className="pt-3 border-t border-neutral-800 space-y-3">
+              <div className={cn("pt-3 border-t space-y-3", isLight ? "border-stone-200" : "border-neutral-800")}>
                 <div className="space-y-1 text-xs">
-                  <div className="flex justify-between text-neutral-400">
+                  <div className={cn("flex justify-between", isLight ? "text-stone-600" : "text-neutral-400")}>
                     <span>Subtotal:</span>
                     <span>${tableOrderData.total.toFixed(2)} MXN</span>
                   </div>
-                  <div className="flex justify-between text-neutral-400">
+                  <div className={cn("flex justify-between", isLight ? "text-stone-600" : "text-neutral-400")}>
                     <span>Propina ({billTipPercent}%):</span>
                     <span>
                       ${((tableOrderData.total * billTipPercent) / 100).toFixed(2)} MXN
                     </span>
                   </div>
-                  <div className="flex justify-between text-sm font-bold text-neutral-100 pt-1 border-t border-neutral-800/60">
+                  <div className={cn("flex justify-between text-sm font-bold pt-1 border-t", isLight ? "border-stone-200 text-stone-900" : "border-neutral-800/60 text-neutral-100")}>
                     <span>Total con propina:</span>
                     <span className="text-[#009ee3] font-black">
                       ${(tableOrderData.total * (1 + billTipPercent / 100)).toFixed(2)} MXN
@@ -1216,10 +1462,15 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
       {/* MODAL / SHEET DE DETALLE DE PLATILLO (QUICK VIEW CULINARIO) */}
       {selectedDetailItem && (() => {
         const visual = getFoodVisual(selectedDetailItem.name, selectedDetailItem.categoryName);
+        const pairings = getSmartPairings(selectedDetailItem, menuItems, cart.map((c) => c.item.id));
         return (
           <div className="fixed inset-0 z-50 bg-neutral-950/80 backdrop-blur-md flex flex-col justify-end sm:items-center sm:justify-center p-0 sm:p-4">
-            <div className="bg-neutral-900 border-t sm:border border-neutral-800 rounded-t-3xl sm:rounded-3xl max-w-lg w-full mx-auto max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-200">
-              
+            <div
+              className={cn(
+                "border-t sm:border rounded-t-3xl sm:rounded-3xl max-w-lg w-full mx-auto max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-200",
+                isLight ? "bg-white border-stone-200 text-stone-900" : "bg-neutral-900 border-neutral-800 text-neutral-100"
+              )}
+            >
               {/* IMAGEN DE ALTA DEFINICIÓN DEL PLATILLO */}
               <div className="relative h-56 sm:h-64 w-full bg-neutral-950 flex-shrink-0 overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1228,7 +1479,7 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
                   alt={selectedDetailItem.name}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-transparent to-black/60" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/60" />
                 
                 <button
                   onClick={() => setSelectedDetailItem(null)}
@@ -1263,31 +1514,31 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
               {/* CONTENIDO Y PERSONALIZACIÓN */}
               <div className="p-4 sm:p-5 flex-1 overflow-y-auto space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl font-black text-amber-400">
+                  <span className={cn("text-2xl font-black", isLight ? "text-amber-800" : "text-amber-400")}>
                     ${selectedDetailItem.price.toFixed(2)} MXN
                   </span>
                   <div className="flex items-center gap-1.5">
                     {selectedDetailItem.popular && (
-                      <span className="text-xs font-bold text-amber-400 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                      <span className="text-xs font-bold text-amber-500 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-lg flex items-center gap-1">
                         <SparklesIcon className="w-3 h-3" /> Popular
                       </span>
                     )}
                     {selectedDetailItem.spicy && (
-                      <span className="text-xs font-bold text-red-400 bg-red-500/15 border border-red-500/30 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                      <span className="text-xs font-bold text-red-500 bg-red-500/15 border border-red-500/30 px-2 py-0.5 rounded-lg flex items-center gap-1">
                         <FlameIcon className="w-3 h-3" /> Picante
                       </span>
                     )}
                   </div>
                 </div>
 
-                <p className="text-sm text-neutral-300 leading-relaxed">
+                <p className={cn("text-sm leading-relaxed", isLight ? "text-stone-600" : "text-neutral-300")}>
                   {selectedDetailItem.description || "Elaborado con ingredientes frescos de la más alta calidad, preparado al momento para garantizar el mejor sabor y temperatura."}
                 </p>
 
                 {/* NOTAS SUGERIDAS RÁPIDAS (1 TAP) */}
                 {visual.suggestedNotes && visual.suggestedNotes.length > 0 && (
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-neutral-300 flex items-center gap-1.5">
+                    <label className={cn("text-xs font-bold flex items-center gap-1.5", isLight ? "text-stone-700" : "text-neutral-300")}>
                       <span>✨</span>
                       <span>Personalización rápida (toca para agregar nota):</span>
                     </label>
@@ -1316,7 +1567,9 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
                             className={cn(
                               "text-xs px-2.5 py-1 rounded-xl border transition-all flex items-center gap-1 font-medium",
                               isIncluded
-                                ? "bg-amber-500/20 border-amber-500 text-amber-300 font-bold scale-[1.02]"
+                                ? "bg-amber-500/20 border-amber-500 text-amber-700 dark:text-amber-300 font-bold scale-[1.02]"
+                                : isLight
+                                ? "bg-stone-100 border-stone-200 text-stone-600 hover:text-stone-900"
                                 : "bg-neutral-950/70 border-neutral-800 text-neutral-400 hover:text-neutral-200 hover:border-neutral-700"
                             )}
                           >
@@ -1331,7 +1584,7 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
 
                 {/* CAMPO LIBRE DE NOTA PARA COCINA */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-neutral-300 flex items-center gap-1.5">
+                  <label className={cn("text-xs font-bold flex items-center gap-1.5", isLight ? "text-stone-700" : "text-neutral-300")}>
                     <span>📝</span>
                     <span>Instrucciones especiales para cocina (opcional):</span>
                   </label>
@@ -1340,21 +1593,82 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
                     value={detailNotes}
                     onChange={(e) => setDetailNotes(e.target.value)}
                     placeholder="Ej. salsa aparte, término medio, etc."
-                    className="w-full text-xs bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-amber-500"
+                    className={cn(
+                      "w-full text-xs border rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500",
+                      isLight ? "bg-stone-50 border-stone-200 text-stone-900 placeholder:text-stone-400" : "bg-neutral-950 border-neutral-800 text-neutral-100 placeholder:text-neutral-600"
+                    )}
                   />
                 </div>
+
+                {/* MARIDAJE / ACOMPAÑAMIENTO RECOMENDADO (UPSELLING) */}
+                {pairings.items.length > 0 && (
+                  <div className={cn("pt-3 border-t space-y-2", isLight ? "border-stone-200" : "border-neutral-800")}>
+                    <div>
+                      <h4 className={cn("text-xs font-black flex items-center gap-1.5", isLight ? "text-stone-900" : "text-neutral-200")}>
+                        {pairings.title}
+                      </h4>
+                      <p className={cn("text-[11px]", isLight ? "text-stone-500" : "text-neutral-400")}>
+                        {pairings.subtitle}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      {pairings.items.map((suggested) => {
+                        const sugVisual = getFoodVisual(suggested.name, suggested.categoryName);
+                        const sugInCart = cart.some((l) => l.item.id === suggested.id);
+                        return (
+                          <div
+                            key={suggested.id}
+                            className={cn(
+                              "p-2 rounded-2xl border flex flex-col justify-between text-left transition-all",
+                              isLight
+                                ? "bg-stone-50 border-stone-200 hover:border-amber-400"
+                                : "bg-neutral-950/80 border-neutral-800 hover:border-amber-500/40"
+                            )}
+                          >
+                            <div className="relative w-full h-14 rounded-xl overflow-hidden bg-neutral-800 mb-1.5 flex-shrink-0">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={sugVisual.image} alt={suggested.name} className="w-full h-full object-cover" />
+                              <span className="absolute bottom-0.5 right-1 text-xs filter drop-shadow">{sugVisual.emoji}</span>
+                            </div>
+                            <p className={cn("text-[11px] font-bold line-clamp-1", isLight ? "text-stone-800" : "text-neutral-200")}>
+                              {suggested.name}
+                            </p>
+                            <div className="mt-1 flex items-center justify-between">
+                              <span className={cn("text-[11px] font-black", isLight ? "text-amber-800" : "text-amber-400")}>
+                                ${suggested.price.toFixed(0)}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleAddToCart(suggested)}
+                                className={cn(
+                                  "text-[10px] font-extrabold px-1.5 py-0.5 rounded-lg active:scale-95 transition-all",
+                                  sugInCart
+                                    ? "bg-emerald-500 text-neutral-950"
+                                    : "bg-amber-500 hover:bg-amber-400 text-neutral-950"
+                                )}
+                              >
+                                {sugInCart ? "✓ Listo" : "+ Agregar"}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* PIE CON STEPPER Y BOTÓN AGREGAR */}
-              <div className="p-4 border-t border-neutral-800 bg-neutral-950 flex items-center gap-3">
-                <div className="flex items-center gap-2 bg-neutral-900 p-1.5 rounded-2xl border border-neutral-800">
+              <div className={cn("p-4 border-t flex items-center gap-3", isLight ? "bg-stone-50 border-stone-200" : "bg-neutral-950 border-neutral-800")}>
+                <div className={cn("flex items-center gap-2 p-1.5 rounded-2xl border", isLight ? "bg-white border-stone-200" : "bg-neutral-900 border-neutral-800")}>
                   <button
                     onClick={() => setDetailQty((q) => Math.max(1, q - 1))}
-                    className="w-8 h-8 flex items-center justify-center rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 active:scale-90 font-bold"
+                    className={cn("w-8 h-8 flex items-center justify-center rounded-xl active:scale-90 font-bold", isLight ? "bg-stone-200 text-stone-800" : "bg-neutral-800 hover:bg-neutral-700 text-neutral-200")}
                   >
                     <MinusIcon className="w-4 h-4" />
                   </button>
-                  <span className="text-sm font-black text-amber-400 px-2 min-w-[24px] text-center">
+                  <span className={cn("text-sm font-black px-2 min-w-[24px] text-center", isLight ? "text-amber-800" : "text-amber-400")}>
                     {detailQty}
                   </span>
                   <button
