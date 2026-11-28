@@ -197,6 +197,10 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
   const [billTipPercent, setBillTipPercent] = useState<number>(10);
   const [loadingBill, setLoadingBill] = useState<boolean>(false);
   const [tableOrderData, setTableOrderData] = useState<OrderResponse | null>(null);
+  const [selectedDetailItem, setSelectedDetailItem] = useState<MenuItem | null>(null);
+  const [detailQty, setDetailQty] = useState<number>(1);
+  const [detailNotes, setDetailNotes] = useState<string>("");
+  const [dietaryFilter, setDietaryFilter] = useState<"ALL" | "POPULAR" | "VEGETARIAN" | "SPICY">("ALL");
 
   // Carga inicial del catálogo desde la API pública
   useEffect(() => {
@@ -301,12 +305,17 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
     return menuItems.filter((item) => {
       const matchesCategory =
         selectedCategory === "ALL" || item.categoryId === selectedCategory;
+      const matchesDietary =
+        dietaryFilter === "ALL" ||
+        (dietaryFilter === "POPULAR" && item.popular) ||
+        (dietaryFilter === "VEGETARIAN" && item.vegetarian) ||
+        (dietaryFilter === "SPICY" && item.spicy);
       const matchesQuery =
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesQuery;
+      return matchesCategory && matchesDietary && matchesQuery;
     });
-  }, [menuItems, selectedCategory, searchQuery]);
+  }, [menuItems, selectedCategory, dietaryFilter, searchQuery]);
 
   const cartTotalAmount = useMemo(() => {
     return cart.reduce((acc, line) => acc + line.item.price * line.quantity, 0);
@@ -318,9 +327,39 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
 
   // Platillo destacado ("Especial de la Casa")
   const featuredItem = useMemo(() => {
-    if (searchQuery.trim().length > 0 || selectedCategory !== "ALL") return null;
+    if (searchQuery.trim().length > 0 || selectedCategory !== "ALL" || dietaryFilter !== "ALL") return null;
     return filteredItems.find((it) => it.popular) || filteredItems[0] || null;
-  }, [filteredItems, searchQuery, selectedCategory]);
+  }, [filteredItems, searchQuery, selectedCategory, dietaryFilter]);
+
+  const handleOpenDetail = (item: MenuItem) => {
+    const existing = cart.find((l) => l.item.id === item.id);
+    setSelectedDetailItem(item);
+    setDetailQty(existing ? existing.quantity : 1);
+    setDetailNotes(existing?.notes || "");
+  };
+
+  const handleAddDetailToCart = () => {
+    if (!selectedDetailItem) return;
+    if (typeof navigator !== "undefined" && navigator.vibrate) {
+      navigator.vibrate(15);
+    }
+    setCart((prev) => {
+      const existing = prev.find((line) => line.item.id === selectedDetailItem.id);
+      if (existing) {
+        return prev.map((line) =>
+          line.item.id === selectedDetailItem.id
+            ? { ...line, quantity: detailQty, notes: detailNotes || undefined }
+            : line
+        );
+      }
+      return [
+        ...prev,
+        { item: selectedDetailItem, quantity: detailQty, notes: detailNotes || undefined },
+      ];
+    });
+    toast.success(`Agregaste ${detailQty}× ${selectedDetailItem.name}`, { duration: 2500 });
+    setSelectedDetailItem(null);
+  };
 
   const handleAddToCart = (item: MenuItem) => {
     if (typeof navigator !== "undefined" && navigator.vibrate) {
@@ -559,6 +598,33 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
             );
           })}
         </div>
+
+        {/* FILTROS RÁPIDOS GASTRONÓMICOS */}
+        <div className="mt-2.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1 border-t border-neutral-800/50">
+          <span className="text-[10px] font-black text-neutral-500 uppercase tracking-wider pl-0.5">
+            Filtro rápido:
+          </span>
+          {[
+            { id: "ALL", label: "Todos", icon: "✨" },
+            { id: "POPULAR", label: "Populares", icon: "🔥" },
+            { id: "VEGETARIAN", label: "Vegetarianos", icon: "🌱" },
+            { id: "SPICY", label: "Picantes", icon: "🌶️" },
+          ].map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setDietaryFilter(f.id as typeof dietaryFilter)}
+              className={cn(
+                "px-2.5 py-1 rounded-xl text-[11px] font-bold whitespace-nowrap transition-all flex items-center gap-1",
+                dietaryFilter === f.id
+                  ? "bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-xs"
+                  : "bg-neutral-900/60 text-neutral-400 border border-neutral-800 hover:text-neutral-200"
+              )}
+            >
+              <span>{f.icon}</span>
+              <span>{f.label}</span>
+            </button>
+          ))}
+        </div>
       </header>
 
       {/* ESTADO DE ORDEN ACTIVA EN COCINA */}
@@ -655,14 +721,17 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
       {/* PLATILLO DESTACADO ("ESPECIAL DE LA CASA") */}
       {featuredItem && !isLoadingCatalog && (
         <section className="mx-4 mt-4">
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-950/40 via-neutral-900 to-neutral-900 border border-amber-500/30 p-4 shadow-xl">
+          <div
+            onClick={() => handleOpenDetail(featuredItem)}
+            className="group relative overflow-hidden rounded-3xl bg-gradient-to-r from-amber-950/40 via-neutral-900 to-neutral-900 border border-amber-500/30 p-4 shadow-xl cursor-pointer hover:border-amber-500/60 transition-all"
+          >
             <div className="flex flex-col sm:flex-row gap-4 items-center">
               <div className="relative w-full sm:w-44 h-36 sm:h-32 flex-shrink-0 rounded-2xl overflow-hidden bg-neutral-800 shadow-md">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={getFoodVisual(featuredItem.name, featuredItem.categoryName).image}
                   alt={featuredItem.name}
-                  className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
@@ -673,7 +742,7 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
 
               <div className="flex-1 w-full flex flex-col justify-between">
                 <div>
-                  <h3 className="text-base sm:text-lg font-black text-white leading-snug">
+                  <h3 className="text-base sm:text-lg font-black text-white leading-snug group-hover:text-amber-300 transition-colors">
                     {featuredItem.name}
                   </h3>
                   <p className="text-xs text-neutral-300 mt-1 line-clamp-2 leading-relaxed">
@@ -692,22 +761,34 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
                     return qty === 0 ? (
                       <Button
                         size="sm"
-                        onClick={() => handleAddToCart(featuredItem)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAddToCart(featuredItem);
+                        }}
                         className="h-8 px-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black text-xs shadow-md shadow-amber-500/20 active:scale-95 transition-all"
                       >
                         <PlusIcon className="w-3.5 h-3.5 mr-1" /> Agregar
                       </Button>
                     ) : (
-                      <div className="flex items-center gap-2 bg-neutral-950 p-1 rounded-xl border border-amber-500/50 shadow-md">
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex items-center gap-2 bg-neutral-950 p-1 rounded-xl border border-amber-500/50 shadow-md"
+                      >
                         <button
-                          onClick={() => handleDecrement(featuredItem.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDecrement(featuredItem.id);
+                          }}
                           className="w-6 h-6 flex items-center justify-center rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 active:scale-90"
                         >
                           <MinusIcon className="w-3 h-3" />
                         </button>
                         <span className="text-xs font-black text-amber-400 px-1.5">{qty}</span>
                         <button
-                          onClick={() => handleAddToCart(featuredItem)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddToCart(featuredItem);
+                          }}
                           className="w-6 h-6 flex items-center justify-center rounded-lg bg-amber-500 text-neutral-950 font-black active:scale-90"
                         >
                           <PlusIcon className="w-3 h-3" />
@@ -764,7 +845,8 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
               return (
                 <div
                   key={item.id}
-                  className="group relative p-3.5 rounded-3xl bg-gradient-to-br from-neutral-900/90 to-neutral-900/50 border border-neutral-800/80 hover:border-amber-500/30 transition-all duration-200 flex gap-3.5 items-stretch shadow-md hover:shadow-xl hover:shadow-black/50"
+                  onClick={() => handleOpenDetail(item)}
+                  className="group relative p-3.5 rounded-3xl bg-gradient-to-br from-neutral-900/90 to-neutral-900/50 border border-neutral-800/80 hover:border-amber-500/40 transition-all duration-200 flex gap-3.5 items-stretch shadow-md hover:shadow-xl hover:shadow-black/50 cursor-pointer"
                 >
                   {/* COLUMNA DETALLES */}
                   <div className="flex-1 flex flex-col justify-between min-w-0">
@@ -791,6 +873,11 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
                             {visual.badge}
                           </span>
                         )}
+                        {visual.prepTime && (
+                          <span className="text-[10px] text-neutral-400 bg-neutral-900/80 border border-neutral-800 px-1.5 py-0.5 rounded-md font-medium">
+                            ⏱️ {visual.prepTime}
+                          </span>
+                        )}
                       </div>
 
                       <p className="text-xs text-neutral-400 mt-1.5 line-clamp-2 leading-relaxed">
@@ -806,15 +893,24 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
                       {qty === 0 ? (
                         <Button
                           size="sm"
-                          onClick={() => handleAddToCart(item)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddToCart(item);
+                          }}
                           className="h-8 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black text-xs shadow-md shadow-amber-500/20 active:scale-90 transition-all flex items-center gap-1"
                         >
                           <PlusIcon className="w-3.5 h-3.5" /> Agregar
                         </Button>
                       ) : (
-                        <div className="flex items-center gap-2 bg-neutral-950 p-1 rounded-xl border border-amber-500/50 shadow-md">
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center gap-2 bg-neutral-950 p-1 rounded-xl border border-amber-500/50 shadow-md"
+                        >
                           <button
-                            onClick={() => handleDecrement(item.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDecrement(item.id);
+                            }}
                             className="w-6 h-6 flex items-center justify-center rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-200 active:scale-90 font-bold"
                           >
                             <MinusIcon className="w-3 h-3" />
@@ -823,7 +919,10 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
                             {qty}
                           </span>
                           <button
-                            onClick={() => handleAddToCart(item)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAddToCart(item);
+                            }}
                             className="w-6 h-6 flex items-center justify-center rounded-lg bg-amber-500 hover:bg-amber-400 text-neutral-950 active:scale-90 font-black"
                           >
                             <PlusIcon className="w-3 h-3" />
@@ -1113,6 +1212,173 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
         publicSlug={slug}
         publicTableNumber={tableNumber}
       />
+
+      {/* MODAL / SHEET DE DETALLE DE PLATILLO (QUICK VIEW CULINARIO) */}
+      {selectedDetailItem && (() => {
+        const visual = getFoodVisual(selectedDetailItem.name, selectedDetailItem.categoryName);
+        return (
+          <div className="fixed inset-0 z-50 bg-neutral-950/80 backdrop-blur-md flex flex-col justify-end sm:items-center sm:justify-center p-0 sm:p-4">
+            <div className="bg-neutral-900 border-t sm:border border-neutral-800 rounded-t-3xl sm:rounded-3xl max-w-lg w-full mx-auto max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-200">
+              
+              {/* IMAGEN DE ALTA DEFINICIÓN DEL PLATILLO */}
+              <div className="relative h-56 sm:h-64 w-full bg-neutral-950 flex-shrink-0 overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={visual.image}
+                  alt={selectedDetailItem.name}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-transparent to-black/60" />
+                
+                <button
+                  onClick={() => setSelectedDetailItem(null)}
+                  className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-neutral-900/80 backdrop-blur border border-neutral-700/60 flex items-center justify-center text-neutral-300 hover:text-white transition-colors"
+                >
+                  <XIcon className="w-4 h-4" />
+                </button>
+
+                <div className="absolute top-3.5 left-3.5 flex items-center gap-1.5 flex-wrap">
+                  <span className="text-xs font-black px-2.5 py-1 rounded-full bg-amber-500 text-neutral-950 flex items-center gap-1 shadow-md">
+                    <span>{visual.emoji}</span>
+                    <span>{visual.badge || "Especialidad"}</span>
+                  </span>
+                  {visual.prepTime && (
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-neutral-900/80 backdrop-blur text-neutral-300 border border-neutral-700/60 flex items-center gap-1">
+                      <span>⏱️</span>
+                      <span>~{visual.prepTime}</span>
+                    </span>
+                  )}
+                </div>
+
+                <div className="absolute bottom-3 left-4 right-4">
+                  <span className="text-xs font-semibold text-amber-400 uppercase tracking-wider">
+                    {selectedDetailItem.categoryName}
+                  </span>
+                  <h3 className="text-xl sm:text-2xl font-black text-white leading-tight mt-0.5 drop-shadow">
+                    {selectedDetailItem.name}
+                  </h3>
+                </div>
+              </div>
+
+              {/* CONTENIDO Y PERSONALIZACIÓN */}
+              <div className="p-4 sm:p-5 flex-1 overflow-y-auto space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl font-black text-amber-400">
+                    ${selectedDetailItem.price.toFixed(2)} MXN
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {selectedDetailItem.popular && (
+                      <span className="text-xs font-bold text-amber-400 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                        <SparklesIcon className="w-3 h-3" /> Popular
+                      </span>
+                    )}
+                    {selectedDetailItem.spicy && (
+                      <span className="text-xs font-bold text-red-400 bg-red-500/15 border border-red-500/30 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                        <FlameIcon className="w-3 h-3" /> Picante
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <p className="text-sm text-neutral-300 leading-relaxed">
+                  {selectedDetailItem.description || "Elaborado con ingredientes frescos de la más alta calidad, preparado al momento para garantizar el mejor sabor y temperatura."}
+                </p>
+
+                {/* NOTAS SUGERIDAS RÁPIDAS (1 TAP) */}
+                {visual.suggestedNotes && visual.suggestedNotes.length > 0 && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-neutral-300 flex items-center gap-1.5">
+                      <span>✨</span>
+                      <span>Personalización rápida (toca para agregar nota):</span>
+                    </label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {visual.suggestedNotes.map((note) => {
+                        const isIncluded = detailNotes.toLowerCase().includes(note.toLowerCase());
+                        return (
+                          <button
+                            key={note}
+                            type="button"
+                            onClick={() => {
+                              if (isIncluded) {
+                                const cleaned = detailNotes
+                                  .split(",")
+                                  .map((n) => n.trim())
+                                  .filter((n) => n.toLowerCase() !== note.toLowerCase())
+                                  .join(", ");
+                                setDetailNotes(cleaned);
+                              } else {
+                                const updated = detailNotes.trim()
+                                  ? `${detailNotes.trim()}, ${note}`
+                                  : note;
+                                setDetailNotes(updated);
+                              }
+                            }}
+                            className={cn(
+                              "text-xs px-2.5 py-1 rounded-xl border transition-all flex items-center gap-1 font-medium",
+                              isIncluded
+                                ? "bg-amber-500/20 border-amber-500 text-amber-300 font-bold scale-[1.02]"
+                                : "bg-neutral-950/70 border-neutral-800 text-neutral-400 hover:text-neutral-200 hover:border-neutral-700"
+                            )}
+                          >
+                            <span>{isIncluded ? "✓" : "+"}</span>
+                            <span>{note}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* CAMPO LIBRE DE NOTA PARA COCINA */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-neutral-300 flex items-center gap-1.5">
+                    <span>📝</span>
+                    <span>Instrucciones especiales para cocina (opcional):</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={detailNotes}
+                    onChange={(e) => setDetailNotes(e.target.value)}
+                    placeholder="Ej. salsa aparte, término medio, etc."
+                    className="w-full text-xs bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-neutral-100 placeholder:text-neutral-600 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              {/* PIE CON STEPPER Y BOTÓN AGREGAR */}
+              <div className="p-4 border-t border-neutral-800 bg-neutral-950 flex items-center gap-3">
+                <div className="flex items-center gap-2 bg-neutral-900 p-1.5 rounded-2xl border border-neutral-800">
+                  <button
+                    onClick={() => setDetailQty((q) => Math.max(1, q - 1))}
+                    className="w-8 h-8 flex items-center justify-center rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 active:scale-90 font-bold"
+                  >
+                    <MinusIcon className="w-4 h-4" />
+                  </button>
+                  <span className="text-sm font-black text-amber-400 px-2 min-w-[24px] text-center">
+                    {detailQty}
+                  </span>
+                  <button
+                    onClick={() => setDetailQty((q) => Math.min(99, q + 1))}
+                    className="w-8 h-8 flex items-center justify-center rounded-xl bg-amber-500 hover:bg-amber-400 text-neutral-950 active:scale-90 font-black"
+                  >
+                    <PlusIcon className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <Button
+                  onClick={handleAddDetailToCart}
+                  className="flex-1 h-12 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black text-sm rounded-2xl shadow-lg shadow-amber-500/25 active:scale-95 transition-all flex items-center justify-between px-4"
+                >
+                  <span>Agregar a la orden</span>
+                  <span className="bg-neutral-950/20 px-2.5 py-1 rounded-xl text-xs font-black">
+                    ${(selectedDetailItem.price * detailQty).toFixed(2)} MXN
+                  </span>
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
