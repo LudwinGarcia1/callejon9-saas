@@ -290,9 +290,13 @@ Las que más importan:
 
 **Infraestructura.** Autenticación con JWT en cookie `httpOnly` y rotación de tokens de refresco, canal STOMP con validación de inquilino por suscripción, documentación OpenAPI navegable, despliegue en Azure con Terraform, CI en GitHub Actions y Jenkins, y observabilidad con Sentry.
 
+### En curso
+
+**Cobro recurrente con Mercado Pago (CAL-29 y CAL-31).** Suscripción del restaurante en el sandbox al darse de alta, webhooks con firma verificada e idempotencia, conciliación del estado y máquina de estados de la suscripción. Planeado para cerrar el 11 de diciembre de 2026. Hoy Mercado Pago solo existe como forma de pago que la caja registra a mano.
+
 ### Diferido, con su diseño
 
-Delivery y rastreo en vivo; aprendizaje automático (K-means, RandomForest, Apriori, Pareto); sensores IoT; integración real con MercadoPago; segundo factor TOTP —el servicio existe, falta el endpoint—; inventario con descuento por receta; envío automático de notificaciones push desde la API —hoy se envían con `pnpm push:send` desde `mobile/`—; y el ETL de migración desde MongoDB.
+Delivery y rastreo en vivo; aprendizaje automático (K-means, RandomForest, Apriori, Pareto); sensores IoT; segundo factor TOTP —el servicio existe, falta el endpoint—; inventario con descuento por receta; envío automático de notificaciones push desde la API —hoy se envían con `pnpm push:send` desde `mobile/`—; y el ETL de migración desde MongoDB.
 
 ### Deuda registrada
 
