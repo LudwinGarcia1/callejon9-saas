@@ -22,15 +22,16 @@ import { Input } from "@/components/ui/input";
 import { MercadoPagoQrModal } from "@/components/shared/mercadopago-qr-modal";
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
-import type { OrderResponse, OrderStatus } from "@/lib/types";
+import type { KitchenItemStatus, OrderResponse, OrderStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-interface DinerMenuViewProps {
+export interface DinerMenuViewProps {
   slug: string;
   tableNumber: string;
+  initialMenuItems?: MenuItem[];
 }
 
-interface MenuItem {
+export interface MenuItem {
   id: string;
   categoryId: string;
   categoryName: string;
@@ -42,10 +43,11 @@ interface MenuItem {
   vegetarian?: boolean;
 }
 
-interface CartItem {
+export interface CartItem {
   item: MenuItem;
   quantity: number;
   notes?: string;
+  kitchenStatus?: KitchenItemStatus;
 }
 
 interface PublicCatalogApiResponse {
@@ -55,7 +57,7 @@ interface PublicCatalogApiResponse {
   products: { id: string; name: string; description: string; price: number; categoryId: string }[];
 }
 
-const DEFAULT_MENU_ITEMS: MenuItem[] = [
+export const DEFAULT_MENU_ITEMS: MenuItem[] = [
   // Entradas
   {
     id: "00000000-0000-0000-0000-000000000001",
@@ -172,8 +174,11 @@ const DEFAULT_MENU_ITEMS: MenuItem[] = [
   },
 ];
 
-export function DinerMenuView({ slug, tableNumber }: DinerMenuViewProps) {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(DEFAULT_MENU_ITEMS);
+export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenuViewProps) {
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(() => initialMenuItems ?? []);
+  const [isLoadingCatalog, setIsLoadingCatalog] = useState<boolean>(
+    () => !initialMenuItems || initialMenuItems.length === 0,
+  );
   const [restaurantTitle, setRestaurantTitle] = useState<string>(slug.replace(/-/g, " "));
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -196,11 +201,14 @@ export function DinerMenuView({ slug, tableNumber }: DinerMenuViewProps) {
     let active = true;
     async function loadCatalog() {
       try {
+        if (!initialMenuItems || initialMenuItems.length === 0) {
+          setIsLoadingCatalog(true);
+        }
         const data = await api.get<PublicCatalogApiResponse>(endpoints.publicMenu.catalog(slug));
-        if (active && data && data.products && data.products.length > 0) {
+        if (active && data) {
           if (data.restaurantName) setRestaurantTitle(data.restaurantName);
-          const catMap = new Map(data.categories.map((c) => [c.id, c.name]));
-          const mapped: MenuItem[] = data.products.map((p) => ({
+          const catMap = new Map((data.categories || []).map((c) => [c.id, c.name]));
+          const mapped: MenuItem[] = (data.products || []).map((p) => ({
             id: p.id,
             categoryId: p.categoryId,
             categoryName: catMap.get(p.categoryId) || "General",
@@ -211,14 +219,71 @@ export function DinerMenuView({ slug, tableNumber }: DinerMenuViewProps) {
           setMenuItems(mapped);
         }
       } catch {
-        // En caso de modo offline o demo, se conserva DEFAULT_MENU_ITEMS
+        // En caso de error o restaurante sin menú, deja el catálogo vacío (sin productos falsos)
+        if (active && (!initialMenuItems || initialMenuItems.length === 0)) {
+          setMenuItems([]);
+        }
+      } finally {
+        if (active) {
+          setIsLoadingCatalog(false);
+        }
       }
     }
     loadCatalog();
     return () => {
       active = false;
     };
-  }, [slug]);
+  }, [slug, initialMenuItems]);
+
+  // Sincronización periódica de la comanda activa de la mesa con el backend
+  useEffect(() => {
+    let active = true;
+    async function syncActiveOrder() {
+      try {
+        const order = await api.get<OrderResponse>(endpoints.publicMenu.tableOrder(slug, tableNumber));
+        if (!active) return;
+        // Solo consideramos comanda activa si tiene platillos y ya fue enviada o está lista
+        if (
+          order &&
+          order.items &&
+          order.items.length > 0 &&
+          (order.status === "SENT" || order.status === "READY")
+        ) {
+          setActiveOrder({
+            folio: order.folio,
+            items: order.items.map((it) => ({
+              item: {
+                id: it.productId ?? it.id,
+                name: it.productName,
+                price: it.unitPrice,
+                description: "",
+                categoryId: "",
+                categoryName: "",
+              },
+              quantity: it.quantity,
+              notes: it.notes ?? undefined,
+              kitchenStatus: it.kitchenStatus,
+            })),
+            createdAt: new Date(order.openedAt),
+            status: order.status,
+          });
+          setTableOrderData(order);
+        } else if (!order || order.status === "PAID" || order.status === "CANCELED" || (order.items && order.items.length === 0)) {
+          setActiveOrder(null);
+          setTableOrderData(order && order.items && order.items.length > 0 ? order : null);
+        }
+      } catch {
+        // En caso de que no haya orden abierta en la mesa o error de red, no rompe
+      }
+    }
+
+    syncActiveOrder();
+    const intervalId = setInterval(syncActiveOrder, 5000);
+    return () => {
+      active = false;
+      clearInterval(intervalId);
+    };
+  }, [slug, tableNumber]);
 
   const categories = useMemo(() => {
     const map = new Map<string, string>();
@@ -303,7 +368,10 @@ export function DinerMenuView({ slug, tableNumber }: DinerMenuViewProps) {
       );
       setActiveOrder({
         folio: response.folio,
-        items: [...cart],
+        items: cart.map((line) => ({
+          ...line,
+          kitchenStatus: "PENDING" as KitchenItemStatus,
+        })),
         createdAt: new Date(),
         status: response.status || "SENT",
       });
@@ -312,20 +380,12 @@ export function DinerMenuView({ slug, tableNumber }: DinerMenuViewProps) {
       toast.success("¡Tu comanda fue enviada a cocina con éxito!", {
         description: `Folio asignado: ${response.folio}`,
       });
-    } catch {
-      // Fallback para modo demo / test offline
-      const fallbackFolio = `FOL-M${tableNumber}-${Math.floor(1000 + Math.random() * 9000)}`;
-      setActiveOrder({
-        folio: fallbackFolio,
-        items: [...cart],
-        createdAt: new Date(),
-        status: "SENT",
-      });
-      setCart([]);
-      setIsCartOpen(false);
-      toast.success("¡Tu comanda fue enviada a cocina con éxito!", {
-        description: `Folio asignado: ${fallbackFolio}`,
-      });
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "No se pudo enviar la orden a cocina. Inténtalo de nuevo."
+      );
     }
   };
 
@@ -471,35 +531,112 @@ export function DinerMenuView({ slug, tableNumber }: DinerMenuViewProps) {
       </header>
 
       {/* ESTADO DE ORDEN ACTIVA EN COCINA */}
-      {activeOrder && (
-        <div className="mx-4 mt-4 p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-neutral-900 border border-amber-500/30">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="flex h-2.5 w-2.5 relative">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-              </span>
-              <span className="text-xs font-bold text-amber-400 uppercase tracking-wide">
-                Comanda Activa
+      {activeOrder && activeOrder.items.length > 0 && (activeOrder.status === "SENT" || activeOrder.status === "READY") && (() => {
+        const allDelivered = activeOrder.items.every((it) => it.kitchenStatus === "DELIVERED");
+        const isReady = activeOrder.status === "READY" && !allDelivered;
+
+        return (
+          <div
+            className={cn(
+              "mx-4 mt-4 p-4 rounded-2xl border transition-all",
+              allDelivered
+                ? "bg-gradient-to-r from-emerald-500/20 via-teal-600/10 to-neutral-900 border-emerald-500/40"
+                : isReady
+                ? "bg-gradient-to-r from-emerald-500/20 via-emerald-600/10 to-neutral-900 border-emerald-500/40"
+                : "bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-neutral-900 border-amber-500/30",
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="flex h-2.5 w-2.5 relative">
+                  <span
+                    className={cn(
+                      "animate-ping absolute inline-flex h-full w-full rounded-full opacity-75",
+                      allDelivered
+                        ? "hidden"
+                        : isReady
+                        ? "bg-emerald-400"
+                        : "bg-amber-400",
+                    )}
+                  ></span>
+                  <span
+                    className={cn(
+                      "relative inline-flex rounded-full h-2.5 w-2.5",
+                      allDelivered
+                        ? "bg-emerald-500"
+                        : isReady
+                        ? "bg-emerald-500"
+                        : "bg-amber-500",
+                    )}
+                  ></span>
+                </span>
+                <span
+                  className={cn(
+                    "text-xs font-bold uppercase tracking-wide",
+                    allDelivered
+                      ? "text-emerald-400"
+                      : isReady
+                      ? "text-emerald-400"
+                      : "text-amber-400",
+                  )}
+                >
+                  {allDelivered
+                    ? "¡Pedido Entregado!"
+                    : isReady
+                    ? "¡Pedido Listo!"
+                    : "En Preparación"}
+                </span>
+              </div>
+              <span className="text-xs font-mono font-bold text-neutral-400">
+                {activeOrder.folio}
               </span>
             </div>
-            <span className="text-xs font-mono font-bold text-neutral-400">
-              {activeOrder.folio}
-            </span>
-          </div>
 
-          <p className="text-sm font-semibold text-neutral-200 mt-1">
-            Tu pedido está siendo preparado por cocina
-          </p>
-          <p className="text-xs text-neutral-400 mt-0.5">
-            {activeOrder.items.length} productos ordenados a la Mesa {tableNumber}.
-          </p>
-        </div>
-      )}
+            <p className="text-sm font-semibold text-neutral-200 mt-1.5 flex items-center gap-1.5">
+              {allDelivered ? (
+                <>
+                  <span>✅</span>
+                  <span>¡Buen provecho! Tu pedido ya fue entregado en tu mesa.</span>
+                </>
+              ) : isReady ? (
+                <>
+                  <span>🍽️</span>
+                  <span>¡Tu pedido está listo! El mesero lo está llevando a tu mesa.</span>
+                </>
+              ) : (
+                <>
+                  <span>🍳</span>
+                  <span>Tu pedido está siendo preparado por cocina</span>
+                </>
+              )}
+            </p>
+            <p className="text-xs text-neutral-400 mt-0.5">
+              {allDelivered
+                ? "Si deseas ordenar algo más o pedir tu cuenta, puedes hacerlo desde aquí."
+                : `${activeOrder.items.length} ${
+                    activeOrder.items.length === 1 ? "producto ordenado" : "productos ordenados"
+                  } a la Mesa ${tableNumber}.`}
+            </p>
+          </div>
+        );
+      })()}
 
       {/* LISTADO DE PLATILLOS */}
       <main className="p-4 space-y-3">
-        {filteredItems.length === 0 ? (
+        {isLoadingCatalog ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((n) => (
+              <div
+                key={n}
+                className="p-3.5 rounded-2xl bg-neutral-900/40 border border-neutral-800/50 animate-pulse space-y-2.5"
+              >
+                <div className="h-4 bg-neutral-800 rounded w-1/3" />
+                <div className="h-3 bg-neutral-800/60 rounded w-2/3" />
+                <div className="h-5 bg-neutral-800/40 rounded w-16" />
+              </div>
+            ))}
+          </div>
+        ) : filteredItems.length === 0 ? (
           <div className="text-center py-12 text-neutral-500">
             <UtensilsCrossedIcon className="w-10 h-10 mx-auto text-neutral-600 mb-2" />
             <p className="text-sm">No encontramos platillos con ese criterio.</p>

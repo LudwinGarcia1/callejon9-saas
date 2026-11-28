@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { XIcon } from "lucide-react";
+import { CheckCircle2Icon, CheckIcon, XIcon } from "lucide-react";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -30,10 +30,13 @@ import { kitchenEventOrderId } from "@/lib/realtime";
 import type {
   AddOrderItemsRequest,
   CategoryResponse,
+  KitchenItemResponse,
+  KitchenItemStatus,
   OrderResponse,
   OrderStatus,
   ProductResponse,
   TableResponse,
+  UpdateKitchenItemStatusRequest,
 } from "@/lib/types";
 import { ProductPicker, type CartLine } from "./product-picker";
 
@@ -183,6 +186,45 @@ export function OrderView({ orderId }: OrderViewProps) {
     },
   });
 
+  const advanceItemMutation = useMutation({
+    mutationFn: ({ itemId, status }: { itemId: string; status: KitchenItemStatus }) =>
+      api.post<KitchenItemResponse>(endpoints.kitchen.itemStatus(itemId), {
+        status,
+      } satisfies UpdateKitchenItemStatusRequest),
+    onSuccess: (updated) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all() });
+      toast.success(
+        updated.kitchenStatus === "DELIVERED"
+          ? `${updated.productName} marcado como entregado a la mesa.`
+          : `${updated.productName} actualizado.`,
+      );
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof ApiError ? error.message : "No se pudo actualizar el estado del platillo.",
+      );
+    },
+  });
+
+  const deliverAllReadyItemsMutation = useMutation({
+    mutationFn: async (itemIds: string[]) => {
+      for (const id of itemIds) {
+        await api.post(endpoints.kitchen.itemStatus(id), { status: "DELIVERED" });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(orderId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders.all() });
+      toast.success("Todos los platillos listos se marcaron como entregados.");
+    },
+    onError: (error) => {
+      toast.error(
+        error instanceof ApiError ? error.message : "No se pudieron marcar los platillos como entregados.",
+      );
+    },
+  });
+
   /** Volver a tocar un producto suma una unidad a su linea sin nota. Si todas
    * sus lineas ya llevan nota, abre una nueva: la unidad extra no hereda una
    * indicacion que el comensal no pidio. */
@@ -303,7 +345,27 @@ export function OrderView({ orderId }: OrderViewProps) {
                       {/* Antes de enviar a cocina todo esta "Pendiente": solo
                           aporta una vez que cocina puede moverlo. */}
                       {order.status !== "NEW" && (
-                        <StatusBadge kind="kitchen" status={item.kitchenStatus} />
+                        <div className="flex items-center gap-2">
+                          <StatusBadge kind="kitchen" status={item.kitchenStatus} />
+                          {item.kitchenStatus === "READY" && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-6 px-2 text-xs border-emerald-500/40 text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800 dark:text-emerald-400 dark:hover:bg-emerald-950/40"
+                              disabled={advanceItemMutation.isPending}
+                              onClick={() =>
+                                advanceItemMutation.mutate({
+                                  itemId: item.id,
+                                  status: "DELIVERED",
+                                })
+                              }
+                            >
+                              <CheckIcon className="mr-1 size-3" />
+                              Entregar
+                            </Button>
+                          )}
+                        </div>
                       )}
                       <Money
                         amount={item.unitPrice}
@@ -351,6 +413,15 @@ export function OrderView({ orderId }: OrderViewProps) {
                     cartIsEmpty={cart.length === 0}
                     isPending={sendToKitchenMutation.isPending}
                     onSend={() => sendToKitchenMutation.mutate()}
+                    onDeliverAllReady={() => {
+                      const readyItemIds = order.items
+                        .filter((it) => it.kitchenStatus === "READY")
+                        .map((it) => it.id);
+                      if (readyItemIds.length > 0) {
+                        deliverAllReadyItemsMutation.mutate(readyItemIds);
+                      }
+                    }}
+                    isDeliveringAll={deliverAllReadyItemsMutation.isPending}
                   />
                   {isCancelable && (
                     <Button
@@ -387,6 +458,7 @@ export function OrderView({ orderId }: OrderViewProps) {
             isCommitting={addItemsMutation.isPending}
             disabled={order.status === "PAID" || order.status === "CANCELED"}
             alreadySentToKitchen={order.status === "SENT" || order.status === "READY"}
+            orderStatus={order.status}
           />
 
           <Dialog open={confirmCancelOpen} onOpenChange={setConfirmCancelOpen}>
@@ -428,12 +500,21 @@ interface SendToKitchenActionProps {
   cartIsEmpty: boolean;
   isPending: boolean;
   onSend: () => void;
+  onDeliverAllReady?: () => void;
+  isDeliveringAll?: boolean;
 }
 
 /** Region de accion "Enviar a cocina": solo tiene sentido mientras la orden
  * sigue NEW, porque el backend rechaza el reenvio con 409 en cualquier otro
  * estado. Para los demas estados se explica que ya paso, sin ocultar nada. */
-function SendToKitchenAction({ order, cartIsEmpty, isPending, onSend }: SendToKitchenActionProps) {
+function SendToKitchenAction({
+  order,
+  cartIsEmpty,
+  isPending,
+  onSend,
+  onDeliverAllReady,
+  isDeliveringAll,
+}: SendToKitchenActionProps) {
   if (order.status === "NEW") {
     return (
       <Button
@@ -447,7 +528,53 @@ function SendToKitchenAction({ order, cartIsEmpty, isPending, onSend }: SendToKi
     );
   }
 
-  if (order.status === "SENT" || order.status === "READY") {
+  const allItemsDelivered =
+    order.items.length > 0 && order.items.every((it) => it.kitchenStatus === "DELIVERED");
+
+  if (allItemsDelivered) {
+    return (
+      <Alert className="flex-1 border-neutral-300 bg-neutral-100/50 dark:border-neutral-700 dark:bg-neutral-900/50">
+        <AlertTitle className="flex items-center gap-1.5 font-medium text-foreground">
+          <CheckCircle2Icon className="size-4 text-emerald-600" />
+          Pedido entregado en mesa
+        </AlertTitle>
+        <AlertDescription className="text-muted-foreground">
+          Todos los productos fueron entregados a los comensales. La orden está lista para el cobro en caja.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (order.status === "READY") {
+    const readyItems = order.items.filter((it) => it.kitchenStatus === "READY");
+    return (
+      <div className="flex flex-1 flex-col gap-2.5 sm:flex-row sm:items-center">
+        <Alert className="flex-1 border-emerald-500/30 bg-emerald-500/10 text-emerald-950 dark:text-emerald-100">
+          <AlertTitle className="flex items-center gap-1.5 font-semibold text-emerald-800 dark:text-emerald-300">
+            <CheckCircle2Icon className="size-4 text-emerald-600" />
+            ¡Pedido listo para servir!
+          </AlertTitle>
+          <AlertDescription className="text-emerald-900/90 dark:text-emerald-200/90">
+            Cocina completó todos los platillos. Ya pueden llevarse a la mesa de los comensales.
+          </AlertDescription>
+        </Alert>
+        {readyItems.length > 0 && onDeliverAllReady && (
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            disabled={isDeliveringAll}
+            onClick={onDeliverAllReady}
+            className="border-emerald-500/40 text-emerald-700 hover:bg-emerald-500/10 dark:text-emerald-300 sm:self-stretch"
+          >
+            {isDeliveringAll ? "Entregando…" : "Entregar todo"}
+          </Button>
+        )}
+      </div>
+    );
+  }
+
+  if (order.status === "SENT") {
     return (
       <Alert className="flex-1">
         <AlertTitle>Ya está en cocina</AlertTitle>

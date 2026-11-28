@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/kitchen")
-@PreAuthorize("hasAnyRole('KITCHEN','ADMIN')")
 public class KitchenController {
 
     private final KitchenService kitchenService;
@@ -27,11 +26,13 @@ public class KitchenController {
     }
 
     @GetMapping("/orders")
+    @PreAuthorize("hasAnyRole('KITCHEN','ADMIN')")
     public List<KitchenOrderResponse> listSentOrders() {
         return kitchenService.listSentOrders().stream().map(KitchenOrderResponse::from).toList();
     }
 
     @PostMapping("/items/{itemId}/status")
+    @PreAuthorize("hasAnyRole('KITCHEN','ADMIN','WAITER')")
     public KitchenItemResponse advanceItemStatus(
             @PathVariable UUID itemId, @Valid @RequestBody UpdateKitchenItemStatusRequest request) {
         return KitchenItemResponse.from(kitchenService.advanceItemStatus(itemId, request.status()));

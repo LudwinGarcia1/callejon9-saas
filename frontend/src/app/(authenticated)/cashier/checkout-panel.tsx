@@ -63,13 +63,79 @@ export function CheckoutPanel({ orderId }: { orderId: string }) {
               <label>Personas<Input aria-label="Personas" type="number" min="1" max="50" value={parts} onChange={(e) => setParts(Number(e.target.value))} /></label>
               <Button variant="outline" disabled={!Number.isInteger(parts) || parts < 1 || parts > 50 || parts > Math.round(total * 100)} onClick={() => setPayments(splitEqually(total, parts))}>Dividir en partes iguales</Button>
             </div>
-            {payments.map((payment, index) => <div key={index} className="flex flex-wrap items-end gap-2 rounded-md border p-3">
-              <label className="flex-1">Método {index + 1}<select aria-label={`Método ${index + 1}`} value={payment.method} className="h-10 w-full rounded-md border bg-background px-2" onChange={(e) => update(index, { method: e.target.value as PaymentRequest["method"] })}>
-                {(["CASH", "CARD", "TRANSFER", "MERCADOPAGO"] as const).map((method) => <option key={method} value={method}>{PAYMENT_METHOD_LABELS[method]}</option>)}
-              </select></label>
-              <label className="flex-1">Monto recibido {index + 1}<Input aria-label={`Monto recibido ${index + 1}`} type="number" min="0.01" max="99999999.99" step="0.01" value={payment.amount || ""} onChange={(e) => update(index, { amount: Number(e.target.value) })} /></label>
-              <Button variant="outline" aria-label={`Quitar pago ${index + 1}`} onClick={() => setPayments(payments.filter((_, i) => i !== index))}>Quitar</Button>
-            </div>)}
+            {payments.map((payment, index) => (
+              <div key={index} className="flex flex-col gap-2 rounded-md border p-3">
+                <div className="flex flex-wrap items-end gap-2">
+                  <label className="flex-1">
+                    Método {index + 1}
+                    <select
+                      aria-label={`Método ${index + 1}`}
+                      value={payment.method}
+                      className="h-10 w-full rounded-md border bg-background px-2"
+                      onChange={(e) => update(index, { method: e.target.value as PaymentRequest["method"] })}
+                    >
+                      {(["CASH", "CARD", "TRANSFER", "MERCADOPAGO"] as const).map((method) => (
+                        <option key={method} value={method}>
+                          {PAYMENT_METHOD_LABELS[method]}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="flex-1">
+                    Monto recibido {index + 1}
+                    <Input
+                      aria-label={`Monto recibido ${index + 1}`}
+                      type="number"
+                      min="0.01"
+                      max="99999999.99"
+                      step="0.01"
+                      value={payment.amount || ""}
+                      onChange={(e) => update(index, { amount: Number(e.target.value) })}
+                    />
+                  </label>
+                  <Button
+                    variant="outline"
+                    aria-label={`Quitar pago ${index + 1}`}
+                    onClick={() => setPayments(payments.filter((_, i) => i !== index))}
+                  >
+                    Quitar
+                  </Button>
+                </div>
+
+                {/* Explicación y acciones específicas por método */}
+                {payment.method === "MERCADOPAGO" && (
+                  <div className="mt-1 flex flex-wrap items-center justify-between gap-2 rounded-md border border-[#009ee3]/40 bg-[#009ee3]/10 p-2.5 text-xs text-[#009ee3]">
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <QrCodeIcon className="size-4 shrink-0" />
+                      <span>Pasarela digital oficial: Requiere cobro con QR dinámico o enlace de Checkout Pro.</span>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="h-7 text-xs bg-[#009ee3] text-white hover:bg-[#0081ba] font-semibold"
+                      onClick={() => setIsMpModalOpen(true)}
+                    >
+                      Abrir Pasarela QR
+                    </Button>
+                  </div>
+                )}
+                {payment.method === "CASH" && (
+                  <p className="text-xs text-muted-foreground">
+                    💵 Efectivo en caja: Registra el monto recibido en mano; el sistema calcula el cambio y suma al arqueo del turno.
+                  </p>
+                )}
+                {payment.method === "CARD" && (
+                  <p className="text-xs text-muted-foreground">
+                    💳 Terminal bancaria física: Cobra con la terminal física de tarjeta del restaurante y registra el comprobante.
+                  </p>
+                )}
+                {payment.method === "TRANSFER" && (
+                  <p className="text-xs text-muted-foreground">
+                    📲 Transferencia SPEI: Verifica el comprobante en tu app bancaria y registra el cobro.
+                  </p>
+                )}
+              </div>
+            ))}
             <Button variant="outline" disabled={payments.length >= 50} onClick={() => setPayments([...payments, { method: "CASH", amount: balance.remaining }])}>Agregar pago por monto libre</Button>
             <p className="text-sm text-muted-foreground">Los montos incluyen propina. Si cambias la propina, ajusta los pagos. Solo el efectivo admite cambio.</p>
           </fieldset>}
@@ -87,24 +153,37 @@ export function CheckoutPanel({ orderId }: { orderId: string }) {
         {mutation.error && <p role="alert" className="text-destructive">{mutation.error.message}</p>}
         {!closed && (
           <div className="flex flex-col gap-2">
-            <Button
-              className="h-14 text-lg"
-              disabled={!balance.valid || !Number.isFinite(tipPercent) || tipPercent < 0 || tipPercent > 100 || mutation.isPending}
-              onClick={charge}
-            >
-              {mutation.isPending ? "Cobrando…" : "Confirmar cobro"}
-            </Button>
+            {payments.length === 1 && payments[0].method === "MERCADOPAGO" ? (
+              <Button
+                className="h-14 text-lg bg-[#009ee3] hover:bg-[#0081ba] text-white font-bold gap-2 shadow-sm"
+                disabled={!balance.valid || !Number.isFinite(tipPercent) || tipPercent < 0 || tipPercent > 100 || mutation.isPending}
+                onClick={() => setIsMpModalOpen(true)}
+              >
+                <QrCodeIcon className="size-5" />
+                Cobrar con QR Mercado Pago
+              </Button>
+            ) : (
+              <Button
+                className="h-14 text-lg"
+                disabled={!balance.valid || !Number.isFinite(tipPercent) || tipPercent < 0 || tipPercent > 100 || mutation.isPending}
+                onClick={charge}
+              >
+                {mutation.isPending ? "Cobrando…" : "Confirmar cobro"}
+              </Button>
+            )}
 
-            <Button
-              type="button"
-              variant="outline"
-              className="h-12 border-[#009ee3]/60 text-[#009ee3] hover:bg-[#009ee3]/10 font-bold gap-2 text-sm shadow-sm"
-              disabled={mutation.isPending}
-              onClick={() => setIsMpModalOpen(true)}
-            >
-              <QrCodeIcon className="w-4 h-4 text-[#009ee3]" />
-              Cobrar con QR Mercado Pago
-            </Button>
+            {!(payments.length === 1 && payments[0].method === "MERCADOPAGO") && (
+              <Button
+                type="button"
+                variant="outline"
+                className="h-12 border-[#009ee3]/60 text-[#009ee3] hover:bg-[#009ee3]/10 font-bold gap-2 text-sm shadow-sm"
+                disabled={mutation.isPending}
+                onClick={() => setIsMpModalOpen(true)}
+              >
+                <QrCodeIcon className="w-4 h-4 text-[#009ee3]" />
+                Cobrar con QR Mercado Pago
+              </Button>
+            )}
           </div>
         )}
       </>}

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Money } from "@/components/shared/money";
 import { cn } from "@/lib/utils";
-import type { CategoryResponse, ProductResponse } from "@/lib/types";
+import type { CategoryResponse, OrderStatus, ProductResponse } from "@/lib/types";
 
 /** Sentinela para agrupar productos sin categoria asignada. */
 const NO_CATEGORY = "sin-categoria";
@@ -47,6 +47,8 @@ interface ProductPickerProps {
   /** La orden ya esta SENT o READY: agregar sigue permitido, pero hay que
    * dejarlo claro para que el mesero no piense que reenvia a cocina solo. */
   alreadySentToKitchen: boolean;
+  /** Estado de la orden para adaptar el mensaje de aviso dinamicamente. */
+  orderStatus?: OrderStatus;
 }
 
 /**
@@ -68,6 +70,7 @@ export function ProductPicker({
   isCommitting,
   disabled,
   alreadySentToKitchen,
+  orderStatus,
 }: ProductPickerProps) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
@@ -115,14 +118,23 @@ export function ProductPicker({
     <aside className="flex flex-col bg-surface-alt xl:border-l">
       <div className="border-b px-[18px] pt-5 pb-4 sm:px-6">
         <p className="eyebrow">Agregar productos</p>
-        {alreadySentToKitchen && (
+        {orderStatus === "READY" ? (
+          <Alert className="mt-3 border-emerald-500/30 bg-emerald-500/10">
+            <AlertTitle className="text-emerald-700 dark:text-emerald-400 font-semibold">
+              Comanda lista para servir
+            </AlertTitle>
+            <AlertDescription className="text-emerald-800/90 dark:text-emerald-300/90">
+              Los productos actuales ya salieron de cocina. Si agregas más productos, se enviarán como una nueva tanda.
+            </AlertDescription>
+          </Alert>
+        ) : alreadySentToKitchen ? (
           <Alert className="mt-3">
             <AlertTitle>Esta orden ya está en cocina</AlertTitle>
             <AlertDescription>
               Lo que agregues ahora se sumará a la cuenta y aparecerá en cocina como pendiente.
             </AlertDescription>
           </Alert>
-        )}
+        ) : null}
         <div className="mt-3 flex flex-wrap gap-1.5">
           {tabs.map((tab) => (
             <button
