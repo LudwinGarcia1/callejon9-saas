@@ -127,24 +127,24 @@ try {
     # Se reinstala con node_modules plano y se recompila: con los enlaces de pnpm,
     # copiar la salida resolviendolos separa a next de sus dependencias y server.js
     # no arranca. El script falla si queda algun enlace en la salida.
-    Write-Host '== Recompilando con node_modules plano'
+    # El empaquetado en zip se realiza dentro del contenedor Linux para evitar que
+    # nombres de archivos con caracteres especiales de Next/Turbopack (como dos puntos ':')
+    # fallen al copiarse a sistemas de archivos Windows/NTFS.
+    Write-Host '== Recompilando con node_modules plano y empaquetando zip'
     $package = 'set -e; rm -rf node_modules .next; pnpm install --frozen-lockfile --config.node-linker=hoisted; ' +
                'pnpm build; [ $(find .next/standalone -type l | wc -l) -eq 0 ]; mkdir /out; ' +
                'cp -r .next/standalone/. /out/; mkdir -p /out/.next; cp -r .next/static /out/.next/static; ' +
-               'cp -r public /out/public'
+               'cp -r public /out/public; [ -f /out/server.js ]; apk add --no-cache zip; cd /out; zip -qry /package.zip .'
     $createArgs = @('create', '--name', $container, '--entrypoint', 'sh')
     # Solo la compilacion que se publica sube source maps: la del builder genera otros archivos.
     if ($env:SENTRY_AUTH_TOKEN) { $createArgs += @('-e', 'SENTRY_AUTH_TOKEN') }
     Invoke-Native 'docker' ($createArgs + @($image, '-c', $package)) | Out-Null
     Invoke-Native 'docker' @('start', '--attach', $container) | Out-Host
-    Invoke-Native 'docker' @('cp', "${container}:/out", $siteDir) | Out-Null
+    Invoke-Native 'docker' @('cp', "${container}:/package.zip", $zipPath) | Out-Null
 
-    if (-not (Test-Path (Join-Path $siteDir 'server.js'))) {
-        throw 'La salida no contiene server.js: revisa que la compilacion use NEXT_OUTPUT=standalone.'
+    if (-not (Test-Path $zipPath) -or (Get-Item $zipPath).Length -eq 0) {
+        throw 'La salida no contiene package.zip: revisa que la compilacion use NEXT_OUTPUT=standalone.'
     }
-    # tar.exe de Windows (bsdtar) escribe zip con -a; incluye .next, que Compress-Archive omite.
-    $systemTar = Join-Path $env:SystemRoot 'System32\tar.exe'
-    Invoke-Native $systemTar @('-a', '-cf', $zipPath, '-C', $siteDir, '.')
     $sizeMb = [math]::Round((Get-Item $zipPath).Length / 1MB, 1)
 
     Write-Host "== Publicando $sizeMb MB en $WebAppName"
