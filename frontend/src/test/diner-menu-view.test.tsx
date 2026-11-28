@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, fireEvent, cleanup } from "@testing-library/react";
+import { render, screen, fireEvent, cleanup, waitFor } from "@testing-library/react";
 import { DinerMenuView } from "../app/m/[slug]/[table]/diner-menu-view";
 
 afterEach(cleanup);
@@ -40,19 +40,37 @@ describe("DinerMenuView (Auto-pedido y Menú QR)", () => {
     expect(screen.getByText(/ver comanda de la mesa 3/i)).toBeDefined();
   });
 
-  it("permite llamar al mesero y notifica con toast", async () => {
+  it("permite llamar al mesero y confirma cuando el servidor recibe la llamada", async () => {
     const { toast } = await import("sonner");
+    const { api } = await import("@/lib/api");
+    const post = vi.spyOn(api, "post").mockResolvedValue({ success: true, tableNumber: 2 });
     render(<DinerMenuView slug="los-taquitos" tableNumber="2" />);
 
-    const callWaiterBtn = screen.getByRole("button", { name: /mesero/i });
-    fireEvent.click(callWaiterBtn);
+    fireEvent.click(screen.getByRole("button", { name: /mesero/i }));
 
-    expect(toast.info).toHaveBeenCalledWith(
+    expect(post).toHaveBeenCalledWith("/api/v1/public/los-taquitos/tables/2/call-waiter", {});
+    await waitFor(() => expect(toast.info).toHaveBeenCalledWith(
       expect.stringContaining("Mesero notificado"),
       expect.objectContaining({
         description: expect.stringContaining("Mesa 2"),
       })
-    );
+    ));
+    post.mockRestore();
+  });
+
+  it("avisa al comensal si la llamada al mesero no llega al servidor", async () => {
+    const { toast } = await import("sonner");
+    const { api } = await import("@/lib/api");
+    const post = vi.spyOn(api, "post").mockRejectedValue(new Error("sin red"));
+    render(<DinerMenuView slug="los-taquitos" tableNumber="2" />);
+
+    fireEvent.click(screen.getByRole("button", { name: /mesero/i }));
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith(
+      expect.stringContaining("No se pudo avisar al mesero"),
+    ));
+    expect(toast.info).not.toHaveBeenCalledWith(expect.stringContaining("Mesero notificado"), expect.anything());
+    post.mockRestore();
   });
 
   it("permite pedir la cuenta y notifica a caja", async () => {

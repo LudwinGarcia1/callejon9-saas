@@ -1,4 +1,4 @@
-import { Client, type IMessage } from "@stomp/stompjs";
+import { Client, type IMessage, type StompSubscription } from "@stomp/stompjs";
 
 import { endpoints } from "./endpoints";
 import type { KitchenItemResponse, OrderResponse, WaiterCallResponse } from "./types";
@@ -70,35 +70,92 @@ interface ChannelOptions<T> {
   onConnectionChange: (connected: boolean) => void;
 }
 
+interface Subscriber {
+  topic: string;
+  deliver: (message: IMessage) => void;
+  onConnectionChange: (connected: boolean) => void;
+  handle?: StompSubscription;
+}
+
+interface SharedChannel {
+  client: Client;
+  subscribers: Set<Subscriber>;
+  connected: boolean;
+}
+
 /**
- * Crea y activa un cliente suscrito a un topico. Se suscribe en cada
- * conexion, incluidas las reconexiones, y descarta las tramas que `parse` no
- * reconoce. Devuelve la funcion que lo cierra.
+ * Una sola conexion por pestana, compartida por todas las suscripciones. El
+ * plan F1 de App Service admite 5 WebSockets simultaneos para toda la app:
+ * con una conexion por pantalla, la comanda del mesero abria dos (cocina y
+ * llamadas) y unas cuantas pestanas agotaban el cupo.
+ */
+let shared: SharedChannel | null = null;
+
+function openSharedChannel(): SharedChannel {
+  const channel: SharedChannel = { client: null as unknown as Client, subscribers: new Set(), connected: false };
+  channel.client = new Client({
+    brokerURL: realtimeUrl(window.location),
+    reconnectDelay: RECONNECT_DELAY_MS,
+    onConnect: () => {
+      channel.connected = true;
+      for (const subscriber of channel.subscribers) {
+        subscriber.handle = channel.client.subscribe(subscriber.topic, subscriber.deliver);
+        subscriber.onConnectionChange(true);
+      }
+    },
+    onWebSocketClose: () => {
+      channel.connected = false;
+      for (const subscriber of channel.subscribers) {
+        subscriber.handle = undefined;
+        subscriber.onConnectionChange(false);
+      }
+    },
+  });
+  shared = channel;
+  channel.client.activate();
+  return channel;
+}
+
+/**
+ * Suscribe a un topico sobre la conexion compartida, abriendola si hace
+ * falta. Se vuelve a suscribir en cada reconexion y descarta las tramas que
+ * `parse` no reconoce. La funcion que devuelve quita la suscripcion y, si era
+ * la ultima, cierra la conexion.
  */
 function connectTopic<T>(
   topic: string,
   parse: (message: Pick<IMessage, "body">) => T | null,
   { onEvent, onConnectionChange }: Omit<ChannelOptions<T>, "tenantId">,
 ): () => void {
-  const client = new Client({
-    brokerURL: realtimeUrl(window.location),
-    reconnectDelay: RECONNECT_DELAY_MS,
-    onConnect: () => {
-      onConnectionChange(true);
-      client.subscribe(topic, (message) => {
-        const event = parse(message);
-        if (event) {
-          onEvent(event);
-        }
-      });
+  const subscriber: Subscriber = {
+    topic,
+    deliver: (message) => {
+      const event = parse(message);
+      if (event) {
+        onEvent(event);
+      }
     },
-    onWebSocketClose: () => onConnectionChange(false),
-  });
-  client.activate();
+    onConnectionChange,
+  };
+  const channel = shared ?? openSharedChannel();
+  channel.subscribers.add(subscriber);
+  if (channel.connected) {
+    subscriber.handle = channel.client.subscribe(topic, subscriber.deliver);
+    onConnectionChange(true);
+  }
 
   return () => {
     onConnectionChange(false);
-    void client.deactivate();
+    if (channel.connected) {
+      subscriber.handle?.unsubscribe();
+    }
+    channel.subscribers.delete(subscriber);
+    if (channel.subscribers.size === 0) {
+      if (shared === channel) {
+        shared = null;
+      }
+      void channel.client.deactivate();
+    }
   };
 }
 

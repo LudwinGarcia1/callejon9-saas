@@ -1,3 +1,4 @@
+import { Client } from "@stomp/stompjs";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import {
@@ -108,7 +109,7 @@ it("accepts only frames shaped like a waiter call", () => {
 
 it("delivers waiter calls from the restaurant topic and ignores other frames", () => {
   const onEvent = vi.fn();
-  connectWaiterCallChannel({ tenantId: TENANT, onEvent, onConnectionChange: vi.fn() });
+  const close = connectWaiterCallChannel({ tenantId: TENANT, onEvent, onConnectionChange: vi.fn() });
 
   (stomp.config as { onConnect: () => void }).onConnect();
   expect(stomp.subscribe).toHaveBeenCalledWith(`/topic/tenant.${TENANT}.waiter-calls`, expect.any(Function));
@@ -118,4 +119,30 @@ it("delivers waiter calls from the restaurant topic and ignores other frames", (
   deliver({ body: JSON.stringify(item) });
   expect(onEvent).toHaveBeenCalledTimes(1);
   expect(onEvent).toHaveBeenCalledWith(call);
+  close();
+});
+
+it("shares one connection between kitchen and waiter calls and closes it with the last one", () => {
+  const unsubscribeKitchen = vi.fn();
+  stomp.subscribe.mockReturnValueOnce({ unsubscribe: unsubscribeKitchen });
+  const kitchenConnection = vi.fn();
+  const callsConnection = vi.fn();
+
+  const closeKitchen = connectKitchenChannel({ tenantId: TENANT, onEvent: vi.fn(), onConnectionChange: kitchenConnection });
+  (stomp.config as { onConnect: () => void }).onConnect();
+  // La segunda pantalla llega con la conexion ya abierta: se suscribe en el acto.
+  const closeCalls = connectWaiterCallChannel({ tenantId: TENANT, onEvent: vi.fn(), onConnectionChange: callsConnection });
+
+  expect(Client).toHaveBeenCalledTimes(1);
+  expect(stomp.activate).toHaveBeenCalledTimes(1);
+  expect(stomp.subscribe).toHaveBeenCalledWith(`/topic/tenant.${TENANT}.kitchen`, expect.any(Function));
+  expect(stomp.subscribe).toHaveBeenCalledWith(`/topic/tenant.${TENANT}.waiter-calls`, expect.any(Function));
+  expect(callsConnection).toHaveBeenLastCalledWith(true);
+
+  closeKitchen();
+  expect(unsubscribeKitchen).toHaveBeenCalledTimes(1);
+  expect(stomp.deactivate).not.toHaveBeenCalled();
+
+  closeCalls();
+  expect(stomp.deactivate).toHaveBeenCalledTimes(1);
 });

@@ -20,7 +20,7 @@ class WaiterCallThrottleTest {
     @DisplayName("la misma mesa avisa una vez por ventana y vuelve a avisar al vencerse")
     void sameTableNotifiesOncePerWindow() {
         assertThat(throttle.tryAcquire(tenantA, 5, start)).isTrue();
-        assertThat(throttle.tryAcquire(tenantA, 5, start.plusSeconds(5))).isFalse();
+        assertThat(throttle.tryAcquire(tenantA, 5, start.plusSeconds(1))).isFalse();
         assertThat(throttle.tryAcquire(tenantA, 5, start.plus(WaiterCallThrottle.WINDOW).minusMillis(1))).isFalse();
         assertThat(throttle.tryAcquire(tenantA, 5, start.plus(WaiterCallThrottle.WINDOW))).isTrue();
     }
