@@ -30,7 +30,7 @@ param(
     [ValidateSet('Status', 'Stop', 'Start')]
     [string]$Action,
 
-    [string]$ResourceGroup = 'rg-callejon9-prod-mxc-001',
+    [string]$ResourceGroup = 'rg-callejon9-prod-cus-001',
 
     # SKU al que vuelve el plan con Start. Debe coincidir con app_service_sku de Terraform.
     [string]$Sku = 'B1',

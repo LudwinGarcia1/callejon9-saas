@@ -154,4 +154,13 @@ public class GlobalExceptionHandler {
                 .header(HttpHeaders.RETRY_AFTER, Long.toString(seconds))
                 .body(problem);
     }
+
+    @ExceptionHandler(com.callejon9.payment.service.MercadoPagoException.class)
+    ProblemDetail onMercadoPagoError(com.callejon9.payment.service.MercadoPagoException exception) {
+        log.error("Fallo de servicio o integracion con Mercado Pago: {}", exception.getMessage(), exception);
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_GATEWAY, exception.getMessage());
+        problem.setTitle("Error de servicio externo");
+        return problem;
+    }
 }

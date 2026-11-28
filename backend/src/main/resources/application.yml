@@ -107,6 +107,17 @@ app:
     # ven afectados.
     allowed-origins: ${APP_ALLOWED_ORIGINS:http://localhost:3000}
 
+  payment:
+    mercadopago:
+      access-token: ${MERCADOPAGO_ACCESS_TOKEN:}
+      public-key: ${MERCADOPAGO_PUBLIC_KEY:}
+      webhook-secret: ${MERCADOPAGO_WEBHOOK_SECRET:}
+      mock-enabled: ${MERCADOPAGO_MOCK_ENABLED:true}
+      sandbox: ${MERCADOPAGO_SANDBOX:true}
+      base-url: ${MERCADOPAGO_BASE_URL:https://api.mercadopago.com}
+      frontend-base-url: ${APP_FRONTEND_BASE_URL:http://localhost:3000}
+      backend-base-url: ${APP_BACKEND_BASE_URL:http://localhost:8080}
+
 server:
   port: 8080
 
@@ -137,3 +148,31 @@ management:
 logging:
   level:
     org.flywaydb: INFO
+
+# Reporte de errores a Sentry. Con SENTRY_DSN vacio el SDK no se inicializa:
+# pruebas, CI y desarrollo local no envian nada. Solo llegan las excepciones
+# que ningun @ExceptionHandler atiende (los 500); los 4xx de
+# GlobalExceptionHandler son respuestas esperadas y no se reportan.
+sentry:
+  dsn: ${SENTRY_DSN:}
+  environment: ${SENTRY_ENVIRONMENT:local}
+  release: ${SENTRY_RELEASE:}
+  # Sin cookies, cabeceras de sesion, IP ni cuerpo de la peticion: el JWT y
+  # los datos del restaurante no salen hacia Sentry.
+  send-default-pii: false
+  max-request-body-size: none
+  # Trazas: una de cada diez peticiones por defecto. Con 1.0 se trazan todas
+  # (util en local para verificar) y con 0 se apagan.
+  traces-sample-rate: ${SENTRY_TRACES_SAMPLE_RATE:0.1}
+  ignored-transactions:
+    - "GET /actuator/health"
+    - "GET /actuator/health/**"
+  # Logs de Sentry: cada log de INFO en adelante se envia a Sentry Logs,
+  # ligado a la traza de su peticion. SentryPrivacyConfig tacha correos y JWT
+  # antes de enviarlos. Un log.error ademas crea un evento de error.
+  logs:
+    enabled: ${SENTRY_LOGS_ENABLED:true}
+  logging:
+    minimum-level: info
+    minimum-event-level: error
+    minimum-breadcrumb-level: info

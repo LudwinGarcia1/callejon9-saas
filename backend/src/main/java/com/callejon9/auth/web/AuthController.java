@@ -8,6 +8,7 @@ import com.callejon9.auth.throttle.LoginThrottledException;
 import com.callejon9.auth.web.dto.LoginRequest;
 import com.callejon9.auth.web.dto.LoginResponse;
 import com.callejon9.auth.web.dto.MeResponse;
+import com.callejon9.shared.observability.BusinessMetrics;
 import com.callejon9.tenancy.TenantFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -72,6 +73,7 @@ public class AuthController {
                     request.slug(), request.email(), request.password());
         } catch (BadCredentialsException exception) {
             loginAttemptLimiter.recordFailure(clientAddress, request.slug(), request.email());
+            BusinessMetrics.loginFailed();
             throw exception;
         }
         loginAttemptLimiter.recordSuccess(request.slug(), request.email());

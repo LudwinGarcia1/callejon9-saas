@@ -37,6 +37,10 @@ services:
       JWT_SECRET: ${JWT_SECRET:-dev-only-secret-change-me-min-32-bytes-long!!}
       AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
       APP_ALLOWED_ORIGINS: ${APP_ALLOWED_ORIGINS:-http://localhost:3000}
+      # Sentry: vacio por defecto, el SDK queda apagado.
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-local}
+      SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE:-0}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     # Sistema de archivos de solo lectura: Tomcat solo escribe en /tmp.
@@ -55,6 +59,9 @@ services:
         # Next fija el destino del rewrite /api/v1 al compilar. Cambiarlo
         # requiere reconstruir la imagen: no se lee al arrancar.
         BACKEND_ORIGIN: http://backend:8080
+        # El DSN del navegador tambien se fija al compilar. Vacio, Sentry queda apagado.
+        NEXT_PUBLIC_SENTRY_DSN: ${NEXT_PUBLIC_SENTRY_DSN:-}
+        NEXT_PUBLIC_SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-local}
     container_name: callejon9-frontend
     depends_on:
       backend:

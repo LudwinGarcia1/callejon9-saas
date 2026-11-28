@@ -67,7 +67,8 @@ export function middleware(request: NextRequest) {
 /**
  * Incluye login, alta, paginas y errores. Los assets no necesitan nonce.
  * La API pasa sin el gate de sesion para conservar el rewrite al backend.
+ * El tunel de Sentry solo recibe eventos del navegador: no lleva nonce ni sesion.
  */
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|sentry-tunnel).*)"],
 };

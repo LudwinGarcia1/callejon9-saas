@@ -237,6 +237,16 @@
       "authority": "medium"
     },
     {
+      "path": "docs/pruebas/uat/CAL-148-usuarios-roles/README.md",
+      "kind": "testing",
+      "authority": "medium"
+    },
+    {
+      "path": "docs/pruebas/uat/CAL-148-usuarios-roles/registro-aceptacion.md",
+      "kind": "testing",
+      "authority": "medium"
+    },
+    {
       "path": "docs/pruebas/uat/CAL-149-catalogo/README.md",
       "kind": "testing",
       "authority": "medium"

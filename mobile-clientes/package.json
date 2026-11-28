@@ -1,0 +1,29 @@
+{
+  "name": "mobile-clientes",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/netinfo": "12.0.1",
+    "@sentry/react-native": "~8.28.1",
+    "expo": "~58.0.23",
+    "expo-camera": "~58.0.14",
+    "expo-status-bar": "~58.0.4",
+    "react": "19.3.0",
+    "react-native": "0.88.1",
+    "react-native-safe-area-context": "~5.11.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "@types/react": "~19.3.0",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.5"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "test": "vitest run",
+    "apk": "expo prebuild --platform android --clean && cd android && ./gradlew assembleRelease"
+  },
+  "private": true
+}

@@ -7,6 +7,7 @@ import com.callejon9.shared.error.BusinessRuleException;
 import com.callejon9.shared.error.InvalidRoleException;
 import com.callejon9.shared.error.ResourceNotFoundException;
 import com.callejon9.tenancy.TenantContext;
+import com.callejon9.user.domain.EmailAddress;
 import com.callejon9.user.domain.User;
 import com.callejon9.user.domain.UserRole;
 import com.callejon9.user.repository.UserRepository;
@@ -53,15 +54,16 @@ public class UserService {
                             + "y no puede asignarse desde un restaurante.");
         }
 
-        if (userRepository.findByEmail(email).isPresent()) {
+        String normalizedEmail = EmailAddress.normalize(email);
+        if (userRepository.findByEmail(normalizedEmail).isPresent()) {
             throw new BusinessRuleException(
-                    "Ya existe un usuario con el correo '" + email + "' en este restaurante.");
+                    "Ya existe un usuario con el correo '" + normalizedEmail + "' en este restaurante.");
         }
 
         planLimitService.assertCanAddUser(TenantContext.require());
 
         return userRepository.save(User.builder()
-                .email(email)
+                .email(normalizedEmail)
                 .passwordHash(passwordEncoder.encode(rawPassword))
                 .fullName(fullName)
                 .role(role)

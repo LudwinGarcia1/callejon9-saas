@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Plan de monitoreo</title>
+<style>
+  :root {
+    --guinda: #5B1631; --guinda-2: #7A1F44; --guinda-osc: #43101F;
+    --oro: #B08D57; --oro-claro: #F3EBDD;
+    --texto: #3A3A3A; --suave: #6B6B6B; --linea: #E7E1D8; --fondo-tarjeta: #F8F6F2;
+    --verde: #1E7F4F; --rojo: #A3263A; --azul: #2F4E8C;
+  }
+  @page { size: letter; margin: 0.85in 0.95in 0.8in;
+    @bottom-left { content: "RestoHub · Plan de monitoreo"; font: 9px "Avenir Next", sans-serif; color: #8A8A8A; }
+    @bottom-right { content: counter(page) " / " counter(pages); font: 9px "Avenir Next", sans-serif; color: #8A8A8A; }
+  }
+  @page portada { margin: 0; @bottom-left { content: none } @bottom-right { content: none } }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font-family: "Avenir Next", "Avenir", "Helvetica Neue", sans-serif; color: var(--texto); font-size: 10.5pt; line-height: 1.55; }
+  h1, h2, h3 { color: var(--guinda); margin: 0; line-height: 1.2; }
+  h2 { font-size: 19pt; font-weight: 700; padding-bottom: 8px; border-bottom: 2px solid var(--oro); margin: 0 0 14px; break-after: avoid; }
+  h2 .num { color: var(--oro); font-size: 14pt; margin-right: 8px; }
+  h3 { font-size: 12.5pt; margin: 18px 0 8px; break-after: avoid; color: var(--guinda-2); }
+  p { margin: 0 0 10px; }
+  code, .mono { font-family: "SF Mono", Menlo, monospace; font-size: 8.6pt; }
+  .seccion { break-before: page; }
+  .sin-salto { break-inside: avoid; }
+
+  /* ---------- Portada ---------- */
+  .portada { page: portada; display: grid; grid-template-columns: 2.55in 1fr; height: 11in; width: 8.5in; }
+  .lateral { background: linear-gradient(180deg, #7C1D43 0%, #5B1631 45%, #4A1027 100%); color: #fff; padding: 0.95in 0.4in 0.9in; display: flex; flex-direction: column; justify-content: space-between; }
+  .lateral .etiqueta { font-size: 8.5pt; letter-spacing: 2.5px; text-transform: uppercase; opacity: .85; }
+  .lateral .grande { font-size: 50pt; font-weight: 700; line-height: 1; }
+  .lateral .grande + div { font-size: 8.5pt; letter-spacing: 2.5px; opacity: .85; margin-top: 8px; text-transform: uppercase; }
+  .ilustracion { display: flex; justify-content: center; }
+  .principal { padding: 0.8in 0.75in 0.75in 1.4in; display: flex; flex-direction: column; }
+  .logos { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid var(--linea); }
+  .logo-edomex { width: 132px; height: 32px; background: url(assets/edomex.png) center/contain no-repeat;
+    -webkit-mask: url(assets/edomex-mask.png) center/contain no-repeat; mask: url(assets/edomex-mask.png) center/contain no-repeat; mask-mode: luminance; }
+  .logos .sep { width: 1px; height: 40px; background: var(--linea); }
+  .logos .utvt b { color: var(--guinda); font-size: 10pt; display: block; }
+  .logos .utvt span { color: var(--suave); font-size: 8.5pt; line-height: 1.35; display: block; }
+  .carrera { margin-top: 1.25in; color: var(--oro); font-size: 8.5pt; letter-spacing: 2.2px; font-weight: 600; text-transform: uppercase; }
+  .portada h1 { font-size: 30pt; font-weight: 700; margin: 10px 0 14px; color: var(--guinda); }
+  .subtitulo { color: var(--suave); font-size: 12.5pt; line-height: 1.5; }
+  .raya { width: 50px; height: 4px; background: var(--oro); border-radius: 2px; margin: 22px 0 18px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--linea); border-radius: 999px; padding: 4px 11px; font-size: 8pt; font-weight: 600; color: #555; }
+  .datos { margin-top: auto; border-top: 1px solid var(--linea); padding-top: 14px; display: grid; grid-template-columns: 1.4in 1fr; row-gap: 8px; font-size: 9.5pt; }
+  .datos dt { color: #8A8A8A; font-size: 7.5pt; letter-spacing: 1.8px; text-transform: uppercase; padding-top: 2px; }
+  .datos dd { margin: 0; font-weight: 600; color: #2A2A2A; }
+
+  /* ---------- Tablas ---------- */
+  table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 9pt; margin: 6px 0 14px; }
+  thead th { background: var(--guinda-osc); color: #fff; text-align: left; font-weight: 600; padding: 8px 10px; }
+  thead th:first-child { border-top-left-radius: 6px; } thead th:last-child { border-top-right-radius: 6px; }
+  tbody td { padding: 8px 10px; border-bottom: 1px solid var(--linea); vertical-align: top; }
+  tbody tr:nth-child(even) td { background: var(--fondo-tarjeta); }
+  tbody td:first-child { font-weight: 600; color: var(--guinda); }
+  tr { break-inside: avoid; }
+  .ok { color: var(--verde); font-weight: 700; }
+  .ficha td:first-child { width: 34%; }
+
+  /* ---------- Tarjetas y avisos ---------- */
+  .tarjetas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 8px 0 14px; }
+  .tarjetas.dos { grid-template-columns: repeat(2, 1fr); }
+  .tarjeta { background: var(--fondo-tarjeta); border: 1px solid var(--linea); border-radius: 10px; padding: 12px 14px; break-inside: avoid; font-size: 9.3pt; }
+  .tarjeta .k { font-size: 7.5pt; letter-spacing: 1.6px; text-transform: uppercase; color: var(--oro); font-weight: 700; }
+  .tarjeta .v { font-size: 15pt; font-weight: 700; color: var(--guinda); line-height: 1.25; margin: 2px 0 4px; }
+  .nota { border-left: 4px solid var(--guinda-2); background: var(--fondo-tarjeta); border-radius: 0 10px 10px 0; padding: 10px 14px; margin: 8px 0 14px; font-size: 9.3pt; break-inside: avoid; }
+  .terminal { background: #1E1A1C; color: #EDE6DF; border-radius: 10px; padding: 12px 14px; font-family: "SF Mono", Menlo, monospace; font-size: 8pt; line-height: 1.5; white-space: pre-wrap; word-break: break-all; margin: 8px 0 14px; break-inside: avoid; }
+  .terminal .c { color: #C9A877; } .terminal .g { color: #8FD3A6; } .terminal .d { color: #9C9198; }
+
+  /* ---------- Figuras ---------- */
+  .figuras { display: grid; gap: 12px; margin: 8px 0 14px; }
+  .figuras.f2 { grid-template-columns: repeat(2, 1fr); } .figuras.f3 { grid-template-columns: repeat(3, 1fr); } .figuras.f4 { grid-template-columns: repeat(4, 1fr); }
+  figure { margin: 0; break-inside: avoid; text-align: center; }
+  figure img { width: 100%; border: 1px solid var(--linea); border-radius: 8px; display: block; }
+  figure.tel img { border-radius: 14px; }
+  figure:not(.tel) img { max-height: 2.35in; object-fit: cover; object-position: top; }
+  figcaption { font-size: 8pt; color: var(--suave); margin-top: 5px; line-height: 1.35; }
+  figcaption b { color: var(--guinda); }
+
+  .conclusion { background: linear-gradient(180deg, #FBF8F3, #F5EFE4); border: 1px solid var(--linea); border-radius: 12px; padding: 16px 18px; }
+  ul { margin: 4px 0 10px; padding-left: 18px; } li { margin-bottom: 4px; }
+  .fuentes li { font-size: 9pt; color: var(--suave); } .fuentes a { color: var(--guinda-2); text-decoration: none; }
+  /* ---------- Agregados para este documento ---------- */
+  .pend { color: #9A6B12; font-weight: 700; }
+  .no { color: var(--rojo); font-weight: 700; }
+  .indice { columns: 2; column-gap: 28px; font-size: 9.5pt; margin: 6px 0 14px; padding-left: 0; list-style: none; }
+  .indice li { break-inside: avoid; margin-bottom: 5px; }
+  .indice b { color: var(--oro); display: inline-block; width: 26px; }
+  .parte { font-size: 8pt; letter-spacing: 2.2px; text-transform: uppercase; color: var(--oro); font-weight: 700; margin: 0 0 4px; }
+  table.compacta { font-size: 8.6pt; }
+  table.compacta td, table.compacta th { padding: 6px 8px; }
+  .datos dd small { font-weight: 400; color: var(--suave); }
+  td ul { padding-left: 14px; } td ul li { margin-bottom: 1px; line-height: 1.4; }
+  .cadena { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin: 10px 0 6px; position: relative; }
+  .eslabon { border-radius: 10px; padding: 10px 10px 11px; text-align: center; color: #fff; break-inside: avoid; position: relative; font-size: 8.4pt; line-height: 1.35; }
+  .eslabon:not(:last-child)::after { content: "›"; position: absolute; right: -12px; top: 50%; transform: translateY(-50%); color: var(--oro); font-size: 16pt; font-weight: 700; }
+  .eslabon .t { font-size: 9.5pt; font-weight: 700; letter-spacing: .4px; }
+  .eslabon .s { font-size: 7.3pt; letter-spacing: 1.4px; text-transform: uppercase; opacity: .85; margin: 2px 0 6px; }
+  .eslabon .v { font-weight: 700; font-size: 10.5pt; display: block; margin-bottom: 3px; }
+  .e1 { background: #6B6B6B; } .e2 { background: var(--azul); } .e3 { background: var(--verde); } .e4 { background: #B0563F; } .e5 { background: var(--guinda); }
+  .verbos { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; text-align: center; font-size: 8pt; font-weight: 700; color: var(--guinda-2); margin-bottom: 12px; }
+  .verbos span small { display: block; font-weight: 400; color: var(--suave); }
+  .ambito { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin: 0 0 12px; font-size: 7.5pt; letter-spacing: 1.4px; text-transform: uppercase; font-weight: 700; text-align: center; }
+  .ambito div { border: 1.5px solid var(--guinda); border-top: none; border-radius: 0 0 8px 8px; padding: 6px 4px 4px; color: var(--guinda); }
+  .ambito .mon { grid-column: 1 / span 4; } .ambito .sla { grid-column: 5; }
+  .ambito .actual { background: var(--guinda); color: #fff; }
+  .rail { display: flex; gap: 4px; margin: -6px 0 14px; font-size: 6.8pt; letter-spacing: 1px; text-transform: uppercase; font-weight: 700; }
+  .rail span { flex: 1; text-align: center; padding: 3px 0; border-radius: 3px; background: #EFEBE5; color: #B3ABA0; }
+  .rail span.on { color: #fff; }
+  .rail span.on.r1 { background: #6B6B6B; } .rail span.on.r2 { background: var(--azul); } .rail span.on.r3 { background: var(--verde); } .rail span.on.r4 { background: #B0563F; } .rail span.on.r5 { background: var(--guinda); }
+</style>
+</head>
+
+<body>
+
+<!-- ===================== PORTADA ===================== -->
+<section class="portada">
+  <div class="lateral">
+    <div class="etiqueta">Entrega por equipo</div>
+    <div class="ilustracion">
+      <svg width="150" height="170" viewBox="0 0 150 170" aria-hidden="true">
+        <rect x="8" y="30" width="134" height="96" rx="12" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="3"/>
+        <path d="M22 96l22-26 18 14 24-34 18 20 22-18" fill="none" stroke="#B08D57" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="86" cy="50" r="6" fill="#F7EFE4"/>
+        <path d="M60 126v18M90 126v18M44 148h62" stroke="#fff" stroke-opacity=".45" stroke-width="3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div><div class="grande">10°</div><div>Cuatrimestre · 2026</div></div>
+  </div>
+  <div class="principal">
+    <div class="logos">
+      <svg width="132" height="32" viewBox="0 0 322 77" role="img" aria-label="Gobierno del Estado de México">
+        <defs><mask id="m-edomex" maskUnits="userSpaceOnUse" x="0" y="0" width="322" height="77"><image href="assets/edomex-mask.png" width="322" height="77"/></mask></defs>
+        <image href="assets/edomex.png" width="322" height="77" mask="url(#m-edomex)"/>
+      </svg>
+      <div class="sep"></div>
+      <div class="utvt"><b>UTVT</b><span>Universidad Tecnológica<br>del Valle de Toluca</span></div>
+    </div>
+    <div class="carrera">Ingeniería en Desarrollo y Gestión de Software</div>
+    <h1>Plan de monitoreo</h1>
+    <div class="subtitulo">Qué se vigila, con qué herramientas, a partir de qué umbral se alerta y quién responde en <b>RestoHub</b>, la plataforma SaaS multi-restaurante Callejón 9.</div>
+    <div class="raya"></div>
+    <div class="chips"><span class="chip">Métricas crudas</span><span class="chip">SLI</span><span class="chip">SLO</span><span class="chip">Presupuesto de error</span><span class="chip" style="opacity:.45">SLA</span></div>
+    <dl class="datos">
+      <dt>Proyecto</dt><dd>Restaurant Hub (RestoHub) · plataforma SaaS Callejón 9</dd>
+      <dt>Equipo</dt><dd>García Gaytán Ludwin <small>· 222310777</small><br>Duarte Villavicencio Octavio <small>· 222310422</small><br>Mercado Serrano Valeria <small>· 222310838</small><br>Hernández Mejía Braulio <small>· 222310435</small></dd>
+      <dt>Grupo</dt><dd>IDGS 101</dd>
+      <dt>Lugar y fecha</dt><dd>Santa María Atarasquillo, Lerma, México · 26 de noviembre de 2026 · actualizado al 27 de noviembre</dd>
+    </dl>
+  </div>
+</section>
+
+<!-- ===================== 01 OBJETIVO ===================== -->
+<section class="seccion">
+  <p class="parte">Contenido</p>
+  <ul class="indice">
+    <li><b>01</b>Objetivo, ciclo y cadena de compromisos</li>
+    <li><b>02</b>Arquitectura monitoreada</li>
+    <li><b>03</b>Herramientas y estado actual</li>
+    <li><b>04</b>Medir: indicadores y umbrales</li>
+    <li><b>05</b>Validar: objetivos y presupuesto de error</li>
+    <li><b>06</b>Anticipar: tendencias y capacidad</li>
+    <li><b>07</b>Decidir: matriz de decisiones y alertas</li>
+    <li><b>08</b>Registros y privacidad</li>
+    <li><b>09</b>Respuesta a incidentes</li>
+    <li><b>10</b>Paneles y revisión periódica</li>
+    <li><b>11</b>Plan de implementación</li>
+  </ul>
+
+  <h2><span class="num">01</span>Objetivo, ciclo y cadena de compromisos</h2>
+  <div class="rail"><span class="r1 on">Métricas crudas</span><span class="r2 on">SLI</span><span class="r3 on">SLO</span><span class="r4 on">Presupuesto de error</span><span class="r5 on">SLA</span></div>
+  <p>El objetivo del plan es que el equipo se entere de una degradación <b>antes de que la reporte un restaurante</b>, que vea venir los problemas de capacidad y costo antes de que ocurran, y que cada señal termine en una decisión con dueño. El plan también aporta las mediciones con las que se calcula el cumplimiento del acuerdo de nivel de servicio (SLA), que se entrega como documento aparte.</p>
+
+  <h3>1.1 Ciclo de monitoreo</h3>
+  <p>Todo el plan se organiza en cuatro funciones que se repiten en cada revisión. Un dato que no se valida, no anticipa nada ni lleva a una decisión no se recolecta: cuesta cuota de ingesta y atención.</p>
+  <div class="tarjetas dos">
+    <div class="tarjeta"><div class="k">1 · Medir · sección 04</div><div class="v">¿Qué está pasando?</div>Indicadores de disponibilidad, errores, latencia, base de datos, costo y entrega, con fuente, frecuencia y umbral definidos.</div>
+    <div class="tarjeta"><div class="k">2 · Validar · sección 05</div><div class="v">¿Está bien?</div>Se compara cada medición contra su objetivo y su presupuesto de error, se valida cada despliegue y se comprueba que la propia medición sea confiable.</div>
+    <div class="tarjeta"><div class="k">3 · Anticipar · sección 06</div><div class="v">¿Qué va a pasar?</div>Tendencias, pronósticos y umbrales dinámicos para actuar días o semanas antes de que un recurso se agote.</div>
+    <div class="tarjeta"><div class="k">4 · Decidir · sección 07</div><div class="v">¿Qué hacemos?</div>Una matriz que dice, para cada señal, qué se decide, quién lo decide y en qué plazo, y cómo queda registrado.</div>
+  </div>
+
+  <div style="break-inside: avoid">
+  <h3>1.2 De señales técnicas a compromisos</h3>
+  <p>Este plan y el acuerdo de nivel de servicio recorren el mismo riel. El plan cubre los cuatro primeros tramos y el SLA el último; cada sección de los dos documentos indica, bajo su título, en qué tramo del riel trabaja. El riel convierte la telemetría en un compromiso con el restaurante en cinco pasos: <b>observar → representar → fijar la meta → gestionar el margen → comprometer</b>. Cada paso tiene en RestoHub un valor concreto y una sección de este plan que lo desarrolla.</p>
+  <div class="cadena">
+    <div class="eslabon e1"><div class="t">Métricas crudas</div><div class="s">Telemetría</div><span class="v">Peticiones, duración, HTTP, CPU, pools, errores</span>Application Insights, Azure Monitor y Sentry</div>
+    <div class="eslabon e2"><div class="t">SLI</div><div class="s">Indicador útil</div><span class="v">% de peticiones buenas</span>En las rutas críticas: sin 5xx y bajo su p95</div>
+    <div class="eslabon e3"><div class="t">SLO</div><div class="s">Meta temporal</div><span class="v">99.8 % en 30 días</span>Objetivo interno del equipo</div>
+    <div class="eslabon e4"><div class="t">Presupuesto de error</div><div class="s">Riesgo aceptable</div><span class="v">86 min / mes</span>Margen para desplegar y fallar</div>
+    <div class="eslabon e5"><div class="t">SLA</div><div class="s">Acuerdo externo</div><span class="v">99.5 % mensual</span>Con créditos si se incumple</div>
+  </div>
+  <div class="ambito"><div class="mon actual">Plan de monitoreo · este documento</div><div class="sla">Acuerdo (SLA)</div></div>
+  <div class="verbos">
+    <span>Observar<small>Medir · 04</small></span><span>Representar<small>Medir · 4.5</small></span><span>Fijar la meta<small>Validar · 5.1</small></span><span>Gestionar el margen<small>Validar 5.2 · Decidir 07</small></span><span>Comprometer<small>Documento del SLA</small></span>
+  </div>
+  </div>
+  <p>La distancia entre el SLO (99.8 %) y el SLA (99.5 %) es intencional: el equipo se entera y corrige con el presupuesto de error interno antes de incumplir lo que firmó con el restaurante. Anticipar (sección 06) actúa sobre ese margen: avisa cuando la tendencia lo va a consumir.</p>
+
+  <div class="tarjetas">
+    <div class="tarjeta"><div class="k">Detectar</div><div class="v">≤ 5 min</div>Desde que la API deja de responder hasta que se dispara la alerta.</div>
+    <div class="tarjeta"><div class="k">Atender</div><div class="v">≤ 30 min</div>Desde la alerta crítica hasta que una persona la reconoce.</div>
+    <div class="tarjeta"><div class="k">Anticipar</div><div class="v">≥ 14 días</div>De aviso antes de que un recurso llegue a su umbral crítico.</div>
+  </div>
+</section>
+
+<!-- ===================== 01b ALCANCE ===================== -->
+<section>
+  <h3>1.3 Dentro del alcance</h3>
+  <ul>
+    <li>Entorno productivo en Azure: web Next.js (<code>restohub.azurewebsites.net</code>), API Spring Boot y Azure Database for PostgreSQL Flexible Server.</li>
+    <li>Apps móviles RestoHub Meseros y RestoHub Clientes, en lo que toca a su comunicación con la API y a las notificaciones push.</li>
+    <li>Pipeline de Jenkins, en lo que afecta a la entrega: despliegues fallidos y reversiones.</li>
+    <li>Costo de la suscripción de Azure, porque el crédito de estudiante es un límite operativo real.</li>
+  </ul>
+  <div class="nota"><b>Requisito previo.</b> El plan de la web usa F1 por defecto en Terraform. F1 descarga la app cuando está inactiva, limita la CPU a 60 minutos diarios y no tiene health check ni SLA de Microsoft; para producción, <code>app_service_sku</code> debe ser B1 o superior.</div>
+
+  <h3>1.4 Fuera del alcance</h3>
+  <ul>
+    <li>Perfilado de CPU y grabación de sesiones (Session Replay): con el volumen actual no aportan lo que cuestan en cuota.</li>
+    <li>Alertas de negocio (ventas, tickets promedio): dependen de tener operación real sostenida.</li>
+    <li>Otras plataformas de observabilidad de terceros. La única excepción es Sentry, que recibe errores, trazas, logs y métricas de aplicación (sección 03), porque Application Insights no ve el navegador ni las apps móviles.</li>
+  </ul>
+</section>
+
+<!-- ===================== 02 ARQUITECTURA ===================== -->
+<section class="seccion">
+  <h2><span class="num">02</span>Arquitectura monitoreada</h2>
+  <div class="rail"><span class="r1 on">Métricas crudas</span><span class="r2">SLI</span><span class="r3">SLO</span><span class="r4">Presupuesto de error</span><span class="r5">SLA</span></div>
+  <p>El navegador y las apps solo hablan con rutas relativas <code>/api/v1/*</code>; la web las reescribe hacia la API. PostgreSQL impone el aislamiento entre restaurantes con Row Level Security (RLS) en las 17 tablas de datos. Cada componente tiene una señal propia y un punto de falla distinto.</p>
+
+  <table class="compacta">
+    <thead><tr><th style="width:22%">Componente</th><th style="width:26%">Recurso en Azure</th><th>Señal principal</th><th style="width:22%">Falla típica</th></tr></thead>
+    <tbody>
+      <tr><td>Web</td><td>App Service (Linux, Node) · B1 en producción</td><td>Health check de App Service en <code>/login</code> (no existe en F1); disponibilidad externa; errores del navegador y del servidor de Next en Sentry</td><td>Proceso caído, despliegue roto</td></tr>
+      <tr><td>API</td><td>App Service (Java 21) · B1, una instancia</td><td><code>/actuator/health/liveness</code> y <code>/readiness</code>; tasa de 5xx; latencia p95; excepciones no atendidas en Sentry</td><td>Pool de conexiones agotado, error de migración</td></tr>
+      <tr><td>Base de datos</td><td>PostgreSQL Flexible Server · B_Standard_B1ms</td><td>CPU, memoria, conexiones activas, almacenamiento; respaldo diario</td><td>Saturación de CPU en la capa Burstable, disco lleno</td></tr>
+      <tr><td>Secretos</td><td>Key Vault</td><td>Accesos denegados; vencimiento de secretos</td><td>Rotación olvidada</td></tr>
+      <tr><td>Apps móviles</td><td>Expo · notificaciones push</td><td>Errores de JavaScript y fallos nativos por versión de app en Sentry; errores de la API; entregas push fallidas</td><td>Token push vencido, versión antigua</td></tr>
+      <tr><td>Entrega</td><td>Jenkins (VM en Azure)</td><td>Resultado de la etapa de despliegue y de la verificación posterior</td><td>Despliegue con reversión</td></tr>
+    </tbody>
+  </table>
+
+  <div class="nota"><b>Por qué la vida de la API no depende de la base.</b> Si dependiera, una caída de PostgreSQL pondría la instancia en <code>DOWN</code> y App Service la reiniciaría en ciclo sin arreglar nada. La caída de la base se detecta con la disponibilidad (<code>readiness</code>) y con sus métricas propias, no con reinicios (ver <code>docs/operacion-probes.md</code>).</div>
+</section>
+
+<!-- ===================== 03 HERRAMIENTAS ===================== -->
+<section class="seccion">
+  <h2><span class="num">03</span>Herramientas y estado actual</h2>
+  <div class="rail"><span class="r1 on">Métricas crudas</span><span class="r2">SLI</span><span class="r3">SLO</span><span class="r4">Presupuesto de error</span><span class="r5">SLA</span></div>
+  <p>El monitoreo de Azure se provisiona con Terraform (<code>infra/terraform/azure-backend</code> y <code>azure-frontend</code>) y se activa con la variable <code>monitoring_enabled</code>. Sentry vive fuera de Azure: sus proyectos se crearon con el CLI de Sentry y su DSN llega a la API por la variable <code>sentry_dsn</code> de Terraform. La tabla separa lo que ya existe de lo que falta, para no dar por hecho algo que todavía no está configurado.</p>
+
+  <table class="compacta">
+    <thead><tr><th style="width:24%">Herramienta</th><th>Uso en el plan</th><th style="width:20%">Estado</th></tr></thead>
+    <tbody>
+      <tr><td>Application Insights</td><td>Peticiones, excepciones, dependencias (SQL) y latencia de la API, con el agente Java 3.x; telemetría de la web.</td><td class="ok">✔ Provisionado</td></tr>
+      <tr><td>Sentry</td><td>Errores, trazas (10 % de las peticiones), logs y métricas de negocio de la API, la web y las dos apps móviles, ligados entre sí por la traza y a la versión del commit. Organización <code>restohub</code> con un proyecto por componente (sección 3.2).</td><td class="ok">✔ Configurado y verificado el 27-nov en los cuatro componentes; web en producción</td></tr>
+      <tr><td>Log Analytics</td><td>Destino central de logs y telemetría; consultas KQL. Retención de 30 días y tope de 0.1 GB diarios para no salir del uso gratuito.</td><td class="ok">✔ Provisionado</td></tr>
+      <tr><td>Health check de App Service</td><td>Saca de rotación una instancia que no responde: API en <code>/actuator/health/liveness</code>, web en <code>/login</code>.</td><td class="ok">✔ Configurado</td></tr>
+      <tr><td>Presupuesto de Azure</td><td>Correo al 80 % del gasto real y al 100 % del gasto pronosticado del presupuesto mensual.</td><td class="ok">✔ Configurado</td></tr>
+      <tr><td>Respaldo de PostgreSQL</td><td>Respaldo automático con 7 días de retención y restauración a un punto en el tiempo.</td><td class="pend">◐ Falta ensayar la restauración (CAL-58)</td></tr>
+      <tr><td>Logs estructurados</td><td>JSON con <code>requestId</code>, <code>tenantId</code> y <code>userId</code>, con redacción de datos sensibles.</td><td class="pend">◐ Pendiente (CAL-23)</td></tr>
+      <tr><td>Métricas y panel</td><td>Métricas de Micrometer y un libro de Azure Workbooks con los indicadores de la sección 04.</td><td class="pend">◐ Pendiente (CAL-24)</td></tr>
+      <tr><td>Reglas de alerta</td><td>Alertas de métricas, de registros y de disponibilidad con grupo de acciones (correo y notificación push de la app de Azure).</td><td class="pend">◐ Pendiente (CAL-57)</td></tr>
+      <tr><td>Prueba de disponibilidad</td><td>Prueba estándar de Application Insights desde 3 regiones, cada 5 minutos, contra la web y contra <code>/actuator/health/readiness</code>.</td><td class="pend">◐ Pendiente (CAL-57)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.1 Justificación</h3>
+  <ul>
+    <li><b>Servicios nativos de Azure:</b> la nube del proyecto es Azure desde el 17 de octubre de 2026. Application Insights se conecta a App Service sin instalar agentes propios y comparte el control de acceso de la suscripción.</li>
+    <li><b>Topes de ingesta:</b> el tope diario protege el crédito de estudiante. Si se alcanza, se pierde telemetría del resto del día, no servicio; por eso la prueba de disponibilidad y las alertas de métricas, que no dependen de la ingesta de logs, son la primera línea de detección.</li>
+    <li><b>Sentry para errores, trazas, logs y métricas de aplicación:</b> Application Insights solo ve lo que pasa en los servidores de Azure. Un error o una pantalla lenta en el navegador del mesero o en la app del comensal nunca llega ahí. Sentry recibe de los cuatro componentes los errores agrupados por causa, la traza completa de una petición (de la app o el navegador hasta la consulta SQL), los logs ligados a esa traza y conteos de negocio. No sustituye a la prueba de disponibilidad de Application Insights ni entra en el cálculo del SLA.</li>
+    <li><b>Medición desde fuera:</b> la disponibilidad que se reporta en el SLA viene de la prueba sintética, no de los logs de la propia API, que callan justo cuando la API está caída.</li>
+  </ul>
+
+  <h3>3.2 Sentry: configuración verificada</h3>
+  <p>Los cuatro proyectos están en la organización <code>restohub</code> de sentry.io, en su región de Estados Unidos. Cada componente usa su propio DSN, que entra por variable de entorno y nunca se versiona.</p>
+  <table class="compacta">
+    <thead><tr><th style="width:24%">Proyecto</th><th style="width:20%">Plataforma</th><th>Qué reporta</th><th style="width:20%">Prueba real</th></tr></thead>
+    <tbody>
+      <tr><td><code>restohub-server</code></td><td>Spring Boot</td><td>Excepciones que ningún <code>@ExceptionHandler</code> atiende (los 500) y cada <code>log.error</code>. Los 4xx esperados no se reportan.</td><td class="ok">✔ RESTOHUB-SERVER-1</td></tr>
+      <tr><td><code>restohub-frontend</code></td><td>Next.js</td><td>Errores del navegador, de Server Components, Route Handlers y middleware. El navegador envía sus eventos a <code>/sentry-tunnel</code> del propio sitio, nunca directo a Sentry.</td><td class="ok">✔ RESTOHUB-FRONTEND-1 (servidor), -2 (navegador) y -3 (producción)</td></tr>
+      <tr><td><code>restohub-meseros</code></td><td>React Native</td><td>Errores de JavaScript y fallos nativos de la app de meseros.</td><td class="ok">✔ RESTOHUB-MESEROS-1 (emulador)</td></tr>
+      <tr><td><code>restohub-clientes</code></td><td>React Native</td><td>Errores de JavaScript y fallos nativos de la app de comensales.</td><td class="ok">✔ RESTOHUB-CLIENTES-1 (emulador)</td></tr>
+    </tbody>
+  </table>
+  <p>La prueba del 27 de noviembre corrió cada componente como arranca normalmente (la API en Docker, la web con <code>pnpm dev</code> y las dos apps en un emulador de Android), disparó un error identificable y lo confirmó en Sentry con el CLI. Las trazas apuntaron a la línea original del código fuente. Ese mismo día la web se publicó en Azure con Sentry activo, y un error disparado en la página de producción llegó con el entorno <code>production</code> y la versión del commit desplegado. La API no se pudo publicar porque su suscripción de Azure está deshabilitada (sección 11).</p>
+  <p>Además de los errores, los cuatro componentes envían:</p>
+  <table class="compacta">
+    <thead><tr><th style="width:14%">Señal</th><th>API</th><th>Web</th><th>Apps</th></tr></thead>
+    <tbody>
+      <tr><td>Trazas</td><td>Cada petición con sus consultas SQL, al 10 %</td><td>Carga de página, navegación y llamadas a <code>/api/v1</code>, en la misma traza que la API; Web Vitals</td><td>Arranque de la app y una transacción por pantalla</td></tr>
+      <tr><td>Logs</td><td>Todo log de INFO en adelante, ligado a su traza</td><td><code>console.warn</code> y <code>console.error</code></td><td><code>console.warn</code> y <code>console.error</code></td></tr>
+      <tr><td>Métricas</td><td>Órdenes abiertas, órdenes enviadas a cocina, cobros y logins fallidos</td><td>Sesiones vencidas que regresan al login</td><td>Pedidos guardados sin conexión, enviados al reconectar y rechazados; registros de notificaciones push</td></tr>
+    </tbody>
+  </table>
+  <p>Las métricas son solo conteos, sin montos ni identificadores de restaurante. Se verificaron el 27 de noviembre: la API, la web y la app de clientes enviaron trazas, logs y métricas, y una petición del navegador quedó en la misma traza que su procesamiento en la API.</p>
+  <p>Cada proyecto tiene la regla <b>Issue nuevo o regresión en producción</b>, que envía un correo al equipo <code>restohub</code> como máximo cada 30 minutos. Es la alerta P3 de la sección 7.1.</p>
+</section>
+
+<!-- ===================== 04 MEDIR ===================== -->
+<section class="seccion">
+  <h2><span class="num">04</span>Medir: indicadores y umbrales</h2>
+  <div class="rail"><span class="r1 on">Métricas crudas</span><span class="r2 on">SLI</span><span class="r3">SLO</span><span class="r4">Presupuesto de error</span><span class="r5">SLA</span></div>
+  <p>Medir es recolectar, de forma automática y continua, las señales que describen el estado del servicio. Cada indicador tiene una fuente, un valor objetivo, un umbral de advertencia y uno crítico. Los umbrales parten de lo observado en las pruebas de integración en Azure y se ajustan en la revisión mensual (sección 10).</p>
+
+  <table class="compacta">
+    <thead><tr><th style="width:24%">Indicador</th><th>Fuente</th><th style="width:15%">Objetivo</th><th style="width:15%">Advertencia</th><th style="width:15%">Crítico</th></tr></thead>
+    <tbody>
+      <tr><td>Disponibilidad externa</td><td>Prueba de disponibilidad, 3 regiones</td><td>≥ 99.5 % mensual</td><td>1 región falla</td><td>2 de 3 regiones fallan</td></tr>
+      <tr><td>Tasa de errores 5xx de la API</td><td>Application Insights · requests</td><td>&lt; 0.5 %</td><td>&gt; 1 % en 10 min</td><td>&gt; 5 % en 5 min</td></tr>
+      <tr><td>Latencia p95 de rutas críticas</td><td>Application Insights · requests</td><td>&lt; 800 ms</td><td>&gt; 1.5 s en 15 min</td><td>&gt; 3 s en 10 min</td></tr>
+      <tr><td>Latencia p99 de rutas críticas</td><td>Application Insights · requests</td><td>&lt; 2 s</td><td>&gt; 3 s en 15 min</td><td>&gt; 5 s en 10 min</td></tr>
+      <tr><td>Readiness de la API</td><td>Prueba de disponibilidad a <code>/readiness</code></td><td>200</td><td>—</td><td>503 por 3 min</td></tr>
+      <tr><td>CPU de PostgreSQL</td><td>Métrica de plataforma</td><td>&lt; 60 %</td><td>&gt; 80 % por 15 min</td><td>&gt; 95 % por 10 min</td></tr>
+      <tr><td>Créditos de CPU (Burstable)</td><td>Métrica de plataforma</td><td>Estables</td><td>&lt; 30 % restantes</td><td>&lt; 10 % restantes</td></tr>
+      <tr><td>Conexiones activas</td><td>Métrica de plataforma</td><td>&lt; 60 % del máximo</td><td>&gt; 80 %</td><td>&gt; 95 %</td></tr>
+      <tr><td>Pool de Hikari de la API</td><td>Métricas de Micrometer (CAL-24)</td><td>&lt; 7 de 10 en uso</td><td>Hilos esperando conexión</td><td>Espera &gt; 1 s por 5 min</td></tr>
+      <tr><td>E/S de disco de la base</td><td>Métrica de plataforma (IOPS)</td><td>&lt; 60 % del límite</td><td>&gt; 80 % por 15 min</td><td>&gt; 95 % por 10 min</td></tr>
+      <tr><td>Almacenamiento de la base</td><td>Métrica de plataforma</td><td>&lt; 70 %</td><td>&gt; 80 %</td><td>&gt; 90 %</td></tr>
+      <tr><td>Memoria de la API</td><td>Métrica del plan de App Service</td><td>&lt; 75 %</td><td>&gt; 85 % por 15 min</td><td>&gt; 95 % por 5 min</td></tr>
+      <tr><td>Respuestas 401/403 por IP</td><td>Logs de la API</td><td>Normal</td><td>Pico de 10× la media</td><td>Bloqueo por límite de intentos sostenido</td></tr>
+      <tr><td>Gasto de Azure</td><td>Presupuesto de la suscripción</td><td>&lt; 80 %</td><td>≥ 80 % real</td><td>≥ 100 % pronosticado</td></tr>
+      <tr><td>Despliegue</td><td>Jenkins</td><td>Exitoso</td><td>Verificación lenta</td><td>Reversión automática</td></tr>
+    </tbody>
+  </table>
+
+  <div class="nota"><b>Indicador de seguridad sin umbral numérico.</b> Cualquier evidencia de que un restaurante vio datos de otro es crítica por sí sola, sin importar la frecuencia. Su detección no depende de un tablero: la cubren <code>TenantIsolationTest</code> en cada corrida de CI y <code>scripts/verify-rls.sql</code> después de cada restauración, y un reporte de un usuario se trata como incidente P1 (sección 09).</div>
+</section>
+
+<!-- ===================== 04b MEDIR ===================== -->
+<section>
+  <h3>4.1 Criterios para elegir las señales</h3>
+  <p>No todo lo que se puede medir explica lo que vive el restaurante. Las señales de la tabla se eligieron con cuatro criterios:</p>
+  <div class="tarjetas dos">
+    <div class="tarjeta"><div class="k">01 · Rutas críticas</div>Se priorizan las operaciones sin las que el restaurante no puede atender: inicio de sesión, órdenes, envío a cocina, cobro y menú QR (tabla 4.2). Un error en reportes no pesa igual que uno en el cobro.</div>
+    <div class="tarjeta"><div class="k">02 · Percentiles altos</div>Se usan p95 y p99, nunca el promedio. Un promedio de 300 ms puede esconder que 1 de cada 100 cobros tarda 6 s, y ese es el mesero que se queja.</div>
+    <div class="tarjeta"><div class="k">03 · Saturación</div>Se correlaciona la demanda (peticiones por minuto) con CPU, memoria, E/S de disco, créditos de CPU y los pools de conexiones de la API y de la base, que es donde se forma la cola antes de que suba el error.</div>
+    <div class="tarjeta"><div class="k">04 · Contexto</div>Cada valor se interpreta contra la carga y el momento: horario de comida y cena, fines de semana y días festivos, número de restaurantes activos y despliegues recientes (tabla 4.3).</div>
+  </div>
+
+  <h3>4.2 Rutas críticas</h3>
+  <table class="compacta">
+    <thead><tr><th style="width:20%">Operación</th><th style="width:40%">Ruta de la API</th><th>p95 · p99 objetivo</th><th style="width:14%">Criticidad</th></tr></thead>
+    <tbody>
+      <tr><td>Inicio de sesión</td><td><code>POST /api/v1/auth/login</code></td><td>&lt; 800 ms · &lt; 2 s</td><td class="no">Crítica</td></tr>
+      <tr><td>Tomar la orden</td><td><code>POST /api/v1/orders</code>, <code>POST /api/v1/orders/{id}/items</code></td><td>&lt; 500 ms · &lt; 1.5 s</td><td class="no">Crítica</td></tr>
+      <tr><td>Enviar a cocina</td><td><code>POST /api/v1/orders/{id}/send-to-kitchen</code>, <code>/api/v1/kitchen/**</code></td><td>&lt; 500 ms · &lt; 1.5 s</td><td class="no">Crítica</td></tr>
+      <tr><td>Cobrar</td><td><code>POST /api/v1/orders/{id}/checkout</code></td><td>&lt; 800 ms · &lt; 2 s</td><td class="no">Crítica</td></tr>
+      <tr><td>Menú QR y pedido del comensal</td><td><code>GET /api/v1/public/{slug}/catalog</code>, <code>POST …/tables/{n}/orders</code>, <code>…/call-waiter</code></td><td>&lt; 800 ms · &lt; 2 s</td><td class="no">Crítica</td></tr>
+      <tr><td>Reportes</td><td><code>/api/v1/analytics</code>, <code>/api/v1/sales</code></td><td>&lt; 3 s · &lt; 6 s</td><td>Baja</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.3 Contexto para interpretar las señales</h3>
+  <table class="compacta">
+    <thead><tr><th style="width:24%">Contexto</th><th>Cómo se usa</th></tr></thead>
+    <tbody>
+      <tr><td>Carga</td><td>Toda gráfica de errores o latencia se muestra junto a las peticiones por minuto: 1 % de errores con 10 peticiones no significa lo mismo que con 10 000.</td></tr>
+      <tr><td>Estacionalidad</td><td>Se compara contra la misma hora del mismo día de la semana anterior, porque la carga sube en comida, cena, fines de semana y días festivos. Los umbrales dinámicos de Azure Monitor aprenden ese patrón.</td></tr>
+      <tr><td>Cambios recientes</td><td>Cada despliegue se marca como anotación en Application Insights con su SHA, para ver de inmediato si un cambio en la gráfica coincide con una versión nueva.</td></tr>
+      <tr><td>Crecimiento</td><td>Se registra el número de restaurantes activos cada mes; una latencia mayor con el doble de restaurantes es capacidad, no un defecto.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.4 Cómo y cada cuánto se mide</h3>
+  <table class="compacta">
+    <thead><tr><th style="width:26%">Tipo de medición</th><th>Mecanismo</th><th style="width:18%">Frecuencia</th></tr></thead>
+    <tbody>
+      <tr><td>Sintética (desde fuera)</td><td>Prueba estándar de Application Insights contra la web y contra <code>/actuator/health/readiness</code>, desde 3 regiones.</td><td>Cada 5 min</td></tr>
+      <tr><td>Telemetría de la aplicación</td><td>Agente Java de Application Insights: cada petición, excepción y consulta SQL, con su duración.</td><td>Continua</td></tr>
+      <tr><td>Métricas de plataforma</td><td>Azure Monitor recoge CPU, memoria, conexiones, créditos y almacenamiento de App Service y PostgreSQL sin configuración adicional.</td><td>Cada 1 min</td></tr>
+      <tr><td>Registros</td><td>Logs JSON de la API enviados a Log Analytics (sección 08).</td><td>Continua</td></tr>
+      <tr><td>Errores, trazas, logs y métricas de aplicación</td><td>SDK de Sentry en la API, la web y las dos apps: errores no atendidos, una de cada diez peticiones o pantallas trazada de punta a punta, logs ligados a la traza y conteos de negocio.</td><td>Continua</td></tr>
+      <tr><td>Entrega</td><td>Resultado de cada etapa del <code>Jenkinsfile</code>, SHA desplegado y resultado de la verificación posterior.</td><td>Por despliegue</td></tr>
+      <tr><td>Costo</td><td>Gestión de costos de Azure sobre toda la suscripción.</td><td>Diaria</td></tr>
+      <tr><td>Aislamiento</td><td><code>TenantIsolationTest</code> en CI y <code>scripts/verify-rls.sql</code> como <code>callejon9_app</code>.</td><td>Por cambio y por restauración</td></tr>
+    </tbody>
+  </table>
+
+  <h3>4.5 Indicadores de nivel de servicio (SLI)</h3>
+  <p>De todos los indicadores, tres definen si el restaurante percibe el servicio como bueno. Son los que se validan contra objetivos en la sección 05 y los que se reportan en el SLA:</p>
+  <ul>
+    <li><b>Disponibilidad:</b> minutos en que la prueba sintética tiene éxito en al menos 2 de 3 regiones ÷ minutos del periodo.</li>
+    <li><b>Éxito de peticiones:</b> peticiones a las rutas críticas que no terminan en 5xx ÷ total de peticiones a esas rutas.</li>
+    <li><b>Latencia:</b> peticiones a las rutas críticas que responden bajo su objetivo p95 de la tabla 4.2 ÷ total de peticiones a esas rutas; el p99 se vigila como alerta, no como SLI.</li>
+  </ul>
+</section>
+
+<!-- ===================== 05 VALIDAR ===================== -->
+<section class="seccion">
+  <h2><span class="num">05</span>Validar: objetivos y presupuesto de error</h2>
+  <div class="rail"><span class="r1">Métricas crudas</span><span class="r2">SLI</span><span class="r3 on">SLO</span><span class="r4 on">Presupuesto de error</span><span class="r5">SLA</span></div>
+  <p>Validar es comparar lo medido contra lo que se esperaba y confirmar que la medición misma es confiable. Una medición sin objetivo no dice si algo está bien o mal; un objetivo sin margen no deja desplegar nada.</p>
+
+  <h3>5.1 Objetivos de nivel de servicio (SLO) y presupuesto de error</h3>
+  <p>El presupuesto de error es la cantidad de falla que el objetivo interno permite en el mes. Mientras quede presupuesto, el equipo despliega con normalidad; cuando se agota, la confiabilidad tiene prioridad sobre las funciones nuevas (sección 07).</p>
+  <table class="compacta">
+    <thead><tr><th style="width:22%">SLI</th><th style="width:15%">Compromiso del SLA</th><th style="width:15%">Objetivo interno (SLO)</th><th>Presupuesto de error mensual (30 días)</th></tr></thead>
+    <tbody>
+      <tr><td>Disponibilidad</td><td>99.5 %</td><td>99.8 %</td><td>86 minutos de indisponibilidad</td></tr>
+      <tr><td>Éxito de peticiones</td><td>99.5 %</td><td>99.8 %</td><td>2 de cada 1 000 peticiones pueden fallar con 5xx</td></tr>
+      <tr><td>Latencia</td><td>Seguimiento</td><td>95 % bajo el objetivo p95 · 99 % bajo el p99</td><td>5 % de peticiones pueden superar el p95 y 1 % el p99</td></tr>
+    </tbody>
+  </table>
+
+  <h3>5.2 Velocidad de consumo del presupuesto</h3>
+  <p>No basta con validar al cierre del mes: se valida qué tan rápido se está gastando el presupuesto. La velocidad 1× significa gastarlo exacto en 30 días.</p>
+  <table class="compacta">
+    <thead><tr><th style="width:26%">Ventana</th><th style="width:22%">Velocidad de consumo</th><th>Qué significa</th><th style="width:12%">Severidad</th></tr></thead>
+    <tbody>
+      <tr><td>1 hora</td><td>≥ 14×</td><td>Se gasta el 2 % del presupuesto del mes en una hora; a ese ritmo se agota en 2 días.</td><td>P1</td></tr>
+      <tr><td>6 horas</td><td>≥ 6×</td><td>Se gasta el 5 % en 6 horas; se agota en 5 días.</td><td>P2</td></tr>
+      <tr><td>3 días</td><td>≥ 1×</td><td>El mes cerrará sin presupuesto si no cambia nada.</td><td>P3</td></tr>
+    </tbody>
+  </table>
+
+  <h3>5.3 Validación de cada despliegue</h3>
+  <ul>
+    <li>Después de desplegar, el pipeline valida <code>readiness</code> en 200 y un recorrido mínimo real: iniciar sesión, consultar mesas y crear una orden de prueba en un restaurante de verificación (CAL-56).</li>
+    <li>Durante los 30 minutos siguientes se comparan 5xx y latencia p95 contra los 30 minutos anteriores. Un aumento mayor al 50 % invalida el despliegue y lleva a la decisión de revertir.</li>
+    <li>El SHA desplegado queda registrado, para poder relacionar cualquier cambio de los indicadores con la versión que lo causó.</li>
+  </ul>
+</section>
+
+<!-- ===================== 05b VALIDAR ===================== -->
+<section>
+  <h3>5.4 Validación de la medición</h3>
+  <p>Un monitoreo que falla en silencio es peor que no tenerlo, porque da una falsa tranquilidad. Por eso se valida que las herramientas mismas funcionen:</p>
+  <table class="compacta">
+    <thead><tr><th style="width:30%">Qué se valida</th><th>Cómo</th><th style="width:18%">Frecuencia</th></tr></thead>
+    <tbody>
+      <tr><td>Que las alertas llegan</td><td>Se dispara una alerta P1 de ensayo y se mide el tiempo hasta que la guardia la reconoce.</td><td>Mensual</td></tr>
+      <tr><td>Que la telemetría sigue entrando</td><td>Alerta si Application Insights no recibe peticiones de la API durante 15 minutos en horario de servicio.</td><td>Continua</td></tr>
+      <tr><td>Que no se agotó la cuota de ingesta</td><td>Consumo diario contra el tope de 0.1 GB; al alcanzarlo, Log Analytics deja de recibir datos ese día.</td><td>Diaria</td></tr>
+      <tr><td>Que la medición externa coincide</td><td>Se contrasta la disponibilidad sintética con el éxito de peticiones del mismo periodo; si difieren más de 0.5 puntos, se revisa la prueba.</td><td>Mensual</td></tr>
+      <tr><td>Que los respaldos se pueden restaurar</td><td>Restauración real a un punto en el tiempo, con <code>verify-rls.sql</code> en verde (CAL-58).</td><td>Trimestral</td></tr>
+      <tr><td>Que Sentry sigue recibiendo errores</td><td>Se dispara un error de prueba en cada componente y se busca con <code>sentry issue list</code>; se repite después de cambiar un DSN o la versión de un SDK.</td><td>Mensual y por cambio</td></tr>
+      <tr><td>Que Sentry no guarda datos personales</td><td>Se revisa un evento reciente de cada proyecto: sin IP, cookies, cabeceras de sesión ni cuerpo de la petición.</td><td>Mensual</td></tr>
+      <tr><td>Que los logs no contienen datos sensibles</td><td>Consulta KQL que busca patrones de correo, JWT y <code>password</code> en los registros.</td><td>Semanal</td></tr>
+    </tbody>
+  </table>
+
+  <div class="terminal"><span class="c">// Validación: ¿algún registro de la última semana contiene un JWT o un correo?</span>
+union traces, exceptions
+| where timestamp &gt; ago(7d)
+| where message matches regex @"eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+"
+     or message matches regex @"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[a-z]{2,}"
+| summarize hallazgos = count() by bin(timestamp, 1d)   <span class="d">// debe dar 0; cualquier hallazgo es un defecto P2</span></div>
+</section>
+
+<!-- ===================== 06 ANTICIPAR ===================== -->
+<section class="seccion">
+  <h2><span class="num">06</span>Anticipar: tendencias y capacidad</h2>
+  <div class="rail"><span class="r1">Métricas crudas</span><span class="r2">SLI</span><span class="r3">SLO</span><span class="r4 on">Presupuesto de error</span><span class="r5">SLA</span></div>
+  <p>Anticipar es usar la historia de las mediciones para ver venir un problema antes de que se convierta en incidente. La infraestructura actual es pequeña (una instancia B1 por App Service y PostgreSQL en la capa Burstable), así que el margen se agota rápido cuando crece el número de restaurantes.</p>
+
+  <table class="compacta">
+    <thead><tr><th style="width:22%">Qué se anticipa</th><th>Señal temprana</th><th style="width:22%">Método</th><th style="width:16%">Horizonte</th></tr></thead>
+    <tbody>
+      <tr><td>Disco lleno</td><td>Proyección lineal del almacenamiento de PostgreSQL de los últimos 30 días llega a 80 % en menos de 30 días.</td><td>Tendencia (<code>series_fit_line</code> en KQL)</td><td>30 días</td></tr>
+      <tr><td>Saturación de CPU de la base</td><td>El saldo de créditos de CPU de la capa Burstable baja de un día a otro durante 3 días seguidos.</td><td>Tendencia de la métrica de créditos</td><td>1 a 2 semanas</td></tr>
+      <tr><td>Pool de conexiones agotado</td><td>Las conexiones en uso del pool de Hikari (máximo 10 por instancia) superan 7 en la hora pico durante una semana.</td><td>Percentil 95 semanal</td><td>2 semanas</td></tr>
+      <tr><td>Degradación gradual</td><td>La latencia p95 sube más de 20 % semana contra semana, o una consulta SQL aparece nueva entre las 10 más lentas.</td><td>Comparación semanal</td><td>1 semana</td></tr>
+      <tr><td>Comportamiento anómalo</td><td>5xx, latencia o peticiones fuera del patrón aprendido para esa hora y día de la semana.</td><td>Umbrales dinámicos de Azure Monitor</td><td>Horas</td></tr>
+      <tr><td>Fin del presupuesto de error</td><td>Velocidad de consumo ≥ 1× sostenida (sección 5.2).</td><td>Proyección al cierre del mes</td><td>Días</td></tr>
+      <tr><td>Exceso de gasto</td><td>El gasto pronosticado del mes alcanza el 100 % del presupuesto de la suscripción.</td><td>Pronóstico de Azure Cost Management</td><td>Mes en curso</td></tr>
+      <tr><td>Pérdida de telemetría</td><td>El consumo diario de ingesta supera 70 % del tope de 0.1 GB.</td><td>Tendencia diaria</td><td>Días</td></tr>
+      <tr><td>Secretos por vencer</td><td>Secretos de Key Vault y claves de firma con fecha de vencimiento en los próximos 30 días.</td><td>Eventos de Key Vault</td><td>30 días</td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.1 Capacidad frente al crecimiento</h3>
+  <p>El número de restaurantes activos y el número de órdenes en la hora pico son los dos datos que más anticipan la carga. Cada mes se registran junto con la CPU, la memoria y la latencia de esa hora, para estimar cuántos restaurantes más soporta la infraestructura actual antes de llegar a los umbrales de advertencia.</p>
+  <div class="nota"><b>Límite conocido.</b> Hoy no existe una prueba de carga que diga cuál es la capacidad máxima; la estimación se basa en la tendencia de la operación real. Antes de abrir el alta a más restaurantes se recomienda medir esa capacidad en un entorno separado del productivo.</div>
+
+  <div class="terminal"><span class="c">// Anticipar: días que faltan para que el almacenamiento de la base llegue a 80 %</span>
+AzureMetrics
+| where ResourceProvider == "MICROSOFT.DBFORPOSTGRESQL" and MetricName == "storage_percent"
+| where TimeGenerated &gt; ago(30d)
+| summarize uso = max(Maximum) by dia = bin(TimeGenerated, 1d)
+| summarize serie = make_list(uso)
+| extend (r2, pendiente, varianza, rvarianza, ordenada, ajuste) = series_fit_line(serie)
+| extend dias_para_80 = (80.0 - todouble(serie[array_length(serie) - 1])) / pendiente   <span class="d">// pendiente = puntos de % por día</span></div>
+  <p style="font-size:9pt;color:var(--suave)">Requiere enviar las métricas de PostgreSQL a Log Analytics con una configuración de diagnóstico, que se agrega en CAL-57.</p>
+</section>
+
+<!-- ===================== 07 DECIDIR ===================== -->
+<section class="seccion">
+  <h2><span class="num">07</span>Decidir: matriz de decisiones y alertas</h2>
+  <div class="rail"><span class="r1">Métricas crudas</span><span class="r2">SLI</span><span class="r3">SLO</span><span class="r4 on">Presupuesto de error</span><span class="r5 on">SLA</span></div>
+  <p>Decidir es convertir una señal validada o anticipada en una acción con responsable y plazo. La matriz se acuerda de antemano para no improvisar durante un incidente ni discutir en cada caso quién tiene la autoridad.</p>
+
+  <table class="compacta">
+    <thead><tr><th style="width:26%">Señal</th><th>Decisión</th><th style="width:20%">Quién decide</th><th style="width:13%">Plazo</th></tr></thead>
+    <tbody>
+      <tr><td>Despliegue invalidado (sección 5.3)</td><td>Revertir a la versión anterior; la reversión es automática y, si falla, se ejecuta el procedimiento manual.</td><td>Quien integró el cambio o la guardia</td><td>15 min</td></tr>
+      <tr><td>Consumo de presupuesto ≥ 14× en 1 h</td><td>Abrir incidente P1 y congelar despliegues hasta cerrarlo.</td><td>Guardia</td><td>Inmediato</td></tr>
+      <tr><td>Presupuesto de error agotado en el mes</td><td>Congelar funciones nuevas: el siguiente sprint prioriza confiabilidad hasta recuperar el objetivo.</td><td>Product Owner con Scrum Master</td><td>Siguiente planeación</td></tr>
+      <tr><td>Créditos de CPU en descenso o CPU &gt; 80 % sostenida</td><td>Optimizar las consultas más costosas; si no alcanza, pasar la base a la capa de uso general.</td><td>Responsable de infraestructura con el Product Owner (costo)</td><td>1 semana</td></tr>
+      <tr><td>Almacenamiento proyectado a 80 % en &lt; 30 días</td><td>Ampliar el almacenamiento con Terraform o depurar datos que ya no se usan.</td><td>Responsable de infraestructura</td><td>2 semanas</td></tr>
+      <tr><td>Pool de conexiones cerca del máximo</td><td>Revisar transacciones largas; después, ajustar el pool o agregar una segunda instancia.</td><td>Responsable de infraestructura</td><td>2 semanas</td></tr>
+      <tr><td>Latencia p95 +20 % semana contra semana</td><td>Crear un issue de optimización en Linear para el siguiente sprint.</td><td>Scrum Master</td><td>Revisión semanal</td></tr>
+      <tr><td>Gasto ≥ 80 % o pronóstico ≥ 100 %</td><td>Reducir ingesta, apagar la VM de Jenkins fuera de uso y revisar SKUs antes de afectar producción.</td><td>Product Owner</td><td>48 h</td></tr>
+      <tr><td>Ingesta &gt; 70 % del tope diario</td><td>Bajar el nivel de logs ruidosos o subir el tope si el presupuesto lo permite.</td><td>Responsable de infraestructura</td><td>3 días</td></tr>
+      <tr><td>Sospecha de fuga entre restaurantes</td><td>Incidente P1, congelar despliegues y no reabrir hasta que <code>verify-rls.sql</code> y <code>TenantIsolationTest</code> pasen.</td><td>Product Owner con todo el equipo</td><td>Inmediato</td></tr>
+      <tr><td>Alerta que se disparó 2 veces sin requerir acción</td><td>Ajustar el umbral o eliminar la alerta.</td><td>Scrum Master</td><td>Revisión semanal</td></tr>
+      <tr><td>Disponibilidad del mes &lt; 99.5 %</td><td>Aplicar créditos del SLA y entregar el reporte a los restaurantes.</td><td>Product Owner</td><td>5 días hábiles</td></tr>
+    </tbody>
+  </table>
+  <p>Cada decisión queda registrada en el issue de Linear que la originó, con la señal que la motivó y su resultado, para validar en la siguiente revisión si funcionó.</p>
+</section>
+
+<!-- ===================== 07b ALERTAS ===================== -->
+<section>
+  <h3>7.1 Alertas y destinatarios</h3>
+  <p>Las alertas son las señales que exigen una decisión inmediata. Una alerta sin destinatario concreto es ruido con costo: cada regla nombra a una persona responsable y a un respaldo, y el canal depende de la severidad.</p>
+  <table class="compacta">
+    <thead><tr><th style="width:9%">Sev.</th><th style="width:30%">Condición</th><th style="width:22%">Canal</th><th>Responsable · respaldo</th></tr></thead>
+    <tbody>
+      <tr><td>P1</td><td>Disponibilidad externa caída en 2 de 3 regiones; readiness en 503 por 3 min; 5xx &gt; 5 %; sospecha de fuga entre restaurantes</td><td>Notificación push de la app de Azure + correo</td><td>Guardia de la semana · Scrum Master</td></tr>
+      <tr><td>P2</td><td>Latencia p95 &gt; 3 s; CPU o conexiones de la base en crítico; reversión automática de un despliegue</td><td>Correo + aviso en el canal del equipo</td><td>Guardia de la semana · responsable de infraestructura</td></tr>
+      <tr><td>P3</td><td>Umbrales de advertencia de la sección 04; almacenamiento &gt; 80 %; gasto ≥ 80 %; issue nuevo en Sentry en producción</td><td>Correo</td><td>Responsable de infraestructura</td></tr>
+      <tr><td>P4</td><td>Tendencias: errores de una versión de app antigua (Sentry), crecimiento de logs, secretos por vencer</td><td>Resumen semanal</td><td>Se revisa en la retrospectiva</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7.2 Guardia</h3>
+  <p>La guardia rota cada semana entre los cuatro integrantes, en el mismo orden de la tabla de roles del equipo. Cubre de lunes a domingo de 8:00 a 23:00 (hora del centro de México), que es el horario de servicio de los restaurantes. Fuera de ese horario solo se atiende P1.</p>
+  <ul>
+    <li>Quien recibe una P1 o P2 la <b>reconoce</b> en Azure Monitor; así el resto sabe que alguien la tiene.</li>
+    <li>Si nadie la reconoce en 30 minutos, el respaldo la toma y avisa por el canal del equipo.</li>
+    <li>Cada alerta que se dispare sin requerir acción se ajusta o se elimina en la revisión semanal: las alertas falsas entrenan a ignorar las verdaderas.</li>
+  </ul>
+
+  
+  <h3>7.3 Reglas que se crean (CAL-57)</h3>
+  <div class="terminal"><span class="c">// Tasa de 5xx de la API en los últimos 5 minutos (alerta de registros, KQL)</span>
+requests
+| where timestamp &gt; ago(5m)
+| summarize total = count(), fallidas = countif(toint(resultCode) &gt;= 500)
+| extend tasa = todouble(fallidas) / total * 100
+| where total &gt;= 20 and tasa &gt; 5   <span class="d">// mínimo de 20 peticiones para no alertar por una sola falla</span></div>
+</section>
+
+<!-- ===================== 08 REGISTROS ===================== -->
+<section class="seccion">
+  <h2><span class="num">08</span>Registros y privacidad</h2>
+  <div class="rail"><span class="r1 on">Métricas crudas</span><span class="r2">SLI</span><span class="r3">SLO</span><span class="r4">Presupuesto de error</span><span class="r5">SLA</span></div>
+  <p>Los registros deben permitir seguir una petición completa por su <code>requestId</code> sin convertirse en una copia paralela de los datos de los restaurantes. Log Analytics es un agregador compartido: no tiene RLS, así que lo que no se escribe no se puede filtrar.</p>
+
+  <h3>6.1 Qué se registra</h3>
+  <table class="compacta">
+    <thead><tr><th style="width:24%">Campo</th><th>Uso</th><th style="width:28%">Regla</th></tr></thead>
+    <tbody>
+      <tr><td><code>requestId</code></td><td>Correlacionar todas las líneas de una petición.</td><td>Se genera en la API y se devuelve en la respuesta de error RFC 7807.</td></tr>
+      <tr><td><code>tenantId</code></td><td>Saber qué restaurante resultó afectado.</td><td>Solo el identificador interno, nunca el nombre.</td></tr>
+      <tr><td><code>userId</code></td><td>Investigar abuso o errores por usuario.</td><td>Identificador interno; nunca correo ni nombre.</td></tr>
+      <tr><td>Método, ruta, estado, duración</td><td>Errores y latencia.</td><td>La ruta se registra como plantilla (<code>/api/v1/orders/{id}</code>).</td></tr>
+    </tbody>
+  </table>
+
+  <h3>6.2 Qué nunca se registra</h3>
+  <ul>
+    <li>Contraseñas, cookies, el JWT de sesión ni encabezados <code>Authorization</code>.</li>
+    <li>Cuerpos de petición o respuesta, datos de pago, correos, teléfonos ni nombres de comensales.</li>
+    <li>Cadenas de conexión o secretos de Key Vault, incluso en excepciones.</li>
+  </ul>
+
+  <h3>6.3 Retención y acceso</h3>
+  <table class="compacta">
+    <thead><tr><th style="width:30%">Tipo de dato</th><th style="width:18%">Retención</th><th>Justificación</th></tr></thead>
+    <tbody>
+      <tr><td>Telemetría y logs en Log Analytics</td><td>30 días</td><td>Cubre la revisión mensual y el reporte del SLA; el mínimo incluido sin costo adicional.</td></tr>
+      <tr><td>Logs de archivo de App Service</td><td>3 días · 35 MB</td><td>Solo para diagnóstico inmediato cuando falla el envío a Log Analytics.</td></tr>
+      <tr><td>Respaldos de PostgreSQL</td><td>7 días</td><td>Restauración a un punto en el tiempo dentro de la ventana; ver RPO y RTO en el SLA.</td></tr>
+      <tr><td>Reportes de incidente</td><td>Permanente</td><td>En <code>docs/runbooks/</code>; sin datos personales.</td></tr>
+    </tbody>
+  </table>
+  <h3>Sentry</h3>
+  <p>Sentry es un servicio externo: lo que se le envía sale de Azure. Por eso los cuatro SDK tienen <code>sendDefaultPii</code> en <code>false</code>, que impide enviar cookies, cabeceras de sesión, IP y usuario, y la API tampoco envía el cuerpo de las peticiones. Aun así, la prueba del 27 de noviembre mostró que el túnel de la web reenvía la IP del navegador y Sentry la guardaba con el evento. Se activó <b>Prevent Storing of IP Addresses</b> en los cuatro proyectos y la repetición de la prueba llegó sin IP. Los logs y errores pasan además por un filtro que tacha correos y JWT del texto antes de enviarlo: un detalle de PostgreSQL como <code>(email)=(ana@restaurante.mx)</code> llega como <code>(email)=([correo])</code>. Las pruebas automatizadas <code>SentryConfigurationTest</code>, <code>SentryPrivacyConfigTest</code> y <code>sentry.test.ts</code> fallan si alguien activa el envío de datos personales o quita ese filtro.</p>
+  <p>El acceso de lectura a Log Analytics se limita a los cuatro integrantes del equipo mediante el control de acceso de Azure; ningún restaurante tiene acceso a la telemetría. Sentry sigue la misma regla: solo los integrantes del equipo invitados a la organización <code>restohub</code>.</p>
+</section>
+
+<!-- ===================== 09 INCIDENTES ===================== -->
+<section class="seccion">
+  <h2><span class="num">09</span>Respuesta a incidentes</h2>
+  <div class="rail"><span class="r1">Métricas crudas</span><span class="r2">SLI</span><span class="r3">SLO</span><span class="r4 on">Presupuesto de error</span><span class="r5">SLA</span></div>
+  <p>El procedimiento es el mismo para cualquier severidad; lo que cambia es la urgencia. La prioridad es <b>restablecer el servicio</b>, no encontrar la causa: primero se mitiga y después se investiga.</p>
+
+  <table class="compacta">
+    <thead><tr><th style="width:18%">Paso</th><th>Qué se hace</th><th style="width:26%">Evidencia</th></tr></thead>
+    <tbody>
+      <tr><td>1 · Detectar</td><td>Llega la alerta o el reporte de un restaurante. La guardia la reconoce.</td><td>Hora de la alerta y del reconocimiento</td></tr>
+      <tr><td>2 · Clasificar</td><td>Asigna severidad P1 a P4 con la tabla del SLA. Si hay duda entre dos, se elige la más alta.</td><td>Issue en Linear con etiqueta de incidente</td></tr>
+      <tr><td>3 · Mitigar</td><td>Revertir el último despliegue si coincide en tiempo; reiniciar la API; escalar el plan de App Service o el SKU de la base si es saturación.</td><td>Acción tomada y hora</td></tr>
+      <tr><td>4 · Comunicar</td><td>Para P1 y P2, aviso a los restaurantes afectados al inicio, cada hora y al cierre.</td><td>Mensajes enviados</td></tr>
+      <tr><td>5 · Verificar</td><td>Disponibilidad externa en verde, 5xx y latencia de vuelta a lo normal durante 15 minutos.</td><td>Captura del panel</td></tr>
+      <tr><td>6 · Aprender</td><td>Reporte sin culpables en 5 días hábiles para P1 y P2: línea de tiempo, causa, acciones con dueño y fecha.</td><td><code>docs/runbooks/incidentes/</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="nota"><b>Incidente de aislamiento.</b> Si un restaurante pudo ver datos de otro, además de los pasos anteriores: se conserva la evidencia sin copiarla a issues públicos, se ejecuta <code>scripts/verify-rls.sql</code> como <code>callejon9_app</code>, se revisa que el rol no haya ganado <code>BYPASSRLS</code> ni propiedad de tablas, y se notifica a los restaurantes afectados conforme a la LFPDPPP.</div>
+</section>
+
+<!-- ===================== 10 PANELES ===================== -->
+<section class="seccion">
+  <h2><span class="num">10</span>Paneles y revisión periódica</h2>
+  <div class="rail"><span class="r1">Métricas crudas</span><span class="r2 on">SLI</span><span class="r3 on">SLO</span><span class="r4 on">Presupuesto de error</span><span class="r5">SLA</span></div>
+  <p>Un solo libro de Azure Workbooks concentra los indicadores de la sección 04, de arriba abajo en el orden en que se revisan durante un incidente: ¿está arriba?, ¿falla?, ¿está lento?, ¿la base aguanta?, ¿qué viene?</p>
+
+  <div class="tarjetas dos">
+    <div class="tarjeta"><div class="k">Fila 1 · Servicio</div>Disponibilidad externa por región, tasa de 5xx y latencia p50/p95 de las últimas 24 horas.</div>
+    <div class="tarjeta"><div class="k">Fila 2 · Errores</div>Las 10 excepciones más frecuentes y las rutas con más fallas, con enlace a sus <code>requestId</code>. Los errores del navegador y de las apps se revisan en la vista de issues de Sentry, filtrada por entorno y versión.</div>
+    <div class="tarjeta"><div class="k">Fila 3 · Base de datos</div>CPU, créditos de CPU, conexiones activas, almacenamiento y consultas más lentas.</div>
+    <div class="tarjeta"><div class="k">Fila 4 · Validación y anticipación</div>Presupuesto de error restante y su velocidad de consumo, proyección de almacenamiento y créditos de CPU, gasto pronosticado.</div>
+    <div class="tarjeta"><div class="k">Fila 5 · Operación</div>Último despliegue y su SHA, alertas abiertas, decisiones pendientes y consumo de la cuota diaria de ingesta.</div>
+  </div>
+
+  <table class="compacta">
+    <thead><tr><th style="width:15%">Frecuencia</th><th style="width:22%">Funciones del ciclo</th><th>Actividad</th><th style="width:20%">Responsable</th></tr></thead>
+    <tbody>
+      <tr><td>Diaria</td><td>Medir · validar</td><td>Revisar el panel al iniciar la guardia: alertas abiertas, errores nuevos (también los issues nuevos de Sentry) y consumo de la cuota de ingesta.</td><td>Guardia de la semana</td></tr>
+      <tr><td>Por despliegue</td><td>Validar · decidir</td><td>Verificación posterior y comparación de 30 minutos antes y después; revertir si se invalida.</td><td>Quien integró el cambio</td></tr>
+      <tr><td>Semanal</td><td>Validar · anticipar · decidir</td><td>Presupuesto de error restante, tendencias de la sección 06, alertas falsas y decisiones pendientes de la matriz. Se hace el viernes, con la revisión del sprint.</td><td>Scrum Master</td></tr>
+      <tr><td>Mensual</td><td>Validar · anticipar · decidir</td><td>Reporte de disponibilidad del SLA, proyección de capacidad y costo, ajuste de umbrales y alerta P1 de ensayo.</td><td>Responsable de infraestructura</td></tr>
+      <tr><td>Trimestral</td><td>Validar</td><td>Restauración real de la base y revisión completa de este plan.</td><td>Product Owner</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===================== 11 IMPLEMENTACIÓN ===================== -->
+<section class="seccion">
+  <h2><span class="num">11</span>Plan de implementación</h2>
+  <div class="rail"><span class="r1 on">Métricas crudas</span><span class="r2 on">SLI</span><span class="r3 on">SLO</span><span class="r4 on">Presupuesto de error</span><span class="r5">SLA</span></div>
+  <p>Lo pendiente está planeado en Linear dentro del Cycle 8 (20 de noviembre al 3 de diciembre de 2026); el Cycle 9 queda como reserva hasta el cierre técnico del 11 de diciembre.</p>
+
+  <table class="compacta">
+    <thead><tr><th style="width:12%">Issue</th><th>Entrega</th><th style="width:16%">Vence</th><th style="width:16%">Depende de</th></tr></thead>
+    <tbody>
+      <tr><td>CAL-23</td><td>Logs JSON con <code>requestId</code>, <code>tenantId</code> y <code>userId</code>, y la política de redacción de la sección 08.</td><td>26 nov</td><td>—</td></tr>
+      <tr><td>CAL-24</td><td>Métricas de la API y el libro de Azure Workbooks de la sección 10.</td><td>26 nov</td><td>—</td></tr>
+      <tr><td>CAL-56</td><td>Despliegue desde <code>main</code> con verificación posterior y reversión automática.</td><td>26 nov</td><td>—</td></tr>
+      <tr><td>CAL-57</td><td>Prueba de disponibilidad, reglas de alerta (incluidas las de consumo del presupuesto de error y las de anticipación), grupos de acciones y búsqueda por <code>requestId</code>. Al menos una alerta disparada como ensayo.</td><td>3 dic</td><td>CAL-23, CAL-24</td></tr>
+      <tr><td>CAL-58</td><td>Restauración de la base medida contra el RTO del SLA, con <code>verify-rls.sql</code> en verde.</td><td>3 dic</td><td>—</td></tr>
+      <tr><td>—</td><td>Sentry en la API, la web y las dos apps, con los proyectos de la sección 3.2 y las IP descartadas. Rama <code>feat/sentry-observabilidad</code>.</td><td class="ok">Hecho 27 nov</td><td>—</td></tr>
+      <tr><td>—</td><td>Sentry: apps probadas en emulador, web publicada en producción con Sentry, alerta de issue nuevo en producción (P3) y build preparado para subir source maps.</td><td class="ok">Hecho 27 nov</td><td>—</td></tr>
+      <tr><td>—</td><td>Sentry: trazas al 10 %, logs y métricas de negocio en los cuatro componentes, con filtro de correos y JWT. Rama <code>feat/sentry-trazas-logs-metricas</code>.</td><td class="ok">Hecho 27 nov</td><td>—</td></tr>
+      <tr><td>—</td><td>Sentry: publicar la API con su DSN y crear el token de <code>SENTRY_AUTH_TOKEN</code> para subir source maps en el siguiente despliegue.</td><td>3 dic</td><td>Reactivar la suscripción de la API</td></tr>
+      <tr><td>CAL-30</td><td>Runbook de operación con los procedimientos de las secciones 07 y 09.</td><td>3 dic</td><td>CAL-56, CAL-57, CAL-58</td></tr>
+    </tbody>
+  </table>
+
+  <h3>9.1 Criterios para dar el plan por implementado</h3>
+  <ul>
+    <li>Una petición con error en Azure se encuentra completa por su <code>requestId</code>.</li>
+    <li>Una alerta P1 de ensayo llegó a la persona de guardia y se reconoció en menos de 30 minutos.</li>
+    <li>Ningún registro almacenado contiene contraseñas, cookies ni tokens.</li>
+    <li>Un error real de cada componente llegó a Sentry sin IP y con la traza legible (los cuatro el 27 de noviembre; en producción, solo la web hasta que se publique la API).</li>
+    <li>El panel muestra datos reales del entorno productivo y el primer reporte mensual de disponibilidad está emitido.</li>
+    <li>La primera revisión semanal registró en Linear al menos una decisión tomada con la matriz de la sección 07.</li>
+  </ul>
+
+  <div class="conclusion"><b>Resumen.</b> RestoHub ya tiene la base de la observabilidad (Application Insights, Log Analytics, health checks, presupuesto y Sentry para los errores de los cuatro componentes), pero hoy la señal no llega a nadie. Este plan la organiza en un ciclo: <b>medir</b> indicadores con fuente y umbral, <b>validarlos</b> contra objetivos y un presupuesto de error, <b>anticipar</b> con tendencias y pronósticos lo que se va a agotar, y <b>decidir</b> con una matriz acordada quién actúa y en qué plazo. Las mismas mediciones demuestran el cumplimiento del SLA.</div>
+
+  <h3>Fuentes</h3>
+  <ul class="fuentes">
+    <li>Microsoft Learn. <i>Application Insights: pruebas de disponibilidad</i>. learn.microsoft.com/azure/azure-monitor/app/availability</li>
+    <li>Microsoft Learn. <i>Alertas de Azure Monitor y grupos de acciones</i>. learn.microsoft.com/azure/azure-monitor/alerts/alerts-overview</li>
+    <li>Microsoft Learn. <i>Umbrales dinámicos en alertas de métricas</i>. learn.microsoft.com/azure/azure-monitor/alerts/alerts-dynamic-thresholds</li>
+    <li>Google. <i>Site Reliability Engineering Workbook: Alerting on SLOs</i>. sre.google/workbook/alerting-on-slos</li>
+    <li>Microsoft Learn. <i>Supervisión de Azure Database for PostgreSQL – Servidor flexible</i>. learn.microsoft.com/azure/postgresql/flexible-server/concepts-monitoring</li>
+    <li>Sentry. <i>Next.js, Spring Boot y React Native: guías de configuración</i>. docs.sentry.io/platforms</li>
+    <li>Sentry. <i>Scrubbing sensitive data</i>. docs.sentry.io/security-legal-pii/scrubbing</li>
+    <li>Repositorio Callejón 9: <code>infra/terraform/azure-backend/monitoring.tf</code>, <code>docs/operacion-probes.md</code>, <code>docs/operacion-sentry.md</code>.</li>
+  </ul>
+</section>
+
+</body>
+</html>

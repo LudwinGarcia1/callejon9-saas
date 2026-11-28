@@ -19,6 +19,7 @@ import { ProductFormScreen } from './src/screens/ProductFormScreen';
 import { ProductsScreen, type CatalogNotice } from './src/screens/ProductsScreen';
 import { ResultScreen } from './src/screens/ResultScreen';
 import { TablesScreen } from './src/screens/TablesScreen';
+import { countMetric, traceScreen } from './src/monitoring/sentry';
 import { colors } from './src/ui/theme';
 
 // Debe configurarse antes de que llegue la primera notificación en primer plano.
@@ -46,6 +47,7 @@ type Screen =
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'checking' });
+  useEffect(() => traceScreen(screen.name), [screen.name]);
   const [session, setSession] = useState<Session | null>(null);
   const [registration, setRegistration] = useState<PushRegistration | null>(null);
   const [registering, setRegistering] = useState(false);
@@ -61,6 +63,7 @@ export default function App() {
     try {
       const result = await registerForPushNotifications();
       setRegistration(result);
+      countMetric('push_registrations', { status: result.status });
       if (result.status === 'granted' && __DEV__) {
         // Facilita copiar el token desde la terminal de Metro durante la práctica.
         console.log(`[push] token del dispositivo: ${result.token}`);

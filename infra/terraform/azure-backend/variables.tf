@@ -102,6 +102,23 @@ variable "swagger_enabled" {
   default     = false
 }
 
+variable "sentry_dsn" {
+  description = "Sentry DSN of the backend project. Empty keeps error reporting off. Not a secret, but pass it through TF_VAR_sentry_dsn instead of committing it."
+  type        = string
+  default     = ""
+}
+
+variable "sentry_traces_sample_rate" {
+  description = "Fraction of requests traced by Sentry (0 to 1). 0 turns performance tracing off."
+  type        = number
+  default     = 0.1
+
+  validation {
+    condition     = var.sentry_traces_sample_rate >= 0 && var.sentry_traces_sample_rate <= 1
+    error_message = "sentry_traces_sample_rate must be between 0 and 1."
+  }
+}
+
 variable "monthly_budget_usd" {
   description = "Monthly subscription budget that triggers e-mail alerts."
   type        = number

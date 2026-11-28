@@ -19,8 +19,10 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { MercadoPagoQrModal } from "@/components/shared/mercadopago-qr-modal";
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
+import type { OrderResponse, OrderStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface DinerMenuViewProps {
@@ -181,8 +183,13 @@ export function DinerMenuView({ slug, tableNumber }: DinerMenuViewProps) {
     folio: string;
     items: CartItem[];
     createdAt: Date;
-    status: "SENT" | "PREPARING" | "READY";
+    status: OrderStatus;
   } | null>(null);
+  const [isBillOpen, setIsBillOpen] = useState<boolean>(false);
+  const [isMpModalOpen, setIsMpModalOpen] = useState<boolean>(false);
+  const [billTipPercent, setBillTipPercent] = useState<number>(10);
+  const [loadingBill, setLoadingBill] = useState<boolean>(false);
+  const [tableOrderData, setTableOrderData] = useState<OrderResponse | null>(null);
 
   // Carga inicial del catálogo desde la API pública
   useEffect(() => {
@@ -290,7 +297,7 @@ export function DinerMenuView({ slug, tableNumber }: DinerMenuViewProps) {
           notes: line.notes || null,
         })),
       };
-      const response = await api.post<{ folio: string; status: "SENT" | "PREPARING" | "READY" }>(
+      const response = await api.post<{ folio: string; status: OrderStatus }>(
         endpoints.publicMenu.sendOrder(slug, tableNumber),
         payload
       );
@@ -333,10 +340,45 @@ export function DinerMenuView({ slug, tableNumber }: DinerMenuViewProps) {
     }
   };
 
-  const handleAskBill = () => {
+  const handleAskBill = async () => {
     toast.info("💳 Solicitud de cuenta enviada", {
       description: `Caja y mesero preparan el ticket de la Mesa ${tableNumber}.`,
     });
+    setIsBillOpen(true);
+    setLoadingBill(true);
+    try {
+      const order = await api.get<OrderResponse>(endpoints.publicMenu.tableOrder(slug, tableNumber));
+      setTableOrderData(order);
+    } catch {
+      if (activeOrder) {
+        setTableOrderData({
+          id: "00000000-0000-0000-0000-000000000000",
+          folio: activeOrder.folio,
+          tableId: null,
+          waiterId: null,
+          guestCount: 1,
+          status: activeOrder.status,
+          total: activeOrder.items.reduce((acc, it) => acc + it.item.price * it.quantity, 0),
+          openedAt: activeOrder.createdAt.toISOString(),
+          sentToKitchenAt: activeOrder.createdAt.toISOString(),
+          closedAt: null,
+          items: activeOrder.items.map((it, idx) => ({
+            id: `item-${idx}`,
+            productId: it.item.id,
+            productName: it.item.name,
+            unitPrice: it.item.price,
+            quantity: it.quantity,
+            kitchenStatus: "PENDING",
+            notes: it.notes || null,
+            orderedAt: activeOrder.createdAt.toISOString(),
+          })),
+        });
+      } else {
+        setTableOrderData(null);
+      }
+    } finally {
+      setLoadingBill(false);
+    }
   };
 
   return (
@@ -656,6 +698,143 @@ export function DinerMenuView({ slug, tableNumber }: DinerMenuViewProps) {
           </div>
         </div>
       )}
+
+      {/* MODAL / DRAWER DE CUENTA Y PAGO MERCADO PAGO */}
+      {isBillOpen && (
+        <div className="fixed inset-0 z-50 bg-neutral-950/80 backdrop-blur-sm flex flex-col justify-end">
+          <div className="bg-neutral-900 border-t border-neutral-800 rounded-t-3xl p-5 max-w-lg w-full mx-auto max-h-[85vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
+              <div>
+                <h2 className="text-base font-bold text-neutral-100 flex items-center gap-2">
+                  <CreditCardIcon className="w-4 h-4 text-[#009ee3]" />
+                  Cuenta de Mesa {tableNumber}
+                </h2>
+                <p className="text-xs text-neutral-400">
+                  {tableOrderData ? `Comanda ${tableOrderData.folio}` : "Revisión de consumo"}
+                </p>
+              </div>
+              <button
+                onClick={() => setIsBillOpen(false)}
+                className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-neutral-100"
+              >
+                <XIcon className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto py-3 space-y-3">
+              {loadingBill ? (
+                <div className="py-12 text-center text-sm text-neutral-400">
+                  Consultando cuenta de la mesa...
+                </div>
+              ) : !tableOrderData || tableOrderData.items.length === 0 ? (
+                <div className="py-10 text-center space-y-2">
+                  <p className="text-sm text-neutral-300 font-semibold">
+                    No hay comanda activa para esta mesa
+                  </p>
+                  <p className="text-xs text-neutral-500 max-w-xs mx-auto">
+                    Selecciona platillos del menú y envíalos a cocina para iniciar tu cuenta.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    {tableOrderData.items.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-950/60 border border-neutral-800/80 text-xs"
+                      >
+                        <div>
+                          <p className="font-bold text-neutral-200">
+                            {item.quantity}× {item.productName}
+                          </p>
+                          {item.notes && (
+                            <p className="text-[10px] text-neutral-400 italic">
+                              Nota: {item.notes}
+                            </p>
+                          )}
+                        </div>
+                        <span className="font-extrabold text-neutral-100">
+                          ${(item.unitPrice * item.quantity).toFixed(2)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* SELECCIÓN DE PROPINA */}
+                  <div className="pt-2">
+                    <p className="text-xs text-neutral-400 mb-1.5 font-medium">
+                      Agregar propina voluntaria:
+                    </p>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {[0, 10, 15, 20].map((pct) => (
+                        <button
+                          key={pct}
+                          onClick={() => setBillTipPercent(pct)}
+                          className={cn(
+                            "py-2 rounded-xl text-xs font-bold border transition-all",
+                            billTipPercent === pct
+                              ? "bg-[#009ee3]/10 border-[#009ee3] text-[#009ee3]"
+                              : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700"
+                          )}
+                        >
+                          {pct}%
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {tableOrderData && tableOrderData.items.length > 0 && (
+              <div className="pt-3 border-t border-neutral-800 space-y-3">
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between text-neutral-400">
+                    <span>Subtotal:</span>
+                    <span>${tableOrderData.total.toFixed(2)} MXN</span>
+                  </div>
+                  <div className="flex justify-between text-neutral-400">
+                    <span>Propina ({billTipPercent}%):</span>
+                    <span>
+                      ${((tableOrderData.total * billTipPercent) / 100).toFixed(2)} MXN
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm font-bold text-neutral-100 pt-1 border-t border-neutral-800/60">
+                    <span>Total con propina:</span>
+                    <span className="text-[#009ee3] font-black">
+                      ${(tableOrderData.total * (1 + billTipPercent / 100)).toFixed(2)} MXN
+                    </span>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={() => setIsMpModalOpen(true)}
+                  className="w-full h-12 bg-[#009ee3] hover:bg-[#009ee3]/90 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-[#009ee3]/20 active:scale-95 transition-all gap-2"
+                >
+                  <CreditCardIcon className="w-4 h-4" />
+                  Pagar con Mercado Pago
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE QR MERCADO PAGO */}
+      <MercadoPagoQrModal
+        orderId={tableOrderData?.id || ""}
+        tipPercent={billTipPercent}
+        isOpen={isMpModalOpen}
+        onClose={() => setIsMpModalOpen(false)}
+        onPaid={() => {
+          setActiveOrder(null);
+          setTableOrderData(null);
+          setIsBillOpen(false);
+          toast.success("¡Tu comanda fue cobrada con Mercado Pago con éxito!");
+        }}
+        publicSlug={slug}
+        publicTableNumber={tableNumber}
+      />
     </div>
   );
 }

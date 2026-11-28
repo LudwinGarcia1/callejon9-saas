@@ -2,9 +2,11 @@
 
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { QrCodeIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MercadoPagoQrModal } from "@/components/shared/mercadopago-qr-modal";
 import { Money } from "@/components/shared/money";
 import { QueryState } from "@/components/shared/query-state";
 import { TicketSummary } from "@/components/shared/ticket-summary";
@@ -20,6 +22,7 @@ export function CheckoutPanel({ orderId }: { orderId: string }) {
   const [payments, setPayments] = useState<PaymentRequest[]>([]);
   const [parts, setParts] = useState(2);
   const [ticket, setTicket] = useState<TicketResponse | null>(null);
+  const [isMpModalOpen, setIsMpModalOpen] = useState(false);
   const submitting = useRef(false);
   const query = useQuery({ queryKey: queryKeys.orders.detail(orderId), queryFn: () => api.get<OrderResponse>(endpoints.orders.detail(orderId)) });
   const subtotal = query.data?.total ?? 0;
@@ -82,8 +85,47 @@ export function CheckoutPanel({ orderId }: { orderId: string }) {
         <div className="flex justify-between"><span>Cambio de efectivo</span><Money amount={balance.change} /></div>
         {balance.nonCashExcess && <p role="alert" className="text-destructive">Los pagos sin efectivo exceden el total.</p>}
         {mutation.error && <p role="alert" className="text-destructive">{mutation.error.message}</p>}
-        {!closed && <Button className="h-16 text-xl" disabled={!balance.valid || !Number.isFinite(tipPercent) || tipPercent < 0 || tipPercent > 100 || mutation.isPending} onClick={charge}>{mutation.isPending ? "Cobrando…" : "Confirmar cobro"}</Button>}
+        {!closed && (
+          <div className="flex flex-col gap-2">
+            <Button
+              className="h-14 text-lg"
+              disabled={!balance.valid || !Number.isFinite(tipPercent) || tipPercent < 0 || tipPercent > 100 || mutation.isPending}
+              onClick={charge}
+            >
+              {mutation.isPending ? "Cobrando…" : "Confirmar cobro"}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              className="h-12 border-[#009ee3]/60 text-[#009ee3] hover:bg-[#009ee3]/10 font-bold gap-2 text-sm shadow-sm"
+              disabled={mutation.isPending}
+              onClick={() => setIsMpModalOpen(true)}
+            >
+              <QrCodeIcon className="w-4 h-4 text-[#009ee3]" />
+              Cobrar con QR Mercado Pago
+            </Button>
+          </div>
+        )}
       </>}
     </aside>
+
+    <MercadoPagoQrModal
+      orderId={orderId}
+      tipPercent={tipPercent}
+      isOpen={isMpModalOpen}
+      onClose={() => setIsMpModalOpen(false)}
+      onPaid={() => {
+        query.refetch();
+        for (const key of [
+          queryKeys.orders.all(),
+          queryKeys.tables.all(),
+          queryKeys.sales.all(),
+          queryKeys.analytics.all(),
+        ]) {
+          client.invalidateQueries({ queryKey: key });
+        }
+      }}
+    />
   </>;
 }
