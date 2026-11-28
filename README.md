@@ -72,7 +72,7 @@ El frontend nunca llama a `:8080` directamente. Un `rewrites()` en `next.config.
 ### Estructura
 
 ```
-backend/          Spring Boot · Maven Wrapper · 840 pruebas en 96 clases · 53 rutas de API
+backend/          Spring Boot · Maven Wrapper · 866 pruebas en 96 clases · 59 rutas de API
 frontend/         Next.js · TypeScript · Tailwind · shadcn/ui · 15 pantallas
 mobile/           App Expo de meseros: mesas, comandas, catálogo y notificaciones push
 mobile-clientes/  App Expo de comensales: menú, pedido y llamada al mesero, sin conexión
@@ -81,7 +81,7 @@ scripts/          setup-db.sql, verify-rls.sql, verify-images.sh, despliegue y o
 docs/             pruebas (UT, SIT, UAT), operación, entregas, specs y planes
 ```
 
-Las cifras son de `main` al 27 de noviembre de 2026. Cada app móvil tiene su propio README con instrucciones para ejecutarla y generar el APK.
+Las cifras son de `main` al 28 de noviembre de 2026. Cada app móvil tiene su propio README con instrucciones para ejecutarla y generar el APK.
 
 Los paquetes del backend se organizan por funcionalidad, no por capa: `auth`, `user`, `table`, `catalog`, `order`, `kitchen`, `sale`, `ticket`, `inventory`, `analytics`, `realtime`, `platform`, más `tenancy` y `shared`. Cada uno contiene `web/`, `domain/`, `service/` y `repository/`.
 
@@ -280,7 +280,7 @@ Las que más importan:
 
 **Correcciones.** Editar y dar de baja productos, categorías y mesas; cancelar una comanda y liberar su mesa. Nada se borra físicamente: los productos y las mesas están referenciados por el histórico.
 
-**Caja.** Turnos de caja con arqueo, pagos mixtos y divididos, cambio y propina.
+**Caja y cobro digital.** Turnos de caja con arqueo, pagos mixtos y divididos, cambio, propina y pasarela de cobro digital con Mercado Pago (CAL-196 y CAL-197) mediante checkout QR dinámico de comandas en terminal POS y Menú QR de comensales, con webhooks idempotentes y conciliación automática.
 
 **Inventario y reportes.** Movimientos de inventario, historial de ventas paginado y analítica de ventas.
 
@@ -292,7 +292,7 @@ Las que más importan:
 
 ### En curso
 
-**Cobro recurrente con Mercado Pago (CAL-29 y CAL-31).** Suscripción del restaurante en el sandbox al darse de alta, webhooks con firma verificada e idempotencia, conciliación del estado y máquina de estados de la suscripción. Planeado para cerrar el 11 de diciembre de 2026. Hoy Mercado Pago solo existe como forma de pago que la caja registra a mano.
+**Suscripción SaaS del restaurante con Mercado Pago (CAL-29 y CAL-31).** Cobro mensual recurrente por suscripción de la plataforma para nuevos restaurantes (alta de planes, máquina de estados y conciliación de suscripciones). Planeado para cerrar el 11 de diciembre de 2026.
 
 ### Diferido, con su diseño
 
@@ -307,7 +307,7 @@ Delivery y rastreo en vivo; aprendizaje automático (K-means, RandomForest, Apri
 | No hay cambio de contraseña por el propio usuario ni recuperación por correo | Medio: un administrador debe restablecerla | Requiere un servicio de correo transaccional, fuera del alcance |
 | La web corre en plan F1 de App Service | Medio: Azure descarga la app inactiva y limita la CPU a 60 minutos al día | Costo; para el SLA hace falta B1 (ver `docs/entregas/`) |
 
-Ya resueltos y que antes figuraban aquí: los productos inactivos se rechazan al agregarse a una comanda (CAL-10), las rutas de comandas exigen rol (`@PreAuthorize`) la colisión de folios entre instancias se corrigió con secuencias atómicas en PostgreSQL (CAL-13) y el correo de los usuarios ya no distingue mayúsculas: se guarda normalizado y la migración V16 lo hace único sin importar mayúsculas (CAL-180).
+Ya resueltos y que antes figuraban aquí: los productos inactivos se rechazan al agregarse a una comanda (CAL-10), las rutas de comandas exigen rol (`@PreAuthorize`), la colisión de folios entre instancias se corrigió con secuencias atómicas en PostgreSQL (CAL-13), el correo de los usuarios ya no distingue mayúsculas (CAL-180), y el cobro digital con pasarela Mercado Pago en caja y menú QR está integrado de extremo a extremo con webhook verificado (CAL-196 y CAL-197).
 
 Tres carencias que sí se cerraron y vale la pena nombrar, porque marcaban la diferencia entre una demostración y un sistema: no existía forma de crear usuarios —los cinco roles eran teoría—, nada podía editarse ni darse de baja, y `PlanLimitService` estaba escrito sin que ningún endpoint lo llamara.
 
