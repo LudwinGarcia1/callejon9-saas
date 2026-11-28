@@ -10,13 +10,16 @@ import com.callejon9.order.domain.Order;
 import com.callejon9.order.domain.OrderItem;
 import com.callejon9.order.domain.OrderStatus;
 import com.callejon9.order.event.OrderSentToKitchenEvent;
+import com.callejon9.order.event.WaiterCalledEvent;
 import com.callejon9.order.repository.OrderItemRepository;
 import com.callejon9.order.repository.OrderRepository;
 import com.callejon9.order.service.FolioGenerator;
 import com.callejon9.order.service.OrderWithItems;
+import com.callejon9.order.service.WaiterCallThrottle;
 import com.callejon9.order.web.dto.AddOrderItemsRequest;
 import com.callejon9.order.web.dto.OrderResponse;
 import com.callejon9.order.web.dto.PublicCatalogResponse;
+import com.callejon9.order.web.dto.WaiterCallResponse;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.repository.TenantRepository;
 import com.callejon9.shared.error.BusinessRuleException;
@@ -69,6 +72,7 @@ public class PublicMenuController {
     private final FolioGenerator folioGenerator;
     private final ApplicationEventPublisher eventPublisher;
     private final TransactionTemplate transactionTemplate;
+    private final WaiterCallThrottle waiterCallThrottle;
 
     public PublicMenuController(
             TenantRepository tenantRepository,
@@ -79,7 +83,8 @@ public class PublicMenuController {
             OrderItemRepository orderItemRepository,
             FolioGenerator folioGenerator,
             ApplicationEventPublisher eventPublisher,
-            TransactionTemplate transactionTemplate) {
+            TransactionTemplate transactionTemplate,
+            WaiterCallThrottle waiterCallThrottle) {
         this.tenantRepository = tenantRepository;
         this.categoryRepository = categoryRepository;
         this.productRepository = productRepository;
@@ -89,6 +94,7 @@ public class PublicMenuController {
         this.folioGenerator = folioGenerator;
         this.eventPublisher = eventPublisher;
         this.transactionTemplate = transactionTemplate;
+        this.waiterCallThrottle = waiterCallThrottle;
     }
 
     @GetMapping("/{slug}/catalog")
@@ -189,6 +195,13 @@ public class PublicMenuController {
         }));
     }
 
+    /**
+     * Avisa al personal del restaurante que una mesa llama al mesero. El aviso
+     * viaja como {@link WaiterCalledEvent} y el canal en tiempo real lo
+     * entrega al confirmarse la transaccion. Una mesa que ya llamo dentro de
+     * {@link WaiterCallThrottle#WINDOW} recibe la misma respuesta, pero no
+     * genera un aviso nuevo.
+     */
     @PostMapping("/{slug}/tables/{tableNumber}/call-waiter")
     public Map<String, Object> callWaiter(
             @PathVariable String slug,
@@ -199,7 +212,16 @@ public class PublicMenuController {
         return TenantContext.callAs(tenant.getId(), () -> transactionTemplate.execute(status -> {
             RestaurantTable table = tableRepository.findByNumber(tableNumber)
                     .orElseThrow(() -> new ResourceNotFoundException("La mesa " + tableNumber + " no existe."));
-            log.info("Notificacion de llamada a mesero: tenant={} mesa={}", slug, table.getNumber());
+            if (!table.isActive()) {
+                throw new BusinessRuleException("La mesa " + tableNumber + " esta inactiva.");
+            }
+
+            Instant now = Instant.now();
+            if (waiterCallThrottle.tryAcquire(tenant.getId(), table.getNumber(), now)) {
+                eventPublisher.publishEvent(new WaiterCalledEvent(tenant.getId(),
+                        new WaiterCallResponse(table.getId(), table.getNumber(), now)));
+            }
+            log.info("Llamada a mesero: tenant={} mesa={}", slug, table.getNumber());
             return Map.<String, Object>of(
                     "success", true,
                     "message", "Mesero notificado para la Mesa " + tableNumber,

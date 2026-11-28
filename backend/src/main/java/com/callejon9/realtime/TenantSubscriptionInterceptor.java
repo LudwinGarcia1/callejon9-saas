@@ -29,8 +29,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class TenantSubscriptionInterceptor implements ChannelInterceptor {
 
-    private static final Pattern KITCHEN_TOPIC =
-            Pattern.compile("^/topic/tenant\\.([0-9a-fA-F-]{36})\\.kitchen$");
+    /**
+     * Topicos por tenant que existen: cocina ({@link KitchenRealtimeEventPublisher})
+     * y llamadas al mesero ({@link WaiterCallRealtimeEventPublisher}). Cualquier
+     * otro destino se rechaza.
+     */
+    private static final Pattern TENANT_TOPIC =
+            Pattern.compile("^/topic/tenant\\.([0-9a-fA-F-]{36})\\.(kitchen|waiter-calls)$");
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
@@ -46,7 +51,7 @@ public class TenantSubscriptionInterceptor implements ChannelInterceptor {
             throw new AccessDeniedException("Suscripcion rechazada: no hay sesion autenticada.");
         }
 
-        Matcher matcher = KITCHEN_TOPIC.matcher(destination);
+        Matcher matcher = TENANT_TOPIC.matcher(destination);
         if (!matcher.matches() || !matcher.group(1).equalsIgnoreCase(authenticated.tenantId().toString())) {
             throw new AccessDeniedException(
                     "Suscripcion rechazada: el destino " + destination

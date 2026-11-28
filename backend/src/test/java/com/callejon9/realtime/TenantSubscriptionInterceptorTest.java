@@ -9,7 +9,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -60,9 +61,10 @@ class TenantSubscriptionInterceptorTest {
         testSessions.deleteTenants(SLUG_PREFIX);
     }
 
-    @Test
-    @DisplayName("un usuario del tenant A no puede suscribirse al topico de cocina del tenant B")
-    void userFromTenantACannotSubscribeToTenantBsKitchenTopic() throws Exception {
+    @ParameterizedTest(name = "topico {0}")
+    @ValueSource(strings = {"kitchen", "waiter-calls"})
+    @DisplayName("un usuario del tenant A no puede suscribirse a los topicos del tenant B")
+    void userFromTenantACannotSubscribeToTenantBsTopic(String channel) throws Exception {
         // El usuario y su restaurante tienen que existir: el handshake exige
         // una sesion vigente. El tenant B solo aparece en el nombre del topico.
         User adminA = testSessions.newUser(SLUG_PREFIX, UserRole.ADMIN);
@@ -104,7 +106,7 @@ class TenantSubscriptionInterceptorTest {
         stompClient.connectAsync("ws://localhost:" + port + "/ws", handshakeHeaders, handler);
         StompSession session = connected.get(10, TimeUnit.SECONDS);
 
-        session.subscribe("/topic/tenant." + tenantA + ".kitchen", noopFrameHandler());
+        session.subscribe("/topic/tenant." + tenantA + "." + channel, noopFrameHandler());
 
         // Ventana para que un rechazo indebido de la suscripcion LEGITIMA ya
         // se hubiera manifestado (ERROR + cierre de conexion) antes de
@@ -115,7 +117,7 @@ class TenantSubscriptionInterceptorTest {
                 .isFalse();
         assertThat(session.isConnected()).isTrue();
 
-        session.subscribe("/topic/tenant." + tenantB + ".kitchen", noopFrameHandler());
+        session.subscribe("/topic/tenant." + tenantB + "." + channel, noopFrameHandler());
 
         // El servidor envuelve el AccessDeniedException de
         // TenantSubscriptionInterceptor en un MessageDeliveryException

@@ -281,6 +281,16 @@ export interface KitchenItemResponse {
   notes: string | null;
 }
 
+/**
+ * Llamada al mesero que entrega el canal en tiempo real — verificado contra
+ * WaiterCallResponse (`/topic/tenant.{id}.waiter-calls`).
+ */
+export interface WaiterCallResponse {
+  tableId: string;
+  tableNumber: number;
+  calledAt: string;
+}
+
 /** GET /api/v1/kitchen/orders — verificado contra KitchenOrderResponse. */
 export interface KitchenOrderResponse {
   id: string;

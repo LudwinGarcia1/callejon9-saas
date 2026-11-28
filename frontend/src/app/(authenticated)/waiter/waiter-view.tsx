@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import { BellRing } from "lucide-react";
 import { toast } from "sonner";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -11,6 +12,7 @@ import { Money } from "@/components/shared/money";
 import { QueryState } from "@/components/shared/query-state";
 import { StatusDot, statusTone } from "@/components/shared/status-badge";
 import { useOpenOrders } from "@/hooks/use-open-orders";
+import { useWaiterCalls } from "@/hooks/use-waiter-calls";
 import { api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import { formatShortTime } from "@/lib/format";
@@ -71,6 +73,8 @@ export function WaiterView() {
   });
 
   const openOrders = useOpenOrders({ refetchInterval: TABLES_POLL_INTERVAL_MS });
+  const { calls } = useWaiterCalls();
+  const callingTables = useMemo(() => new Set(calls.map((call) => call.tableId)), [calls]);
 
   /** Orden abierta de cada mesa, para el monto de la tarjeta y para navegar. */
   const openOrderByTable = useMemo(() => {
@@ -158,6 +162,7 @@ export function WaiterView() {
                 key={table.id}
                 table={table}
                 order={openOrderByTable.get(table.id) ?? null}
+                calling={callingTables.has(table.id)}
                 onSelect={() => handleTableClick(table)}
               />
             ))}
@@ -180,10 +185,12 @@ export function WaiterView() {
 interface TableCardProps {
   table: TableResponse;
   order: OrderSummaryResponse | null;
+  /** La mesa llamo al mesero y nadie ha marcado la llamada como atendida. */
+  calling: boolean;
   onSelect: () => void;
 }
 
-function TableCard({ table, order, onSelect }: TableCardProps) {
+function TableCard({ table, order, calling, onSelect }: TableCardProps) {
   const tone = statusTone({ kind: "table", status: table.status });
   const isActionable = table.status === "FREE" || table.status === "OCCUPIED";
   const isOccupied = table.status === "OCCUPIED";
@@ -224,7 +231,17 @@ function TableCard({ table, order, onSelect }: TableCardProps) {
           <p className="eyebrow">Mesa</p>
           <p className="font-display text-[46px] leading-[0.95] tabular-nums">{table.number}</p>
         </div>
-        <StatusDot />
+        {calling ? (
+          <span
+            data-tone="amber"
+            className="inline-flex items-center gap-1 rounded-sm border border-[var(--tone-border)] bg-[var(--tone-bg)] px-2 py-1 font-mono text-[11px] tracking-[0.06em] text-[var(--tone-text)] uppercase"
+          >
+            <BellRing aria-hidden className="size-3.5" />
+            Llama al mesero
+          </span>
+        ) : (
+          <StatusDot />
+        )}
       </div>
 
       <div className="flex flex-col gap-[7px]">
