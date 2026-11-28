@@ -91,8 +91,8 @@ Los paquetes del backend se organizan por funcionalidad, no por capa: `auth`, `u
 
 | Componente | Recurso | Dirección |
 |---|---|---|
-| Web | App Service Linux (Node 24), plan F1 | https://restohub.azurewebsites.net |
-| API | App Service Java 21, plan B1, con health check en `/actuator/health/liveness` | `app-callejon9-api-prod-3878c6.azurewebsites.net` |
+| Web | App Service Linux (Node 24), plan F1, en West US 3 | https://restohub.azurewebsites.net |
+| API | App Service Java 21, plan B1, en Central US, con health check en `/actuator/health/liveness` | `app-callejon9-api-prod-70af93.azurewebsites.net` |
 | Base de datos | Azure Database for PostgreSQL Flexible Server 16 (B1ms), respaldo de 7 días | Privada para la API |
 | Secretos | Key Vault, leído con la identidad administrada de la API | — |
 | Monitoreo | Application Insights y Log Analytics para la API; Sentry para los cuatro componentes | — |
@@ -100,7 +100,7 @@ Los paquetes del backend se organizan por funcionalidad, no por capa: `auth`, `u
 
 Todo se provisiona con Terraform (`infra/terraform/azure-backend`, `azure-frontend` y `azure-ci`); los procedimientos están en el README de cada carpeta. La web se publica con `scripts/deploy-frontend-azure.ps1`. El monitoreo está descrito en [`docs/operacion-sentry.md`](docs/operacion-sentry.md) y en el plan de monitoreo de `docs/entregas/`.
 
-> **Estado al 27 de noviembre de 2026.** La web está publicada con Sentry activo. La suscripción de Azure de la API y de PostgreSQL está deshabilitada (solo lectura), así que la API no responde hasta reactivarla o moverla a otra suscripción con el mismo Terraform.
+> **Estado al 27 de noviembre de 2026.** La suscripción original de la API se quedó sin crédito y Azure la deshabilitó. Con el mismo Terraform, la API y PostgreSQL se recrearon en la suscripción de la web, en Central US, porque la política de la suscripción solo permite cinco regiones y West US 3 rechazó la SKU B1ms de PostgreSQL. La base nueva tiene el restaurante de pruebas `pruebas`, cargado por la API; su contraseña está en el secreto `demo-password` del Key Vault `kv-c9-prod-70af93`.
 
 ---
 
