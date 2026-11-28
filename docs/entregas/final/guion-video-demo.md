@@ -122,7 +122,7 @@ Asignen nombres a los dos papeles técnicos antes de grabar y escríbanlos aquí
 ## Lo que no se muestra y por qué
 
 - **Contraseñas, tokens y el DSN de Sentry:** nunca en pantalla.
-- **Llamar al mesero:** el botón responde «Mesero notificado», pero hoy el backend solo lo registra en el log y no avisa al personal (`PublicMenuController.callWaiter`). No se muestra hasta corregirlo; si el jurado pregunta, es un defecto conocido.
+- **Llamar al mesero:** ya avisa en tiempo real a la vista de mesas del mesero, con un aviso emergente y la mesa marcada «Llama al mesero». Se muestra solo si el cambio ya está en `main` y desplegado; si no, sigue fuera del video.
 - **Mercado Pago:** está en curso (CAL-29). Si ya está listo cuando se grabe, agregar una escena entre la 2 y la 3 con la suscripción en el sandbox.
 - **Datos personales reales:** todas las cuentas y restaurantes son de prueba.
 

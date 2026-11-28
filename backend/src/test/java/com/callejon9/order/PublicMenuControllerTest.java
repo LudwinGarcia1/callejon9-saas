@@ -7,9 +7,11 @@ import com.callejon9.catalog.repository.ProductRepository;
 import com.callejon9.order.domain.Order;
 import com.callejon9.order.domain.OrderStatus;
 import com.callejon9.order.event.OrderSentToKitchenEvent;
+import com.callejon9.order.event.WaiterCalledEvent;
 import com.callejon9.order.repository.OrderItemRepository;
 import com.callejon9.order.repository.OrderRepository;
 import com.callejon9.order.service.FolioGenerator;
+import com.callejon9.order.service.WaiterCallThrottle;
 import com.callejon9.order.web.PublicMenuController;
 import com.callejon9.order.web.dto.AddOrderItemRequest;
 import com.callejon9.order.web.dto.AddOrderItemsRequest;
@@ -17,6 +19,7 @@ import com.callejon9.order.web.dto.OrderResponse;
 import com.callejon9.order.web.dto.PublicCatalogResponse;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.repository.TenantRepository;
+import com.callejon9.shared.error.BusinessRuleException;
 import com.callejon9.shared.error.ResourceNotFoundException;
 import com.callejon9.table.domain.RestaurantTable;
 import com.callejon9.table.domain.TableStatus;
@@ -41,6 +44,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -90,7 +95,8 @@ class PublicMenuControllerTest {
                 orderItemRepository,
                 folioGenerator,
                 eventPublisher,
-                new TransactionTemplate(transactionManager)
+                new TransactionTemplate(transactionManager),
+                new WaiterCallThrottle()
         );
     }
 
@@ -191,18 +197,53 @@ class PublicMenuControllerTest {
     }
 
     @Test
-    @DisplayName("callWaiter responde confirmación de notificación")
+    @DisplayName("callWaiter responde confirmación y publica el aviso de la mesa al personal")
     void callWaiter_Success() {
-        Tenant tenant = Tenant.builder().slug(slug).name("Los Taquitos").build();
-        tenant.setId(tenantId);
-        when(tenantRepository.findBySlug(slug)).thenReturn(Optional.of(tenant));
-
-        RestaurantTable table = RestaurantTable.builder().number(5).active(true).build();
-        when(tableRepository.findByNumber(5)).thenReturn(Optional.of(table));
+        RestaurantTable table = stubTable(5, true);
 
         Map<String, Object> result = controller.callWaiter(slug, 5);
 
         assertThat(result.get("success")).isEqualTo(true);
         assertThat(result.get("tableNumber")).isEqualTo(5);
+
+        ArgumentCaptor<WaiterCalledEvent> eventCaptor = ArgumentCaptor.forClass(WaiterCalledEvent.class);
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+        assertThat(eventCaptor.getValue().tenantId()).isEqualTo(tenantId);
+        assertThat(eventCaptor.getValue().call().tableId()).isEqualTo(table.getId());
+        assertThat(eventCaptor.getValue().call().tableNumber()).isEqualTo(5);
+        assertThat(eventCaptor.getValue().call().calledAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("callWaiter repetido de la misma mesa responde igual pero avisa una sola vez")
+    void callWaiter_RepeatedWithinWindowNotifiesOnce() {
+        stubTable(5, true);
+
+        controller.callWaiter(slug, 5);
+        Map<String, Object> second = controller.callWaiter(slug, 5);
+
+        assertThat(second.get("success")).isEqualTo(true);
+        verify(eventPublisher, times(1)).publishEvent(any(WaiterCalledEvent.class));
+    }
+
+    @Test
+    @DisplayName("callWaiter de una mesa inactiva se rechaza sin avisar")
+    void callWaiter_InactiveTableIsRejected() {
+        stubTable(5, false);
+
+        assertThatThrownBy(() -> controller.callWaiter(slug, 5))
+                .isInstanceOf(BusinessRuleException.class);
+        verify(eventPublisher, never()).publishEvent(any());
+    }
+
+    private RestaurantTable stubTable(int number, boolean active) {
+        Tenant tenant = Tenant.builder().slug(slug).name("Los Taquitos").build();
+        tenant.setId(tenantId);
+        when(tenantRepository.findBySlug(slug)).thenReturn(Optional.of(tenant));
+
+        RestaurantTable table = RestaurantTable.builder().number(number).active(active).build();
+        table.setId(UUID.randomUUID());
+        when(tableRepository.findByNumber(number)).thenReturn(Optional.of(table));
+        return table;
     }
 }

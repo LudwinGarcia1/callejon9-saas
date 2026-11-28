@@ -1,10 +1,11 @@
 import { Client, type IMessage } from "@stomp/stompjs";
 
 import { endpoints } from "./endpoints";
-import type { KitchenItemResponse, OrderResponse } from "./types";
+import type { KitchenItemResponse, OrderResponse, WaiterCallResponse } from "./types";
 
 /*
- * Canal en tiempo real de cocina (STOMP sobre WebSocket, sin SockJS).
+ * Canales en tiempo real del restaurante (STOMP sobre WebSocket, sin SockJS):
+ * cocina y llamadas al mesero.
  *
  * El navegador abre `/ws` en el mismo origen del frontend y `next.config.ts`
  * lo reenvia al backend, igual que `/api/v1/*`. Asi la cookie `access_token`
@@ -46,28 +47,46 @@ export function parseKitchenEvent(message: Pick<IMessage, "body">): KitchenChann
   }
 }
 
-interface KitchenChannelOptions {
+/** Mismo topico que `WaiterCallRealtimeEventPublisher.waiterCallsTopicFor`. */
+export function waiterCallsTopic(tenantId: string): string {
+  return `/topic/tenant.${tenantId}.waiter-calls`;
+}
+
+export function parseWaiterCall(message: Pick<IMessage, "body">): WaiterCallResponse | null {
+  try {
+    const call = JSON.parse(message.body) as Partial<WaiterCallResponse> | null;
+    return call && typeof call.tableId === "string" && typeof call.tableNumber === "number"
+      && typeof call.calledAt === "string"
+      ? (call as WaiterCallResponse)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+interface ChannelOptions<T> {
   tenantId: string;
-  onEvent: (event: KitchenChannelEvent) => void;
+  onEvent: (event: T) => void;
   onConnectionChange: (connected: boolean) => void;
 }
 
 /**
- * Crea y activa el cliente. Se suscribe al topico del restaurante en cada
- * conexion, incluidas las reconexiones. Devuelve la funcion que lo cierra.
+ * Crea y activa un cliente suscrito a un topico. Se suscribe en cada
+ * conexion, incluidas las reconexiones, y descarta las tramas que `parse` no
+ * reconoce. Devuelve la funcion que lo cierra.
  */
-export function connectKitchenChannel({
-  tenantId,
-  onEvent,
-  onConnectionChange,
-}: KitchenChannelOptions): () => void {
+function connectTopic<T>(
+  topic: string,
+  parse: (message: Pick<IMessage, "body">) => T | null,
+  { onEvent, onConnectionChange }: Omit<ChannelOptions<T>, "tenantId">,
+): () => void {
   const client = new Client({
     brokerURL: realtimeUrl(window.location),
     reconnectDelay: RECONNECT_DELAY_MS,
     onConnect: () => {
       onConnectionChange(true);
-      client.subscribe(kitchenTopic(tenantId), (message) => {
-        const event = parseKitchenEvent(message);
+      client.subscribe(topic, (message) => {
+        const event = parse(message);
         if (event) {
           onEvent(event);
         }
@@ -81,4 +100,14 @@ export function connectKitchenChannel({
     onConnectionChange(false);
     void client.deactivate();
   };
+}
+
+/** Canal de cocina del restaurante: ordenes enviadas y productos que cambian. */
+export function connectKitchenChannel({ tenantId, ...options }: ChannelOptions<KitchenChannelEvent>): () => void {
+  return connectTopic(kitchenTopic(tenantId), parseKitchenEvent, options);
+}
+
+/** Canal de llamadas al mesero del restaurante (menu QR y app de clientes). */
+export function connectWaiterCallChannel({ tenantId, ...options }: ChannelOptions<WaiterCallResponse>): () => void {
+  return connectTopic(waiterCallsTopic(tenantId), parseWaiterCall, options);
 }

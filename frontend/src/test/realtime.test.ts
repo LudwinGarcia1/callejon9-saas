@@ -2,13 +2,16 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
 import {
   connectKitchenChannel,
+  connectWaiterCallChannel,
   kitchenEventOrderId,
   kitchenTopic,
   parseKitchenEvent,
+  parseWaiterCall,
   realtimeUrl,
   RECONNECT_DELAY_MS,
+  waiterCallsTopic,
 } from "@/lib/realtime";
-import type { KitchenItemResponse, OrderResponse } from "@/lib/types";
+import type { KitchenItemResponse, OrderResponse, WaiterCallResponse } from "@/lib/types";
 
 const stomp = vi.hoisted(() => ({
   config: null as null | Record<string, unknown>,
@@ -87,4 +90,32 @@ it("subscribes on every connect, delivers events and reports the connection stat
   close();
   expect(stomp.deactivate).toHaveBeenCalledTimes(1);
   expect(onConnectionChange).toHaveBeenLastCalledWith(false);
+});
+
+const call: WaiterCallResponse = { tableId: "t7", tableNumber: 7, calledAt: "2026-11-28T20:00:00Z" };
+
+it("subscribes to the waiter calls topic, the one WaiterCallRealtimeEventPublisher uses", () => {
+  expect(waiterCallsTopic(TENANT)).toBe(`/topic/tenant.${TENANT}.waiter-calls`);
+});
+
+it("accepts only frames shaped like a waiter call", () => {
+  expect(parseWaiterCall({ body: JSON.stringify(call) })).toEqual(call);
+  expect(parseWaiterCall({ body: JSON.stringify(item) })).toBeNull();
+  expect(parseWaiterCall({ body: JSON.stringify({ ...call, tableNumber: "7" }) })).toBeNull();
+  expect(parseWaiterCall({ body: "no es json" })).toBeNull();
+  expect(parseWaiterCall({ body: "null" })).toBeNull();
+});
+
+it("delivers waiter calls from the restaurant topic and ignores other frames", () => {
+  const onEvent = vi.fn();
+  connectWaiterCallChannel({ tenantId: TENANT, onEvent, onConnectionChange: vi.fn() });
+
+  (stomp.config as { onConnect: () => void }).onConnect();
+  expect(stomp.subscribe).toHaveBeenCalledWith(`/topic/tenant.${TENANT}.waiter-calls`, expect.any(Function));
+
+  const deliver = stomp.subscribe.mock.calls[0][1] as (message: { body: string }) => void;
+  deliver({ body: JSON.stringify(call) });
+  deliver({ body: JSON.stringify(item) });
+  expect(onEvent).toHaveBeenCalledTimes(1);
+  expect(onEvent).toHaveBeenCalledWith(call);
 });
