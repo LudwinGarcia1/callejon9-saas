@@ -54,6 +54,12 @@
               "$ref" : "#/components/schemas/SalesByDayRow"
             },
             "type" : "array"
+          },
+          "topProducts" : {
+            "items" : {
+              "$ref" : "#/components/schemas/TopProductRow"
+            },
+            "type" : "array"
           }
         },
         "type" : "object"
@@ -1298,6 +1304,21 @@
             "type" : "number"
           },
           "total" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "TopProductRow" : {
+        "properties" : {
+          "productName" : {
+            "type" : "string"
+          },
+          "quantity" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "revenue" : {
             "type" : "number"
           }
         },

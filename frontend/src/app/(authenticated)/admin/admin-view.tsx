@@ -33,6 +33,7 @@ import { todayIsoDate } from "@/lib/format";
 import { queryKeys } from "@/lib/query-keys";
 import {
   USER_ROLE_LABELS,
+  type AnalyticsResponse,
   type CategoryResponse,
   type ProductResponse,
   type SalesHistoryResponse,
@@ -53,10 +54,11 @@ import { PrintTablesQrDialog } from "./print-tables-qr-dialog";
 import { RestaurantSettingsSection } from "./restaurant-settings-section";
 
 /**
- * Dashboard de administracion. No existe un endpoint de estadisticas, asi
- * que los conteos se derivan de las mismas listas que alimentan las tablas
- * (mesas, categorias, productos, usuarios) y lo cobrado hoy sale del resumen
- * del historial de ventas.
+ * Dashboard de administracion. Los conteos de mesas, categorias, productos y
+ * usuarios salen de las mismas listas que alimentan las tablas y se muestran
+ * en sus pestañas. Las tarjetas son del dia: mas vendidos y mayor ingreso
+ * vienen de `/analytics` con el rango de hoy, y ventas y ticket promedio del
+ * resumen del historial de ventas.
  */
 export function AdminView() {
   const { user: currentUser } = useSession();
@@ -90,6 +92,12 @@ export function AdminView() {
   const usersQuery = useQuery({
     queryKey: queryKeys.users.all(),
     queryFn: () => api.get<UserResponse[]>(endpoints.users.list()),
+  });
+  /** Analitica de hoy (dia del negocio): mas vendidos por unidades y por ingreso. */
+  const todayAnalyticsQuery = useQuery({
+    queryKey: queryKeys.analytics.summary(today, today),
+    queryFn: () =>
+      api.get<AnalyticsResponse>(endpoints.analytics.summary(), { from: today, to: today }),
   });
 
   const toggleUserActiveMutation = useMutation({
@@ -167,48 +175,29 @@ export function AdminView() {
       }
       contentClassName="flex flex-col gap-6"
     >
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-        <SummaryCard
-          label="Mesas"
-          value={tablesQuery.data?.length}
-          isLoading={tablesQuery.isLoading}
-        />
-        <SummaryCard
-          label="Categorías"
-          value={categoriesQuery.data?.length}
-          isLoading={categoriesQuery.isLoading}
-        />
-        <SummaryCard
-          label="Productos"
-          value={productsQuery.data?.length}
-          isLoading={productsQuery.isLoading}
-        />
-        <SummaryCard
-          label="Usuarios"
-          value={usersQuery.data?.length}
-          isLoading={usersQuery.isLoading}
-        />
-        <Card>
-          <CardHeader>
-            <CardDescription className="eyebrow">Ventas de hoy</CardDescription>
-            <CardTitle className="text-[34px] leading-none">
-              {todaySalesQuery.isLoading ? "—" : (todaySummary?.count ?? 0)}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Total: {todaySalesQuery.isLoading ? "—" : <Money amount={todaySummary?.total ?? 0} />}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      <TodayInsights
+        analytics={todayAnalyticsQuery.data}
+        analyticsLoading={todayAnalyticsQuery.isLoading}
+        analyticsFailed={todayAnalyticsQuery.isError}
+        salesCount={todaySummary?.count}
+        salesTotal={todaySummary?.total}
+        salesLoading={todaySalesQuery.isLoading}
+      />
 
       <Tabs defaultValue="tables">
         <TabsList>
-          <TabsTrigger value="tables">Mesas</TabsTrigger>
-          <TabsTrigger value="categories">Categorías</TabsTrigger>
-          <TabsTrigger value="products">Productos</TabsTrigger>
-          <TabsTrigger value="users">Usuarios</TabsTrigger>
+          <TabsTrigger value="tables">
+            Mesas <TabCount value={tablesQuery.data?.length} />
+          </TabsTrigger>
+          <TabsTrigger value="categories">
+            Categorías <TabCount value={categoriesQuery.data?.length} />
+          </TabsTrigger>
+          <TabsTrigger value="products">
+            Productos <TabCount value={productsQuery.data?.length} />
+          </TabsTrigger>
+          <TabsTrigger value="users">
+            Usuarios <TabCount value={usersQuery.data?.length} />
+          </TabsTrigger>
           <TabsTrigger value="restaurant">Restaurante</TabsTrigger>
         </TabsList>
 
@@ -527,21 +516,122 @@ export function AdminView() {
   );
 }
 
-interface SummaryCardProps {
-  label: string;
-  value: number | undefined;
-  isLoading: boolean;
+/** Conteo junto al nombre de la pestaña; mientras carga no muestra nada. */
+function TabCount({ value }: { value: number | undefined }) {
+  if (value === undefined) {
+    return null;
+  }
+  return <span className="font-mono text-[11px] tabular-nums opacity-70">{value}</span>;
 }
 
-function SummaryCard({ label, value, isLoading }: SummaryCardProps) {
+/** Productos de mayor ingreso que se listan en su tarjeta. */
+const TOP_REVENUE_ROWS = 3;
+
+interface TodayInsightsProps {
+  analytics: AnalyticsResponse | undefined;
+  analyticsLoading: boolean;
+  analyticsFailed: boolean;
+  salesCount: number | undefined;
+  salesTotal: number | undefined;
+  salesLoading: boolean;
+}
+
+/**
+ * Indicadores del dia: el producto mas vendido por unidades, los que mas
+ * ingreso generaron, las ventas cobradas y el ticket promedio. Los conteos
+ * del catalogo viven en las pestañas; aqui solo va lo que cambia durante el
+ * turno.
+ */
+function TodayInsights({
+  analytics,
+  analyticsLoading,
+  analyticsFailed,
+  salesCount,
+  salesTotal,
+  salesLoading,
+}: TodayInsightsProps) {
+  const bestSeller = analytics?.topProducts?.[0];
+  // "Otros" agrupa la cola del Pareto: no es un producto.
+  const topRevenue = (analytics?.pareto ?? [])
+    .filter((row) => row.productName !== "Otros")
+    .slice(0, TOP_REVENUE_ROWS);
+  const count = salesCount ?? 0;
+  const total = salesTotal ?? 0;
+  const noSalesYet = "Sin ventas cobradas hoy todavía.";
+  const analyticsMessage = analyticsLoading
+    ? "—"
+    : analyticsFailed
+      ? "No se pudo cargar la analítica de hoy."
+      : noSalesYet;
+
   return (
-    <Card>
-      <CardHeader>
-        <CardDescription className="eyebrow">{label}</CardDescription>
-        <CardTitle className="text-[34px] leading-none">
-          {isLoading ? "—" : (value ?? 0)}
-        </CardTitle>
-      </CardHeader>
-    </Card>
+    <section aria-label="Indicadores de hoy" className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <Card>
+        <CardHeader>
+          <CardDescription className="eyebrow">Más vendido hoy</CardDescription>
+          {bestSeller ? (
+            <>
+              <CardTitle className="text-[26px] leading-tight text-balance">{bestSeller.productName}</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                {bestSeller.quantity} {bestSeller.quantity === 1 ? "unidad" : "unidades"} ·{" "}
+                <Money amount={bestSeller.revenue} />
+              </p>
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">{analyticsMessage}</p>
+          )}
+        </CardHeader>
+      </Card>
+
+      <Card className="md:col-span-2 xl:col-span-1">
+        <CardHeader>
+          <CardDescription className="eyebrow">Mayor ingreso hoy</CardDescription>
+          {topRevenue.length > 0 ? (
+            <ol className="mt-1 flex flex-col gap-2">
+              {topRevenue.map((row, index) => (
+                <li key={row.productName} className="flex items-baseline justify-between gap-3 text-sm">
+                  <span className="min-w-0 truncate">
+                    <span className="font-mono text-[11px] text-muted-foreground tabular-nums">{index + 1}.</span>{" "}
+                    {row.productName}
+                  </span>
+                  <span className="shrink-0 tabular-nums">
+                    <Money amount={row.revenue} />
+                    <span className="ml-1.5 text-xs text-muted-foreground">{Math.round(row.revenueShare)}%</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="text-sm text-muted-foreground">{analyticsMessage}</p>
+          )}
+        </CardHeader>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardDescription className="eyebrow">Ventas de hoy</CardDescription>
+          <CardTitle className="text-[34px] leading-none tabular-nums">{salesLoading ? "—" : count}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Cobrado: {salesLoading ? "—" : <Money amount={total} />}
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardDescription className="eyebrow">Ticket promedio hoy</CardDescription>
+          <CardTitle className="text-[34px] leading-none tabular-nums">
+            {salesLoading ? "—" : count > 0 ? <Money amount={total / count} /> : "—"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            {count > 0 ? `Sobre ${count} ${count === 1 ? "venta" : "ventas"}.` : noSalesYet}
+          </p>
+        </CardContent>
+      </Card>
+    </section>
   );
 }

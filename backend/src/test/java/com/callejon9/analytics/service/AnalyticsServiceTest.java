@@ -2,6 +2,7 @@ package com.callejon9.analytics.service;
 
 import com.callejon9.analytics.repository.AnalyticsRepository;
 import com.callejon9.analytics.web.dto.AnalyticsResponse;
+import com.callejon9.analytics.web.dto.TopProductRow;
 import com.callejon9.shared.time.BusinessCalendar;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -52,5 +53,24 @@ class AnalyticsServiceTest {
         assertThat(response.salesByDay()).allMatch(row -> row.total().compareTo(BigDecimal.ZERO) == 0);
         assertThat(response.salesByDay()).allMatch(row -> row.count() == 0);
         assertThat(response.paymentMix()).isEmpty();
+        assertThat(response.topProducts()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("El ranking de más vendidos se limita a los cinco primeros, en el orden del repositorio")
+    void topProductsAreLimitedToFive() {
+        List<TopProductRow> rows = java.util.stream.IntStream.rangeClosed(1, 7)
+                .mapToObj(i -> new TopProductRow("Producto " + i, 10L - i, BigDecimal.TEN))
+                .toList();
+        when(analyticsRepository.productRevenue(any(), any())).thenReturn(List.of());
+        when(analyticsRepository.dailySales(any(), any(), any())).thenReturn(List.of());
+        when(analyticsRepository.paymentMix(any(), any())).thenReturn(List.of());
+        when(analyticsRepository.productUnitsSold(any(), any())).thenReturn(rows);
+
+        AnalyticsResponse response = analyticsService.getAnalytics(LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 1));
+
+        assertThat(response.topProducts()).hasSize(AnalyticsService.TOP_SELLERS_LIMIT)
+                .extracting(TopProductRow::productName)
+                .containsExactly("Producto 1", "Producto 2", "Producto 3", "Producto 4", "Producto 5");
     }
 }
