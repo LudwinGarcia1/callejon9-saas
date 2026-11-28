@@ -17,6 +17,8 @@ app:
   # La demostracion corre sobre http://localhost, sin HTTPS.
   auth:
     cookie-secure: false
+  realtime:
+    allowed-origins: ${APP_ALLOWED_ORIGINS:http://localhost:3000,http://127.0.0.1:3000,http://192.168.1.98:3000}
 
 logging:
   level:

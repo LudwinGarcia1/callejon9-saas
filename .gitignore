@@ -66,3 +66,6 @@ build/
 *.tfvars
 backend.hcl
 tfplan
+
+### Scratch ###
+scratch/
