@@ -165,7 +165,7 @@ export function CreateUserDialog() {
               required
               autoComplete="new-password"
               maxLength={72}
-              aria-describedby="password-requirements"
+              aria-describedby="password-requirements create-user-password-error"
               aria-invalid={Boolean(passwordError ?? apiError?.errors?.password)}
               disabled={createMutation.isPending}
             />
@@ -174,7 +174,9 @@ export function CreateUserDialog() {
               password={password}
               personalData={personalData}
             />
-            <FieldError error={apiError} field="password" message={passwordError ?? undefined} />
+            <div id="create-user-password-error" aria-live="polite">
+              <FieldError error={apiError} field="password" message={passwordError ?? undefined} />
+            </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
