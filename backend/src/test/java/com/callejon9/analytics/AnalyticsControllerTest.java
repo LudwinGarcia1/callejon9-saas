@@ -201,6 +201,36 @@ class AnalyticsControllerTest {
     }
 
     @Test
+    @DisplayName("los mas vendidos se ordenan por unidades, no por ingreso, y suman entre ventas")
+    void topProductsAreRankedByUnitsAcrossSales() throws Exception {
+        Product taco = createProduct(tenant, "Taco", "25.00");
+        Product agua = createProduct(tenant, "Agua", "15.00");
+        Product torta = createProduct(tenant, "Torta", "40.00");
+
+        LocalDate day = LocalDate.now(BUSINESS_ZONE).minusDays(1);
+        backdateSale(tenant, checkout(waiter, cashier, table, agua, 6, "CASH"), day);   // 6 u, 90.00
+        backdateSale(tenant, checkout(waiter, cashier, table, torta, 2, "CARD"), day);  // 2 u, 80.00
+        backdateSale(tenant, checkout(waiter, cashier, table, taco, 2, "CASH"), day);   // Taco suma
+        backdateSale(tenant, checkout(waiter, cashier, table, taco, 1, "CASH"), day);   // 3 u, 75.00
+
+        mockMvc.perform(get("/api/v1/analytics")
+                        .param("from", day.toString())
+                        .param("to", day.toString())
+                        .cookie(cookieFor(admin)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.topProducts.length()").value(3))
+                .andExpect(jsonPath("$.topProducts[0].productName").value("Agua"))
+                .andExpect(jsonPath("$.topProducts[0].quantity").value(6))
+                .andExpect(jsonPath("$.topProducts[0].revenue").value(90.00))
+                .andExpect(jsonPath("$.topProducts[1].productName").value("Taco"))
+                .andExpect(jsonPath("$.topProducts[1].quantity").value(3))
+                .andExpect(jsonPath("$.topProducts[1].revenue").value(75.00))
+                .andExpect(jsonPath("$.topProducts[2].productName").value("Torta"))
+                // El Pareto sigue ordenado por ingreso: Torta (80) antes que Taco (75).
+                .andExpect(jsonPath("$.pareto[1].productName").value("Torta"));
+    }
+
+    @Test
     @DisplayName("mas de 12 productos se pliegan en una fila Otros, sin perder ingreso")
     void paretoFoldsProductsBeyondTwelveIntoOthers() throws Exception {
         LocalDate day = LocalDate.now(BUSINESS_ZONE).minusDays(2);

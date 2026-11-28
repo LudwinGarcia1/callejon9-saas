@@ -499,11 +499,20 @@ export interface PaymentMixRow {
   share: number;
 }
 
+/** Producto del ranking de mas vendidos: ordenado por unidades, no por ingreso. */
+export interface TopProductRow {
+  productName: string;
+  quantity: number;
+  revenue: number;
+}
+
 /** GET /api/v1/analytics — verificado contra AnalyticsResponse. */
 export interface AnalyticsResponse {
   pareto: ParetoRow[];
   salesByDay: SalesByDayRow[];
   paymentMix: PaymentMixRow[];
+  /** Hasta cinco productos con mas unidades vendidas del rango. */
+  topProducts: TopProductRow[];
 }
 
 /** GET /api/v1/inventory/items — verificado contra InventoryItemResponse. */

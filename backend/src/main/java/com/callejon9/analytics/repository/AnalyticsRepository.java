@@ -2,6 +2,7 @@ package com.callejon9.analytics.repository;
 
 import com.callejon9.analytics.web.dto.PaymentMixAggregate;
 import com.callejon9.analytics.web.dto.ProductRevenueAggregate;
+import com.callejon9.analytics.web.dto.TopProductRow;
 import com.callejon9.sale.domain.Sale;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -43,6 +44,23 @@ public interface AnalyticsRepository extends JpaRepository<Sale, UUID> {
             order by sum(oi.unitPrice * oi.quantity) desc
             """)
     List<ProductRevenueAggregate> productRevenue(@Param("from") Instant from, @Param("to") Instant to);
+
+    /**
+     * Unidades vendidas e ingreso por producto, de mas a menos unidades. A
+     * igualdad de unidades gana el que genero mas ingreso, y despues el
+     * nombre, para que el orden sea estable.
+     */
+    @Query("""
+            select new com.callejon9.analytics.web.dto.TopProductRow(
+                oi.productName, sum(oi.quantity), sum(oi.unitPrice * oi.quantity))
+            from Sale s
+            join com.callejon9.order.domain.OrderItem oi on oi.orderId = s.orderId
+            where s.status = com.callejon9.sale.domain.SaleStatus.COMPLETED
+              and s.createdAt >= :from and s.createdAt < :to
+            group by oi.productName
+            order by sum(oi.quantity) desc, sum(oi.unitPrice * oi.quantity) desc, oi.productName
+            """)
+    List<TopProductRow> productUnitsSold(@Param("from") Instant from, @Param("to") Instant to);
 
     /** Ingreso total del rango, el mismo universo que {@link #productRevenue}, para calcular los porcentajes del Pareto. */
     @Query("""

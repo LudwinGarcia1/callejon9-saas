@@ -8,6 +8,7 @@ import com.callejon9.analytics.web.dto.PaymentMixRow;
 import com.callejon9.analytics.web.dto.ParetoRow;
 import com.callejon9.analytics.web.dto.ProductRevenueAggregate;
 import com.callejon9.analytics.web.dto.SalesByDayRow;
+import com.callejon9.analytics.web.dto.TopProductRow;
 import com.callejon9.shared.time.BusinessCalendar;
 import com.callejon9.shared.time.InstantRange;
 import com.callejon9.shared.time.TenantCalendar;
@@ -40,6 +41,8 @@ public class AnalyticsService {
     /** Productos que se muestran individualmente en el Pareto; el resto se pliega en "Otros". */
     static final int TOP_PRODUCTS_LIMIT = 12;
     static final String OTHERS_LABEL = "Otros";
+    /** Productos del ranking de mas vendidos por unidades. */
+    static final int TOP_SELLERS_LIMIT = 5;
 
     private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
     private static final int SHARE_SCALE = 2;
@@ -64,7 +67,14 @@ public class AnalyticsService {
         return new AnalyticsResponse(
                 buildPareto(range),
                 buildSalesByDay(range, effectiveFrom, effectiveTo, calendar.zone()),
-                buildPaymentMix(range));
+                buildPaymentMix(range),
+                buildTopProducts(range));
+    }
+
+    /** Los {@value #TOP_SELLERS_LIMIT} productos con mas unidades vendidas del rango. */
+    private List<TopProductRow> buildTopProducts(InstantRange range) {
+        List<TopProductRow> rows = analyticsRepository.productUnitsSold(range.start(), range.endExclusive());
+        return rows.size() <= TOP_SELLERS_LIMIT ? rows : List.copyOf(rows.subList(0, TOP_SELLERS_LIMIT));
     }
 
     /**
