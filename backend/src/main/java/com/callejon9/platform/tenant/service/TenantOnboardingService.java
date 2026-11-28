@@ -9,6 +9,7 @@ import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.repository.TenantRepository;
 import com.callejon9.shared.error.BusinessRuleException;
 import com.callejon9.tenancy.TenantContext;
+import com.callejon9.user.domain.EmailAddress;
 import com.callejon9.user.domain.User;
 import com.callejon9.user.domain.UserRole;
 import com.callejon9.user.repository.UserRepository;
@@ -161,7 +162,7 @@ public class TenantOnboardingService {
         // @SuperBuilder), el builder no cubre campos heredados. Por eso no se
         // fija aqui: @PrePersist lo toma de TenantContext, que ya esta fijado.
         userRepository.save(User.builder()
-                .email(adminEmail)
+                .email(EmailAddress.normalize(adminEmail))
                 .passwordHash(passwordEncoder.encode(rawPassword))
                 .fullName(adminFullName)
                 .role(UserRole.ADMIN)

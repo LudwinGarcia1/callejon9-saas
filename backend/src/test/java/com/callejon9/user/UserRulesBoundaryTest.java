@@ -10,7 +10,6 @@ import jakarta.servlet.http.Cookie;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -249,7 +248,6 @@ class UserRulesBoundaryTest {
                     .andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors.fullName").exists());
         }
 
-        @Disabled("CAL-180: el correo distingue mayúsculas; se activa con la corrección")
         @Test
         @DisplayName("Inválido: un correo que solo cambia en mayúsculas es el mismo usuario y da 409")
         void emailDifferingOnlyInCaseIsADuplicate() throws Exception {
@@ -259,13 +257,40 @@ class UserRulesBoundaryTest {
                     .andExpect(status().isConflict());
         }
 
-        @Disabled("CAL-180: el correo distingue mayúsculas; se activa con la corrección")
         @Test
         @DisplayName("Válido: un usuario creado con mayúsculas en el correo entra con el correo en minúsculas, como lo envía la app móvil")
         void userCreatedWithUppercaseEmailLogsInWithLowercase() throws Exception {
             createdId(createUser("Ana.Caja@Usuarios-Borde.com", "Ana Caja", "CASHIER", PASSWORD));
 
             login("ana.caja@usuarios-borde.com").andExpect(status().isOk());
+        }
+
+        @Test
+        @DisplayName("Válido: el correo se guarda en minúsculas y el login acepta cualquier combinación de mayúsculas")
+        void emailIsStoredNormalizedAndLoginIgnoresCase() throws Exception {
+            createUser("Pedro.Cocina@Usuarios-Borde.com", "Pedro Cocina", "KITCHEN", PASSWORD)
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.email").value("pedro.cocina@usuarios-borde.com"));
+
+            login("PEDRO.COCINA@USUARIOS-BORDE.COM").andExpect(status().isOk());
+        }
+
+        @Test
+        @DisplayName("Válido: el administrador dado de alta con mayúsculas entra con el correo en minúsculas")
+        void onboardedAdminWithUppercaseEmailLogsInWithLowercase() throws Exception {
+            String slug = "usuarios-borde-alta";
+            try {
+                onboardingService.onboard("Usuarios Borde Alta", slug,
+                        "Duena.Local@Usuarios-Borde.com", "Duena Local", PASSWORD, "FREE");
+
+                mockMvc.perform(post("/api/v1/auth/login")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"slug\":\"" + slug + "\",\"email\":\"duena.local@usuarios-borde.com\","
+                                        + "\"password\":\"" + PASSWORD + "\"}"))
+                        .andExpect(status().isOk());
+            } finally {
+                jdbcTemplate.update("DELETE FROM tenants WHERE slug = ?", slug);
+            }
         }
     }
 }
