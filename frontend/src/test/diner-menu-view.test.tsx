@@ -23,7 +23,19 @@ describe("DinerMenuView (Auto-pedido y Menú QR)", () => {
 
     expect(screen.getByText("los taquitos")).toBeDefined();
     expect(screen.getByText("Mesa 5")).toBeDefined();
-    expect(screen.getByText("RestoHub")).toBeDefined();
+    expect(screen.getAllByText(/RestoHub/i)[0]).toBeDefined();
+  });
+
+  it("abre el modal de detalle del platillo con notas sugeridas al hacer clic en un platillo", () => {
+    render(<DinerMenuView slug="los-taquitos" tableNumber="5" initialMenuItems={DEFAULT_MENU_ITEMS} />);
+
+    // Tocar el primer platillo
+    const itemCards = screen.getAllByText("Guacamole Tradicional con Totopos");
+    fireEvent.click(itemCards[0]);
+
+    // Debe abrir el modal con el título y las notas sugeridas
+    expect(screen.getByText("Personalización rápida (toca para agregar nota):")).toBeDefined();
+    expect(screen.getByRole("button", { name: /agregar a la orden/i })).toBeDefined();
   });
 
   it("permite agregar productos a la comanda y actualiza la barra flotante", () => {
