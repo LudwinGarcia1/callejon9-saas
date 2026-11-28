@@ -304,6 +304,7 @@ Delivery y rastreo en vivo; aprendizaje automático (K-means, RandomForest, Apri
 |---|---|---|
 | CAL-180: el correo distingue mayúsculas al iniciar sesión y al validar duplicados | Bajo: `Ana@…` y `ana@…` cuentan como cuentas distintas; el usuario debe escribirlo igual que al darse de alta | Requiere normalizar los correos existentes con una migración. Las dos pruebas que lo cubren están marcadas `@Disabled` con la referencia y se activan con la corrección |
 | `GET /orders` y `GET /orders/{id}` permiten a mesero, caja y administración leer cualquier comanda de su restaurante, no solo las propias | Bajo: no cruza restaurantes, que lo impide RLS | Caja y cocina necesitan ver las comandas de todos los meseros |
+| Llamar al mesero desde el menú QR o la app de clientes responde «Mesero notificado», pero el backend solo lo registra en el log | Medio: el comensal cree que avisó y nadie recibe el aviso | Detectado al preparar el video final (27 de noviembre). Falta publicarlo por WebSocket a meseros y caja, o enviarlo como push |
 | No hay cambio de contraseña por el propio usuario ni recuperación por correo | Medio: un administrador debe restablecerla | Requiere un servicio de correo transaccional, fuera del alcance |
 | La web corre en plan F1 de App Service | Medio: Azure descarga la app inactiva y limita la CPU a 60 minutos al día | Costo; para el SLA hace falta B1 (ver `docs/entregas/`) |
 
