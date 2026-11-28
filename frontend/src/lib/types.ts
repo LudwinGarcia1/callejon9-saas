@@ -302,6 +302,26 @@ export interface CheckoutRequest {
   tipPercent: number;
 }
 
+export interface PreferenceResponse {
+  preferenceId: string;
+  initPoint: string;
+  sandboxInitPoint: string;
+  qrCode: string;
+  externalReference: string;
+  total: number;
+  folio: string;
+  isMock: boolean;
+}
+
+export interface PaymentStatusResponse {
+  orderId: string;
+  folio: string;
+  status: string;
+  paid: boolean;
+  ticketFolio: string | null;
+  closedAt: string | null;
+}
+
 export interface PaymentRequest {
   method: Exclude<PaymentMethod, "MIXED">;
   amount: number;

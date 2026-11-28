@@ -12,6 +12,7 @@ import lombok.*;
 public class Payment extends TenantScopedEntity {
     @Column(name = "sale_id", nullable = false) private UUID saleId;
     @Column(nullable = false) private String provider;
+    @Column(name = "provider_payment_id") private String providerPaymentId;
     @Enumerated(EnumType.STRING) @Column(nullable = false) private PaymentMethod method;
     @Column(nullable = false) private BigDecimal amount;
     @Column(name = "received_amount", nullable = false) private BigDecimal receivedAmount;

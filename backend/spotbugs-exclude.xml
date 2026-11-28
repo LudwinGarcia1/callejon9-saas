@@ -24,4 +24,13 @@
         <Class name="com.callejon9.config.SecurityConfig"/>
         <Bug pattern="SPRING_CSRF_PROTECTION_DISABLED"/>
     </Match>
+
+    <!--
+      En la integracion con Mercado Pago los logs registran identificadores de webhook
+      y referencias externas para trazabilidad operativa de pagos.
+    -->
+    <Match>
+        <Package name="~com\.callejon9\.payment(\..*)?"/>
+        <Bug pattern="CRLF_INJECTION_LOGS,REC_CATCH_EXCEPTION"/>
+    </Match>
 </FindBugsFilter>

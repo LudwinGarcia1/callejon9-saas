@@ -4,6 +4,7 @@ import com.callejon9.sale.domain.Sale;
 import com.callejon9.sale.web.dto.SaleHistoryRow;
 import com.callejon9.sale.web.dto.SaleHistorySummary;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,8 @@ import org.springframework.data.repository.query.Param;
  * limitan las filas visibles al tenant activo.
  */
 public interface SaleRepository extends JpaRepository<Sale, UUID> {
+
+    Optional<Sale> findByOrderId(UUID orderId);
 
     /**
      * Historial de ventas para el rango [from, to) solicitado, mas reciente
