@@ -11,6 +11,7 @@ public class MercadoPagoProperties {
     private String publicKey = "";
     private String webhookSecret = "";
     private boolean mockEnabled = true;
+    private boolean sandbox = true;
     private String baseUrl = "https://api.mercadopago.com";
     private String frontendBaseUrl = "http://localhost:3000";
     private String backendBaseUrl = "http://localhost:8080";
@@ -45,6 +46,14 @@ public class MercadoPagoProperties {
 
     public void setMockEnabled(boolean mockEnabled) {
         this.mockEnabled = mockEnabled;
+    }
+
+    public boolean isSandbox() {
+        return sandbox;
+    }
+
+    public void setSandbox(boolean sandbox) {
+        this.sandbox = sandbox;
     }
 
     public String getBaseUrl() {

@@ -11,6 +11,7 @@ import com.callejon9.payment.service.MercadoPagoService;
 import com.callejon9.payment.web.dto.CreatePreferenceRequest;
 import com.callejon9.payment.web.dto.PaymentStatusResponse;
 import com.callejon9.payment.web.dto.PreferenceResponse;
+import com.callejon9.payment.web.dto.SyncPaymentRequest;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.repository.TenantRepository;
 import com.callejon9.shared.error.BusinessRuleException;
@@ -87,7 +88,7 @@ public class PublicMercadoPagoController {
         Tenant tenant = tenantRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("El restaurante '" + slug + "' no existe."));
 
-        return TenantContext.callAs(tenant.getId(), () -> {
+        return TenantContext.callAs(tenant.getId(), () -> transactionTemplate.execute(status -> {
             RestaurantTable table = tableRepository.findByNumber(tableNumber)
                     .orElseThrow(() -> new ResourceNotFoundException("La mesa " + tableNumber + " no existe."));
 
@@ -105,7 +106,7 @@ public class PublicMercadoPagoController {
                     tenant.getSlug(),
                     tableNumber
             );
-        });
+        }));
     }
 
     @GetMapping("/{slug}/tables/{tableNumber}/payment-status")
@@ -116,7 +117,7 @@ public class PublicMercadoPagoController {
         Tenant tenant = tenantRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("El restaurante '" + slug + "' no existe."));
 
-        return TenantContext.callAs(tenant.getId(), () -> {
+        return TenantContext.callAs(tenant.getId(), () -> transactionTemplate.execute(status -> {
             RestaurantTable table = tableRepository.findByNumber(tableNumber)
                     .orElseThrow(() -> new ResourceNotFoundException("La mesa " + tableNumber + " no existe."));
 
@@ -125,7 +126,7 @@ public class PublicMercadoPagoController {
                     .orElseThrow(() -> new ResourceNotFoundException("No se encontró ninguna orden para la mesa " + tableNumber));
 
             return mercadoPagoService.getPaymentStatus(tenant.getId(), order.getId());
-        });
+        }));
     }
 
     @PostMapping("/{slug}/tables/{tableNumber}/mercadopago/simulate-approval")
@@ -137,7 +138,7 @@ public class PublicMercadoPagoController {
         Tenant tenant = tenantRepository.findBySlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("El restaurante '" + slug + "' no existe."));
 
-        return TenantContext.callAs(tenant.getId(), () -> {
+        return TenantContext.callAs(tenant.getId(), () -> transactionTemplate.execute(status -> {
             RestaurantTable table = tableRepository.findByNumber(tableNumber)
                     .orElseThrow(() -> new ResourceNotFoundException("La mesa " + tableNumber + " no existe."));
 
@@ -147,6 +148,29 @@ public class PublicMercadoPagoController {
 
             var tipPercent = request != null ? request.tipPercent() : null;
             return mercadoPagoService.simulateApproval(tenant.getId(), order.getId(), tipPercent);
-        });
+        }));
+    }
+
+    @PostMapping("/{slug}/tables/{tableNumber}/mercadopago/sync")
+    public PaymentStatusResponse syncTablePayment(
+            @PathVariable String slug,
+            @PathVariable int tableNumber,
+            @RequestBody(required = false) SyncPaymentRequest request) {
+
+        Tenant tenant = tenantRepository.findBySlug(slug)
+                .orElseThrow(() -> new ResourceNotFoundException("El restaurante '" + slug + "' no existe."));
+
+        return TenantContext.callAs(tenant.getId(), () -> transactionTemplate.execute(status -> {
+            RestaurantTable table = tableRepository.findByNumber(tableNumber)
+                    .orElseThrow(() -> new ResourceNotFoundException("La mesa " + tableNumber + " no existe."));
+
+            List<OrderStatus> allStatuses = List.of(OrderStatus.NEW, OrderStatus.SENT, OrderStatus.READY, OrderStatus.PAID);
+            Order order = orderRepository.findFirstByTableIdAndStatusInOrderByOpenedAtDesc(table.getId(), allStatuses)
+                    .orElseThrow(() -> new ResourceNotFoundException("No se encontró ninguna orden para la mesa " + tableNumber));
+
+            String paymentId = request != null ? request.paymentId() : null;
+            String externalReference = request != null ? request.externalReference() : null;
+            return mercadoPagoService.syncPayment(tenant.getId(), order.getId(), paymentId, externalReference);
+        }));
     }
 }

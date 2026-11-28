@@ -58,6 +58,7 @@ export const endpoints = {
     checkout: (orderId: string) => `/api/v1/orders/${orderId}/checkout`,
     mercadopagoPreference: (orderId: string) => `/api/v1/orders/${orderId}/mercadopago/preference`,
     paymentStatus: (orderId: string) => `/api/v1/orders/${orderId}/payment-status`,
+    mercadopagoSync: (orderId: string) => `/api/v1/orders/${orderId}/mercadopago/sync`,
     mercadopagoSimulate: (orderId: string) => `/api/v1/orders/${orderId}/mercadopago/simulate-approval`,
     cancel: (orderId: string) => `/api/v1/orders/${orderId}/cancel`,
   },
@@ -109,7 +110,12 @@ export const endpoints = {
       `/api/v1/public/${slug}/tables/${tableNumber}/mercadopago/preference`,
     paymentStatus: (slug: string, tableNumber: string | number) =>
       `/api/v1/public/${slug}/tables/${tableNumber}/payment-status`,
+    mercadopagoSync: (slug: string, tableNumber: string | number) =>
+      `/api/v1/public/${slug}/tables/${tableNumber}/mercadopago/sync`,
     mercadopagoSimulate: (slug: string, tableNumber: string | number) =>
       `/api/v1/public/${slug}/tables/${tableNumber}/mercadopago/simulate-approval`,
+  },
+  webhooks: {
+    mercadopago: () => "/api/v1/webhooks/mercadopago",
   },
 };

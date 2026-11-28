@@ -216,6 +216,7 @@ public class CheckoutService {
         paymentRepository.save(com.callejon9.sale.domain.Payment.builder()
                 .saleId(sale.getId())
                 .provider("MERCADOPAGO")
+                .providerPaymentId(providerPaymentId)
                 .method(paymentMethod)
                 .amount(total)
                 .receivedAmount(total)

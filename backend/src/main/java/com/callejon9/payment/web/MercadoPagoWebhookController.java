@@ -34,7 +34,7 @@ public class MercadoPagoWebhookController {
         log.info("Webhook recibido de Mercado Pago: body={} params={} requestId={}", body, queryParams, requestId);
 
         try {
-            boolean processed = mercadoPagoService.processWebhook(body, queryParams);
+            boolean processed = mercadoPagoService.processWebhook(body, queryParams, signature, requestId);
             return ResponseEntity.ok(Map.of("status", "received", "processed", processed));
         } catch (Exception e) {
             log.error("Error al procesar webhook de Mercado Pago: {}", e.getMessage(), e);

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
-import { CheckCircle2Icon, ExternalLinkIcon, Loader2Icon, SparklesIcon, XIcon } from "lucide-react";
+import { CheckCircle2Icon, ExternalLinkIcon, Loader2Icon, RefreshCwIcon, SparklesIcon, XIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Money } from "@/components/shared/money";
@@ -34,9 +34,10 @@ export function MercadoPagoQrModal({
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [paid, setPaid] = useState(false);
   const [simulating, setSimulating] = useState(false);
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
-    if (!isOpen) {
+    if (!isOpen || (!orderId && !(publicSlug && publicTableNumber))) {
       setPreference(null);
       setQrDataUrl(null);
       setPaid(false);
@@ -82,17 +83,27 @@ export function MercadoPagoQrModal({
     };
   }, [isOpen, orderId, tipPercent, publicSlug, publicTableNumber]);
 
-  // Polling para detectar cuando el webhook de Mercado Pago apruebe la orden
+  // Polling para detectar cuando el webhook o Mercado Pago apruebe la orden
   useEffect(() => {
     if (!isOpen || paid || !preference) return;
 
     const interval = setInterval(async () => {
       try {
-        const statusEndpoint = publicSlug && publicTableNumber
-          ? endpoints.publicMenu.paymentStatus(publicSlug, publicTableNumber)
-          : endpoints.orders.paymentStatus(orderId);
+        let res: PaymentStatusResponse;
+        if (preference.isMock) {
+          const statusEndpoint = publicSlug && publicTableNumber
+            ? endpoints.publicMenu.paymentStatus(publicSlug, publicTableNumber)
+            : endpoints.orders.paymentStatus(orderId);
+          res = await api.get<PaymentStatusResponse>(statusEndpoint);
+        } else {
+          const syncEndpoint = publicSlug && publicTableNumber
+            ? endpoints.publicMenu.mercadopagoSync(publicSlug, publicTableNumber)
+            : endpoints.orders.mercadopagoSync(orderId);
+          res = await api.post<PaymentStatusResponse>(syncEndpoint, {
+            externalReference: preference.externalReference,
+          });
+        }
 
-        const res = await api.get<PaymentStatusResponse>(statusEndpoint);
         if (res.paid) {
           setPaid(true);
           toast.success(`¡Pago recibido con Mercado Pago! Folio: ${res.ticketFolio || res.folio}`);
@@ -108,6 +119,33 @@ export function MercadoPagoQrModal({
 
     return () => clearInterval(interval);
   }, [isOpen, paid, preference, orderId, publicSlug, publicTableNumber, onPaid, onClose]);
+
+  async function handleManualCheck() {
+    if (!preference || paid || checking) return;
+    setChecking(true);
+    try {
+      const syncEndpoint = publicSlug && publicTableNumber
+        ? endpoints.publicMenu.mercadopagoSync(publicSlug, publicTableNumber)
+        : endpoints.orders.mercadopagoSync(orderId);
+      const res = await api.post<PaymentStatusResponse>(syncEndpoint, {
+        externalReference: preference.externalReference,
+      });
+      if (res.paid) {
+        setPaid(true);
+        toast.success(`¡Pago recibido con Mercado Pago! Folio: ${res.ticketFolio || res.folio}`);
+        setTimeout(() => {
+          onPaid();
+          onClose();
+        }, 1800);
+      } else {
+        toast.info("Aún no detectamos el pago aprobado en Mercado Pago. Si ya lo completaste, dale unos segundos.");
+      }
+    } catch {
+      toast.error("No se pudo verificar el estado en Mercado Pago");
+    } finally {
+      setChecking(false);
+    }
+  }
 
   async function handleSimulate() {
     setSimulating(true);
@@ -206,7 +244,7 @@ export function MercadoPagoQrModal({
                   </Button>
                 </a>
 
-                {preference.isMock && (
+                {preference.isMock ? (
                   <Button
                     onClick={handleSimulate}
                     disabled={simulating}
@@ -214,6 +252,16 @@ export function MercadoPagoQrModal({
                   >
                     <SparklesIcon className="w-3.5 h-3.5" />
                     {simulating ? "Simulando aprobación..." : "Simular Aprobación (Modo Demo)"}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleManualCheck}
+                    disabled={checking || paid}
+                    variant="outline"
+                    className="w-full border-neutral-700 text-neutral-200 hover:bg-neutral-800 h-10 text-xs font-semibold gap-1.5"
+                  >
+                    <RefreshCwIcon className={`w-3.5 h-3.5 ${checking ? "animate-spin" : ""}`} />
+                    {checking ? "Verificando en Mercado Pago..." : "Ya pagué / Verificar ahora"}
                   </Button>
                 )}
               </div>

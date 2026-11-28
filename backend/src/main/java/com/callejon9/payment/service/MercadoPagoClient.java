@@ -72,22 +72,28 @@ public class MercadoPagoClient {
                     "currency_id", "MXN"
             );
 
-            Map<String, String> backUrls = Map.of(
-                    "success", successBackUrl,
-                    "failure", successBackUrl + "?payment=failure",
-                    "pending", successBackUrl + "?payment=pending"
-            );
+            Map<String, Object> requestPayload = new java.util.HashMap<>();
+            requestPayload.put("items", List.of(item));
+            requestPayload.put("external_reference", externalReference);
+            requestPayload.put("statement_descriptor", "RESTOHUB");
 
-            String notificationUrl = properties.getBackendBaseUrl() + "/api/v1/webhooks/mercadopago";
+            // Mercado Pago exige que back_urls y notification_url sean HTTPS publicos y no localhost.
+            if (successBackUrl != null && successBackUrl.startsWith("https://")
+                    && !successBackUrl.contains("localhost") && !successBackUrl.contains("127.0.0.1")) {
+                Map<String, String> backUrls = Map.of(
+                        "success", successBackUrl,
+                        "failure", successBackUrl + "?payment=failure",
+                        "pending", successBackUrl + "?payment=pending"
+                );
+                requestPayload.put("back_urls", backUrls);
+                requestPayload.put("auto_return", "approved");
+            }
 
-            Map<String, Object> requestPayload = Map.of(
-                    "items", List.of(item),
-                    "external_reference", externalReference,
-                    "back_urls", backUrls,
-                    "auto_return", "approved",
-                    "notification_url", notificationUrl,
-                    "statement_descriptor", "RESTOHUB"
-            );
+            String backendBaseUrl = properties.getBackendBaseUrl();
+            if (backendBaseUrl != null && backendBaseUrl.startsWith("https://")
+                    && !backendBaseUrl.contains("localhost") && !backendBaseUrl.contains("127.0.0.1")) {
+                requestPayload.put("notification_url", backendBaseUrl + "/api/v1/webhooks/mercadopago");
+            }
 
             String responseBody = restClient.post()
                     .uri(properties.getBaseUrl() + "/checkout/preferences")
@@ -102,11 +108,15 @@ public class MercadoPagoClient {
             String initPoint = root.path("init_point").asText();
             String sandboxInitPoint = root.path("sandbox_init_point").asText(initPoint);
 
+            String effectiveUrl = (properties.isSandbox() && sandboxInitPoint != null && !sandboxInitPoint.isBlank())
+                    ? sandboxInitPoint
+                    : initPoint;
+
             return new PreferenceResponse(
                     id,
-                    initPoint,
+                    effectiveUrl,
                     sandboxInitPoint,
-                    initPoint,
+                    effectiveUrl,
                     externalReference,
                     total,
                     folio,
@@ -133,6 +143,32 @@ public class MercadoPagoClient {
             return objectMapper.readTree(response);
         } catch (Exception e) {
             log.error("Error al consultar pago {} en Mercado Pago: {}", paymentId, e.getMessage());
+            return null;
+        }
+    }
+
+    public JsonNode findPaymentByExternalReference(String externalReference) {
+        if (properties.isMockEnabled() || externalReference == null || externalReference.isBlank()) {
+            return null;
+        }
+
+        try {
+            String encodedRef = URLEncoder.encode(externalReference, StandardCharsets.UTF_8);
+            String response = restClient.get()
+                    .uri(properties.getBaseUrl() + "/v1/payments/search?external_reference=" + encodedRef
+                            + "&sort=date_created&criteria=desc&limit=1")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + properties.getAccessToken())
+                    .retrieve()
+                    .body(String.class);
+
+            JsonNode root = objectMapper.readTree(response);
+            JsonNode results = root.path("results");
+            if (results.isArray() && !results.isEmpty()) {
+                return results.get(0);
+            }
+            return null;
+        } catch (Exception e) {
+            log.error("Error al buscar pago por external_reference {}: {}", externalReference, e.getMessage());
             return null;
         }
     }

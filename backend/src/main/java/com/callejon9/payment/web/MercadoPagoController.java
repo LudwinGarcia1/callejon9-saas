@@ -6,6 +6,7 @@ import com.callejon9.payment.service.MercadoPagoService;
 import com.callejon9.payment.web.dto.CreatePreferenceRequest;
 import com.callejon9.payment.web.dto.PaymentStatusResponse;
 import com.callejon9.payment.web.dto.PreferenceResponse;
+import com.callejon9.payment.web.dto.SyncPaymentRequest;
 import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.repository.TenantRepository;
 import com.callejon9.shared.error.ResourceNotFoundException;
@@ -16,6 +17,7 @@ import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,16 +34,19 @@ public class MercadoPagoController {
     private final OrderRepository orderRepository;
     private final TenantRepository tenantRepository;
     private final RestaurantTableRepository tableRepository;
+    private final TransactionTemplate transactionTemplate;
 
     public MercadoPagoController(
             MercadoPagoService mercadoPagoService,
             OrderRepository orderRepository,
             TenantRepository tenantRepository,
-            RestaurantTableRepository tableRepository) {
+            RestaurantTableRepository tableRepository,
+            TransactionTemplate transactionTemplate) {
         this.mercadoPagoService = mercadoPagoService;
         this.orderRepository = orderRepository;
         this.tenantRepository = tenantRepository;
         this.tableRepository = tableRepository;
+        this.transactionTemplate = transactionTemplate;
     }
 
     @PostMapping("/{orderId}/mercadopago/preference")
@@ -52,29 +57,32 @@ public class MercadoPagoController {
             @Valid @RequestBody(required = false) CreatePreferenceRequest request) {
 
         UUID tenantId = TenantContext.require();
-        Tenant tenant = tenantRepository.findById(tenantId)
-                .orElseThrow(() -> new ResourceNotFoundException("El restaurante no existe."));
 
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new ResourceNotFoundException("La orden " + orderId + " no existe."));
+        return transactionTemplate.execute(status -> {
+            Tenant tenant = tenantRepository.findById(tenantId)
+                    .orElseThrow(() -> new ResourceNotFoundException("El restaurante no existe."));
 
-        Integer tableNumber = null;
-        if (order.getTableId() != null) {
-            tableNumber = tableRepository.findById(order.getTableId())
-                    .map(RestaurantTable::getNumber)
-                    .orElse(null);
-        }
+            Order order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new ResourceNotFoundException("La orden " + orderId + " no existe."));
 
-        var tipPercent = request != null ? request.tipPercent() : null;
+            Integer tableNumber = null;
+            if (order.getTableId() != null) {
+                tableNumber = tableRepository.findById(order.getTableId())
+                        .map(RestaurantTable::getNumber)
+                        .orElse(null);
+            }
 
-        return mercadoPagoService.createPreferenceForOrder(
-                tenantId,
-                orderId,
-                tipPercent,
-                tenant.getName(),
-                tenant.getSlug(),
-                tableNumber
-        );
+            var tipPercent = request != null ? request.tipPercent() : null;
+
+            return mercadoPagoService.createPreferenceForOrder(
+                    tenantId,
+                    orderId,
+                    tipPercent,
+                    tenant.getName(),
+                    tenant.getSlug(),
+                    tableNumber
+            );
+        });
     }
 
     @GetMapping("/{orderId}/payment-status")
@@ -93,5 +101,17 @@ public class MercadoPagoController {
         UUID tenantId = TenantContext.require();
         var tipPercent = request != null ? request.tipPercent() : null;
         return mercadoPagoService.simulateApproval(tenantId, orderId, tipPercent);
+    }
+
+    @PostMapping("/{orderId}/mercadopago/sync")
+    @PreAuthorize("hasAnyRole('CASHIER','ADMIN','WAITER')")
+    public PaymentStatusResponse syncPayment(
+            @PathVariable UUID orderId,
+            @RequestBody(required = false) SyncPaymentRequest request) {
+
+        UUID tenantId = TenantContext.require();
+        String paymentId = request != null ? request.paymentId() : null;
+        String externalReference = request != null ? request.externalReference() : null;
+        return mercadoPagoService.syncPayment(tenantId, orderId, paymentId, externalReference);
     }
 }
