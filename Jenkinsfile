@@ -92,6 +92,7 @@ pipeline {
             post {
                 always {
                     junit testResults: 'backend/target/surefire-reports/*.xml', allowEmptyResults: true
+                    archiveArtifacts artifacts: 'backend/target/openapi.json', allowEmptyArchive: true
                 }
             }
         }

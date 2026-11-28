@@ -1,5 +1,12 @@
 package com.callejon9.config;
 
+import com.fasterxml.jackson.databind.cfg.JsonNodeFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -8,6 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.hasSize;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -16,6 +24,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class OpenApiConfigTest {
+    private static final JsonMapper CONTRACT_JSON = JsonMapper.builder()
+            .enable(JsonNodeFeature.WRITE_PROPERTIES_SORTED)
+            .build();
+
     @Autowired private MockMvc mockMvc;
 
     @Test
@@ -25,5 +37,41 @@ class OpenApiConfigTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.servers", hasSize(1)))
                 .andExpect(jsonPath("$.servers[0].url").value("/"));
+    }
+
+    @Test
+    void generatedContractMatchesVersionedDocument() throws Exception {
+        String document = mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paths").isNotEmpty())
+                .andReturn()
+                .getResponse()
+                .getContentAsString(StandardCharsets.UTF_8);
+        Path generated = Path.of("target", "openapi.json");
+        Path versioned = Path.of("..", "docs", "api", "openapi.json");
+        Files.createDirectories(generated.getParent());
+        String canonical = CONTRACT_JSON.writerWithDefaultPrettyPrinter()
+                .writeValueAsString(CONTRACT_JSON.readTree(document));
+        Files.writeString(generated, canonical.replace("\r\n", "\n") + "\n");
+
+        if (Boolean.getBoolean("openapi.update")) {
+            Files.copy(generated, versioned, StandardCopyOption.REPLACE_EXISTING);
+            return;
+        }
+
+        String[] expected = Files.readAllLines(versioned).toArray(String[]::new);
+        String[] actual = Files.readAllLines(generated).toArray(String[]::new);
+        int difference = Arrays.mismatch(expected, actual);
+        if (difference >= 0) {
+            fail("El contrato OpenAPI difiere en la línea " + (difference + 1)
+                    + "\nVersionado: " + lineAt(expected, difference)
+                    + "\nGenerado:   " + lineAt(actual, difference)
+                    + "\nComparar " + versioned + " con " + generated
+                    + ". Para actualizarlo, consulta docs/api/README.md.");
+        }
+    }
+
+    private static String lineAt(String[] lines, int index) {
+        return index < lines.length ? lines[index] : "(fin del archivo)";
     }
 }
