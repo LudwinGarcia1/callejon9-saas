@@ -85,6 +85,30 @@ describe("DinerMenuView (Auto-pedido y Menú QR)", () => {
     post.mockRestore();
   });
 
+  it("permite alternar entre modo oscuro y modo claro con el botón de tema", () => {
+    render(<DinerMenuView slug="los-taquitos" tableNumber="5" initialMenuItems={DEFAULT_MENU_ITEMS} />);
+
+    const themeToggleBtn = screen.getByRole("button", { name: /cambiar a modo claro/i });
+    expect(themeToggleBtn).toBeDefined();
+
+    // Cambiar a modo claro
+    fireEvent.click(themeToggleBtn);
+
+    // El botón ahora debe ofrecer cambiar a modo oscuro
+    expect(screen.getByRole("button", { name: /cambiar a modo oscuro/i })).toBeDefined();
+  });
+
+  it("muestra sugerencias de maridaje culinario dentro del modal de detalle de platillo", () => {
+    render(<DinerMenuView slug="los-taquitos" tableNumber="5" initialMenuItems={DEFAULT_MENU_ITEMS} />);
+
+    // Tocar el primer platillo
+    const itemCards = screen.getAllByText("Guacamole Tradicional con Totopos");
+    fireEvent.click(itemCards[0]);
+
+    // Debe mostrar la sección de maridaje sugerido
+    expect(screen.getByText(/¿Algo refrescante para beber\?/i)).toBeDefined();
+  });
+
   it("permite pedir la cuenta y notifica a caja", async () => {
     const { toast } = await import("sonner");
     render(<DinerMenuView slug="los-taquitos" tableNumber="8" />);
