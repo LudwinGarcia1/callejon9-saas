@@ -1,6 +1,6 @@
 # Evidencia de prueba · CAL-122 — UT · Usuarios y roles
 
-> **v1.** Ejecución completa con el alcance ajustado del 2026-10-22 (sección 4); pendiente de revisión por otro integrante (sección 10). Defecto registrado en Linear: CAL-180 (C06).
+> **v1.** Ejecución completa con el alcance ajustado del 2026-10-22 (sección 4); pendiente de revisión por otro integrante (sección 10). Defecto registrado en Linear: CAL-180 (C06). **Re-prueba del 2026-11-27:** C06 pasa con la corrección de CAL-180 ([PR #142](https://github.com/LudwinGarcia1/callejon9-saas/pull/142)); ver la sección 7.
 
 ## 1. Identificación
 
@@ -184,7 +184,9 @@ Todas las horas en `America/Mexico_City`, formato `AAAA-MM-DD HH:MM`.
 
 | ID | Caso | Severidad | Descripción breve | Estado | Re-probado el |
 |---|---|---|---|---|---|
-| [CAL-180](https://linear.app/callejon19/issue/CAL-180/el-correo-de-los-usuarios-distingue-mayusculas-y-bloquea-el-login) | C06 | Media | El correo distingue mayúsculas: se duplican usuarios y uno creado con mayúsculas no entra desde la app móvil | Abierto | — |
+| [CAL-180](https://linear.app/callejon19/issue/CAL-180/el-correo-de-los-usuarios-distingue-mayusculas-y-bloquea-el-login) | C06 | Media | El correo distingue mayúsculas: se duplican usuarios y uno creado con mayúsculas no entra desde la app móvil | Corregido en [PR #142](https://github.com/LudwinGarcia1/callejon9-saas/pull/142), pendiente de merge | 2026-11-27 |
+
+**Re-prueba de C06 (2026-11-27).** Rama `fix/cal-180-correo-sin-mayusculas`, commit `d467cde`, JDK 21 y PostgreSQL 16 con Testcontainers. Se quitó el `@Disabled` de las dos pruebas de C06 y pasan, junto con dos casos nuevos: el correo se guarda en minúsculas y el login acepta cualquier combinación de mayúsculas, y el administrador dado de alta con mayúsculas entra en minúsculas. `UserRulesBoundaryTest` queda en 25 casos sin omitidos. `EmailCaseMigrationTest` comprueba que la migración V16 normaliza los correos existentes y resuelve los duplicados por mayúsculas. `.\mvnw.cmd -B verify`: 843 pruebas, 0 fallas, 0 omitidas, SpotBugs sin hallazgos. El resumen de la sección 8 conserva el resultado de la ejecución original del 2026-10-22.
 
 **Hallazgo para producto (no es defecto).** Un usuario desactivado sigue ocupando cupo del plan (C04). Es coherente con la desactivación lógica, pero el plan dice «hasta 3 usuarios» sin aclarar si cuentan los desactivados. Conviene confirmarlo y, si se decide liberar el cupo, la prueba de C04 cambia junto con `PlanLimitService`.
 
