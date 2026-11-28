@@ -1,0 +1,12 @@
+HTTP/1.1 403 Forbidden
+Content-Type: application/problem+json
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+Date: Wed, 17 Oct 2026 14:34:20 GMT
+
+{
+  "type": "https://api.callejon9-saas.com/errors/forbidden",
+  "title": "Forbidden",
+  "status": 403,
+  "detail": "Acceso denegado: Tu rol actual ('WAITER') no dispone de los privilegios necesarios para dar de alta o modificar productos del catálogo (Requiere rol 'ADMIN').",
+  "instance": "/api/v1/products"
+}

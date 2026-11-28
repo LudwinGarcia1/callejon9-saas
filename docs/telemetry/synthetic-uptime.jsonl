@@ -1,0 +1,2 @@
+{"timestamp_iso": "2026-11-27T21:37:53.333194+00:00", "target_name": "Frontend-Produccion", "url": "https://restohub.azurewebsites.net", "status_code": 200, "latency_ms": 1015.21, "is_up": 1, "error_message": ""}
+{"timestamp_iso": "2026-11-27T21:37:53.442407+00:00", "target_name": "Backend-API-Health", "url": "https://app-callejon9-api-prod-3878c6.azurewebsites.net/actuator/health", "status_code": 403, "latency_ms": 107.93, "is_up": 0, "error_message": "HTTPError: 403 Site Disabled"}

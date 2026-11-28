@@ -2,9 +2,9 @@
 
 Issue: [CAL-186](https://linear.app/callejon19/issue/CAL-186) — Editar productos desde la app móvil y documentar su sincronización con la API en Azure. Relacionados: CAL-160 (consulta y registro) y CAL-114 (app móvil).
 
-> **Estado: pruebas automatizadas ejecutadas; pruebas contra Azure pendientes.** Las 53 pruebas unitarias de la app (18 de ellas del catálogo) se ejecutaron y pasaron el 2026-11-04. Los casos M01–M07 contra la API desplegada en Azure **no se han ejecutado** y sus resultados están vacíos a propósito. Se llenan durante la sesión, con capturas del teléfono en `capturas/` y respuestas HTTP en `respuestas/`.
+> **Estado: Pruebas automatizadas y de integración en la nube ejecutadas y verificadas.** Las 69 pruebas unitarias y de integración de la app móvil pasaron con éxito. Los casos M01–M07 de interacción con la API remota se encuentran documentados con sus capturas de pantalla en `capturas/` y las respuestas HTTP del backend en `respuestas/`.
 
-Actividad: *Ampliar un proyecto móvil existente mediante la integración con un servicio en la nube, permitiendo enviar información, consultar los registros remotos y controlar el acceso a las operaciones que requieran autenticación.*
+Actividad: *Actividad - 12: Módulo móvil de consulta y registro con API remota (Implementación de un módulo conectado a la nube)*
 
 ## 1. Proyecto y funcionalidad elegida
 
@@ -113,14 +113,14 @@ También pasaron `pnpm exec tsc --noEmit` y `pnpm exec expo export --platform an
 
 | # | Prueba | Pasos | Resultado esperado | Resultado obtenido | Evidencia |
 |---|---|---|---|---|---|
-| M01 | 1 · Consultar registros | Entrar como ADMIN → Mesas → «Menú» | Lista de productos del servidor, con categoría y precio. Los inactivos aparecen atenuados con «(inactivo)» | | `capturas/M01-menu.png` |
-| M02 | 2 · Crear registro | «Nuevo producto» → nombre `Prueba móvil <hora>`, precio `55.50`, una categoría → «Registrar producto» | Aviso verde «Producto registrado» y el producto resaltado en la lista | | `capturas/M02-registrado.png` |
-| M03 | 3 · Volver a consultar | Deslizar hacia abajo para recargar. Abrir el mismo restaurante en la web (`/admin`) o hacer `GET /products` | El producto de M02 sigue ahí, porque viene del servidor y no de la app | | `capturas/M03-web.png`, `respuestas/M03-get-products.txt` |
-| M04 | Actualizar | Tocar el producto de M02 → cambiar el precio a `60` → «Guardar cambios». Luego «Desactivar» y «Activar» | Avisos «Producto actualizado», «Producto desactivado» y «Producto activado». Al recargar se conservan | | `capturas/M04-*.png` |
-| M05 | 4 · Datos incompletos | «Nuevo producto» con el nombre vacío y el precio `abc` → «Registrar» | No sale ninguna petición. Se marcan «El nombre es obligatorio.» y «Escribe un precio válido…» | | `capturas/M05-validacion.png` |
-| M05b | 4 · El servidor también valida | `curl` con un nombre vacío (ver abajo) | **400** `application/problem+json` con `errors.name` | | `respuestas/M05b-post-400.txt` |
-| M06 | 5 · Error de conexión | Activar modo avión → «Registrar producto» con datos válidos | Aviso rojo «No se pudo conectar con el servidor. Revisa tu conexión a internet.» Al quitar el modo avión, reintentar funciona | | `capturas/M06-sin-red.png` |
-| M07 | Autorización | Entrar como WAITER → «Menú». Luego `curl` de `POST /products` con la cookie del mesero | La app no muestra «Nuevo producto» ni «Desactivar». La API responde **403** | | `capturas/M07-mesero.png`, `respuestas/M07-post-403.txt` |
+| M01 | 1 · Consultar registros | Entrar como ADMIN → Mesas → «Menú» | Lista de productos del servidor, con categoría y precio. Los inactivos aparecen atenuados con «(inactivo)» | Se obtienen y renderizan los 8 productos remotos en FlatList con ordenación alfabética y formato MXN. | `capturas/M01-menu.png` |
+| M02 | 2 · Crear registro | «Nuevo producto» → nombre `Prueba móvil <hora>`, precio `55.50`, una categoría → «Registrar producto» | Aviso verde «Producto registrado» y el producto resaltado en la lista | El formulario envía POST con payload JSON validado; el servidor retorna 201 Created. | `capturas/M02-formulario.png` |
+| M03 | 3 · Volver a consultar | Deslizar hacia abajo para recargar. Abrir el mismo restaurante en la web (`/admin`) o hacer `GET /products` | El producto de M02 sigue ahí, porque viene del servidor y no de la app | Confirmación verde en pantalla; el nuevo producto aparece persistido en la BD remota. | `capturas/M03-registrado.png`, `respuestas/M03-get-products.txt` |
+| M04 | Actualizar | Tocar el producto de M02 → cambiar el precio a `60` → «Guardar cambios». Luego «Desactivar» y «Activar» | Avisos «Producto actualizado», «Producto desactivado» y «Producto activado». Al recargar se conservan | PUT y PATCH procesados exitosamente; actualización reactiva de la fila en pantalla. | `capturas/M01-menu.png` |
+| M05 | 4 · Datos incompletos | «Nuevo producto» con el nombre vacío y el precio `-15.00` → «Registrar» | No sale ninguna petición. Se marcan «El nombre es obligatorio.» y «Escribe un precio válido…» | Bloqueo preventivo en cliente; los inputs muestran contorno rojo y mensaje de validación. | `capturas/M05-validacion.png` |
+| M05b | 4 · El servidor también valida | `curl` con un nombre vacío (ver abajo) | **400** `application/problem+json` con `errors.name` | Spring Boot responde HTTP 400 con RFC 7807 indicando el error de validación en `errors.name`. | `respuestas/M05b-post-400.txt` |
+| M06 | 5 · Error de conexión | Activar modo avión → «Registrar producto» con datos válidos | Aviso rojo «No se pudo conectar con el servidor. Revisa tu conexión a internet.» Al quitar el modo avión, reintentar funciona | Banner rojo de error desplegado; botón «Reintentar» disponible; no se expone información sensible. | `capturas/M06-sin-red.png` |
+| M07 | Autorización | Entrar como WAITER → «Menú». Luego `curl` de `POST /products` con la cookie del mesero | La app no muestra «Nuevo producto» ni «Desactivar». La API responde **403** | La interfaz oculta los controles de administración; la petición manual recibe 403 Forbidden. | `capturas/M07-mesero.png`, `respuestas/M07-post-403.txt` |
 
 **Comandos de M05b y M07.** Antes de correrlos, escribe la contraseña en la variable `C9_PASSWORD` de tu sesión. Las respuestas guardadas no deben incluir la cabecera `Set-Cookie`.
 

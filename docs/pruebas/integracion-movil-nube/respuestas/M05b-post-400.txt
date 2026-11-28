@@ -1,0 +1,16 @@
+HTTP/1.1 400 Bad Request
+Content-Type: application/problem+json
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+Date: Wed, 17 Oct 2026 14:33:02 GMT
+
+{
+  "type": "https://api.callejon9-saas.com/errors/validation-error",
+  "title": "Bad Request",
+  "status": 400,
+  "detail": "La solicitud enviada no cumple con las validaciones de negocio requeridas.",
+  "instance": "/api/v1/products",
+  "errors": {
+    "name": "El nombre del producto no puede estar vacío ni contener solo espacios.",
+    "price": "El precio debe ser mayor a 0 y contener como máximo 2 cifras decimales."
+  }
+}

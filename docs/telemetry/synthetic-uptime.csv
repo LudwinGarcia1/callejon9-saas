@@ -1,0 +1,3 @@
+timestamp_iso,target_name,url,status_code,latency_ms,is_up,error_message
+2026-11-27T21:37:53.333194+00:00,Frontend-Produccion,https://restohub.azurewebsites.net,200,1015.21,1,
+2026-11-27T21:37:53.442407+00:00,Backend-API-Health,https://app-callejon9-api-prod-3878c6.azurewebsites.net/actuator/health,403,107.93,0,HTTPError: 403 Site Disabled
