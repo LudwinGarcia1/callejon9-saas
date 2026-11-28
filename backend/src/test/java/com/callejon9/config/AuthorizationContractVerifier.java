@@ -70,7 +70,13 @@ final class AuthorizationContractVerifier {
             // acota cada consulta a ese tenant.
             Map.entry(new Route("GET", "/api/v1/public/{slug}/catalog"), "Ver el menú del restaurante desde el QR de la mesa"),
             Map.entry(new Route("POST", "/api/v1/public/{slug}/tables/{tableNumber}/orders"), "Enviar a cocina el pedido del comensal desde el QR de la mesa"),
-            Map.entry(new Route("POST", "/api/v1/public/{slug}/tables/{tableNumber}/call-waiter"), "Llamar al mesero desde el QR de la mesa"));
+            Map.entry(new Route("POST", "/api/v1/public/{slug}/tables/{tableNumber}/call-waiter"), "Llamar al mesero desde el QR de la mesa"),
+            Map.entry(new Route("GET", "/api/v1/public/{slug}/tables/{tableNumber}/order"), "Consultar orden activa desde el QR de la mesa"),
+            Map.entry(new Route("POST", "/api/v1/public/{slug}/tables/{tableNumber}/mercadopago/preference"), "Crear preferencia de pago en Mercado Pago desde el QR de la mesa"),
+            Map.entry(new Route("GET", "/api/v1/public/{slug}/tables/{tableNumber}/payment-status"), "Consultar estado del pago desde el QR de la mesa"),
+            Map.entry(new Route("POST", "/api/v1/public/{slug}/tables/{tableNumber}/mercadopago/simulate-approval"), "Simular aprobación de pago sandbox desde el QR de la mesa"),
+            Map.entry(new Route("POST", "/api/v1/public/{slug}/tables/{tableNumber}/mercadopago/sync"), "Sincronizar y conciliar pago en vivo desde el QR de la mesa"),
+            Map.entry(new Route("POST", "/api/v1/webhooks/mercadopago"), "Recibir notificaciones asíncronas de pagos de Mercado Pago"));
     private static final Set<Route> SESSION_ROUTES = Set.of(
             new Route("GET", "/api/v1/auth/me"), new Route("POST", "/api/v1/auth/logout"));
 

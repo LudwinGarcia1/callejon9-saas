@@ -124,7 +124,7 @@ public class MercadoPagoClient {
             );
         } catch (Exception e) {
             log.error("Error al crear preferencia en Mercado Pago: {}", e.getMessage(), e);
-            throw new IllegalStateException("No se pudo conectar con Mercado Pago: " + e.getMessage(), e);
+            throw new MercadoPagoException("No se pudo conectar con Mercado Pago: " + e.getMessage(), e);
         }
     }
 
