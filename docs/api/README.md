@@ -177,7 +177,7 @@ El resumen de efectivo suma el fondo inicial, el efectivo recibido menos el camb
 | Método | Ruta | Cuerpo | Respuesta | Roles |
 |---|---|---|---|---|
 | GET | `/kitchen/orders` | — | `200 KitchenOrderResponse[]` | ADMIN, KITCHEN |
-| POST | `/kitchen/items/{itemId}/status` | `UpdateKitchenItemStatusRequest` | `200 KitchenItemResponse` | ADMIN, KITCHEN |
+| POST | `/kitchen/items/{itemId}/status` | `UpdateKitchenItemStatusRequest` | `200 KitchenItemResponse` | ADMIN, KITCHEN; WAITER solo `DELIVERED` |
 
 ### Tickets, ventas y reportes
 

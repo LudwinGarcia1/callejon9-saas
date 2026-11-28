@@ -13,6 +13,11 @@ import org.springframework.stereotype.Component;
  * repetidas veces (o un script) llenaria de avisos la pantalla de cada
  * mesero del restaurante.
  *
+ * <p>La ventana es corta a proposito: absorbe el doble toque y las rafagas,
+ * pero una mesa que vuelve a llamar despues de que la atendieron debe avisar
+ * al instante. Con 20 s, el mesero marcaba «Atendida», la mesa volvia a
+ * llamar y el aviso no salia.
+ *
  * <p>La llamada repetida dentro de la ventana no es un error para el
  * comensal: el personal ya recibio el aviso de esa mesa. El estado vive en
  * memoria de esta instancia; con varias instancias el limite es por
@@ -21,7 +26,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class WaiterCallThrottle {
 
-    public static final Duration WINDOW = Duration.ofSeconds(20);
+    public static final Duration WINDOW = Duration.ofSeconds(3);
 
     /** Por encima de este tamano se descartan las entradas vencidas. */
     private static final int PURGE_THRESHOLD = 10_000;

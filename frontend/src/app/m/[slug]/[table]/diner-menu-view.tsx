@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { MercadoPagoQrModal } from "@/components/shared/mercadopago-qr-modal";
-import { api } from "@/lib/api";
+import { ApiError, api } from "@/lib/api";
 import { endpoints } from "@/lib/endpoints";
 import type { KitchenItemStatus, OrderResponse, OrderStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -389,14 +389,18 @@ export function DinerMenuView({ slug, tableNumber, initialMenuItems }: DinerMenu
     }
   };
 
+  // Confirma solo cuando el servidor recibio la llamada: si falla, el
+  // comensal debe saberlo para volver a intentar o llamar en persona.
   const handleCallWaiter = async () => {
-    toast.info("🛎️ Mesero notificado", {
-      description: `Un mesero se dirige a la Mesa ${tableNumber}.`,
-    });
     try {
       await api.post(endpoints.publicMenu.callWaiter(slug, tableNumber), {});
-    } catch {
-      // noop
+      toast.info("🛎️ Mesero notificado", {
+        description: `Avisamos al personal: un mesero irá a la Mesa ${tableNumber}.`,
+      });
+    } catch (error) {
+      toast.error(
+        error instanceof ApiError ? error.message : "No se pudo avisar al mesero. Inténtalo de nuevo.",
+      );
     }
   };
 

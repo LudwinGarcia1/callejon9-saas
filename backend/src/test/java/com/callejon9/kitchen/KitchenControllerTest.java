@@ -314,6 +314,36 @@ class KitchenControllerTest {
                 .andExpect(jsonPath("$.kitchenStatus").value("DELIVERED"));
     }
 
+    @Test
+    @DisplayName("WAITER no puede hacer el trabajo de cocina: ni en preparacion ni listo")
+    void waiterCannotAdvanceKitchenSteps() throws Exception {
+        Product taco = createProduct("Taco", "25.00");
+        UUID orderId = openOrderOn(createTable(1));
+        addItem(orderId, taco);
+        sendToKitchen(orderId);
+        String tacoId = firstItemIdOf(orderId).toString();
+
+        mockMvc.perform(post("/api/v1/kitchen/items/" + tacoId + "/status")
+                        .cookie(cookieFor(waiter))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"IN_PREPARATION\"}"))
+                .andExpect(status().isForbidden());
+
+        advance(tacoId, "IN_PREPARATION");
+        mockMvc.perform(post("/api/v1/kitchen/items/" + tacoId + "/status")
+                        .cookie(cookieFor(waiter))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"READY\"}"))
+                .andExpect(status().isForbidden());
+
+        // Tampoco puede saltarse cocina pidiendo DELIVERED antes de que este listo.
+        mockMvc.perform(post("/api/v1/kitchen/items/" + tacoId + "/status")
+                        .cookie(cookieFor(waiter))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"DELIVERED\"}"))
+                .andExpect(status().isConflict());
+    }
+
     private void advance(String itemId, String newStatus) throws Exception {
         mockMvc.perform(post("/api/v1/kitchen/items/" + itemId + "/status")
                         .cookie(cookieFor(kitchenUser))
