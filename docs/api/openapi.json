@@ -324,6 +324,16 @@
         },
         "type" : "object"
       },
+      "CreatePreferenceRequest" : {
+        "properties" : {
+          "tipPercent" : {
+            "maximum" : 100.0,
+            "minimum" : 0.0,
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
       "CreateProductRequest" : {
         "properties" : {
           "categoryId" : {
@@ -838,6 +848,31 @@
         "required" : [ "amount", "method" ],
         "type" : "object"
       },
+      "PaymentStatusResponse" : {
+        "properties" : {
+          "closedAt" : {
+            "format" : "date-time",
+            "type" : "string"
+          },
+          "folio" : {
+            "type" : "string"
+          },
+          "orderId" : {
+            "format" : "uuid",
+            "type" : "string"
+          },
+          "paid" : {
+            "type" : "boolean"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "ticketFolio" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "PlanView" : {
         "properties" : {
           "code" : {
@@ -855,6 +890,35 @@
             "type" : "string"
           },
           "priceMonthly" : {
+            "type" : "number"
+          }
+        },
+        "type" : "object"
+      },
+      "PreferenceResponse" : {
+        "properties" : {
+          "externalReference" : {
+            "type" : "string"
+          },
+          "folio" : {
+            "type" : "string"
+          },
+          "initPoint" : {
+            "type" : "string"
+          },
+          "isMock" : {
+            "type" : "boolean"
+          },
+          "preferenceId" : {
+            "type" : "string"
+          },
+          "qrCode" : {
+            "type" : "string"
+          },
+          "sandboxInitPoint" : {
+            "type" : "string"
+          },
+          "total" : {
             "type" : "number"
           }
         },
@@ -1102,6 +1166,17 @@
           },
           "tenantId" : {
             "format" : "uuid",
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "SyncPaymentRequest" : {
+        "properties" : {
+          "externalReference" : {
+            "type" : "string"
+          },
+          "paymentId" : {
             "type" : "string"
           }
         },
@@ -2323,6 +2398,141 @@
         "tags" : [ "order-controller" ]
       }
     },
+    "/api/v1/orders/{orderId}/mercadopago/preference" : {
+      "post" : {
+        "operationId" : "createPreference",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreatePreferenceRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PreferenceResponse"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "tags" : [ "mercado-pago-controller" ]
+      }
+    },
+    "/api/v1/orders/{orderId}/mercadopago/simulate-approval" : {
+      "post" : {
+        "operationId" : "simulateApproval",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreatePreferenceRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentStatusResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "mercado-pago-controller" ]
+      }
+    },
+    "/api/v1/orders/{orderId}/mercadopago/sync" : {
+      "post" : {
+        "operationId" : "syncPayment",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncPaymentRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentStatusResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "mercado-pago-controller" ]
+      }
+    },
+    "/api/v1/orders/{orderId}/payment-status" : {
+      "get" : {
+        "operationId" : "getPaymentStatus",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "orderId",
+          "required" : true,
+          "schema" : {
+            "format" : "uuid",
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentStatusResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "mercado-pago-controller" ]
+      }
+    },
     "/api/v1/platform/plans" : {
       "get" : {
         "operationId" : "list_8",
@@ -2543,6 +2753,169 @@
         "tags" : [ "public-menu-controller" ]
       }
     },
+    "/api/v1/public/{slug}/tables/{tableNumber}/mercadopago/preference" : {
+      "post" : {
+        "operationId" : "createTablePreference",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "slug",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "tableNumber",
+          "required" : true,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreatePreferenceRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "201" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PreferenceResponse"
+                }
+              }
+            },
+            "description" : "Created"
+          }
+        },
+        "tags" : [ "public-mercado-pago-controller" ]
+      }
+    },
+    "/api/v1/public/{slug}/tables/{tableNumber}/mercadopago/simulate-approval" : {
+      "post" : {
+        "operationId" : "simulateTableApproval",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "slug",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "tableNumber",
+          "required" : true,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreatePreferenceRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentStatusResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "public-mercado-pago-controller" ]
+      }
+    },
+    "/api/v1/public/{slug}/tables/{tableNumber}/mercadopago/sync" : {
+      "post" : {
+        "operationId" : "syncTablePayment",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "slug",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "tableNumber",
+          "required" : true,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncPaymentRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentStatusResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "public-mercado-pago-controller" ]
+      }
+    },
+    "/api/v1/public/{slug}/tables/{tableNumber}/order" : {
+      "get" : {
+        "operationId" : "getActiveTableOrder",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "slug",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "tableNumber",
+          "required" : true,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OrderResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "public-mercado-pago-controller" ]
+      }
+    },
     "/api/v1/public/{slug}/tables/{tableNumber}/orders" : {
       "post" : {
         "operationId" : "createTableOrder",
@@ -2585,6 +2958,40 @@
           }
         },
         "tags" : [ "public-menu-controller" ]
+      }
+    },
+    "/api/v1/public/{slug}/tables/{tableNumber}/payment-status" : {
+      "get" : {
+        "operationId" : "getTablePaymentStatus",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "slug",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "path",
+          "name" : "tableNumber",
+          "required" : true,
+          "schema" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaymentStatusResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "public-mercado-pago-controller" ]
       }
     },
     "/api/v1/sales" : {
@@ -3045,6 +3452,54 @@
           }
         },
         "tags" : [ "user-controller" ]
+      }
+    },
+    "/api/v1/webhooks/mercadopago" : {
+      "post" : {
+        "operationId" : "handleMercadoPagoWebhook",
+        "parameters" : [ {
+          "in" : "header",
+          "name" : "x-signature",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "in" : "header",
+          "name" : "x-request-id",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "additionalProperties" : {
+                  "type" : "object"
+                },
+                "type" : "object"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "additionalProperties" : {
+                    "type" : "object"
+                  },
+                  "type" : "object"
+                }
+              }
+            },
+            "description" : "OK"
+          }
+        },
+        "tags" : [ "mercado-pago-webhook-controller" ]
       }
     }
   },
