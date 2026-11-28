@@ -4,6 +4,7 @@ import com.callejon9.platform.tenant.domain.Tenant;
 import com.callejon9.platform.tenant.repository.TenantRepository;
 import com.callejon9.shared.error.ResourceNotFoundException;
 import com.callejon9.tenancy.TenantContext;
+import com.callejon9.user.domain.EmailAddress;
 import com.callejon9.user.domain.User;
 import com.callejon9.user.repository.UserRepository;
 import java.time.Instant;
@@ -109,7 +110,7 @@ public class AuthService {
     }
 
     private User loadUser(String email) {
-        return userRepository.findByEmail(email)
+        return userRepository.findByEmail(EmailAddress.normalize(email))
                 .orElseThrow(() -> new BadCredentialsException("Credenciales invalidas."));
     }
 

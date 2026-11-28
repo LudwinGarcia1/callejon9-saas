@@ -17,7 +17,13 @@ import org.springframework.data.repository.query.Param;
  */
 public interface UserRepository extends JpaRepository<User, UUID> {
 
-    Optional<User> findByEmail(String email);
+    /**
+     * Busca sin distinguir mayusculas (CAL-180). La expresion coincide con el
+     * indice unico {@code (tenant_id, lower(email))} de V16, asi que tambien
+     * encuentra filas anteriores a la normalizacion.
+     */
+    @Query("SELECT u FROM User u WHERE lower(u.email) = lower(:email)")
+    Optional<User> findByEmail(@Param("email") String email);
 
     long countByTenantId(UUID tenantId);
 
