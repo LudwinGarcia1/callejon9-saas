@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Money } from "@/components/shared/money";
+import { getFoodVisual } from "@/lib/food-images";
 import { cn } from "@/lib/utils";
 import type { CategoryResponse, OrderStatus, ProductResponse } from "@/lib/types";
 
@@ -164,32 +165,49 @@ export function ProductPicker({
             </p>
           </div>
         ) : (
-          visibleProducts.map((product) => (
-            <div
-              key={product.id}
-              className="flex items-center justify-between gap-3 rounded-md border bg-card px-3.5 py-[13px]"
-            >
-              <div className="min-w-0">
-                <p className="truncate text-[15px]">{product.name}</p>
-                {product.description && (
-                  <p className="truncate text-xs text-muted-foreground">{product.description}</p>
-                )}
+          visibleProducts.map((product) => {
+            const visual = getFoodVisual(product.name);
+            return (
+              <div
+                key={product.id}
+                className="flex items-center justify-between gap-3 rounded-xl border bg-card p-3 shadow-xs hover:border-amber-500/40 transition-all"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="relative w-11 h-11 rounded-lg overflow-hidden bg-muted flex-shrink-0 border border-border/60">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={visual.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                    <span className="absolute bottom-0 right-0.5 text-[10px] filter drop-shadow">
+                      {visual.emoji}
+                    </span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{product.name}</p>
+                    {product.description && (
+                      <p className="truncate text-xs text-muted-foreground">{product.description}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-3">
+                  <Money amount={product.price} className="font-mono text-sm font-semibold" />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
+                    className="text-brand hover:bg-amber-500 hover:text-neutral-950 active:scale-95 transition-all"
+                    onClick={() => onAddProduct(product)}
+                    aria-label={`Agregar ${product.name}`}
+                  >
+                    <PlusIcon />
+                  </Button>
+                </div>
               </div>
-              <div className="flex shrink-0 items-center gap-3">
-                <Money amount={product.price} className="font-mono text-sm" />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon-sm"
-                  className="text-brand"
-                  onClick={() => onAddProduct(product)}
-                  aria-label={`Agregar ${product.name}`}
-                >
-                  <PlusIcon />
-                </Button>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -210,59 +228,66 @@ export function ProductPicker({
           </p>
         ) : (
           <div className="flex flex-col gap-3">
-            {cart.map((line) => (
-              <div key={line.key} className="flex flex-col gap-1.5">
-                <div className="flex items-center gap-2.5">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm">{line.product.name}</p>
-                    <Money
-                      amount={line.product.price * line.quantity}
-                      className="font-mono text-xs text-muted-foreground"
-                    />
+            {cart.map((line) => {
+              const visual = getFoodVisual(line.product.name);
+              return (
+                <div key={line.key} className="flex flex-col gap-1.5 p-2 rounded-xl bg-surface border border-border/60">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg overflow-hidden bg-muted shrink-0 border border-border/50">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={visual.image} alt={line.product.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{line.product.name}</p>
+                      <Money
+                        amount={line.product.price * line.quantity}
+                        className="font-mono text-xs text-muted-foreground"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-xs"
+                        onClick={() => onDecrement(line.key)}
+                        aria-label="Quitar una unidad"
+                      >
+                        <MinusIcon />
+                      </Button>
+                      <span className="w-6 text-center font-mono text-sm tabular-nums font-bold">
+                        {line.quantity}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-xs"
+                        onClick={() => onIncrement(line.key)}
+                        aria-label="Agregar una unidad"
+                      >
+                        <PlusIcon />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        onClick={() => onRemove(line.key)}
+                        aria-label="Quitar del carrito"
+                      >
+                        <XIcon />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon-xs"
-                      onClick={() => onDecrement(line.key)}
-                      aria-label="Quitar una unidad"
-                    >
-                      <MinusIcon />
-                    </Button>
-                    <span className="w-6 text-center font-mono text-sm tabular-nums">
-                      {line.quantity}
-                    </span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon-xs"
-                      onClick={() => onIncrement(line.key)}
-                      aria-label="Agregar una unidad"
-                    >
-                      <PlusIcon />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-xs"
-                      onClick={() => onRemove(line.key)}
-                      aria-label="Quitar del carrito"
-                    >
-                      <XIcon />
-                    </Button>
-                  </div>
+                  <Input
+                    value={line.notes}
+                    onChange={(event) => onNotesChange(line.key, event.target.value)}
+                    maxLength={MAX_NOTE_LENGTH}
+                    placeholder="Nota para cocina (opcional)"
+                    aria-label={`Nota para ${line.product.name}`}
+                    className="h-9 text-[13px] rounded-lg"
+                  />
                 </div>
-                <Input
-                  value={line.notes}
-                  onChange={(event) => onNotesChange(line.key, event.target.value)}
-                  maxLength={MAX_NOTE_LENGTH}
-                  placeholder="Nota para cocina (opcional)"
-                  aria-label={`Nota para ${line.product.name}`}
-                  className="h-9 text-[13px]"
-                />
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
