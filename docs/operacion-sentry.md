@@ -124,7 +124,7 @@ export SENTRY_AUTH_TOKEN=<token>
 ## Estado del despliegue (27 de noviembre de 2026)
 
 - **Web:** publicada desde `main` (`5e63176`) con Sentry activo. Sin token, todavía sin source maps.
-- **API:** no se pudo desplegar. La suscripción de Azure donde vive `app-callejon9-api-prod-3878c6` está deshabilitada y en solo lectura, y PostgreSQL está detenido. Cuando se reactive, se despliega con `TF_VAR_sentry_dsn` (DSN de `restohub-server`) y `terraform apply`, o con `az webapp config appsettings set` si se aplica fuera de Terraform.
+- **API:** la suscripción original se deshabilitó por falta de crédito. La API se recreó con Terraform en `rg-callejon9-prod-cus-001` (Central US) con `TF_VAR_sentry_dsn` (DSN de `restohub-server`) y se publicó desde `main` el 27 de noviembre. Sentry está activo en ella.
 - La web publicada se compiló con trazas en 0 y antes de los logs y métricas; los activa el próximo despliegue.
 
 ## Consultar errores desde la terminal

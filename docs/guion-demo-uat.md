@@ -29,11 +29,11 @@ Los defectos que encontró el ensayo del 18 de noviembre ya están corregidos y 
 .\scripts\azure-backend-power.ps1 -Action Start   # si no está en B1 / Running / Ready
 ```
 
-El backend vive en la suscripción **Azure for Students** que contiene `rg-callejon9-prod-mxc-001`, que no es la suscripción predeterminada. Si el script responde que no existe el resource group, primero ejecuta `az account set --subscription <id>`.
+Desde el 27 de noviembre de 2026 el backend vive en `rg-callejon9-prod-cus-001` (Central US), en la misma suscripción **Azure for Students** que la web. Si el script responde que no existe el resource group, revisa la suscripción activa con `az account show` y cámbiala con `az account set --subscription <id>`.
 
 Comprobaciones:
 
-- `https://app-callejon9-api-prod-3878c6.azurewebsites.net/actuator/health` responde `{"status":"UP",…}`.
+- `https://app-callejon9-api-prod-70af93.azurewebsites.net/actuator/health` responde `{"status":"UP",…}`.
 - `https://restohub.azurewebsites.net/login` carga.
 - `https://restohub.azurewebsites.net/api/v1/auth/me` responde `401`, lo que demuestra que el proxy llega a la API.
 
