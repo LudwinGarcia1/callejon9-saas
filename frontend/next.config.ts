@@ -1,3 +1,4 @@
+import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
 import { COMMON_SECURITY_HEADERS, HSTS_POLICY } from "./src/lib/security-headers";
 
@@ -45,8 +46,27 @@ const nextConfig: NextConfig = {
         source: "/api/v1/:path*",
         destination: `${BACKEND_ORIGIN}/api/v1/:path*`,
       },
+      // Canal en tiempo real (CAL-172). Next reenvia tambien el upgrade de
+      // WebSocket, asi que la cookie SameSite=Strict llega al handshake igual
+      // que a /api/v1/*. El backend valida el Origin contra APP_ALLOWED_ORIGINS.
+      {
+        source: "/ws",
+        destination: `${BACKEND_ORIGIN}/ws`,
+      },
     ];
   },
 };
 
-export default nextConfig;
+/**
+ * Sentry envuelve la configuracion para instrumentar la compilacion. Los
+ * source maps solo se suben cuando el build tiene SENTRY_AUTH_TOKEN (junto con
+ * SENTRY_ORG y SENTRY_PROJECT, que por defecto apuntan a restohub/restohub-frontend);
+ * sin token, la compilacion no contacta a Sentry.
+ */
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG ?? "restohub",
+  project: process.env.SENTRY_PROJECT ?? "restohub-frontend",
+  silent: !process.env.CI,
+  telemetry: false,
+  sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
+});

@@ -38,3 +38,24 @@ export const NAV_ITEMS_BY_ROLE: Record<UserRole, NavItem[]> = {
   KITCHEN: [NAV_KITCHEN, NAV_INVENTORY],
   CASHIER: [NAV_CASHIER, NAV_CASH_SESSIONS, NAV_HISTORY],
 };
+
+/** La seccion misma o cualquiera de sus subrutas (`/waiter/order/123`). */
+function isWithinSection(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/**
+ * Si el rol tiene la pantalla en su navegacion (CAL-195). Es la misma tabla que
+ * pinta la barra, asi que el menu y el acceso por URL no pueden divergir.
+ *
+ * Es experiencia de usuario, no seguridad: evita mostrar una pantalla ajena a
+ * medias. La autorizacion la sigue decidiendo el backend en cada peticion.
+ */
+export function canOpenPage(role: UserRole, pathname: string): boolean {
+  return NAV_ITEMS_BY_ROLE[role].some((item) => isWithinSection(pathname, item.href));
+}
+
+/** Primera seccion del rol: a donde volver desde una pantalla ajena. */
+export function homeSectionFor(role: UserRole): NavItem {
+  return NAV_ITEMS_BY_ROLE[role][0];
+}

@@ -31,7 +31,8 @@
           "color": "#2B2723",
           "defaultChannel": "solicitudes"
         }
-      ]
+      ],
+      ["@sentry/react-native", {"organization": "restohub", "project": "restohub-meseros", "url": "https://sentry.io/"}]
     ],
     "extra": {
       "eas": {

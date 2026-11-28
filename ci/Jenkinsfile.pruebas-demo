@@ -18,7 +18,7 @@ pipeline {
             description: 'Ejecutar las SIT contra Azure. Requiere la API encendida (scripts/azure-backend-power.ps1 -Action Start).')
         string(name: 'BASE_URL', defaultValue: 'https://restohub.azurewebsites.net',
             description: 'Frontend publicado contra el que corren las SIT.')
-        string(name: 'API_HEALTH_URL', defaultValue: 'https://app-callejon9-api-prod-3878c6.azurewebsites.net/actuator/health',
+        string(name: 'API_HEALTH_URL', defaultValue: 'https://app-callejon9-api-prod-70af93.azurewebsites.net/actuator/health',
             description: 'Health de la API; las SIT esperan a que responda UP.')
     }
 
@@ -39,7 +39,7 @@ pipeline {
         // En la primera corrida del job Jenkins aún no registra los parámetros como
         // variables de entorno; se fijan aquí con el mismo valor por defecto.
         BASE_URL = "${params.BASE_URL ?: 'https://restohub.azurewebsites.net'}"
-        API_HEALTH_URL = "${params.API_HEALTH_URL ?: 'https://app-callejon9-api-prod-3878c6.azurewebsites.net/actuator/health'}"
+        API_HEALTH_URL = "${params.API_HEALTH_URL ?: 'https://app-callejon9-api-prod-70af93.azurewebsites.net/actuator/health'}"
     }
 
     stages {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 
 import { api } from "@/lib/api";
@@ -21,7 +21,6 @@ export const ROLE_LANDING_PATH: Record<UserRole, string> = {
  * Sesion del usuario autenticado, leida de GET /api/v1/auth/me.
  */
 export function useSession() {
-  const queryClient = useQueryClient();
   const router = useRouter();
 
   const sessionQuery = useQuery({
@@ -32,15 +31,21 @@ export function useSession() {
 
   const logoutMutation = useMutation({
     mutationFn: () => api.post<void>(endpoints.auth.logout()),
+    // `replace` y no `push`: la pantalla de la que se sale no queda en el
+    // historial, asi que Atras no regresa a ella (CAL-194).
+    //
+    // El cache no se limpia aqui sino en `providers.tsx`, al llegar al login:
+    // limpiarlo con la pantalla aun montada hacia que sus consultas volvieran a
+    // pedir, recibieran 401 y se tomaran por una sesion expirada.
     onSettled: () => {
-      queryClient.clear();
-      router.push("/login");
+      router.replace("/login");
     },
   });
 
   return {
     user: sessionQuery.data,
     isLoading: sessionQuery.isLoading,
+    error: sessionQuery.error,
     logout: logoutMutation.mutate,
   };
 }

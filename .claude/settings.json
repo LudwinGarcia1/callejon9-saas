@@ -1,6 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "enabledMcpjsonServers": ["linear_callejon9"],
+  "enabledMcpjsonServers": ["linear_callejon9", "sentry"],
   "permissions": {
     "allow": [
       "Bash(git status:*)",
@@ -18,7 +18,12 @@
       "mcp__linear_callejon9__save_milestone",
       "mcp__linear_callejon9__save_comment",
       "mcp__linear_callejon9__save_issue_label",
-      "mcp__linear_callejon9__save_status_update"
+      "mcp__linear_callejon9__save_status_update",
+      "mcp__sentry__update_issue",
+      "mcp__sentry__update_project",
+      "mcp__sentry__create_project",
+      "mcp__sentry__create_team",
+      "mcp__sentry__create_dsn"
     ],
     "deny": [
       "Read(./.env)",

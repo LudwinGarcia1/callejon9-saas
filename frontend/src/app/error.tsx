@@ -1,12 +1,16 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
+import { useEffect } from "react";
+
 import { BrandShell } from "@/components/layout/brand-shell";
 import { Button } from "@/components/ui/button";
 
 /**
  * Frontera de error de la aplicacion. No muestra la traza: en piso no sirve de
  * nada y el detalle util ya viaja en el `digest` que Next registra del lado del
- * servidor. Ofrece reintentar, que es lo unico accionable aqui.
+ * servidor. Ofrece reintentar, que es lo unico accionable aqui. El error se
+ * reporta a Sentry, donde el digest sirve para encontrarlo.
  */
 export default function GlobalError({
   error,
@@ -15,6 +19,10 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
   return (
     <BrandShell eyebrow="Algo salió mal" title="No pudimos cargar esta pantalla">
       <p className="mt-2 text-sm leading-[1.6] text-muted-foreground text-pretty">

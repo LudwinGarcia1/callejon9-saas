@@ -6,6 +6,50 @@ Sincronizado con el proyecto de Linear [Callejón 9 SaaS — Ruta a producción 
 
 Las fases son hitos de resultado; los ciclos de Linear son sprints semanales y no equivalen necesariamente a una fase. Cada ticket conserva su ciclo para la planeación de corto plazo y su fase para mostrar el resultado al que contribuye.
 
+## Replanificación del 2026-11-06: sprints S5 a S9
+
+Meta: alcance técnico cerrado el 11 de diciembre de 2026. Los entregables académicos (CAL-67, CAL-73 a CAL-78, CAL-82 y CAL-83) y las liberaciones quedan fuera de este plan: siguen sus propias fechas, pero consumen la misma capacidad del equipo.
+
+Capacidad: 20 pts por persona por ciclo de dos semanas (10 pts por semana), 80 pts para el equipo. Todo el alcance de abajo se concentra en el Cycle 7 (6–19 nov).
+
+Prioridad: monetización (CAL-29 y CAL-31) y calidad en CI (CAL-185, CAL-18, CAL-91, CAL-20, CAL-90 y CAL-55). Después siguen UAT y seguridad.
+
+| Bloque | Issues | Pts |
+|---|---|---|
+| Monetización | CAL-188, CAL-189, CAL-190 (CAL-29); CAL-191, CAL-192 (CAL-31) | 21 |
+| Calidad en CI | CAL-185, CAL-18, CAL-91, CAL-20, CAL-90, CAL-55 | 23 |
+| Seguridad | CAL-182, CAL-109, CAL-107, CAL-184 | 11 |
+| Operación | CAL-57, CAL-58 | 8 |
+| UAT y cierre de lo que está en progreso | CAL-146 a CAL-158, CAL-117; CAL-16, CAL-19, CAL-183, CAL-170 a CAL-172, CAL-86, CAL-89, CAL-186 | 17 |
+
+Reparto del Cycle 7 (puntos como los cuenta Linear; los issues sin estimación cuentan 1):
+
+| | Semana 1 · vence 13 nov | Semana 2 · vence 19 nov | Total |
+|---|---|---|---|
+| Octavio — monetización y frontend | CAL-186, CAL-187, CAL-188 · 7 | CAL-189, CAL-190, CAL-192, CAL-184, CAL-154, CAL-157 · 15 | 22 |
+| Braulio — Azure, seguridad y suscripción | CAL-170 a CAL-172, CAL-183, CAL-182, CAL-191 · 10 | CAL-57, CAL-109 · 10 | 20 |
+| Ludwin — CI | CAL-67, CAL-185, CAL-18 · 9 | CAL-91, CAL-90, CAL-147 · 11 | 20 |
+| Valeria — calidad y UAT | CAL-20, CAL-107, CAL-150, CAL-155 · 7 | CAL-55, CAL-58, CAL-146, CAL-148, CAL-153, CAL-158 · 10 | 17 |
+
+Total del Cycle 7: 79 pts. CAL-16, CAL-19, CAL-86 y CAL-89 vencen el 13 nov, pero quedan fuera del ciclo porque su trabajo se hizo en ciclos anteriores y solo falta revisarlos.
+
+Reparto del Cycle 8 (20 nov – 3 dic; coincide con las liberaciones del 1 al 5 de diciembre):
+
+| | Semana 1 · vence 26 nov | Semana 2 · vence 3 dic | Total |
+|---|---|---|---|
+| Octavio — frontend y verificación | CAL-60, CAL-25, CAL-166 · 10 | CAL-61, CAL-27, CAL-177, CAL-168, CAL-117 · 12 | 22 |
+| Braulio — observabilidad y datos | CAL-23, CAL-24 · 10 | CAL-62, CAL-180, CAL-34 · 10 | 20 |
+| Ludwin — despliegue y operación | CAL-56, CAL-63 · 8 | CAL-92, CAL-30, CAL-43 · 11 | 19 |
+| Valeria — producto y E2E | CAL-36, CAL-179, CAL-151, CAL-152 · 8 | CAL-28 · 8 | 16 |
+
+Total del Cycle 8: 77 pts, más los entregables académicos CAL-73 a CAL-75 que ya estaban en el ciclo sin estimación. CAL-92 depende de CAL-24; CAL-27 y CAL-30 se apoyan en CAL-56 y CAL-58. El Cycle 9 (4–17 dic) queda como reserva hasta el 11 de diciembre.
+
+Dependencias: CAL-188 → CAL-189 → CAL-190; CAL-189 y CAL-191 → CAL-192; CAL-185 → CAL-18 → CAL-91 → CAL-90. CAL-29 ya no depende de CAL-27, porque la URL HTTPS para webhooks existe desde CAL-108.
+
+Lo que no cupo en los dos ciclos sigue en Backlog: CAL-21, CAL-32, CAL-33, CAL-37, CAL-47 y CAL-99. Si el avance no alcanza, se recorta CAL-190 a conciliación manual; monetización y calidad en CI no se recortan.
+
+Reglas del tramo: revisión de otra persona antes de integrar, máximo dos issues en progreso por persona, el asignado en Linear es quien hace el trabajo, y revisión del sprint cada viernes contra su objetivo.
+
 ## Fase 1 — Base segura y estable
 
 Objetivo: recuperar una base confiable para operar y desarrollar sobre `main`.
@@ -59,3 +103,5 @@ Salida: documentación final entregable, operación responsable y una base comer
 ## Backlog posterior
 
 CAL-36 y CAL-38 a CAL-44 permanecen sin fase ni ciclo hasta que exista capacidad, decisiones de producto o arquitectura suficientes. Incluyen configuración operativa, TOTP, inventario/recetas, ETL, facturación, analítica, CHANGELOG e impresión térmica.
+
+La replanificación del 2026-11-06 movió además a Backlog, sin ciclo, lo que no cabe antes del 11 de diciembre: CAL-21, CAL-32, CAL-33, CAL-37, CAL-47 y CAL-99. El resto de lo recortado ese día volvió al Cycle 8. Conservan su fase para cuando se retomen.

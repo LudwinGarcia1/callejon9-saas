@@ -1,5 +1,6 @@
 package com.callejon9.config;
 
+import com.callejon9.platform.admin.PlatformAdminPasswordGuard;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -110,6 +111,12 @@ public class ProductionConfigurationGuard implements BeanFactoryPostProcessor, E
                 && proxySecret.getBytes(StandardCharsets.UTF_8).length < MIN_PROXY_SECRET_BYTES) {
             problems.add("APP_PROXY_SECRET debe tener al menos " + MIN_PROXY_SECRET_BYTES + " bytes");
         }
+
+        // Opcional: solo hace falta mientras la base conserve la contrasena publicada
+        // del super-administrador (CAL-109). Si se define, se valida aqui, antes de
+        // migrar y de tocar la base.
+        PlatformAdminPasswordGuard.problemWith(environment.getProperty("app.platform-admin.password", ""))
+                .ifPresent(problems::add);
 
         checkDatabasePassword("DB_APP_PASSWORD", "spring.datasource.password", problems);
         checkDatabasePassword("DB_OWNER_PASSWORD", "spring.flyway.password", problems);

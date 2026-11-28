@@ -76,6 +76,10 @@ En ese caso el backend debe arrancar con `AUTH_COOKIE_SECURE=false` (`scripts/ru
 
 `scripts/seed-demo.ps1` crea un restaurante con el usuario `mesero@<slug>.com`. La contraseña es la del script; no la escribas en la app ni en capturas.
 
+## Errores en Sentry
+
+Con `EXPO_PUBLIC_SENTRY_DSN` en `.env` la app reporta sus errores de JavaScript y sus fallos nativos al proyecto `restohub-meseros` de Sentry; sin esa variable no envía nada. Después de cambiar `.env`, reinicia Metro con `--clear`. Una build nativa de release sin `SENTRY_AUTH_TOKEN` necesita `SENTRY_DISABLE_AUTO_UPLOAD=true`. Detalle en [`docs/operacion-sentry.md`](../docs/operacion-sentry.md).
+
 ## Verificación
 
 ```powershell

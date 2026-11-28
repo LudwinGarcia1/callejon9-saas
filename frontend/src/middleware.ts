@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 import { apiRequestHeaders } from "@/lib/client-ip";
+import { endpoints } from "@/lib/endpoints";
 import { isProtectedPagePath, loginPathFor } from "@/lib/protected-pages";
 import { PATHNAME_HEADER } from "@/lib/request-headers";
 import { contentSecurityPolicy } from "@/lib/security-headers";
@@ -34,6 +35,12 @@ export function middleware(request: NextRequest) {
     });
   }
 
+  // El handshake del canal en tiempo real no es una pagina: pasa tal cual al
+  // rewrite, sin nonce ni CSP de pagina (CAL-172).
+  if (request.nextUrl.pathname === endpoints.realtime.channel()) {
+    return NextResponse.next();
+  }
+
   const nonceBytes = crypto.getRandomValues(new Uint8Array(16));
   const nonce = btoa(String.fromCharCode(...nonceBytes));
   const csp = contentSecurityPolicy(nonce, process.env.NODE_ENV === "development");
@@ -60,7 +67,8 @@ export function middleware(request: NextRequest) {
 /**
  * Incluye login, alta, paginas y errores. Los assets no necesitan nonce.
  * La API pasa sin el gate de sesion para conservar el rewrite al backend.
+ * El tunel de Sentry solo recibe eventos del navegador: no lleva nonce ni sesion.
  */
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|sentry-tunnel).*)"],
 };

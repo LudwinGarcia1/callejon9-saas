@@ -13,8 +13,12 @@ resource "azurerm_service_plan" "backend" {
 }
 
 locals {
+  free_tier = var.app_service_sku == "F1"
+
   key_vault_reference = {
-    for name, secret in azurerm_key_vault_secret.backend :
+    for name, secret in merge(azurerm_key_vault_secret.backend, {
+      "platform-admin-password" = azurerm_key_vault_secret.platform_admin
+    }) :
     name => "@Microsoft.KeyVault(SecretUri=${secret.versionless_id})"
   }
 
@@ -22,6 +26,13 @@ locals {
     APPLICATIONINSIGHTS_CONNECTION_STRING      = azurerm_application_insights.backend[0].connection_string
     ApplicationInsightsAgent_EXTENSION_VERSION = "~3"
   } : {}
+
+  # Without a DSN the Sentry SDK stays off (application.yml).
+  sentry_settings = var.sentry_dsn == "" ? {} : {
+    SENTRY_DSN                = var.sentry_dsn
+    SENTRY_ENVIRONMENT        = var.environment == "prod" ? "production" : var.environment
+    SENTRY_TRACES_SAMPLE_RATE = tostring(var.sentry_traces_sample_rate)
+  }
 
   # Environment variables take precedence over application-prod.yml.
   swagger_settings = var.swagger_enabled ? {
@@ -49,8 +60,9 @@ resource "azurerm_linux_web_app" "api" {
 
   site_config {
     # Flyway and Spring Boot take tens of seconds to start; an unloaded app would
-    # repeat that on the first request after every idle period.
-    always_on           = true
+    # repeat that on the first request after every idle period. F1 does not
+    # allow Always On: Azure rejects the update if it is set.
+    always_on           = !local.free_tier
     minimum_tls_version = "1.2"
     ftps_state          = "Disabled"
     http2_enabled       = true
@@ -82,6 +94,10 @@ resource "azurerm_linux_web_app" "api" {
     DB_OWNER_PASSWORD = local.key_vault_reference["db-owner-password"]
     JWT_SECRET        = local.key_vault_reference["jwt-secret"]
 
+    # Replaces the published super-administrator password that V6 seeds; prod does
+    # not start while the database keeps it without this variable (CAL-109).
+    PLATFORM_ADMIN_PASSWORD = local.key_vault_reference["platform-admin-password"]
+
     # Ignored while the prod profile is active: it pins Secure cookies. Kept so
     # the cookies stay secure if the profile is ever changed.
     AUTH_COOKIE_SECURE  = "true"
@@ -96,7 +112,7 @@ resource "azurerm_linux_web_app" "api" {
     # independent of its outbound IPs. Ignored until the frontend sends it; give
     # the same value to BACKEND_PROXY_SECRET of the frontend (CAL-169).
     APP_PROXY_SECRET = local.key_vault_reference["proxy-secret"]
-  }, local.monitoring_settings, local.swagger_settings)
+  }, local.monitoring_settings, local.swagger_settings, local.sentry_settings)
 
   logs {
     detailed_error_messages = false

@@ -11,6 +11,12 @@
 # DB_OWNER_PASSWORD y APP_ALLOWED_ORIGINS (solo https://). DB_HOST, DB_PORT
 # y DB_NAME se leen igual que en application.yml.
 #
+# Variable opcional: PLATFORM_ADMIN_PASSWORD (16 caracteres o mas). Si la base
+# conserva la contrasena publicada del super-administrador que siembra V6,
+# PlatformAdminPasswordGuard la reemplaza con este valor al arrancar; sin la
+# variable, el arranque se detiene. Si la contrasena ya es otra, no se toca
+# (CAL-109).
+#
 # No se combina con demo ni dev: el guard rechaza esa mezcla.
 
 spring:
@@ -36,6 +42,9 @@ app:
 
   realtime:
     allowed-origins: ${APP_ALLOWED_ORIGINS:}
+
+  platform-admin:
+    password: ${PLATFORM_ADMIN_PASSWORD:}
 
 server:
   # Sin cabeceras X-Forwarded-* a nivel de Tomcat. ClientIp ya interpreta

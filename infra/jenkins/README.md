@@ -55,6 +55,58 @@ Si `provision.sh` se detuvo (por ejemplo, porque faltaba un secreto), es seguro 
 - Shell: `tailscale ssh azureuser@<tailscale_hostname>`.
 - Emergencia, sin Tailscale: `az vm run-command invoke` o la consola serie del portal (boot diagnostics habilitado).
 
+### Leer el log de un build sin Tailscale (CAL-185)
+
+Cuando un PR muestra `continuous-integration/jenkins/pr-merge` en rojo y no hay acceso a la tailnet, el log se lee desde la VM con la CLI de Azure. Basta una cuenta con acceso a `rg-restohub-ci`. Los comandos de esta sección solo leen; no cambian la VM ni Jenkins.
+
+Ubicaciones dentro de la VM:
+
+| Qué | Dónde |
+|---|---|
+| `JENKINS_HOME` | `/srv/jenkins/home`, montado en el contenedor `jenkins` |
+| Carpeta de un PR | `/srv/jenkins/home/jobs/restohub/branches/PR-<n>*` |
+| Log de un build | `<carpeta del PR>/builds/<número>/log` |
+
+El número del build es el que aparece en la URL del check de GitHub; por ejemplo, `.../job/PR-128/2/...` es el build `2` de `PR-128`.
+
+Todos los comandos siguen esta forma:
+
+```text
+az vm run-command invoke -g rg-restohub-ci -n vm-jenkins --command-id RunShellScript --query "value[0].message" -o tsv --scripts '<script>'
+```
+
+Pasa el script **entre comillas simples**. Con comillas dobles, la terminal local expande `$(...)` y `$d` antes de enviarlo, y la VM recibe rutas vacías como `/builds/2/log`. Cada invocación tarda entre medio minuto y un minuto, y la VM ejecuta una sola a la vez.
+
+**1. Etapas y errores del build.** Sustituye `PR-128` y el número de build. El log incluye líneas `ha://`, anotaciones internas de Jenkins sin texto útil, que se filtran:
+
+```bash
+d=$(find /srv/jenkins/home/jobs -maxdepth 4 -type d -name "PR-128*" | head -1); f="$d/builds/2/log"; grep -av "^ha:" "$f" | sed "s/\x1b\[[0-9;]*m//g" | grep -anE "\[CI\]|ERROR|rror:|ELIFECYCLE|exit code|BUILD|No space|Killed" | tail -n 40 | cut -c1-220
+```
+
+Los mensajes `[CI]` del `Jenkinsfile` marcan dónde empieza cada paso. El último que aparece antes de `[CI] Limpiando contenedores...` es el paso que falló. Las líneas `ERROR` del backend con `BUILD SUCCESS` después son registros de pruebas que comprueban errores a propósito.
+
+**2. Final del log**, con el código de salida:
+
+```bash
+d=$(find /srv/jenkins/home/jobs -maxdepth 4 -type d -name "PR-128*" | head -1); grep -av "^ha:" "$d/builds/2/log" | sed "s/\x1b\[[0-9;]*m//g" | tail -n 60 | cut -c1-220
+```
+
+**3. Recursos y servicios de la VM**, para descartar la infraestructura:
+
+```bash
+df -h / /srv/jenkins | tail -2; free -m | head -2; docker ps --format "{{.Names}} {{.Image}} {{.Status}}"; systemctl is-active jenkins-agent
+```
+
+El controller corre en el contenedor `jenkins`, así que es normal que `systemctl is-active jenkins` diga `inactive`.
+
+**Qué hacer según el resultado:**
+
+- **Un paso termina con `exit code` distinto de cero:** el pipeline falló de verdad. Repite ese paso en local con los mismos comandos del `Jenkinsfile`. Si GitHub Actions pasa en el mismo commit, busca diferencias de entorno entre los dos, como versiones de Node, pnpm o JDK.
+- **Disco casi lleno, poca memoria o el contenedor `jenkins` detenido:** es un problema de la VM y no del código. Consulta [Recuperación](#recuperación) antes de reiniciar o reemplazar nada.
+- **El log no existe o está vacío:** el build no llegó a empezar. Revisa el estado del agente en el panel, o con `systemctl status jenkins-agent`.
+
+GitHub muestra un build con `Finished: FAILURE` como «This commit cannot be built». El texto no distingue entre un fallo del pipeline y uno de la infraestructura; solo el log lo aclara.
+
 ## Actualización
 
 1. **Jenkins:** cambia juntos el tag y el digest en `Dockerfile`.
@@ -107,8 +159,9 @@ El archivo `Jenkinsfile` en la raíz del repositorio orquesta las puertas de cal
 2. **`Security Scan`**: Ejecuta `scripts/security-scan.sh` para auditoría SCA (`pnpm audit`), SAST (`SpotBugs`) y detección de secretos (CAL-14).
 3. **`Backend Quality Gates`**: Ejecuta `./mvnw -B verify` bajo Java 21, pasando las pruebas de RLS, contratos y concurrencia. Publica resultados con `junit`.
 4. **`Frontend Quality Gates`**: Ejecuta `pnpm install --frozen-lockfile`, `pnpm lint`, `pnpm exec tsc --noEmit`, `pnpm test` (pruebas unitarias Vitest) y `pnpm build`.
-5. **`Production Images`**: Construye y verifica imágenes mínimas y no-root con `scripts/verify-images.sh` (CAL-17).
-6. **`Post Actions`**: Detiene y limpia el contenedor de PostgreSQL y purga el espacio de trabajo con `cleanWs()`.
+5. **`Mobile Quality Gates`**: En `mobile/`, ejecuta `pnpm install --frozen-lockfile`, `pnpm exec tsc --noEmit` y `pnpm test`.
+6. **`Production Images`**: Construye y verifica imágenes mínimas y no-root con `scripts/verify-images.sh` (CAL-17).
+7. **`Post Actions`**: Detiene y limpia el contenedor de PostgreSQL y purga el espacio de trabajo con `cleanWs()`.
 
 ## Checks de Jenkins en Pull Requests (CAL-89)
 
@@ -128,7 +181,7 @@ El plugin `github-branch-source` y la configuración JCasC (`githubpluginconfig`
 * **Estados**:
   * `PENDING`: Al iniciar la compilación.
   * `SUCCESS`: Tras pasar satisfactoriamente todas las etapas del pipeline.
-  * `FAILURE`: Ante cualquier falla en backend, frontend, seguridad o imágenes.
+  * `FAILURE`: Ante cualquier falla en backend, frontend, app móvil, seguridad o imágenes. GitHub lo muestra como «This commit cannot be built». Para saber qué falló, consulta [Leer el log de un build sin Tailscale](#leer-el-log-de-un-build-sin-tailscale-cal-185).
 * **URL de destino**: Apunta a la URL segura en Tailscale (`https://jenkins-restohub.../job/...`) para auditoría de logs.
 
 ### 3. Protección de ramas en GitHub

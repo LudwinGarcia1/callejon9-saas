@@ -14,7 +14,11 @@
     4. Espera a que /login responda 200.
 
     BACKEND_ORIGIN queda fijo en el rewrite de /api/v1/* al compilar: cambiar la API
-    exige volver a correr este script.
+    exige volver a correr este script. Lo mismo pasa con el DSN de Sentry
+    (-SentryDsn o $env:NEXT_PUBLIC_SENTRY_DSN); sin DSN, Sentry queda apagado.
+    Con $env:SENTRY_AUTH_TOKEN, la compilacion que se publica sube sus source
+    maps a Sentry; el token entra como variable del contenedor temporal, que
+    se borra al terminar, y nunca queda en la imagen.
 
     Los valores por defecto salen de `terraform output` en infra/terraform/azure-frontend.
 
@@ -29,6 +33,7 @@ param(
     [string]$ResourceGroup,
     [string]$WebAppName,
     [string]$BackendOrigin,
+    [string]$SentryDsn = $env:NEXT_PUBLIC_SENTRY_DSN,
     [int]$HealthTimeoutSeconds = 600
 )
 
@@ -116,6 +121,7 @@ try {
     $revision = (Invoke-Native 'git' @('-C', $repoRoot, 'rev-parse', '--short', 'HEAD'))
     Write-Host "== Compilando el frontend ($revision) contra $BackendOrigin"
     Invoke-Native 'docker' @('build', '--target', 'builder', '--build-arg', "BACKEND_ORIGIN=$BackendOrigin",
+        '--build-arg', "NEXT_PUBLIC_SENTRY_DSN=$SentryDsn", '--build-arg', "VCS_REF=$revision",
         '-t', $image, $frontendDir) | Out-Host
 
     # Se reinstala con node_modules plano y se recompila: con los enlaces de pnpm,
@@ -126,7 +132,10 @@ try {
                'pnpm build; [ $(find .next/standalone -type l | wc -l) -eq 0 ]; mkdir /out; ' +
                'cp -r .next/standalone/. /out/; mkdir -p /out/.next; cp -r .next/static /out/.next/static; ' +
                'cp -r public /out/public'
-    Invoke-Native 'docker' @('create', '--name', $container, '--entrypoint', 'sh', $image, '-c', $package) | Out-Null
+    $createArgs = @('create', '--name', $container, '--entrypoint', 'sh')
+    # Solo la compilacion que se publica sube source maps: la del builder genera otros archivos.
+    if ($env:SENTRY_AUTH_TOKEN) { $createArgs += @('-e', 'SENTRY_AUTH_TOKEN') }
+    Invoke-Native 'docker' ($createArgs + @($image, '-c', $package)) | Out-Null
     Invoke-Native 'docker' @('start', '--attach', $container) | Out-Host
     Invoke-Native 'docker' @('cp', "${container}:/out", $siteDir) | Out-Null
 

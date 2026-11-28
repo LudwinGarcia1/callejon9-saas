@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Acuerdo de nivel de servicio (SLA)</title>
+<style>
+  :root {
+    --guinda: #5B1631; --guinda-2: #7A1F44; --guinda-osc: #43101F;
+    --oro: #B08D57; --oro-claro: #F3EBDD;
+    --texto: #3A3A3A; --suave: #6B6B6B; --linea: #E7E1D8; --fondo-tarjeta: #F8F6F2;
+    --verde: #1E7F4F; --rojo: #A3263A; --azul: #2F4E8C;
+  }
+  @page { size: letter; margin: 0.85in 0.95in 0.8in;
+    @bottom-left { content: "RestoHub · Acuerdo de nivel de servicio (SLA)"; font: 9px "Avenir Next", sans-serif; color: #8A8A8A; }
+    @bottom-right { content: counter(page) " / " counter(pages); font: 9px "Avenir Next", sans-serif; color: #8A8A8A; }
+  }
+  @page portada { margin: 0; @bottom-left { content: none } @bottom-right { content: none } }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin: 0; font-family: "Avenir Next", "Avenir", "Helvetica Neue", sans-serif; color: var(--texto); font-size: 10.5pt; line-height: 1.55; }
+  h1, h2, h3 { color: var(--guinda); margin: 0; line-height: 1.2; }
+  h2 { font-size: 19pt; font-weight: 700; padding-bottom: 8px; border-bottom: 2px solid var(--oro); margin: 0 0 14px; break-after: avoid; }
+  h2 .num { color: var(--oro); font-size: 14pt; margin-right: 8px; }
+  h3 { font-size: 12.5pt; margin: 18px 0 8px; break-after: avoid; color: var(--guinda-2); }
+  p { margin: 0 0 10px; }
+  code, .mono { font-family: "SF Mono", Menlo, monospace; font-size: 8.6pt; }
+  .seccion { break-before: page; }
+  .sin-salto { break-inside: avoid; }
+
+  /* ---------- Portada ---------- */
+  .portada { page: portada; display: grid; grid-template-columns: 2.55in 1fr; height: 11in; width: 8.5in; }
+  .lateral { background: linear-gradient(180deg, #7C1D43 0%, #5B1631 45%, #4A1027 100%); color: #fff; padding: 0.95in 0.4in 0.9in; display: flex; flex-direction: column; justify-content: space-between; }
+  .lateral .etiqueta { font-size: 8.5pt; letter-spacing: 2.5px; text-transform: uppercase; opacity: .85; }
+  .lateral .grande { font-size: 50pt; font-weight: 700; line-height: 1; }
+  .lateral .grande + div { font-size: 8.5pt; letter-spacing: 2.5px; opacity: .85; margin-top: 8px; text-transform: uppercase; }
+  .ilustracion { display: flex; justify-content: center; }
+  .principal { padding: 0.8in 0.75in 0.75in 1.4in; display: flex; flex-direction: column; }
+  .logos { display: flex; align-items: center; gap: 14px; padding-bottom: 16px; border-bottom: 1px solid var(--linea); }
+  .logo-edomex { width: 132px; height: 32px; background: url(assets/edomex.png) center/contain no-repeat;
+    -webkit-mask: url(assets/edomex-mask.png) center/contain no-repeat; mask: url(assets/edomex-mask.png) center/contain no-repeat; mask-mode: luminance; }
+  .logos .sep { width: 1px; height: 40px; background: var(--linea); }
+  .logos .utvt b { color: var(--guinda); font-size: 10pt; display: block; }
+  .logos .utvt span { color: var(--suave); font-size: 8.5pt; line-height: 1.35; display: block; }
+  .carrera { margin-top: 1.25in; color: var(--oro); font-size: 8.5pt; letter-spacing: 2.2px; font-weight: 600; text-transform: uppercase; }
+  .portada h1 { font-size: 30pt; font-weight: 700; margin: 10px 0 14px; color: var(--guinda); }
+  .subtitulo { color: var(--suave); font-size: 12.5pt; line-height: 1.5; }
+  .raya { width: 50px; height: 4px; background: var(--oro); border-radius: 2px; margin: 22px 0 18px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip { border: 1px solid var(--linea); border-radius: 999px; padding: 4px 11px; font-size: 8pt; font-weight: 600; color: #555; }
+  .datos { margin-top: auto; border-top: 1px solid var(--linea); padding-top: 14px; display: grid; grid-template-columns: 1.4in 1fr; row-gap: 8px; font-size: 9.5pt; }
+  .datos dt { color: #8A8A8A; font-size: 7.5pt; letter-spacing: 1.8px; text-transform: uppercase; padding-top: 2px; }
+  .datos dd { margin: 0; font-weight: 600; color: #2A2A2A; }
+
+  /* ---------- Tablas ---------- */
+  table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 9pt; margin: 6px 0 14px; }
+  thead th { background: var(--guinda-osc); color: #fff; text-align: left; font-weight: 600; padding: 8px 10px; }
+  thead th:first-child { border-top-left-radius: 6px; } thead th:last-child { border-top-right-radius: 6px; }
+  tbody td { padding: 8px 10px; border-bottom: 1px solid var(--linea); vertical-align: top; }
+  tbody tr:nth-child(even) td { background: var(--fondo-tarjeta); }
+  tbody td:first-child { font-weight: 600; color: var(--guinda); }
+  tr { break-inside: avoid; }
+  .ok { color: var(--verde); font-weight: 700; }
+  .ficha td:first-child { width: 34%; }
+
+  /* ---------- Tarjetas y avisos ---------- */
+  .tarjetas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 8px 0 14px; }
+  .tarjetas.dos { grid-template-columns: repeat(2, 1fr); }
+  .tarjeta { background: var(--fondo-tarjeta); border: 1px solid var(--linea); border-radius: 10px; padding: 12px 14px; break-inside: avoid; font-size: 9.3pt; }
+  .tarjeta .k { font-size: 7.5pt; letter-spacing: 1.6px; text-transform: uppercase; color: var(--oro); font-weight: 700; }
+  .tarjeta .v { font-size: 15pt; font-weight: 700; color: var(--guinda); line-height: 1.25; margin: 2px 0 4px; }
+  .nota { border-left: 4px solid var(--guinda-2); background: var(--fondo-tarjeta); border-radius: 0 10px 10px 0; padding: 10px 14px; margin: 8px 0 14px; font-size: 9.3pt; break-inside: avoid; }
+  .terminal { background: #1E1A1C; color: #EDE6DF; border-radius: 10px; padding: 12px 14px; font-family: "SF Mono", Menlo, monospace; font-size: 8pt; line-height: 1.5; white-space: pre-wrap; word-break: break-all; margin: 8px 0 14px; break-inside: avoid; }
+  .terminal .c { color: #C9A877; } .terminal .g { color: #8FD3A6; } .terminal .d { color: #9C9198; }
+
+  /* ---------- Figuras ---------- */
+  .figuras { display: grid; gap: 12px; margin: 8px 0 14px; }
+  .figuras.f2 { grid-template-columns: repeat(2, 1fr); } .figuras.f3 { grid-template-columns: repeat(3, 1fr); } .figuras.f4 { grid-template-columns: repeat(4, 1fr); }
+  figure { margin: 0; break-inside: avoid; text-align: center; }
+  figure img { width: 100%; border: 1px solid var(--linea); border-radius: 8px; display: block; }
+  figure.tel img { border-radius: 14px; }
+  figure:not(.tel) img { max-height: 2.35in; object-fit: cover; object-position: top; }
+  figcaption { font-size: 8pt; color: var(--suave); margin-top: 5px; line-height: 1.35; }
+  figcaption b { color: var(--guinda); }
+
+  .conclusion { background: linear-gradient(180deg, #FBF8F3, #F5EFE4); border: 1px solid var(--linea); border-radius: 12px; padding: 16px 18px; }
+  ul { margin: 4px 0 10px; padding-left: 18px; } li { margin-bottom: 4px; }
+  .fuentes li { font-size: 9pt; color: var(--suave); } .fuentes a { color: var(--guinda-2); text-decoration: none; }
+  /* ---------- Agregados para este documento ---------- */
+  .pend { color: #9A6B12; font-weight: 700; }
+  .no { color: var(--rojo); font-weight: 700; }
+  .indice { columns: 2; column-gap: 28px; font-size: 9.5pt; margin: 6px 0 14px; padding-left: 0; list-style: none; }
+  .indice li { break-inside: avoid; margin-bottom: 5px; }
+  .indice b { color: var(--oro); display: inline-block; width: 26px; }
+  .parte { font-size: 8pt; letter-spacing: 2.2px; text-transform: uppercase; color: var(--oro); font-weight: 700; margin: 0 0 4px; }
+  table.compacta { font-size: 8.6pt; }
+  table.compacta td, table.compacta th { padding: 6px 8px; }
+  .datos dd small { font-weight: 400; color: var(--suave); }
+  td ul { padding-left: 14px; } td ul li { margin-bottom: 1px; line-height: 1.4; }
+  .cadena { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin: 10px 0 6px; position: relative; }
+  .eslabon { border-radius: 10px; padding: 10px 10px 11px; text-align: center; color: #fff; break-inside: avoid; position: relative; font-size: 8.4pt; line-height: 1.35; }
+  .eslabon:not(:last-child)::after { content: "›"; position: absolute; right: -12px; top: 50%; transform: translateY(-50%); color: var(--oro); font-size: 16pt; font-weight: 700; }
+  .eslabon .t { font-size: 9.5pt; font-weight: 700; letter-spacing: .4px; }
+  .eslabon .s { font-size: 7.3pt; letter-spacing: 1.4px; text-transform: uppercase; opacity: .85; margin: 2px 0 6px; }
+  .eslabon .v { font-weight: 700; font-size: 10.5pt; display: block; margin-bottom: 3px; }
+  .e1 { background: #6B6B6B; } .e2 { background: var(--azul); } .e3 { background: var(--verde); } .e4 { background: #B0563F; } .e5 { background: var(--guinda); }
+  .verbos { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; text-align: center; font-size: 8pt; font-weight: 700; color: var(--guinda-2); margin-bottom: 12px; }
+  .verbos span small { display: block; font-weight: 400; color: var(--suave); }
+  .ambito { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin: 0 0 12px; font-size: 7.5pt; letter-spacing: 1.4px; text-transform: uppercase; font-weight: 700; text-align: center; }
+  .ambito div { border: 1.5px solid var(--guinda); border-top: none; border-radius: 0 0 8px 8px; padding: 6px 4px 4px; color: var(--guinda); }
+  .ambito .mon { grid-column: 1 / span 4; } .ambito .sla { grid-column: 5; }
+  .ambito .actual { background: var(--guinda); color: #fff; }
+  .rail { display: flex; gap: 4px; margin: -6px 0 14px; font-size: 6.8pt; letter-spacing: 1px; text-transform: uppercase; font-weight: 700; }
+  .rail span { flex: 1; text-align: center; padding: 3px 0; border-radius: 3px; background: #EFEBE5; color: #B3ABA0; }
+  .rail span.on { color: #fff; }
+  .rail span.on.r1 { background: #6B6B6B; } .rail span.on.r2 { background: var(--azul); } .rail span.on.r3 { background: var(--verde); } .rail span.on.r4 { background: #B0563F; } .rail span.on.r5 { background: var(--guinda); }
+</style>
+</head>
+
+<body>
+
+<!-- ===================== PORTADA ===================== -->
+<section class="portada">
+  <div class="lateral">
+    <div class="etiqueta">Entrega por equipo</div>
+    <div class="ilustracion">
+      <svg width="150" height="170" viewBox="0 0 150 170" aria-hidden="true">
+        <path d="M75 14l52 20v40c0 38-24 64-52 78-28-14-52-40-52-78V34z" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="3" stroke-linejoin="round"/>
+        <circle cx="75" cy="84" r="34" fill="#B08D57"/>
+        <path d="M75 62v24l15 10" fill="none" stroke="#F7EFE4" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div><div class="grande">10°</div><div>Cuatrimestre · 2026</div></div>
+  </div>
+  <div class="principal">
+    <div class="logos">
+      <svg width="132" height="32" viewBox="0 0 322 77" role="img" aria-label="Gobierno del Estado de México">
+        <defs><mask id="m-edomex" maskUnits="userSpaceOnUse" x="0" y="0" width="322" height="77"><image href="assets/edomex-mask.png" width="322" height="77"/></mask></defs>
+        <image href="assets/edomex.png" width="322" height="77" mask="url(#m-edomex)"/>
+      </svg>
+      <div class="sep"></div>
+      <div class="utvt"><b>UTVT</b><span>Universidad Tecnológica<br>del Valle de Toluca</span></div>
+    </div>
+    <div class="carrera">Ingeniería en Desarrollo y Gestión de Software</div>
+    <h1>Acuerdo de nivel de servicio (SLA)</h1>
+    <div class="subtitulo">Disponibilidad, tiempos de atención, protección de datos y compensaciones que <b>RestoHub</b> se compromete a ofrecer a los restaurantes suscritos a la plataforma Callejón 9.</div>
+    <div class="raya"></div>
+    <div class="chips"><span class="chip" style="opacity:.45">Métricas crudas</span><span class="chip" style="opacity:.45">SLI</span><span class="chip" style="opacity:.45">SLO</span><span class="chip" style="opacity:.45">Presupuesto de error</span><span class="chip">SLA</span></div>
+    <dl class="datos">
+      <dt>Proyecto</dt><dd>Restaurant Hub (RestoHub) · plataforma SaaS Callejón 9</dd>
+      <dt>Equipo</dt><dd>García Gaytán Ludwin <small>· 222310777</small><br>Duarte Villavicencio Octavio <small>· 222310422</small><br>Mercado Serrano Valeria <small>· 222310838</small><br>Hernández Mejía Braulio <small>· 222310435</small></dd>
+      <dt>Grupo</dt><dd>IDGS 101</dd>
+      <dt>Lugar y fecha</dt><dd>Santa María Atarasquillo, Lerma, México · 26 de noviembre de 2026 · actualizado al 27 de noviembre</dd>
+    </dl>
+  </div>
+</section>
+
+<!-- ===================== 01 OBJETO ===================== -->
+<section class="seccion">
+  <p class="parte">Contenido</p>
+  <ul class="indice">
+    <li><b>01</b>Objeto, partes y vigencia</li>
+    <li><b>02</b>Servicios cubiertos</li>
+    <li><b>03</b>Disponibilidad</li>
+    <li><b>04</b>Desempeño</li>
+    <li><b>05</b>Soporte e incidentes</li>
+    <li><b>06</b>Datos, respaldo y seguridad</li>
+    <li><b>07</b>Créditos de servicio</li>
+    <li><b>08</b>Medición y reportes</li>
+    <li><b>09</b>Responsabilidades y exclusiones</li>
+    <li><b>10</b>Revisión del acuerdo</li>
+  </ul>
+
+  <h2><span class="num">01</span>Objeto, partes y vigencia</h2>
+  <div class="rail"><span class="r1 on">Métricas crudas</span><span class="r2 on">SLI</span><span class="r3 on">SLO</span><span class="r4 on">Presupuesto de error</span><span class="r5 on">SLA</span></div>
+  <p>Este acuerdo define el nivel de servicio que RestoHub ofrece a cada restaurante con una suscripción activa, cómo se mide y qué ocurre cuando no se cumple. Es el compromiso que el cliente puede exigir; los objetivos internos del equipo son más estrictos y viven en el plan de monitoreo, que se entrega como documento aparte.</p>
+  <div style="break-inside: avoid">
+  <p>Este acuerdo y el plan de monitoreo recorren el mismo riel: <b>métricas crudas → SLI → SLO → presupuesto de error → SLA</b>. El plan de monitoreo cubre los cuatro primeros tramos y este documento el último, el compromiso externo; cada sección de los dos documentos indica, bajo su título, en qué tramo trabaja. Los valores son los mismos en ambos.</p>
+  <div class="cadena">
+    <div class="eslabon e1"><div class="t">Métricas crudas</div><div class="s">Telemetría</div><span class="v">Peticiones, duración, HTTP, CPU, pools, errores</span>Application Insights, Azure Monitor y Sentry</div>
+    <div class="eslabon e2"><div class="t">SLI</div><div class="s">Indicador útil</div><span class="v">% de peticiones buenas</span>En las rutas críticas: sin 5xx y bajo su p95</div>
+    <div class="eslabon e3"><div class="t">SLO</div><div class="s">Meta temporal</div><span class="v">99.8 % en 30 días</span>Objetivo interno del equipo</div>
+    <div class="eslabon e4"><div class="t">Presupuesto de error</div><div class="s">Riesgo aceptable</div><span class="v">86 min / mes</span>Margen para desplegar y fallar</div>
+    <div class="eslabon e5"><div class="t">SLA</div><div class="s">Acuerdo externo</div><span class="v">99.5 % mensual</span>Con créditos si se incumple</div>
+  </div>
+  <div class="ambito"><div class="mon">Plan de monitoreo</div><div class="sla actual">Este documento</div></div>
+  <div class="verbos">
+    <span>Observar<small>Plan de monitoreo · aquí 08</small></span><span>Representar<small>Plan de monitoreo · aquí 02 y 04</small></span><span>Fijar la meta<small>Plan de monitoreo · aquí 03</small></span><span>Gestionar el margen<small>Plan de monitoreo · aquí 03</small></span><span>Comprometer<small>Este documento</small></span>
+  </div>
+  </div>
+
+  <table class="compacta ficha">
+    <thead><tr><th>Concepto</th><th>Definición</th></tr></thead>
+    <tbody>
+      <tr><td>Proveedor</td><td>RestoHub, operado por el equipo de desarrollo de Callejón 9.</td></tr>
+      <tr><td>Cliente</td><td>El restaurante con suscripción activa, representado por su cuenta de administrador.</td></tr>
+      <tr><td>Usuarios finales</td><td>Administradores, meseros, cocina y caja del restaurante; comensales que usan el menú QR y la app RestoHub Clientes.</td></tr>
+      <tr><td>Vigencia</td><td>Mientras la suscripción esté activa. Entra en vigor el 1 de diciembre de 2026 con la liberación a producción.</td></tr>
+      <tr><td>Periodo de medición</td><td>Mes calendario, en hora del centro de México (UTC−6).</td></tr>
+    </tbody>
+  </table>
+
+  <div class="nota"><b>Validación legal pendiente.</b> El documento de normas, estándares y leyes (CAL-69) registra como hueco HUECO-LEG-02 la validación legal de los términos del servicio, que incluyen este SLA. Hasta esa validación, este acuerdo es la propuesta técnica del equipo y no un contrato firmado.</div>
+</section>
+
+<!-- ===================== 02 SERVICIOS ===================== -->
+<section>
+  <h2 style="margin-top:26px"><span class="num">02</span>Servicios cubiertos</h2>
+  <div class="rail"><span class="r1">Métricas crudas</span><span class="r2 on">SLI</span><span class="r3">SLO</span><span class="r4">Presupuesto de error</span><span class="r5">SLA</span></div>
+  <p>El SLA cubre las funciones que el restaurante necesita para operar durante el servicio. Se agrupan por criticidad: si falla una función crítica, el restaurante no puede atender a sus comensales.</p>
+
+  <table class="compacta">
+    <thead><tr><th style="width:26%">Servicio</th><th>Funciones</th><th style="width:18%">Criticidad</th></tr></thead>
+    <tbody>
+      <tr><td>Operación en piso</td><td>Inicio de sesión, mesas, órdenes, envío a cocina, cobro (incluidos pagos divididos) y turnos de caja.</td><td class="no">Crítica</td></tr>
+      <tr><td>Menú QR y app Clientes</td><td>Consulta del menú y solicitudes del comensal a la mesa.</td><td class="no">Crítica</td></tr>
+      <tr><td>App Meseros</td><td>Toma de órdenes y notificaciones push de solicitudes.</td><td class="pend">Alta</td></tr>
+      <tr><td>Administración</td><td>Menú, usuarios, roles, tema visual y configuración del restaurante.</td><td class="pend">Media</td></tr>
+      <tr><td>Reportes</td><td>Ventas y consultas históricas.</td><td>Baja</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2.1 No cubierto</h3>
+  <ul>
+    <li>Entornos de demostración, pruebas o versiones beta, incluidas las apps distribuidas fuera de las tiendas oficiales.</li>
+    <li>La entrega de notificaciones push una vez que salen de RestoHub: depende de los servicios de Apple y Google.</li>
+    <li>Pasarelas de pago de terceros; RestoHub responde por el registro del cobro, no por la red del banco.</li>
+    <li>Funciones marcadas como experimentales en la interfaz.</li>
+  </ul>
+</section>
+
+<!-- ===================== 03 DISPONIBILIDAD ===================== -->
+<section class="seccion">
+  <h2><span class="num">03</span>Disponibilidad</h2>
+  <div class="rail"><span class="r1">Métricas crudas</span><span class="r2">SLI</span><span class="r3 on">SLO</span><span class="r4 on">Presupuesto de error</span><span class="r5 on">SLA</span></div>
+
+  <div class="tarjetas">
+    <div class="tarjeta"><div class="k">Compromiso mensual</div><div class="v">99.5 %</div>Hasta 3 h 36 min de indisponibilidad en un mes de 30 días.</div>
+    <div class="tarjeta"><div class="k">Objetivo interno (SLO)</div><div class="v">99.8 %</div>Presupuesto de error de 1 h 26 min; deja margen antes de incumplir.</div>
+    <div class="tarjeta"><div class="k">Mantenimiento</div><div class="v">4 h / mes</div>Programado, avisado y fuera del horario de servicio.</div>
+  </div>
+
+  <h3>3.1 Cómo se calcula</h3>
+  <div class="terminal">Disponibilidad (%) = (minutos del mes − minutos de indisponibilidad) ÷ minutos del mes × 100
+
+<span class="d">Minutos de indisponibilidad: minutos en que la prueba externa falla desde al menos 2 de sus 3 regiones,
+sin contar el mantenimiento programado ni las exclusiones de la sección 09.</span></div>
+  <p>Un minuto cuenta como indisponible cuando la web o la API no responden con éxito a la prueba externa de Application Insights, que se ejecuta cada 5 minutos desde tres regiones. Exigir dos regiones evita contar como caída un problema de red de una sola región. La API se considera disponible solo si su <code>readiness</code> responde 200, es decir, si además alcanza la base de datos.</p>
+
+  <h3>3.2 Por qué 99.5 % y no más</h3>
+  <p>La disponibilidad comprometida no puede superar la de la infraestructura de la que depende. RestoHub corre en una sola instancia de App Service para la web, otra para la API y un servidor flexible de PostgreSQL sin alta disponibilidad. Los SLA publicados por Microsoft para esos servicios son de 99.95 % para cada App Service de pago y de 99.9 % para PostgreSQL sin redundancia; combinados en serie dan cerca de <b>99.8 %</b>, que es el objetivo interno. Comprometer 99.5 % deja margen para fallas de la propia aplicación y para los despliegues.</p>
+  <p>Ese margen se administra como presupuesto de error: el equipo opera contra el SLO interno de 99.8 % (86 minutos al mes). Si el consumo del presupuesto se acelera, el plan de monitoreo dispara alertas; si se agota, el siguiente sprint prioriza la confiabilidad sobre las funciones nuevas. Así el equipo reacciona antes de acercarse a los 216 minutos que permite este acuerdo.</p>
+  <p>El cálculo supone la web en el plan B1 o superior. El plan F1, que Terraform usa por defecto, no tiene SLA de Microsoft y descarga la app cuando está inactiva, así que este acuerdo no puede entrar en vigor con la web en F1.</p>
+  <table class="compacta">
+    <thead><tr><th>Escenario de crecimiento</th><th style="width:22%">Disponibilidad posible</th><th style="width:30%">Cambio necesario</th></tr></thead>
+    <tbody>
+      <tr><td>Actual (una instancia, base sin HA)</td><td>99.5 %</td><td>—</td></tr>
+      <tr><td>Más restaurantes en hora pico</td><td>99.9 %</td><td>Dos instancias por App Service y alta disponibilidad con redundancia de zona en PostgreSQL</td></tr>
+    </tbody>
+  </table>
+
+  <h3>3.3 Mantenimiento programado</h3>
+  <ul>
+    <li>Se avisa con al menos <b>48 horas</b> de anticipación por correo al administrador del restaurante.</li>
+    <li>Se ejecuta entre las 23:00 y las 7:00, cuando los restaurantes no dan servicio, con un máximo de 4 horas al mes.</li>
+    <li>Los despliegues ordinarios no son mantenimiento: si causan indisponibilidad, cuenta contra el SLA.</li>
+  </ul>
+</section>
+
+<!-- ===================== 04 DESEMPEÑO ===================== -->
+<section class="seccion">
+  <h2><span class="num">04</span>Desempeño</h2>
+  <div class="rail"><span class="r1">Métricas crudas</span><span class="r2 on">SLI</span><span class="r3">SLO</span><span class="r4">Presupuesto de error</span><span class="r5">SLA</span></div>
+  <p>Una plataforma que responde pero tarda demasiado es, para un mesero con una mesa esperando, una plataforma caída. Los objetivos de desempeño se miden con Application Insights sobre las peticiones reales del mes, con percentiles altos (p95 y p99) y no con promedios: un promedio aceptable puede esconder que 1 de cada 100 cobros tarda varios segundos.</p>
+
+  <table class="compacta">
+    <thead><tr><th style="width:36%">Indicador</th><th style="width:20%">Objetivo</th><th>Medición</th></tr></thead>
+    <tbody>
+      <tr><td>Latencia de rutas críticas, p95 · p99</td><td>&lt; 800 ms · &lt; 2 s</td><td>Inicio de sesión, órdenes, envío a cocina, cobro y menú QR.</td></tr>
+      <tr><td>Latencia de reportes, p95 · p99</td><td>&lt; 3 s · &lt; 6 s</td><td>Rutas de reportes y consultas históricas.</td></tr>
+      <tr><td>Peticiones exitosas en rutas críticas</td><td>≥ 99.5 %</td><td>Respuestas que no son 5xx sobre el total del mes.</td></tr>
+      <tr><td>Carga inicial de la web</td><td>&lt; 3 s</td><td>Primera visita a <code>/login</code> desde una conexión 4G.</td></tr>
+      <tr><td>Envío de una notificación push</td><td>&lt; 10 s</td><td>Desde la solicitud del comensal hasta su entrega al servicio de Apple o Google.</td></tr>
+    </tbody>
+  </table>
+  <p>Los objetivos de desempeño son de seguimiento: se reportan cada mes y su incumplimiento abre una acción correctiva, pero solo la disponibilidad de la sección 03 genera créditos de servicio.</p>
+</section>
+
+<!-- ===================== 05 SOPORTE ===================== -->
+<section class="seccion">
+  <h2><span class="num">05</span>Soporte e incidentes</h2>
+  <div class="rail"><span class="r1">Métricas crudas</span><span class="r2">SLI</span><span class="r3">SLO</span><span class="r4">Presupuesto de error</span><span class="r5 on">SLA</span></div>
+  <p>El restaurante reporta por el correo de soporte que recibe al contratar. Cada reporte recibe un folio y una severidad, que el equipo puede subir o bajar al revisarlo, explicando el motivo. El equipo también detecta fallas sin esperar el reporte: las alertas del plan de monitoreo, incluido el aviso de Sentry cuando aparece un error nuevo en producción, abren un folio con las mismas reglas.</p>
+
+  <table class="compacta">
+    <thead><tr><th style="width:9%">Sev.</th><th style="width:31%">Definición</th><th style="width:18%">Primera respuesta</th><th style="width:20%">Restablecimiento objetivo</th><th>Horario</th></tr></thead>
+    <tbody>
+      <tr><td>P1</td><td>Servicio crítico caído para todos los restaurantes, o sospecha de que un restaurante vio datos de otro.</td><td>30 min</td><td>4 h</td><td>Todos los días, 24 h</td></tr>
+      <tr><td>P2</td><td>Una función crítica falla para uno o varios restaurantes, o el desempeño impide operar.</td><td>1 h</td><td>8 h</td><td>Todos los días, 8:00 a 23:00</td></tr>
+      <tr><td>P3</td><td>Una función no crítica falla y existe una alternativa.</td><td>1 día hábil</td><td>5 días hábiles</td><td>Lunes a viernes, 9:00 a 18:00</td></tr>
+      <tr><td>P4</td><td>Dudas de uso, solicitudes de mejora y fallas cosméticas.</td><td>2 días hábiles</td><td>Se planea en un sprint</td><td>Lunes a viernes, 9:00 a 18:00</td></tr>
+    </tbody>
+  </table>
+
+  <h3>5.1 Compromisos durante un incidente</h3>
+  <ul>
+    <li><b>Primera respuesta</b> significa que una persona del equipo confirmó el reporte y está trabajando en él; una respuesta automática no cuenta.</li>
+    <li><b>Restablecimiento</b> significa que el restaurante puede volver a operar, aunque sea con una solución temporal. La corrección definitiva puede llegar después.</li>
+    <li>En P1 y P2, el restaurante recibe una actualización al menos <b>cada hora</b> hasta el cierre.</li>
+    <li>Para cada P1, el restaurante recibe un reporte del incidente en un máximo de <b>5 días hábiles</b>: qué pasó, qué se hizo y qué cambia para que no se repita.</li>
+  </ul>
+</section>
+
+<!-- ===================== 06 DATOS ===================== -->
+<section class="seccion">
+  <h2><span class="num">06</span>Datos, respaldo y seguridad</h2>
+  <div class="rail"><span class="r1">Métricas crudas</span><span class="r2">SLI</span><span class="r3">SLO</span><span class="r4">Presupuesto de error</span><span class="r5 on">SLA</span></div>
+
+  <div class="tarjetas">
+    <div class="tarjeta"><div class="k">RPO</div><div class="v">≤ 15 min</div>Pérdida máxima de datos ante una falla de la base.</div>
+    <div class="tarjeta"><div class="k">RTO</div><div class="v">≤ 4 h</div>Tiempo máximo para restaurar la base y volver a operar.</div>
+    <div class="tarjeta"><div class="k">Retención de respaldos</div><div class="v">7 días</div>Restauración a cualquier punto dentro de la ventana.</div>
+  </div>
+
+  <h3>6.1 Respaldo y recuperación</h3>
+  <ul>
+    <li>Azure Database for PostgreSQL hace respaldos automáticos y guarda el registro de transacciones, lo que permite restaurar a un punto en el tiempo dentro de los últimos 7 días. El RPO comprometido de 15 minutos es conservador respecto de lo que ofrece la plataforma.</li>
+    <li>El RTO de 4 horas se confirma con un ensayo de restauración real con volumen representativo (CAL-58, previsto para el 3 de diciembre de 2026). Si el ensayo da más de 4 horas, el RTO de este acuerdo se corrige antes de su entrada en vigor.</li>
+    <li>Después de cualquier restauración se ejecuta <code>scripts/verify-rls.sql</code> como el rol de la aplicación para comprobar que el aislamiento entre restaurantes sigue intacto antes de reabrir el servicio.</li>
+  </ul>
+
+  <h3>6.2 Aislamiento y confidencialidad</h3>
+  <ul>
+    <li>Los datos de cada restaurante están aislados por PostgreSQL con Row Level Security en las 17 tablas de datos. El restaurante activo se toma de la sesión firmada, nunca de lo que envía el navegador o la app.</li>
+    <li>El tráfico viaja cifrado con TLS 1.2 o superior; las contraseñas se guardan con BCrypt y la sesión vive en una cookie <code>HttpOnly</code>, <code>Secure</code> y <code>SameSite=Strict</code>.</li>
+    <li>Cualquier incidente que comprometa la confidencialidad se notifica al restaurante afectado <b>en un máximo de 72 horas</b> desde que se confirma, con lo que se sabe hasta ese momento, conforme a la LFPDPPP. El restaurante es el responsable de los datos de sus empleados y comensales; RestoHub actúa como encargado.</li>
+    <li>Los errores técnicos de la plataforma y de las apps se envían a <b>Sentry</b>, un servicio de monitoreo de errores con servidores en Estados Unidos. Los eventos llevan la traza técnica del error y la versión de la aplicación; no llevan IP, cookies, datos de sesión ni el contenido de las peticiones, y Sentry está configurado para descartar la IP al recibirlos. Ningún dato de órdenes, cobros o comensales viaja a Sentry.</li>
+  </ul>
+
+  <h3>6.3 Datos al terminar la suscripción</h3>
+  <p>Al terminar la suscripción, el restaurante puede solicitar la exportación de sus datos durante <b>30 días</b>. Después se eliminan de la base productiva y desaparecen de los respaldos cuando vence su ventana de 7 días.</p>
+</section>
+
+<!-- ===================== 07 CRÉDITOS ===================== -->
+<section class="seccion">
+  <h2><span class="num">07</span>Créditos de servicio</h2>
+  <div class="rail"><span class="r1">Métricas crudas</span><span class="r2">SLI</span><span class="r3">SLO</span><span class="r4">Presupuesto de error</span><span class="r5 on">SLA</span></div>
+  <p>Si la disponibilidad del mes queda por debajo del compromiso, el restaurante recibe un crédito sobre la siguiente mensualidad. El crédito es la única compensación por incumplimiento de disponibilidad.</p>
+
+  <table class="compacta">
+    <thead><tr><th>Disponibilidad del mes</th><th style="width:28%">Indisponibilidad equivalente (30 días)</th><th style="width:24%">Crédito sobre la mensualidad</th></tr></thead>
+    <tbody>
+      <tr><td>≥ 99.5 %</td><td>Hasta 3 h 36 min</td><td class="ok">Cumple · sin crédito</td></tr>
+      <tr><td>Entre 99.0 % y 99.5 %</td><td>Hasta 7 h 12 min</td><td>10 %</td></tr>
+      <tr><td>Entre 95.0 % y 99.0 %</td><td>Hasta 36 h</td><td>25 %</td></tr>
+      <tr><td>Menos de 95.0 %</td><td>Más de 36 h</td><td>50 %</td></tr>
+    </tbody>
+  </table>
+
+  <h3>7.1 Cómo se solicita</h3>
+  <ul>
+    <li>El administrador del restaurante lo solicita por el canal de soporte dentro de los <b>30 días</b> siguientes al cierre del mes, indicando fechas y horas aproximadas de la afectación.</li>
+    <li>RestoHub lo valida contra el reporte mensual de disponibilidad (sección 08) y responde en un máximo de 10 días hábiles.</li>
+    <li>El crédito máximo en un mes es el 50 % de la mensualidad; no se paga en efectivo ni se acumula después de cancelar la suscripción.</li>
+    <li>Durante el periodo de prueba gratuita no se generan créditos.</li>
+  </ul>
+</section>
+
+<!-- ===================== 08 MEDICIÓN ===================== -->
+<section class="seccion">
+  <h2><span class="num">08</span>Medición y reportes</h2>
+  <div class="rail"><span class="r1 on">Métricas crudas</span><span class="r2 on">SLI</span><span class="r3">SLO</span><span class="r4">Presupuesto de error</span><span class="r5">SLA</span></div>
+  <p>Las cifras del SLA salen de las mismas herramientas que usa el equipo para operar, descritas en el plan de monitoreo. Así el restaurante y el equipo hablan de un solo número.</p>
+
+  <table class="compacta">
+    <thead><tr><th style="width:26%">Medida</th><th>Fuente</th><th style="width:24%">Retención de la evidencia</th></tr></thead>
+    <tbody>
+      <tr><td>Disponibilidad</td><td>Pruebas de disponibilidad de Application Insights, 3 regiones, cada 5 minutos.</td><td>30 días en Log Analytics; el resumen mensual, permanente.</td></tr>
+      <tr><td>Desempeño</td><td>Telemetría de peticiones de Application Insights.</td><td>30 días; el resumen mensual, permanente.</td></tr>
+      <tr><td>Errores de la aplicación</td><td>Sentry, en la API, la web y las apps: cada error agrupado por causa y ligado a la versión que lo introdujo. Un error nuevo o que reaparece en producción avisa por correo al equipo. Sirve para detectar y reportar incidentes; no entra en el cálculo de disponibilidad.</td><td>La del plan de Sentry; los errores de cada incidente quedan en su reporte.</td></tr>
+      <tr><td>Soporte</td><td>Folios de soporte con hora de reporte, primera respuesta y restablecimiento.</td><td>Permanente.</td></tr>
+      <tr><td>Respaldo</td><td>Historial de respaldos de Azure y bitácora de ensayos de restauración.</td><td>Permanente para los ensayos.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>8.1 Confiabilidad de la medición</h3>
+  <p>Una cifra de disponibilidad solo vale si la herramienta que la mide funciona. Por eso, cada mes el equipo dispara una alerta de ensayo y comprueba que llega, contrasta la disponibilidad de las pruebas externas con el éxito de las peticiones reales (si difieren más de 0.5 puntos, revisa la prueba antes de emitir el reporte), confirma que la telemetría no se interrumpió por la cuota diaria de ingesta y que Sentry sigue recibiendo los errores de producción. Si un periodo quedó sin medición, se informa en el reporte y no se cuenta en contra del restaurante.</p>
+
+  <h3>8.2 Reporte mensual</h3>
+  <p>En los primeros <b>5 días hábiles</b> de cada mes, RestoHub publica para cada restaurante un reporte con la disponibilidad del mes anterior, los incidentes P1 y P2 con su duración y los errores que los causaron según Sentry, el cumplimiento de los tiempos de soporte, el mantenimiento realizado y los créditos que correspondan.</p>
+</section>
+
+<!-- ===================== 09 RESPONSABILIDADES ===================== -->
+<section class="seccion">
+  <h2><span class="num">09</span>Responsabilidades y exclusiones</h2>
+  <div class="rail"><span class="r1">Métricas crudas</span><span class="r2">SLI</span><span class="r3">SLO</span><span class="r4">Presupuesto de error</span><span class="r5 on">SLA</span></div>
+
+  <div class="tarjetas dos">
+    <div class="tarjeta"><div class="k">RestoHub se compromete a</div>
+      <ul style="margin:4px 0 0">
+        <li>Operar y monitorear la plataforma según este acuerdo.</li>
+        <li>Avisar el mantenimiento y los incidentes en los plazos acordados.</li>
+        <li>Conservar el aislamiento entre restaurantes y los respaldos.</li>
+        <li>Publicar el reporte mensual.</li>
+      </ul>
+    </div>
+    <div class="tarjeta"><div class="k">El restaurante se compromete a</div>
+      <ul style="margin:4px 0 0">
+        <li>Mantener un administrador con datos de contacto vigentes.</li>
+        <li>Proteger las credenciales de sus usuarios y dar de baja a quien deje de trabajar ahí.</li>
+        <li>Usar navegadores y versiones de las apps soportadas.</li>
+        <li>Reportar las fallas con la información que se le solicite.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>9.1 Exclusiones del cálculo de disponibilidad</h3>
+  <ul>
+    <li>Mantenimiento programado avisado según la sección 03.</li>
+    <li>Fallas de la red o del internet del restaurante, o de sus dispositivos.</li>
+    <li>Indisponibilidad regional de Microsoft Azure declarada en su página de estado.</li>
+    <li>Suspensión del servicio por falta de pago o por uso contrario a los términos del servicio.</li>
+    <li>Fallas causadas por acciones del restaurante, por ejemplo, borrar su propio menú o compartir credenciales.</li>
+    <li>Ataques de denegación de servicio que superen la protección de la plataforma, siempre que RestoHub haya aplicado sus medidas de mitigación.</li>
+  </ul>
+</section>
+
+<!-- ===================== 10 REVISIÓN ===================== -->
+<section class="seccion">
+  <h2><span class="num">10</span>Revisión del acuerdo</h2>
+  <div class="rail"><span class="r1">Métricas crudas</span><span class="r2">SLI</span><span class="r3">SLO</span><span class="r4 on">Presupuesto de error</span><span class="r5 on">SLA</span></div>
+  <ul>
+    <li>El acuerdo se revisa cada <b>6 meses</b> o antes si cambia la infraestructura (por ejemplo, al pasar a dos instancias y alta disponibilidad, que permitiría comprometer 99.9 %).</li>
+    <li>La proyección de capacidad del plan de monitoreo marca cuándo hacer ese cambio: si anticipa que con el crecimiento de restaurantes la saturación de la base o de la API llegará a su umbral de advertencia en menos de 30 días, se planea la mejora de infraestructura y la revisión de este acuerdo.</li>
+    <li>Un cambio que reduzca el nivel de servicio se avisa con <b>30 días</b> de anticipación y el restaurante puede cancelar sin penalización.</li>
+    <li>Un cambio que mejore el nivel de servicio aplica desde el mes siguiente a su publicación.</li>
+  </ul>
+
+  <h3>10.1 Resumen de compromisos</h3>
+  <table class="compacta">
+    <thead><tr><th style="width:40%">Compromiso</th><th>Valor</th></tr></thead>
+    <tbody>
+      <tr><td>Disponibilidad mensual</td><td>99.5 %, medida desde 3 regiones externas (SLO interno 99.8 %)</td></tr>
+      <tr><td>Latencia de rutas críticas</td><td>p95 &lt; 800 ms · p99 &lt; 2 s (seguimiento)</td></tr>
+      <tr><td>Mantenimiento programado</td><td>Máximo 4 h al mes, de 23:00 a 7:00, avisado con 48 h</td></tr>
+      <tr><td>Respuesta a P1 · P2</td><td>30 min · 1 h</td></tr>
+      <tr><td>Restablecimiento P1 · P2</td><td>4 h · 8 h</td></tr>
+      <tr><td>RPO · RTO</td><td>15 min · 4 h</td></tr>
+      <tr><td>Notificación de incidente de datos</td><td>Máximo 72 h desde su confirmación</td></tr>
+      <tr><td>Créditos</td><td>10 %, 25 % o 50 % de la mensualidad</td></tr>
+    </tbody>
+  </table>
+
+  <div class="conclusion"><b>Resumen.</b> RestoHub compromete lo que su infraestructura actual puede sostener con margen: 99.5 % de disponibilidad mensual medida desde fuera, atención de incidentes críticos en 30 minutos, restauración de datos en 4 horas con pérdida máxima de 15 minutos, y el aislamiento entre restaurantes como garantía no negociable. Cada cifra se mide con las herramientas del plan de monitoreo y se reporta cada mes al restaurante.</div>
+
+  <h3>Fuentes</h3>
+  <ul class="fuentes">
+    <li>Microsoft. <i>Service Level Agreements (SLA) for Online Services</i>: App Service y Azure Database for PostgreSQL. microsoft.com/licensing/docs/view/Service-Level-Agreements-SLA-for-Online-Services</li>
+    <li>Microsoft Learn. <i>Copia de seguridad y restauración en Azure Database for PostgreSQL – Servidor flexible</i>. learn.microsoft.com/azure/postgresql/flexible-server/concepts-backup-restore</li>
+    <li>Ley Federal de Protección de Datos Personales en Posesión de los Particulares (LFPDPPP).</li>
+    <li>Sentry. <i>Data Processing Addendum y subprocesadores</i>. sentry.io/legal/dpa</li>
+    <li>Repositorio Callejón 9: <code>docs/cal-69-normas-estandares-leyes.md</code>, <code>infra/terraform/azure-backend/database.tf</code>, <code>docs/operacion-sentry.md</code>.</li>
+  </ul>
+</section>
+
+</body>
+</html>
